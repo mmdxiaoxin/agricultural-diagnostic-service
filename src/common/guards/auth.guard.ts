@@ -4,6 +4,8 @@ import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 
 interface UserPayload {
   userId: number;
+  roles: string[];
+  username?: string;
 }
 
 declare global {

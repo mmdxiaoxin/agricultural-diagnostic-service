@@ -30,6 +30,10 @@ export class AuthService {
     if (!isValid) {
       throw new ForbiddenException('账号或密码错误');
     }
-    return this.jwt.sign({ userId: user.id });
+    return this.jwt.sign({
+      userId: user.id,
+      username: user.username,
+      roles: user.roles.map((role) => role.name),
+    });
   }
 }
