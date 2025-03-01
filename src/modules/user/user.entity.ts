@@ -6,6 +6,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToMany,
 } from 'typeorm';
 import { Role } from '../role/role.entity';
 
@@ -23,9 +24,9 @@ export class User {
   @Column({ type: 'varchar', length: 255 })
   password: string;
 
-  @ManyToOne(() => Role, (role) => role.users) // 假设 Role 有 users 反向关系
+  @ManyToMany(() => Role, (role) => role.users)
   @JoinColumn({ name: 'role_id' })
-  role: Role;
+  roles: Role[];
 
   @Column({ type: 'tinyint', default: 0 })
   status: boolean;
