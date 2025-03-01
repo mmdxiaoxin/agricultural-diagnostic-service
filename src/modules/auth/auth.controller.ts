@@ -6,7 +6,7 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common';
-import { RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto } from './auth.dto';
 import { AuthService } from './auth.service';
 @Controller('auth')
 export class AuthController {
@@ -21,6 +21,18 @@ export class AuthController {
       code: 201,
       data: null,
       message: '注册成功',
+    };
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() dto: LoginDto) {
+    const { login, password } = dto;
+    const token = await this.authService.login(login, password);
+    return {
+      code: 200,
+      data: { token },
+      message: '登录成功',
     };
   }
 }

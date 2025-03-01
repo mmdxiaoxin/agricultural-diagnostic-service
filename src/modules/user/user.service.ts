@@ -46,6 +46,14 @@ export class UserService {
     return this.userRepository.save(newUser);
   }
 
+  async findByLogin(login: string): Promise<User | null> {
+    return this.userRepository
+      .createQueryBuilder('user')
+      .where('user.email = :login', { login })
+      .orWhere('user.username = :login', { login })
+      .getOne();
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { email },
