@@ -11,6 +11,7 @@ import {
   Param,
   Post,
   Put,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -28,8 +29,14 @@ export class FileController {
 
   // 获取文件空间信息
   @Get('disk-usage')
-  async getSpaceInfo() {
-    // return this.fileService.getSpaceInfo();
+  async getSpaceInfo(@Req() req) {
+    const user = req.user;
+    const data = this.fileService.computeDiskUsage(user);
+    return {
+      code: 200,
+      data,
+      message: '获取文件空间信息成功',
+    };
   }
 
   // 获取文件列表

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 
-interface UserPayload {
+export interface UserPayload {
   userId: number;
   roles: string[];
   username?: string;
