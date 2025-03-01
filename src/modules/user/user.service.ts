@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './user.entity';
+import { hash } from 'bcryptjs';
 import { In, Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
-import { hash } from 'bcryptjs';
+import { User } from './user.entity';
 
 @Injectable()
 export class UserService {
@@ -13,6 +13,9 @@ export class UserService {
   ) {}
 
   async create(user: Partial<User>) {
+    if (!user.email) {
+      throw new Error('Parameters');
+    }
     if (!user.roles) {
       const role = (await this.roleRepository.findOne({
         where: { name: 'user' },
@@ -31,9 +34,9 @@ export class UserService {
     if (!user.password) {
       user.password = '123456';
     }
-    const hashedPassword = await hash(user.password, 10);
-    user.password = hashedPassword;
-    return this.userRepository.create(user);
+    user.password = await hash(user.password, 10);
+    const newUser = this.userRepository.create({ ...user });
+    return this.userRepository.save(newUser);
   }
 
   async findByEmail(email: string): Promise<User | null> {
