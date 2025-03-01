@@ -3,9 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { DiagnosisModule } from './diagnosis/diagnosis.module';
-import { FileModule } from './file/file.module';
-import { KnowledgeModule } from './knowledge/knowledge.module';
 import { UserModule } from './user/user.module';
 import { ConfigEnum } from 'src/common/enum/config.enum';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -33,9 +30,6 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
     }),
     AuthModule,
     UserModule,
-    FileModule,
-    KnowledgeModule,
-    DiagnosisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
