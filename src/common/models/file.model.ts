@@ -10,7 +10,6 @@ import {
 } from 'sequelize-typescript';
 import { DatasetFiles } from './dataset_files.model';
 import { Datasets } from './datasets.model';
-import { ModelFiles } from './model_files';
 import { User } from './user.model';
 
 @Table({ tableName: 'file', timestamps: true })
@@ -108,7 +107,4 @@ export class File extends Model<File> {
 
   @BelongsToMany(() => Datasets, 'dataset_files', 'file_id', 'dataset_id')
   dataset_id_datasets!: Datasets[];
-
-  @HasMany(() => ModelFiles, 'file_id')
-  model_files!: ModelFiles[];
 }
