@@ -106,6 +106,7 @@ export class FileController {
           cb(null, 'uploads/chunks');
         },
         filename: (req, file, cb) => {
+          // @ts-ignore //FIXME
           const { task_id, chunkIndex } = req.body;
           if (!task_id || !chunkIndex) {
             return cb(

@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { ConfigEnum } from 'src/common/enum/config.enum';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
-import { ConfigEnum } from 'src/common/enum/config.enum';
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { File } from './file/file.entity';
+import { FileModule } from './file/file.module';
+import { Role } from './role/role.entity';
 import { RoleModule } from './role/role.module';
 import { User } from './user/user.entity';
-import { Role } from './role/role.entity';
-import { FileModule } from './file/file.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { FileModule } from './file/file.module';
           username: configService.get(ConfigEnum.DB_USERNAME),
           password: configService.get(ConfigEnum.DB_PASSWORD),
           database: configService.get(ConfigEnum.DB_DATABASE),
-          entities: [User, Role],
+          entities: [User, Role, File],
           synchronize: configService.get(ConfigEnum.DB_SYNC),
           logging: process.env.NODE_ENV === 'development',
         }) as TypeOrmModuleOptions,
