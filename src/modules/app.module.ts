@@ -13,6 +13,8 @@ import { Role } from './role/role.entity';
 import { RoleModule } from './role/role.module';
 import { User } from './user/user.entity';
 import { UserModule } from './user/user.module';
+import { MenuModule } from './menu/menu.module';
+import { Menu } from './menu/menu.entity';
 
 @Module({
   imports: [
@@ -30,7 +32,7 @@ import { UserModule } from './user/user.module';
           username: configService.get(ConfigEnum.DB_USERNAME),
           password: configService.get(ConfigEnum.DB_PASSWORD),
           database: configService.get(ConfigEnum.DB_DATABASE),
-          entities: [User, Role, File, Dataset],
+          entities: [User, Role, File, Dataset, Menu],
           synchronize: configService.get(ConfigEnum.DB_SYNC),
           logging: process.env.NODE_ENV === 'development',
         }) as TypeOrmModuleOptions,
@@ -40,6 +42,7 @@ import { UserModule } from './user/user.module';
     RoleModule,
     FileModule,
     DatasetModule,
+    MenuModule,
   ],
   controllers: [AppController],
   providers: [AppService],
