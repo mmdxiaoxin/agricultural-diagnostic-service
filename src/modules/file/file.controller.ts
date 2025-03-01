@@ -1,3 +1,8 @@
+import { Roles } from '@/common/decorator/roles.decorator';
+import { Role } from '@/common/enum/role.enum';
+import { AuthGuard } from '@/common/guards/auth.guard';
+import { FileGuard, FilesGuard } from '@/common/guards/file.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
 import {
   Body,
   Controller,
@@ -14,9 +19,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { FileService } from './file.service'; // 假设你的文件处理逻辑在文件服务中
-import { FileGuard, FilesGuard } from '@/common/guards/file.guard';
 
 @Controller('file')
+@Roles(Role.Admin, Role.Expert)
+@UseGuards(AuthGuard, RolesGuard)
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
@@ -125,14 +131,14 @@ export class FileController {
 
   // 文件下载
   @Get('download/:fileId')
-  @UseGuards(FileGuard) // Assuming checkFileAccess is a guard
+  @UseGuards(FileGuard)
   async downloadFile(@Param('fileId') fileId: string) {
     // return this.fileService.downloadFile(fileId);
   }
 
   // 批量文件下载
   @Post('download')
-  @UseGuards(FilesGuard) // Assuming checkFilesAccess is a guard
+  @UseGuards(FilesGuard)
   async downloadFiles(@Body() fileIds: string[]) {
     // return this.fileService.downloadFiles(fileIds);
   }
