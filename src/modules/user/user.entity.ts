@@ -1,12 +1,9 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
+  JoinTable,
   ManyToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Role } from '../role/role.entity';
 
@@ -25,7 +22,7 @@ export class User {
   password: string;
 
   @ManyToMany(() => Role, (role) => role.users)
-  @JoinColumn({ name: 'role_id' })
+  @JoinTable({ name: 'users_roles' })
   roles: Role[];
 
   @Column({ type: 'tinyint', default: 0 })
@@ -40,10 +37,10 @@ export class User {
   @Column({ type: 'varchar', length: 255, nullable: true })
   address: string | null;
 
-  @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @UpdateDateColumn({
+  @Column({
     type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
