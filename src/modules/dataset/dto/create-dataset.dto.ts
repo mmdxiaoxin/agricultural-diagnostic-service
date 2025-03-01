@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsArray } from 'class-validator';
 
 export class CreateDatasetDto {
   @IsString()
@@ -7,4 +7,10 @@ export class CreateDatasetDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsArray({
+    message: 'fileIds must be an array of numbers',
+  })
+  fileIds?: number[];
 }
