@@ -23,7 +23,7 @@ export class AuthService {
     if (!user) {
       throw new ForbiddenException('账号或密码错误');
     }
-    if (user.status === false) {
+    if (user.status === 0) {
       throw new ForbiddenException('账号未激活或已经被禁用');
     }
     const isValid = await compare(password, user.password);
@@ -33,7 +33,7 @@ export class AuthService {
     return this.jwt.sign({
       userId: user.id,
       username: user.username,
-      roles: user.roles.map((role) => role.name),
+      roles: user.roles?.map((role) => role.name),
     });
   }
 }

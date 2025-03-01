@@ -26,7 +26,7 @@ export class User {
   roles: Role[];
 
   @Column({ type: 'tinyint', default: 0 })
-  status: boolean;
+  status: 0 | 1;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   name: string | null;
