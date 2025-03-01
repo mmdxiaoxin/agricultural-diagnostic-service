@@ -1,29 +1,28 @@
-import { LoggerService } from '@nestjs/common';
+// http-exception.filter.ts
 import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
+import { Response } from 'express';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
-  constructor(private logger: LoggerService) {}
-  async catch(exception: HttpException, host: ArgumentsHost) {
+  catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    // 响应 请求对象
-    const response = ctx.getResponse();
-    // const request = Pctx.getRequest();
-    // http状态码
+    const response = ctx.getResponse<Response>();
     const status = exception.getStatus();
-    this.logger.error(exception.message, exception.stack);
+    const responseBody = exception.getResponse() as any;
+
+    // 可以通过传递的错误对象设置不同的 code 和 message
+    const code = responseBody.code || status; // 如果没有自定义 code，就使用 HTTP 状态码
+    const message = responseBody.message || 'An error occurred';
+
     response.status(status).json({
-      code: status,
-      timestamp: new Date().toISOString(),
-      // path: request.url,
-      // method: request.method,
-      message: exception.message || exception.name,
+      code, // 错误代码（可以根据需要自定义）
+      data: null, // 错误时数据为 null
+      message,
     });
-    // throw new Error('Method not implemented.');
   }
 }
