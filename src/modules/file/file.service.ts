@@ -1,9 +1,9 @@
+import { UserPayload } from '@/common/guards/auth.guard';
+import { getFileType } from '@/common/utils';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { File as FileEntity } from './file.entity';
-import { UserPayload } from '@/common/guards/auth.guard';
-import { getFileType } from '@/common/utils';
 
 @Injectable()
 export class FileService {
@@ -25,15 +25,19 @@ export class FileService {
   }
 
   async computeFileSizeByType(createdBy: number, fileTypes: string[]) {
-    return this.fileRepository
+    const queryBuilder = this.fileRepository
       .createQueryBuilder('file')
       .select([
         'SUM(file.fileSize) AS used',
         'MAX(file.updatedAt) AS last_updated',
       ])
-      .where('file.createdBy = :createdBy', { createdBy })
-      .andWhere('file.fileType IN (:...fileTypes)', { fileTypes })
-      .getRawOne();
+      .where('file.createdBy = :createdBy', { createdBy });
+
+    if (fileTypes.length > 0) {
+      queryBuilder.andWhere('file.fileType IN (:...fileTypes)', { fileTypes });
+    }
+
+    return queryBuilder.getRawOne();
   }
 
   async computeDiskUsage(user: UserPayload) {
@@ -49,8 +53,8 @@ export class FileService {
     const docTypes = getFileType('application');
     const otherTypes = getFileType('other');
 
-    const [total, images, videos, apps, audios, docs, others] =
-      await Promise.all([
+    try {
+      const [total, image, video, app, audio, docs, other] = await Promise.all([
         this.computeFileSizeByType(createdBy, []),
         this.computeFileSizeByType(createdBy, imageTypes),
         this.computeFileSizeByType(createdBy, videoTypes),
@@ -60,14 +64,17 @@ export class FileService {
         this.computeFileSizeByType(createdBy, otherTypes),
       ]);
 
-    return {
-      total,
-      images,
-      videos,
-      apps,
-      audios,
-      docs,
-      others,
-    };
+      return {
+        total: total || { used: 0, last_updated: null },
+        image: image || { used: 0, last_updated: null },
+        video: video || { used: 0, last_updated: null },
+        app: app || { used: 0, last_updated: null },
+        audio: audio || { used: 0, last_updated: null },
+        docs: docs || { used: 0, last_updated: null },
+        other: other || { used: 0, last_updated: null },
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('获取文件空间信息失败: ' + error);
+    }
   }
 }

@@ -8,6 +8,7 @@ import {
   Controller,
   Delete,
   Get,
+  InternalServerErrorException,
   Param,
   Post,
   Put,
@@ -31,12 +32,16 @@ export class FileController {
   @Get('disk-usage')
   async getSpaceInfo(@Req() req) {
     const user = req.user;
-    const data = this.fileService.computeDiskUsage(user);
-    return {
-      code: 200,
-      data,
-      message: '获取文件空间信息成功',
-    };
+    try {
+      const data = await this.fileService.computeDiskUsage(user);
+      return {
+        code: 200,
+        data,
+        message: '获取文件空间信息成功',
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
   // 获取文件列表
