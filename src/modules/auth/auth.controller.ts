@@ -29,14 +29,4 @@ export class AuthController {
       message: '登录成功',
     };
   }
-
-  @Post('route')
-  @HttpCode(HttpStatus.OK)
-  async getRoute() {
-    return {
-      code: 200,
-      data: {},
-      message: '登录成功',
-    };
-  }
 }
