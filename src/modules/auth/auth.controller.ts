@@ -1,10 +1,8 @@
-import { Body, Controller, Post, UseFilters } from '@nestjs/common';
-import { TypeormFilter } from 'src/common/filters/typeorm.filter';
-import { AuthService } from './auth.service';
+import { Body, Controller, Post } from '@nestjs/common';
 import { RegisterDto } from './auth.dto';
+import { AuthService } from './auth.service';
 
 @Controller('auth')
-@UseFilters(new TypeormFilter())
 export class AuthController {
   constructor(private authService: AuthService) {}
 

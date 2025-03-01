@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash } from 'bcryptjs';
 import { In, Repository } from 'typeorm';
@@ -14,12 +18,15 @@ export class UserService {
 
   async create(user: Partial<User>) {
     if (!user.email) {
-      throw new Error('Parameters');
+      throw new BadRequestException('缺少邮箱参数');
     }
     if (!user.roles) {
-      const role = (await this.roleRepository.findOne({
+      const role = await this.roleRepository.findOne({
         where: { name: 'user' },
-      })) as Role;
+      });
+      if (!role) {
+        throw new InternalServerErrorException('user角色未创建');
+      }
       user.roles = [role];
     }
     if (user.roles instanceof Array && typeof user.roles[0] === 'number') {
