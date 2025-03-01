@@ -1,7 +1,8 @@
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
+import { UserPayload } from '@/common/guards/auth.guard';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigEnum } from 'src/common/enum/config.enum';
 
 @Injectable()
@@ -14,9 +15,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
-    // req.user
-    // cache中的token
-    return { userId: payload.sub, username: payload.username };
+  async validate(payload: UserPayload) {
+    return {
+      userId: payload.userId,
+      username: payload.username,
+      roles: payload.roles,
+    };
   }
 }
