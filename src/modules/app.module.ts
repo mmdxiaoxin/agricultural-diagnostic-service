@@ -8,6 +8,7 @@ import { DiagnosisModule } from './diagnosis/diagnosis.module';
 import { FileModule } from './file/file.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { UserModule } from './user/user.module';
+import { ConfigEnum } from 'src/common/enum/config.enum';
 
 @Module({
   imports: [
@@ -23,11 +24,11 @@ import { UserModule } from './user/user.module';
     SequelizeModule.forRootAsync({
       useFactory: async (configService: ConfigService) => ({
         dialect: 'mysql',
-        host: configService.get<string>('MYSQL_HOST', 'localhost'),
-        port: 3306,
-        username: configService.get<string>('MYSQL_USER'),
-        password: configService.get<string>('MYSQL_PASSWORD'),
-        database: configService.get<string>('MYSQL_DATABASE'),
+        host: configService.get(ConfigEnum.DB_HOST),
+        port: configService.get(ConfigEnum.DB_PORT),
+        username: configService.get(ConfigEnum.DB_USERNAME),
+        password: configService.get(ConfigEnum.DB_PASSWORD),
+        database: configService.get(ConfigEnum.DB_DATABASE),
         autoLoadModels: true,
         synchronize: true,
       }),
