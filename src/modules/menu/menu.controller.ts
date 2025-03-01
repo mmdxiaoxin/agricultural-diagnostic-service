@@ -12,6 +12,7 @@ import {
   Post,
   Put,
   Req,
+  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import { Menu } from './menu.entity';
@@ -19,9 +20,11 @@ import { MenuService } from './menu.service';
 import { Roles } from '@/common/decorator/roles.decorator';
 import { Role } from '@/common/enum/role.enum';
 import { RolesGuard } from '@/common/guards/roles.guard';
+import { TypeormFilter } from '@/common/filters/typeorm.filter';
 
 @Controller('menu')
 @UseGuards(AuthGuard)
+@UseFilters(TypeormFilter)
 export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 

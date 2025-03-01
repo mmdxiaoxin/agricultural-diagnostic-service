@@ -6,12 +6,15 @@ import {
   Delete,
   Param,
   Body,
+  UseFilters,
 } from '@nestjs/common';
 import { DatasetService } from './dataset.service';
 import { CreateDatasetDto } from './dto/create-dataset.dto';
 import { UpdateDatasetDto } from './dto/update-dataset.dto';
+import { TypeormFilter } from '@/common/filters/typeorm.filter';
 
 @Controller('dataset')
+@UseFilters(TypeormFilter)
 export class DatasetController {
   constructor(private readonly datasetService: DatasetService) {}
 

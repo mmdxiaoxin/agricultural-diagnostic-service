@@ -1,5 +1,6 @@
 import { Roles } from '@/common/decorator/roles.decorator';
 import { Role } from '@/common/enum/role.enum';
+import { TypeormFilter } from '@/common/filters/typeorm.filter';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import {
@@ -11,17 +12,19 @@ import {
   Post,
   Put,
   UploadedFile,
+  UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import { diskStorage } from 'multer';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 @Controller('user')
 @UseGuards(AuthGuard)
+@UseFilters(TypeormFilter)
 export class UserController {
   // 获取个人信息
   @Get('profile')

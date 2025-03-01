@@ -14,6 +14,7 @@ import {
   Put,
   Req,
   UploadedFile,
+  UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -21,10 +22,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { FileService } from './file.service'; // 假设你的文件处理逻辑在文件服务中
+import { TypeormFilter } from '@/common/filters/typeorm.filter';
 
 @Controller('file')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
+@UseFilters(TypeormFilter)
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
