@@ -12,7 +12,6 @@ import { Request } from 'express';
 interface CustomRequest extends Request<any> {
   params: { fileId: number };
   body: { file_ids: number[] };
-  user?: { userId: number };
 }
 
 @Injectable()
