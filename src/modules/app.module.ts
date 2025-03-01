@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ConfigEnum } from 'src/common/enum/config.enum';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { RoleModule } from './role/role.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
     }),
     AuthModule,
     UserModule,
+    RoleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -7,7 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Role } from './role.entity'; // 假设你有一个 Role 实体
+import { Role } from '../role/role.entity';
 
 @Entity('user')
 export class User {
