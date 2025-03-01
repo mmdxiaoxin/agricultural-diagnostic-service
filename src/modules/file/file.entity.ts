@@ -1,4 +1,11 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Dataset } from '../dataset/dataset.entity';
 
 @Entity('file')
 @Index('file_user_id_fk', ['createdBy'])
@@ -46,4 +53,8 @@ export class File {
 
   @Column({ type: 'int', default: 1 })
   version: number;
+
+  // 多对多关系：一个 File 可能属于多个 Dataset
+  @ManyToMany(() => Dataset, (dataset) => dataset.files)
+  datasets: Dataset[];
 }

@@ -5,6 +5,8 @@ import { ConfigEnum } from 'src/common/enum/config.enum';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { Dataset } from './dataset/dataset.entity';
+import { DatasetModule } from './dataset/dataset.module';
 import { File } from './file/file.entity';
 import { FileModule } from './file/file.module';
 import { Role } from './role/role.entity';
@@ -28,7 +30,7 @@ import { UserModule } from './user/user.module';
           username: configService.get(ConfigEnum.DB_USERNAME),
           password: configService.get(ConfigEnum.DB_PASSWORD),
           database: configService.get(ConfigEnum.DB_DATABASE),
-          entities: [User, Role, File],
+          entities: [User, Role, File, Dataset],
           synchronize: configService.get(ConfigEnum.DB_SYNC),
           logging: process.env.NODE_ENV === 'development',
         }) as TypeOrmModuleOptions,
@@ -37,6 +39,7 @@ import { UserModule } from './user/user.module';
     UserModule,
     RoleModule,
     FileModule,
+    DatasetModule,
   ],
   controllers: [AppController],
   providers: [AppService],
