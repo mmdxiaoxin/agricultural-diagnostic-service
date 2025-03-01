@@ -9,6 +9,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { RoleModule } from './role/role.module';
 import { User } from './user/user.entity';
 import { Role } from './role/role.entity';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { Role } from './role/role.entity';
     AuthModule,
     UserModule,
     RoleModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
