@@ -1,5 +1,6 @@
 import { FileService } from '@/modules/file/file.service';
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
@@ -25,7 +26,7 @@ export class FileGuard implements CanActivate {
 
     const file = await this.fileService.findById(fileId);
     if (!file) {
-      throw new NotFoundException('File not found.');
+      throw new NotFoundException('没有找到文件.');
     }
 
     if (
@@ -35,7 +36,7 @@ export class FileGuard implements CanActivate {
       return true;
     }
 
-    throw new ForbiddenException('Access denied.');
+    throw new ForbiddenException('当前文件无权限访问.');
   }
 }
 
@@ -49,12 +50,12 @@ export class FilesGuard implements CanActivate {
     const userId = request.user?.userId;
 
     if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
-      throw new ForbiddenException('Invalid file_ids parameter');
+      throw new BadRequestException('非法参数');
     }
 
     const files = await this.fileService.findByIds(fileIds);
     if (files.length !== fileIds.length) {
-      throw new NotFoundException('Some files not found.');
+      throw new NotFoundException('有文件不存在.');
     }
 
     for (const file of files) {
@@ -64,7 +65,7 @@ export class FilesGuard implements CanActivate {
       ) {
         continue;
       }
-      throw new ForbiddenException('Access denied.');
+      throw new ForbiddenException('您无权操作.');
     }
 
     return true;
