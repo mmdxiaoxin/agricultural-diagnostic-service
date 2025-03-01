@@ -1,13 +1,7 @@
-import {
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Post,
-  UseInterceptors,
-} from '@nestjs/common';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -32,6 +26,16 @@ export class AuthController {
     return {
       code: 200,
       data: { token },
+      message: '登录成功',
+    };
+  }
+
+  @Post('route')
+  @HttpCode(HttpStatus.OK)
+  async getRoute() {
+    return {
+      code: 200,
+      data: {},
       message: '登录成功',
     };
   }
