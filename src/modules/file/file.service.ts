@@ -231,7 +231,15 @@ export class FileService {
       if (!file) {
         throw new NotFoundException('未找到文件');
       }
-      await this.fileOperationService.deleteFile(file.filePath);
+      // 检查是否有引用该文件
+      const referenceCount = await queryRunner.manager.count(TaskEntity, {
+        where: { fileMd5: file.fileMd5 },
+      });
+      if (referenceCount === 0) {
+        // 如果没有被引用，删除文件
+        await this.fileOperationService.deleteFile(file.filePath);
+      }
+      // 删除文件元数据
       await queryRunner.manager.delete(FileEntity, fileId);
       await queryRunner.commitTransaction();
     } catch (error) {
@@ -453,34 +461,21 @@ export class FileService {
       const finalPath = path.join(folder, storageFileName);
 
       // 合并文件分片，按顺序进行处理
-      const writeStream = fs.createWriteStream(finalPath);
-
-      // 逐个分片合并
+      const chunkPaths: string[] = [];
       for (let i = 1; i <= task.totalChunks; i++) {
         const chunkPath = path.join('uploads/chunks', `${task.fileMd5}-${i}`);
-        const chunk = fs.createReadStream(chunkPath);
-
-        // 按顺序写入文件流
-        await new Promise<void>((resolve, reject) => {
-          chunk.pipe(writeStream, { end: false }); // 不结束流
-          chunk.on('end', resolve);
-          chunk.on('error', reject);
-        });
+        chunkPaths.push(chunkPath);
       }
 
-      // 完成文件合并，手动结束写流
-      await new Promise((resolve, reject) => {
-        writeStream.end();
-        writeStream.on('finish', () => resolve(null));
-        writeStream.on('error', reject);
-      });
+      // 使用 Promise.all 并行合并分片
+      await Promise.all(
+        chunkPaths.map((chunkPath) => this.mergeChunks(chunkPath, finalPath)),
+      );
 
       // 删除分片文件
-      const chunkDeletionPromises: Promise<void>[] = [];
-      for (let i = 1; i <= task.totalChunks; i++) {
-        const chunkPath = path.join('uploads/chunks', `${task.fileMd5}-${i}`);
-        chunkDeletionPromises.push(fs.promises.unlink(chunkPath));
-      }
+      const chunkDeletionPromises = chunkPaths.map((chunkPath) =>
+        fs.promises.unlink(chunkPath),
+      );
       await Promise.all(chunkDeletionPromises);
 
       // 更新任务状态
@@ -521,6 +516,19 @@ export class FileService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  // 合并分片文件
+  private mergeChunks(chunkPath: string, finalPath: string) {
+    return new Promise<void>((resolve, reject) => {
+      const chunkStream = fs.createReadStream(chunkPath);
+      const writeStream = fs.createWriteStream(finalPath, { flags: 'a' }); // 追加模式
+      chunkStream.pipe(writeStream, { end: false }); // 不结束流
+      chunkStream.on('end', resolve);
+      chunkStream.on('error', reject);
+      writeStream.on('finish', resolve);
+      writeStream.on('error', reject);
+    });
   }
 
   async getUploadTaskStatus(taskId: number) {
