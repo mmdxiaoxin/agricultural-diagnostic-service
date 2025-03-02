@@ -1,3 +1,4 @@
+import { formatResponse } from '@/common/helpers/response.helper';
 import {
   BadRequestException,
   Injectable,
@@ -11,9 +12,9 @@ import { Request } from 'express';
 import { unlink } from 'fs';
 import { DataSource, In, Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { Profile } from './models/profile.entity';
 import { User } from './models/user.entity';
-import { formatResponse } from '@/common/helpers/response.helper';
 
 @Injectable()
 export class UserService {
@@ -85,24 +86,44 @@ export class UserService {
     // 避免返回敏感数据
     const { password, ...userData } = user;
 
-    return userData;
+    return formatResponse(200, userData, '用户信息获取成功');
   }
 
   async userDelete(id: string) {
-    const user = await this.userRepository.findOne({
-      where: { id: Number(id) },
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!user) {
-      throw new NotFoundException('用户未找到');
+    try {
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: Number(id) },
+      });
+
+      if (!user) {
+        throw new NotFoundException('用户未找到');
+      }
+
+      // 删除用户的 Profile 数据
+      await queryRunner.manager.delete(Profile, { user });
+
+      // 删除用户
+      await queryRunner.manager.remove(User, user);
+
+      // 提交事务
+      await queryRunner.commitTransaction();
+
+      return { message: '用户及相关数据已删除' };
+    } catch (error) {
+      // 回滚事务
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException('删除用户失败');
+    } finally {
+      // 释放 queryRunner
+      await queryRunner.release();
     }
-
-    // 删除用户时，可以选择同时删除与之相关的 Profile 等数据
-    await this.userRepository.remove(user);
-    return { message: '用户已删除' };
   }
 
-  async userUpdate(id: string, updateUserDto: any) {
+  async userUpdate(id: string, updateUserDto: UpdateUserDto) {
     const user = await this.userRepository.findOne({
       where: { id: Number(id) },
     });
@@ -122,11 +143,8 @@ export class UserService {
       user.roles = roles;
     }
 
-    const updatedUser = await this.userRepository.save(user);
-    // 避免返回敏感信息
-    const { password, ...userData } = updatedUser;
-
-    return userData;
+    await this.userRepository.save(user);
+    return formatResponse(200, null, '用户信息更新成功');
   }
 
   async userReset(id: string, newPassword?: string) {
@@ -141,13 +159,8 @@ export class UserService {
     // 密码加密
     const hashedPassword = await hash(newPassword || '123456', 10);
     user.password = hashedPassword;
-
-    const updatedUser = await this.userRepository.save(user);
-
-    // 避免返回敏感信息
-    const { password, ...userData } = updatedUser;
-
-    return formatResponse(200, userData, '用户信息获取成功');
+    await this.userRepository.save(user);
+    return formatResponse(200, null, '用户密码重置成功');
   }
 
   async getProfile(id: number, req: Request) {

@@ -31,14 +31,15 @@ import { extname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdatePasswordDto } from './dto/change-pass.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ResetPasswordDto } from './dto/reset-pass.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './models/user.entity';
 import {
   AvatarSizeValidationPipe,
   AvatarTypeValidationPipe,
 } from './pipe/avatar.pipe';
 import { UserService } from './user.service';
-import { ResetPasswordDto } from './dto/reset-pass.dto';
 
 @Controller('user')
 @UseGuards(AuthGuard)
@@ -170,6 +171,7 @@ export class UserController {
   @Delete(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async userDelete(@Param('id') id: string) {
     return this.userService.userDelete(id);
   }
@@ -178,7 +180,10 @@ export class UserController {
   @Put(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async userUpdate(@Param('id') id: string, @Body() updateUserDto: any) {
+  async userUpdate(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return this.userService.userUpdate(id, updateUserDto);
   }
 
