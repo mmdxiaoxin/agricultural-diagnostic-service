@@ -3,6 +3,7 @@ import { Role } from '@/common/enum/role.enum';
 import { TypeormFilter } from '@/common/filters/typeorm.filter';
 import { AuthGuard, UserPayload } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
+import { formatResponse } from '@/common/helpers/response.helper';
 import {
   Body,
   Controller,
@@ -22,8 +23,8 @@ import fs from 'fs';
 import { diskStorage } from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserService } from './user.service';
-import { formatResponse } from '@/common/helpers/response.helper';
 
 @Controller('user')
 @UseGuards(AuthGuard)
@@ -33,14 +34,26 @@ export class UserController {
   // 获取个人信息
   @Get('profile')
   async profileGet(@Req() req: { user: UserPayload }) {
-    const profile = await this.userService.getProfile(req.user.userId);
-    return formatResponse(200, profile, '个人信息获取成功');
+    try {
+      const profile = await this.userService.getProfile(req.user.userId);
+      return formatResponse(200, profile, '个人信息获取成功');
+    } catch (error) {
+      throw error;
+    }
   }
 
   // 更新个人信息
   @Put('profile')
-  async profileUpdate(@Body() updateProfileDto: any) {
-    return 'Update user profile';
+  async profileUpdate(
+    @Req() req: { user: UserPayload },
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
+    try {
+      await this.userService.updateProfile(req.user.userId, updateProfileDto);
+      return formatResponse(200, null, '个人信息更新成功');
+    } catch (error) {
+      throw error;
+    }
   }
 
   // 上传个人头像

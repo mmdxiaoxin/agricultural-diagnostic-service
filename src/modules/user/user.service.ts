@@ -71,6 +71,26 @@ export class UserService {
     };
   }
 
+  async updateProfile(userId: number, profile: Partial<Profile>) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+
+    let userProfile = await this.profileRepository.findOne({
+      where: { user },
+    });
+
+    if (!userProfile) {
+      userProfile = new Profile();
+      userProfile.user = user;
+    }
+
+    Object.assign(userProfile, profile);
+
+    return this.profileRepository.save(userProfile);
+  }
+
   async findByLogin(login: string): Promise<User | null> {
     return this.userRepository
       .createQueryBuilder('user')
