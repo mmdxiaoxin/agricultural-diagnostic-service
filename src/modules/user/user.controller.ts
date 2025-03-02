@@ -9,6 +9,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
@@ -19,11 +21,15 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import fs from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
-import path from 'path';
+import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import {
+  AvatarSizeValidationPipe,
+  AvatarTypeValidationPipe,
+} from './pipe/avatar.pipe';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -58,25 +64,38 @@ export class UserController {
 
   // 上传个人头像
   @Post('avatar')
+  @HttpCode(HttpStatus.OK)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
         destination: (req, file, cb) => {
-          if (!fs.existsSync('uploads/avatar')) {
-            fs.mkdirSync('uploads/avatar', { recursive: true });
+          if (!existsSync('uploads/avatar')) {
+            mkdirSync('uploads/avatar', { recursive: true });
           }
           cb(null, 'uploads/avatar');
         },
         filename: (req, file, cb) => {
           const uniquePrefix = uuidv4();
-          const fileExtension = path.extname(file.originalname);
+          const fileExtension = extname(file.originalname);
           cb(null, `${uniquePrefix}${fileExtension}`);
         },
       }),
     }),
   )
-  async uploadAvatar(@UploadedFile() file: Express.Multer.File) {
-    return 'Avatar uploaded';
+  async uploadAvatar(
+    @Req() req: { user: UserPayload },
+    @UploadedFile(
+      new AvatarSizeValidationPipe(),
+      new AvatarTypeValidationPipe(),
+    )
+    file: Express.Multer.File,
+  ) {
+    try {
+      await this.userService.updateAvatar(req.user.userId, file);
+      return formatResponse(HttpStatus.OK, null, '头像上传成功');
+    } catch (error) {
+      throw error;
+    }
   }
 
   // 获取个人头像

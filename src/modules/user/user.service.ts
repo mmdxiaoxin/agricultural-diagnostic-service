@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash } from 'bcryptjs';
-import { In, Repository } from 'typeorm';
+import { unlink } from 'fs';
+import { DataSource, In, Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
 import { Profile } from './profile.entity';
 import { User } from './user.entity';
@@ -17,6 +18,7 @@ export class UserService {
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
     @InjectRepository(Profile)
     private readonly profileRepository: Repository<Profile>,
+    private dataSource: DataSource,
   ) {}
 
   async create(user: Partial<User>) {
@@ -89,6 +91,57 @@ export class UserService {
     Object.assign(userProfile, profile);
 
     return this.profileRepository.save(userProfile);
+  }
+
+  async updateAvatar(userId: number, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('缺少文件参数或上传失败');
+    }
+
+    // 创建 queryRunner 进行事务管理
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: userId },
+      });
+      if (!user) {
+        throw new BadRequestException('用户不存在');
+      }
+
+      let profile = await queryRunner.manager.findOne(Profile, {
+        where: { user },
+      });
+
+      if (!profile) {
+        profile = new Profile();
+        profile.user = user;
+      } else if (profile.avatar) {
+        // **不能直接使用 fs.unlinkSync，因为事务可能回滚**
+        unlink(profile.avatar, (err) => {
+          if (err) console.error('删除旧头像失败:', err);
+        });
+      }
+
+      profile.avatar = file.path;
+
+      // 使用事务管理器保存
+      await queryRunner.manager.save(profile);
+
+      // 提交事务
+      await queryRunner.commitTransaction();
+
+      return profile;
+    } catch (error) {
+      // 发生错误时回滚
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // 释放 queryRunner
+      await queryRunner.release();
+    }
   }
 
   async findByLogin(login: string): Promise<User | null> {
