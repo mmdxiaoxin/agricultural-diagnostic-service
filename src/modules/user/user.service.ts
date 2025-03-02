@@ -8,8 +8,9 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash } from 'bcryptjs';
-import { Request } from 'express';
 import { unlink } from 'fs';
+import { readFile } from 'fs/promises';
+import { extname } from 'path';
 import { DataSource, In, Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -160,7 +161,7 @@ export class UserService {
     return formatResponse(200, null, '用户密码重置成功');
   }
 
-  async getProfile(id: number, req: Request) {
+  async profileGet(id: number) {
     const user = await this.findById(id);
     if (!user) {
       throw new BadRequestException('用户不存在');
@@ -176,18 +177,30 @@ export class UserService {
       await this.profileRepository.save(profile);
     }
 
-    let avatarUrl: string | null = null;
+    let avatarBase64: string | null = null;
     if (profile.avatar) {
-      const token = this.jwt.sign({ userId: user.id });
-      const serverUrl = `${req.protocol}://${req.get('host')}`; // 动态获取服务器地址
-      avatarUrl = `${serverUrl}/user/avatar/${token}`;
+      // 获取头像的绝对路径
+      const avatarPath = profile.avatar;
+
+      try {
+        // 读取头像文件并转为 Base64
+        const avatarBuffer = await readFile(avatarPath);
+        // 获取文件的扩展名
+        const fileExtension = extname(profile.avatar).toLowerCase();
+        // 根据文件扩展名设置 MIME 类型
+        const mimeType = fileExtension === '.png' ? 'image/png' : 'image/jpeg';
+        // 转换为 Base64 字符串
+        avatarBase64 = `data:${mimeType};base64,${avatarBuffer.toString('base64')}`;
+      } catch (err) {
+        console.error('读取头像文件出错:', err);
+      }
     }
 
     return formatResponse(
       200,
       {
         ...profile,
-        avatar: avatarUrl,
+        avatar: avatarBase64,
         ...user,
         password: undefined,
       },
@@ -195,25 +208,19 @@ export class UserService {
     );
   }
 
-  async getAvatar(token: string) {
-    try {
-      const payload = this.jwt.verify(token);
-      const user = await this.findById(payload.userId);
-      if (!user) {
-        throw new BadRequestException('无效的用户');
-      }
-
-      const profile = await this.profileRepository.findOne({ where: { user } });
-      if (!profile || !profile.avatar) {
-        throw new NotFoundException('用户头像不存在');
-      }
-      return profile.avatar;
-    } catch (error) {
-      throw new BadRequestException('无效或过期的 token');
+  async getAvatar(userId: number) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new BadRequestException('无效的用户');
     }
+    const profile = await this.profileRepository.findOne({ where: { user } });
+    if (!profile || !profile.avatar) {
+      return null;
+    }
+    return profile.avatar;
   }
 
-  async updateProfile(userId: number, profile: Partial<Profile>) {
+  async profileUpdate(userId: number, profile: Partial<Profile>) {
     const user = await this.findById(userId);
     if (!user) {
       throw new BadRequestException('用户不存在');

@@ -50,7 +50,7 @@ export class UserController {
   // 获取个人信息
   @Get('profile')
   async profileGet(@Req() req: Request) {
-    return this.userService.getProfile(req.user.userId, req);
+    return this.userService.profileGet(req.user.userId);
   }
 
   // 更新个人信息
@@ -59,7 +59,7 @@ export class UserController {
     @Req() req: Request,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    return this.userService.updateProfile(req.user.userId, updateProfileDto);
+    return this.userService.profileUpdate(req.user.userId, updateProfileDto);
   }
 
   // 上传个人头像
@@ -94,15 +94,19 @@ export class UserController {
   }
 
   // 获取个人头像
-  @Get('avatar/:token')
-  async getAvatar(@Param('token') token: string, @Res() res: Response) {
-    const avatarPath = await this.userService.getAvatar(token);
-    const filePath = join(process.cwd(), avatarPath);
-    if (!existsSync(filePath)) {
-      throw new BadRequestException('头像文件不存在');
+  @Get('avatar')
+  async getAvatar(@Req() req: Request, @Res() res: Response) {
+    const avatarPath = await this.userService.getAvatar(req.user.userId);
+    if (avatarPath) {
+      const filePath = join(process.cwd(), avatarPath);
+      if (!existsSync(filePath)) {
+        throw new BadRequestException('头像文件不存在');
+      }
+      // 以文件流方式返回头像
+      return res.sendFile(filePath);
+    } else {
+      return formatResponse(404, null, '头像不存在');
     }
-    // 以文件流方式返回头像
-    return res.sendFile(filePath);
   }
 
   // 修改密码
