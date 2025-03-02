@@ -2,13 +2,19 @@ import {
   ArrayMinSize,
   IsArray,
   IsEmail,
-  IsNumber,
+  IsEnum,
   IsObject,
   IsOptional,
   IsString,
   Length,
 } from 'class-validator';
 import { Profile } from '../models/profile.entity';
+
+// 状态的枚举
+enum UserStatus {
+  ACTIVE = 1,
+  INACTIVE = 0,
+}
 
 export class CreateUserDto {
   @IsOptional()
@@ -21,19 +27,21 @@ export class CreateUserDto {
   username?: string;
 
   @IsOptional()
-  @IsString({ message: '密码必顼为字符串类型！' })
+  @IsString({ message: '密码必须为字符串类型！' })
   @Length(6, 20, { message: '密码长度必须为6-20位！' })
   password?: string;
 
   @IsOptional()
-  @IsNumber({}, { message: '状态必须为数字类型！' })
-  status?: 0 | 1;
+  @IsEnum(UserStatus, { message: '状态值只能是 0 或 1' })
+  status?: UserStatus; // 使用枚举来限制状态值
 
   @IsOptional()
   @IsArray({ message: '角色必须是数组！' })
   @ArrayMinSize(1, { message: '请至少选择一个角色！' })
   roles?: number[];
 
+  @IsOptional()
+  @IsObject({ message: 'Profile 必须为一个对象！' })
   @IsOptional()
   profile?: Profile;
 }
