@@ -8,9 +8,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
-import { unlink } from 'fs/promises';
+import * as fs from 'fs';
 import * as path from 'path';
 import { DataSource, In, Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { File as FileEntity } from './models/file.entity';
 import { Task as TaskEntity } from './models/task.entity';
@@ -221,7 +222,7 @@ export class FileService {
         '文件上传成功',
       );
     } catch (error) {
-      await unlink(file.path);
+      await fs.promises.unlink(file.path);
       throw error;
     }
   }
@@ -344,6 +345,106 @@ export class FileService {
         { taskId: task.id, status: 'uploading' },
         '任务创建成功',
       );
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async completeUpload(userId: number, taskId: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const task = await this.taskRepository.findOne({
+        where: { id: taskId },
+      });
+      if (!task) {
+        throw new NotFoundException('未找到上传任务');
+      }
+      if (task.status === 'completed') {
+        await queryRunner.rollbackTransaction();
+        return formatResponse(200, null, '当前任务已完成');
+      }
+      // 失败状态响应
+      if (task.status === 'failed') {
+        throw new InternalServerErrorException('当前任务失败，请重新上传');
+      }
+      // 任务未完成状态响应
+      if (task.uploadedChunks !== task.totalChunks) {
+        await queryRunner.rollbackTransaction();
+        return formatResponse(202, null, '当前任务还未完成');
+      }
+      // 分配目录
+      let folder = 'uploads/other'; // 默认存储在 "other" 文件夹
+      if (task.fileType.startsWith('image')) {
+        folder = 'uploads/images'; // 存储图片文件
+      } else if (task.fileType.startsWith('video')) {
+        folder = 'uploads/videos'; // 存储视频文件
+      } else if (task.fileType.startsWith('application')) {
+        folder = 'uploads/documents'; // 存储文档文件
+      } else if (task.fileType.startsWith('audio')) {
+        folder = 'uploads/audio'; // 存储音频文件
+      }
+      // 确保文件夹存在，如果没有则创建
+      if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder, { recursive: true });
+      }
+
+      const fileExtension = path.extname(task.fileName);
+      const storageFileName = `${uuidv4()}${fileExtension}`;
+      const finalPath = path.join(folder, storageFileName);
+      const writeStream = fs.createWriteStream(finalPath);
+
+      // 文件合并过程
+      for (let i = 1; i <= task.totalChunks; i++) {
+        const chunk = fs.createReadStream(
+          path.join('uploads/chunks', `${task.fileMd5}-${i}`),
+        );
+        chunk.pipe(writeStream, { end: false });
+        await new Promise((resolve, reject) => {
+          chunk.on('end', () => resolve(null));
+          chunk.on('error', reject);
+        });
+      }
+      // 响应给用户
+      writeStream.on('finish', async () => {
+        try {
+          // 删除临时分片文件
+          for (let i = 1; i <= task.totalChunks; i++) {
+            await fs.promises.unlink(
+              path.join('uploads/chunks', `${task.fileMd5}-${i}`),
+            );
+          }
+          task.status = 'completed';
+          task.fileSize = fs.statSync(finalPath).size;
+          await this.taskRepository.save(task);
+
+          const newFile = this.fileRepository.create({
+            originalFileName: task.fileName,
+            storageFileName: storageFileName,
+            filePath: finalPath,
+            fileSize: task.fileSize,
+            fileType: task.fileType,
+            fileMd5: task.fileMd5,
+            createdBy: userId,
+            updatedBy: userId,
+          });
+          await this.fileRepository.save(newFile);
+          await queryRunner.commitTransaction();
+
+          return formatResponse(
+            201,
+            null,
+            'File uploaded and merged successfully',
+          );
+        } catch (error) {
+          throw error;
+        }
+      });
+      writeStream.end();
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

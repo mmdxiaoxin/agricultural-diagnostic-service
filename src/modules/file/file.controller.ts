@@ -28,9 +28,11 @@ import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { UploadChunkDto } from './dto/chunk.dto';
+import { CompleteChunkDto } from './dto/complete-chunk.dto';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { FileService } from './file.service';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
+
 @Controller('file')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
@@ -139,8 +141,8 @@ export class FileController {
 
   // 合并分片
   @Post('upload/complete')
-  async completeUpload(@Body() taskDetails: any) {
-    // return this.fileService.completeUpload(taskDetails);
+  async completeUpload(@Req() req: Request, @Body() dto: CompleteChunkDto) {
+    return this.fileService.completeUpload(req.user.userId, dto.taskId);
   }
 
   // 文件分片上传
