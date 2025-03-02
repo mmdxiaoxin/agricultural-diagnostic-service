@@ -38,6 +38,7 @@ import {
   AvatarTypeValidationPipe,
 } from './pipe/avatar.pipe';
 import { UserService } from './user.service';
+import { ResetPasswordDto } from './dto/reset-pass.dto';
 
 @Controller('user')
 @UseGuards(AuthGuard)
@@ -132,7 +133,7 @@ export class UserController {
     @Query('phone') phone?: string,
     @Query('address') address?: string,
   ) {
-    return this.userService.getUserList(page, pageSize, {
+    return this.userService.userListGet(page, pageSize, {
       username,
       name,
       phone,
@@ -185,7 +186,10 @@ export class UserController {
   @Put(':id/reset/password')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async resetPassword(@Param('id') id: string, @Body() resetPasswordDto: any) {
-    return this.userService.resetPassword(id, resetPasswordDto);
+  async userReset(
+    @Param('id') id: string,
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ) {
+    return this.userService.userReset(id, resetPasswordDto.password);
   }
 }

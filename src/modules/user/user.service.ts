@@ -70,16 +70,19 @@ export class UserService {
   }
 
   async userGet(id: string) {
+    if (Number.isNaN(Number(id))) {
+      throw new BadRequestException('无效的用户 ID');
+    }
     const user = await this.userRepository.findOne({
       where: { id: Number(id) },
-      relations: ['profile', 'roles'], // 如果需要返回角色和个人资料
+      relations: ['profile', 'roles'],
     });
 
     if (!user) {
       throw new NotFoundException('用户未找到');
     }
 
-    // 避免返回敏感数据，如密码
+    // 避免返回敏感数据
     const { password, ...userData } = user;
 
     return userData;
@@ -126,7 +129,7 @@ export class UserService {
     return userData;
   }
 
-  async resetPassword(id: string, resetPasswordDto: any) {
+  async userReset(id: string, newPassword?: string) {
     const user = await this.userRepository.findOne({
       where: { id: Number(id) },
     });
@@ -136,7 +139,7 @@ export class UserService {
     }
 
     // 密码加密
-    const hashedPassword = await hash(resetPasswordDto.password, 10);
+    const hashedPassword = await hash(newPassword || '123456', 10);
     user.password = hashedPassword;
 
     const updatedUser = await this.userRepository.save(user);
@@ -282,7 +285,7 @@ export class UserService {
     return formatResponse(200, null, '密码修改成功');
   }
 
-  async getUserList(
+  async userListGet(
     page: number = 1,
     pageSize: number = 10,
     filters: {
