@@ -430,36 +430,36 @@ export class FileService {
       const storageFileName = `${uuidv4()}${fileExtension}`;
       const finalPath = path.join(folder, storageFileName);
 
-      // 合并文件分片
+      // 合并文件分片，按顺序进行处理
       const writeStream = fs.createWriteStream(finalPath);
-      let chunkPromises: Promise<void>[] = [];
+
+      // 逐个分片合并
       for (let i = 1; i <= task.totalChunks; i++) {
         const chunkPath = path.join('uploads/chunks', `${task.fileMd5}-${i}`);
         const chunk = fs.createReadStream(chunkPath);
-        chunk.pipe(writeStream, { end: false });
 
-        const chunkPromise = new Promise<void>((resolve, reject) => {
+        // 按顺序写入文件流
+        await new Promise<void>((resolve, reject) => {
+          chunk.pipe(writeStream, { end: false }); // 不结束流
           chunk.on('end', resolve);
           chunk.on('error', reject);
         });
-        chunkPromises.push(chunkPromise);
       }
 
-      // 等待所有分片合并完成
-      await Promise.all(chunkPromises);
-
-      // 在合并完成后继续执行
+      // 完成文件合并，手动结束写流
       await new Promise((resolve, reject) => {
+        writeStream.end();
         writeStream.on('finish', () => resolve(null));
         writeStream.on('error', reject);
       });
 
       // 删除分片文件
+      const chunkDeletionPromises: Promise<void>[] = [];
       for (let i = 1; i <= task.totalChunks; i++) {
-        await fs.promises.unlink(
-          path.join('uploads/chunks', `${task.fileMd5}-${i}`),
-        );
+        const chunkPath = path.join('uploads/chunks', `${task.fileMd5}-${i}`);
+        chunkDeletionPromises.push(fs.promises.unlink(chunkPath));
       }
+      await Promise.all(chunkDeletionPromises);
 
       // 更新任务状态
       task.status = 'completed';
@@ -484,15 +484,16 @@ export class FileService {
       await queryRunner.rollbackTransaction();
       if (task) {
         // 清理文件
+        const chunkDeletionPromises: Promise<void>[] = [];
         for (let i = 1; i <= task.totalChunks; i++) {
-          try {
-            await fs.promises.unlink(
-              path.join('uploads/chunks', `${task.fileMd5}-${i}`),
-            );
-          } catch (err) {
-            console.error(`Failed to delete chunk ${i}: ${err.message}`);
-          }
+          const chunkPath = path.join('uploads/chunks', `${task.fileMd5}-${i}`);
+          chunkDeletionPromises.push(
+            fs.promises.unlink(chunkPath).catch((err) => {
+              console.error(`Failed to delete chunk ${i}: ${err.message}`);
+            }),
+          );
         }
+        await Promise.all(chunkDeletionPromises);
       }
       throw error;
     } finally {
