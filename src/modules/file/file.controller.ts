@@ -51,8 +51,8 @@ export class FileController {
   @Get('list')
   async fileListGet(
     @Req() req: Request,
-    @Query('page') page?: number,
-    @Query('pageSize') pageSize?: number,
+    @Query('page', ParseIntPipe) page?: number,
+    @Query('pageSize', ParseIntPipe) pageSize?: number,
     @Query('fileType') fileType?: string,
     @Query('originalFileName') originalFileName?: string,
     @Query('createdStart') createdStart?: string,
