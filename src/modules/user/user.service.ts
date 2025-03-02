@@ -347,7 +347,8 @@ export class UserService {
       // 使用 QueryBuilder 进行多表查询
       const queryBuilder = this.userRepository
         .createQueryBuilder('user')
-        .leftJoinAndSelect('user.profile', 'profile');
+        .leftJoinAndSelect('user.profile', 'profile')
+        .leftJoinAndSelect('user.roles', 'role');
 
       // 添加查询条件
       if (filters.username)
