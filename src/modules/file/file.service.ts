@@ -16,6 +16,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { File as FileEntity } from './models/file.entity';
 import { Task as TaskEntity } from './models/task.entity';
 import { FileOperationService } from './operation.service';
+import { UpdateFileDto } from './dto/update-file.dto';
 
 @Injectable()
 export class FileService {
@@ -193,6 +194,30 @@ export class FileService {
     });
 
     return await this.fileRepository.save(fileMeta);
+  }
+
+  async updateFile(dto: UpdateFileDto) {
+    const { fileId, ...fileMeta } = dto;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const file = await this.fileRepository.findOne({
+        where: { id: fileId },
+      });
+      if (!file) {
+        throw new NotFoundException('未找到文件');
+      }
+      Object.assign(file, fileMeta);
+      await queryRunner.manager.save(file);
+      await queryRunner.commitTransaction();
+      return formatResponse(200, null, '文件信息修改成功');
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   // 上传文件

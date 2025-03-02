@@ -27,11 +27,12 @@ import { Request } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import { UploadChunkDto } from './dto/chunk.dto';
 import { CompleteChunkDto } from './dto/complete-chunk.dto';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { FileService } from './file.service';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
+import { UpdateFileDto } from './dto/update-file.dto';
 
 @Controller('file')
 @Roles(Role.Admin, Role.Expert)
@@ -199,16 +200,9 @@ export class FileController {
   }
 
   // 文件修改
-  @Put('update/:fileId')
-  async updateFile(
-    @Param(
-      'fileId',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    fileId: number,
-    @Body() updateFileDto: any,
-  ) {
-    // return this.fileService.updateFile(fileId, updateFileDto);
+  @Put('update')
+  async updateFile(@Body() dto: UpdateFileDto) {
+    return this.fileService.updateFile(dto);
   }
 
   // 批量文件权限修改
