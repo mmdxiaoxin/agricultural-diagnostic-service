@@ -30,7 +30,9 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdatePasswordDto } from './dto/change-pass.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { User } from './models/user.entity';
 import {
   AvatarSizeValidationPipe,
   AvatarTypeValidationPipe,
@@ -169,8 +171,17 @@ export class UserController {
   @Post('create')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async userCreate(@Body() createUserDto: any) {
-    return 'User created';
+  @HttpCode(HttpStatus.CREATED)
+  async userCreate(@Body() createUserDto: CreateUserDto) {
+    const { gender, name, phone, address, ...user } = createUserDto;
+    await this.userService.setRoles(user as User);
+    await this.userService.create(user as User, {
+      gender,
+      name,
+      phone,
+      address,
+    });
+    return formatResponse(201, null, '用户创建成功');
   }
 
   // 获取单个用户信息 (需要管理员权限)

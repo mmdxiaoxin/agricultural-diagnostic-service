@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { hash } from 'bcryptjs';
 import { Request } from 'express';
 import { unlink } from 'fs';
-import { DataSource, In, Like, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
 import { Profile } from './models/profile.entity';
 import { User } from './models/user.entity';
@@ -25,10 +25,20 @@ export class UserService {
     private dataSource: DataSource,
   ) {}
 
-  async create(user: Partial<User>) {
-    if (!user.email) {
-      throw new BadRequestException('缺少邮箱参数');
+  private async validateUserParams(user: Partial<User>) {
+    if (!user.email && !user.username) {
+      throw new BadRequestException('缺少关键参数-email或-username');
     }
+  }
+
+  private async setDefaultPassword(user: Partial<User>) {
+    if (!user.password) {
+      user.password = '123456';
+    }
+    user.password = await hash(user.password, 10);
+  }
+
+  async setRoles(user: Partial<User>) {
     if (!user.roles) {
       const role = await this.roleRepository.findOne({
         where: { name: 'user' },
@@ -38,20 +48,23 @@ export class UserService {
       }
       user.roles = [role];
     }
+
     if (user.roles instanceof Array && typeof user.roles[0] === 'number') {
-      // {id, name} -> { id } -> [id]
-      // 查询所有的用户角色
       user.roles = await this.roleRepository.find({
-        where: {
-          id: In(user.roles),
-        },
+        where: { id: In(user.roles) },
       });
     }
-    if (!user.password) {
-      user.password = '123456';
-    }
-    user.password = await hash(user.password, 10);
+  }
+
+  async create(user: Partial<User>, profile?: Partial<Profile>) {
+    await this.validateUserParams(user); // 验证参数
+    await this.setRoles(user); // 设置角色
+    await this.setDefaultPassword(user); // 设置默认密码
     const newUser = this.userRepository.create(user);
+    if (profile) {
+      const newProfile = this.profileRepository.create(profile);
+      newUser.profile = newProfile;
+    }
     return this.userRepository.save(newUser);
   }
 
