@@ -3,7 +3,7 @@ import { getFileType } from '@/common/utils';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { File as FileEntity } from './file.entity';
+import { File as FileEntity } from './models/file.entity';
 import { formatResponse } from '@/common/helpers/response.helper';
 
 @Injectable()

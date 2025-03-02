@@ -5,7 +5,7 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Dataset } from '../dataset/dataset.entity';
+import { Dataset } from '../../dataset/dataset.entity';
 
 @Entity('file')
 @Index('file_user_id_fk', ['createdBy'])

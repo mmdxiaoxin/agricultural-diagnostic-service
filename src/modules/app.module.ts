@@ -7,7 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { Dataset } from './dataset/dataset.entity';
 import { DatasetModule } from './dataset/dataset.module';
-import { File } from './file/file.entity';
+import { File } from './file/models/file.entity';
 import { FileModule } from './file/file.module';
 import { Menu } from './menu/menu.entity';
 import { MenuModule } from './menu/menu.module';
