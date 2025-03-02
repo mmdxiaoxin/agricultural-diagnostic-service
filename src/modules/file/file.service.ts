@@ -13,10 +13,10 @@ import * as path from 'path';
 import { DataSource, In, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateFileDto } from './dto/update-file.dto';
 import { File as FileEntity } from './models/file.entity';
 import { Task as TaskEntity } from './models/task.entity';
 import { FileOperationService } from './operation.service';
-import { UpdateFileDto } from './dto/update-file.dto';
 
 @Injectable()
 export class FileService {
@@ -445,7 +445,7 @@ export class FileService {
           }
           task.status = 'completed';
           task.fileSize = fs.statSync(finalPath).size;
-          await this.taskRepository.save(task);
+          await queryRunner.manager.save(task);
 
           const newFile = this.fileRepository.create({
             originalFileName: task.fileName,
@@ -457,7 +457,7 @@ export class FileService {
             createdBy: userId,
             updatedBy: userId,
           });
-          await this.fileRepository.save(newFile);
+          await queryRunner.manager.save(newFile);
           await queryRunner.commitTransaction();
 
           return formatResponse(
