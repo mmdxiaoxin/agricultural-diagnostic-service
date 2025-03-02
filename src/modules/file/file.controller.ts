@@ -27,6 +27,7 @@ import { Request } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+import { UploadChunkDto } from './dto/chunk.dto';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { FileService } from './file.service';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
@@ -170,8 +171,9 @@ export class FileController {
   )
   async uploadChunk(
     @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
+    @Body() dto: UploadChunkDto,
   ) {
-    //  return this.fileService.uploadChunk(file);
+    return this.fileService.uploadChunk(dto.taskId, dto.chunkIndex);
   }
 
   // 文件下载

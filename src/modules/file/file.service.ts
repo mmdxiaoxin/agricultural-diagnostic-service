@@ -226,6 +226,50 @@ export class FileService {
     }
   }
 
+  // 分片上传：更新任务中已上传分片数和 chunk_status 状态
+  async uploadChunk(taskId: number, chunkIndex: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    let task: TaskEntity | null = null;
+    try {
+      task = await queryRunner.manager.findOne(TaskEntity, {
+        where: { id: taskId },
+      });
+      if (!task) {
+        throw new NotFoundException('Task not found');
+      }
+      if (task.status === 'completed') {
+        throw new BadRequestException('Task already completed');
+      }
+      // 更新已上传分片数
+      task.uploadedChunks = (task.uploadedChunks || 0) + 1;
+      // 更新分片状态，假设 chunkStatus 为 JSON 对象存储各分片上传结果
+      task.chunkStatus = task.chunkStatus || {};
+      task.chunkStatus[chunkIndex] = true;
+      await queryRunner.manager.save(TaskEntity, task);
+      await queryRunner.commitTransaction();
+      return formatResponse(
+        200,
+        {
+          taskId: task.id,
+          chunkIndex,
+        },
+        `Chunk ${chunkIndex} uploaded successfully`,
+      );
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (task) {
+        task.chunkStatus = task.chunkStatus || {};
+        task.chunkStatus[chunkIndex] = false;
+        await this.taskRepository.save(task);
+      }
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async createUploadTask(userId: number, taskMeta: CreateTaskDto) {
     const { fileName, fileSize, fileType, fileMd5, totalChunks } = taskMeta;
     const queryRunner = this.dataSource.createQueryRunner();
