@@ -12,16 +12,17 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   UploadedFile,
   UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { FileService } from './file.service';
 import { ChunkFileInterceptor } from './interceptor/chunk.interceptor';
 import { SingleFileInterceptor } from './interceptor/single.interceptor';
-import { Request } from 'express';
 
 @Controller('file')
 @Roles(Role.Admin, Role.Expert)
@@ -38,8 +39,30 @@ export class FileController {
 
   // 获取文件列表
   @Get('list')
-  async fileListGet() {
-    // return this.fileService.fileListGet();
+  async fileListGet(
+    @Req() req: Request,
+    @Query('page') page?: number,
+    @Query('pageSize') pageSize?: number,
+    @Query('fileType') fileType?: string,
+    @Query('originalFileName') originalFileName?: string,
+    @Query('createdStart') createdStart?: string,
+    @Query('createdEnd') createdEnd?: string,
+    @Query('updatedStart') updatedStart?: string,
+    @Query('updatedEnd') updatedEnd?: string,
+  ) {
+    return this.fileService.fileListGet(
+      page,
+      pageSize,
+      {
+        fileType,
+        originalFileName,
+        createdStart,
+        createdEnd,
+        updatedEnd,
+        updatedStart,
+      },
+      req.user.userId,
+    );
   }
 
   // 单文件上传
