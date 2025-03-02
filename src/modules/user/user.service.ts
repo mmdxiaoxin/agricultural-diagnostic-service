@@ -74,7 +74,7 @@ export class UserService {
   async userGet(id: number) {
     const user = await this.userRepository.findOne({
       where: { id: Number(id) },
-      relations: ['profile', 'role'],
+      relations: ['profile', 'roles'],
     });
 
     if (!user) {
