@@ -13,6 +13,7 @@ import { DataSource, In, Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
 import { Profile } from './models/profile.entity';
 import { User } from './models/user.entity';
+import { formatResponse } from '@/common/helpers/response.helper';
 
 @Injectable()
 export class UserService {
@@ -68,6 +69,84 @@ export class UserService {
     return this.userRepository.save(newUser);
   }
 
+  async userGet(id: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: Number(id) },
+      relations: ['profile', 'roles'], // 如果需要返回角色和个人资料
+    });
+
+    if (!user) {
+      throw new NotFoundException('用户未找到');
+    }
+
+    // 避免返回敏感数据，如密码
+    const { password, ...userData } = user;
+
+    return userData;
+  }
+
+  async userDelete(id: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: Number(id) },
+    });
+
+    if (!user) {
+      throw new NotFoundException('用户未找到');
+    }
+
+    // 删除用户时，可以选择同时删除与之相关的 Profile 等数据
+    await this.userRepository.remove(user);
+    return { message: '用户已删除' };
+  }
+
+  async userUpdate(id: string, updateUserDto: any) {
+    const user = await this.userRepository.findOne({
+      where: { id: Number(id) },
+    });
+
+    if (!user) {
+      throw new NotFoundException('用户未找到');
+    }
+
+    // 如果有任何需要更新的字段，进行更新
+    Object.assign(user, updateUserDto);
+
+    // 如果需要更新角色，处理角色更新
+    if (updateUserDto.roles) {
+      const roles = await this.roleRepository.find({
+        where: { id: In(updateUserDto.roles) },
+      });
+      user.roles = roles;
+    }
+
+    const updatedUser = await this.userRepository.save(user);
+    // 避免返回敏感信息
+    const { password, ...userData } = updatedUser;
+
+    return userData;
+  }
+
+  async resetPassword(id: string, resetPasswordDto: any) {
+    const user = await this.userRepository.findOne({
+      where: { id: Number(id) },
+    });
+
+    if (!user) {
+      throw new NotFoundException('用户未找到');
+    }
+
+    // 密码加密
+    const hashedPassword = await hash(resetPasswordDto.password, 10);
+    user.password = hashedPassword;
+
+    const updatedUser = await this.userRepository.save(user);
+
+    // 避免返回敏感信息
+    const { password, ...userData } = updatedUser;
+
+    return formatResponse(200, userData, '用户信息获取成功');
+  }
+
   async getProfile(id: number, req: Request) {
     const user = await this.findById(id);
     if (!user) {
@@ -91,11 +170,15 @@ export class UserService {
       avatarUrl = `${serverUrl}/user/avatar/${token}`;
     }
 
-    return {
-      ...profile,
-      avatar: avatarUrl,
-      user: undefined,
-    };
+    return formatResponse(
+      200,
+      {
+        ...profile,
+        avatar: avatarUrl,
+        user: undefined,
+      },
+      '个人信息获取成功',
+    );
   }
 
   async getAvatar(token: string) {
@@ -132,8 +215,9 @@ export class UserService {
     }
 
     Object.assign(userProfile, profile);
+    await this.profileRepository.save(userProfile);
 
-    return this.profileRepository.save(userProfile);
+    return formatResponse(200, null, '个人信息更新成功');
   }
 
   async updateAvatar(userId: number, file: Express.Multer.File) {
@@ -176,7 +260,7 @@ export class UserService {
       // 提交事务
       await queryRunner.commitTransaction();
 
-      return profile;
+      return formatResponse(200, null, '头像上传成功');
     } catch (error) {
       // 发生错误时回滚
       await queryRunner.rollbackTransaction();
@@ -194,7 +278,8 @@ export class UserService {
     }
 
     user.password = await hash(password, 10);
-    return this.userRepository.save(user);
+    await this.userRepository.save(user);
+    return formatResponse(200, null, '密码修改成功');
   }
 
   async getUserList(
@@ -242,12 +327,16 @@ export class UserService {
       // 过滤敏感信息
       const list = users.map(({ password, ...user }) => user);
 
-      return {
-        list,
-        total,
-        page,
-        pageSize,
-      };
+      return formatResponse(
+        200,
+        {
+          list,
+          total,
+          page,
+          pageSize,
+        },
+        '用户列表获取成功',
+      );
     } catch (error) {
       throw new BadRequestException('Failed to fetch user list.');
     }

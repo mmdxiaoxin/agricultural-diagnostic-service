@@ -47,8 +47,7 @@ export class UserController {
   // 获取个人信息
   @Get('profile')
   async profileGet(@Req() req: Request) {
-    const profile = await this.userService.getProfile(req.user.userId, req);
-    return formatResponse(200, profile, '个人信息获取成功');
+    return this.userService.getProfile(req.user.userId, req);
   }
 
   // 更新个人信息
@@ -57,8 +56,7 @@ export class UserController {
     @Req() req: Request,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    await this.userService.updateProfile(req.user.userId, updateProfileDto);
-    return formatResponse(200, null, '个人信息更新成功');
+    return this.userService.updateProfile(req.user.userId, updateProfileDto);
   }
 
   // 上传个人头像
@@ -89,8 +87,7 @@ export class UserController {
     )
     file: Express.Multer.File,
   ) {
-    await this.userService.updateAvatar(req.user.userId, file);
-    return formatResponse(HttpStatus.OK, null, '头像上传成功');
+    return this.userService.updateAvatar(req.user.userId, file);
   }
 
   // 获取个人头像
@@ -111,9 +108,10 @@ export class UserController {
     @Req() req: Request<null, any, UpdatePasswordDto>,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
-    const { confirmPassword } = updatePasswordDto;
-    await this.userService.updatePassword(req.user.userId, confirmPassword);
-    return formatResponse(200, null, '密码修改成功');
+    return this.userService.updatePassword(
+      req.user.userId,
+      updatePasswordDto.confirmPassword,
+    );
   }
 
   // 退出登陆
@@ -134,13 +132,12 @@ export class UserController {
     @Query('phone') phone?: string,
     @Query('address') address?: string,
   ) {
-    const data = await this.userService.getUserList(page, pageSize, {
+    return this.userService.getUserList(page, pageSize, {
       username,
       name,
       phone,
       address,
     });
-    return formatResponse(200, data, '用户列表获取成功');
   }
 
   // 创建单个用户 (需要管理员权限)
@@ -165,7 +162,7 @@ export class UserController {
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async userGet(@Param('id') id: string) {
-    return `Get user with id ${id}`;
+    return this.userService.userGet(id);
   }
 
   // 删除单个用户信息 (需要管理员权限)
@@ -173,7 +170,7 @@ export class UserController {
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async userDelete(@Param('id') id: string) {
-    return `Delete user with id ${id}`;
+    return this.userService.userDelete(id);
   }
 
   // 更新单个用户 (需要管理员权限)
@@ -181,7 +178,7 @@ export class UserController {
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async userUpdate(@Param('id') id: string, @Body() updateUserDto: any) {
-    return `Update user with id ${id}`;
+    return this.userService.userUpdate(id, updateUserDto);
   }
 
   // 重置用户密码 (需要管理员权限)
@@ -189,6 +186,6 @@ export class UserController {
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async resetPassword(@Param('id') id: string, @Body() resetPasswordDto: any) {
-    return `Reset password for user with id ${id}`;
+    return this.userService.resetPassword(id, resetPasswordDto);
   }
 }
