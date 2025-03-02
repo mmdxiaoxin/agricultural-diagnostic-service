@@ -397,96 +397,103 @@ export class FileService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+    let task: TaskEntity | null = null;
     try {
-      const task = await this.taskRepository.findOne({
+      task = await queryRunner.manager.findOne(TaskEntity, {
         where: { id: taskId },
       });
       if (!task) {
         throw new NotFoundException('未找到上传任务');
       }
       if (task.status === 'completed') {
-        await queryRunner.rollbackTransaction();
         return formatResponse(200, null, '当前任务已完成');
       }
-      // 失败状态响应
       if (task.status === 'failed') {
         throw new InternalServerErrorException('当前任务失败，请重新上传');
       }
-      // 任务未完成状态响应
       if (task.uploadedChunks !== task.totalChunks) {
-        await queryRunner.rollbackTransaction();
         return formatResponse(202, null, '当前任务还未完成');
       }
-      // 分配目录
-      let folder = 'uploads/other'; // 默认存储在 "other" 文件夹
-      if (task.fileType.startsWith('image')) {
-        folder = 'uploads/images'; // 存储图片文件
-      } else if (task.fileType.startsWith('video')) {
-        folder = 'uploads/videos'; // 存储视频文件
-      } else if (task.fileType.startsWith('application')) {
-        folder = 'uploads/documents'; // 存储文档文件
-      } else if (task.fileType.startsWith('audio')) {
-        folder = 'uploads/audio'; // 存储音频文件
-      }
-      // 确保文件夹存在，如果没有则创建
-      if (!fs.existsSync(folder)) {
-        fs.mkdirSync(folder, { recursive: true });
-      }
+
+      // 确保文件夹存在
+      let folder = 'uploads/other'; // 默认存储
+      if (task.fileType.startsWith('image')) folder = 'uploads/images';
+      else if (task.fileType.startsWith('video')) folder = 'uploads/videos';
+      else if (task.fileType.startsWith('application'))
+        folder = 'uploads/documents';
+      else if (task.fileType.startsWith('audio')) folder = 'uploads/audio';
+
+      // 使用异步文件夹创建
+      await fs.promises.mkdir(folder, { recursive: true });
 
       const fileExtension = path.extname(task.fileName);
       const storageFileName = `${uuidv4()}${fileExtension}`;
       const finalPath = path.join(folder, storageFileName);
-      const writeStream = fs.createWriteStream(finalPath);
 
-      // 文件合并过程
+      // 合并文件分片
+      const writeStream = fs.createWriteStream(finalPath);
+      let chunkPromises: Promise<void>[] = [];
       for (let i = 1; i <= task.totalChunks; i++) {
-        const chunk = fs.createReadStream(
-          path.join('uploads/chunks', `${task.fileMd5}-${i}`),
-        );
+        const chunkPath = path.join('uploads/chunks', `${task.fileMd5}-${i}`);
+        const chunk = fs.createReadStream(chunkPath);
         chunk.pipe(writeStream, { end: false });
-        await new Promise((resolve, reject) => {
-          chunk.on('end', () => resolve(null));
+
+        const chunkPromise = new Promise<void>((resolve, reject) => {
+          chunk.on('end', resolve);
           chunk.on('error', reject);
         });
+        chunkPromises.push(chunkPromise);
       }
-      // 响应给用户
-      writeStream.on('finish', async () => {
-        try {
-          // 删除临时分片文件
-          for (let i = 1; i <= task.totalChunks; i++) {
+
+      // 等待所有分片合并完成
+      await Promise.all(chunkPromises);
+
+      // 在合并完成后继续执行
+      await new Promise((resolve, reject) => {
+        writeStream.on('finish', () => resolve(null));
+        writeStream.on('error', reject);
+      });
+
+      // 删除分片文件
+      for (let i = 1; i <= task.totalChunks; i++) {
+        await fs.promises.unlink(
+          path.join('uploads/chunks', `${task.fileMd5}-${i}`),
+        );
+      }
+
+      // 更新任务状态
+      task.status = 'completed';
+      task.fileSize = fs.statSync(finalPath).size;
+      await queryRunner.manager.save(task);
+
+      const newFile = this.fileRepository.create({
+        originalFileName: task.fileName,
+        storageFileName: storageFileName,
+        filePath: finalPath,
+        fileSize: task.fileSize,
+        fileType: task.fileType,
+        fileMd5: task.fileMd5,
+        createdBy: userId,
+        updatedBy: userId,
+      });
+      await queryRunner.manager.save(newFile);
+
+      await queryRunner.commitTransaction();
+      return formatResponse(201, null, 'File uploaded and merged successfully');
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (task) {
+        // 清理文件
+        for (let i = 1; i <= task.totalChunks; i++) {
+          try {
             await fs.promises.unlink(
               path.join('uploads/chunks', `${task.fileMd5}-${i}`),
             );
+          } catch (err) {
+            console.error(`Failed to delete chunk ${i}: ${err.message}`);
           }
-          task.status = 'completed';
-          task.fileSize = fs.statSync(finalPath).size;
-          await queryRunner.manager.save(task);
-
-          const newFile = this.fileRepository.create({
-            originalFileName: task.fileName,
-            storageFileName: storageFileName,
-            filePath: finalPath,
-            fileSize: task.fileSize,
-            fileType: task.fileType,
-            fileMd5: task.fileMd5,
-            createdBy: userId,
-            updatedBy: userId,
-          });
-          await queryRunner.manager.save(newFile);
-          await queryRunner.commitTransaction();
-
-          return formatResponse(
-            201,
-            null,
-            'File uploaded and merged successfully',
-          );
-        } catch (error) {
-          throw error;
         }
-      });
-      writeStream.end();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
+      }
       throw error;
     } finally {
       await queryRunner.release();
