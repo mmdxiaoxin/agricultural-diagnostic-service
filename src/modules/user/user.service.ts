@@ -74,7 +74,7 @@ export class UserService {
   async userGet(id: number) {
     const user = await this.userRepository.findOne({
       where: { id: Number(id) },
-      relations: ['profile', 'roles'],
+      relations: ['profile', 'role'],
     });
 
     if (!user) {
@@ -366,6 +366,7 @@ export class UserService {
   async findByLogin(login: string): Promise<User | null> {
     return this.userRepository
       .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'role')
       .where('user.email = :login', { login })
       .orWhere('user.username = :login', { login })
       .getOne();

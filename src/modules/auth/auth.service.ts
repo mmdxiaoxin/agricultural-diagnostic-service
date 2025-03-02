@@ -39,7 +39,7 @@ export class AuthService {
         access_token: this.jwt.sign({
           userId: user.id,
           username: user.username,
-          roles: user.roles?.map((role) => role.name),
+          roles: user.roles.map((role) => role.name),
         }),
       },
       '登录成功',
