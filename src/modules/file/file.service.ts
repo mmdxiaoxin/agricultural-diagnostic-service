@@ -263,8 +263,10 @@ export class FileService {
     await queryRunner.startTransaction();
     let task: TaskEntity | null = null;
     try {
+      // 使用悲观锁，防止并发修改
       task = await queryRunner.manager.findOne(TaskEntity, {
         where: { id: taskId },
+        lock: { mode: 'pessimistic_write' }, // 悲观锁定该任务行
       });
       if (!task) {
         throw new NotFoundException('Task not found');
@@ -272,11 +274,20 @@ export class FileService {
       if (task.status === 'completed') {
         throw new BadRequestException('Task already completed');
       }
+      // 确保 chunkStatus 存在并初始化
+      task.chunkStatus = task.chunkStatus || {};
+
+      // 检查是否已经上传该分片
+      if (task.chunkStatus[chunkIndex] === true) {
+        throw new BadRequestException(`Chunk ${chunkIndex} already uploaded`);
+      }
+
       // 更新已上传分片数
       task.uploadedChunks = (task.uploadedChunks || 0) + 1;
-      // 更新分片状态，假设 chunkStatus 为 JSON 对象存储各分片上传结果
-      task.chunkStatus = task.chunkStatus || {};
+
+      // 更新分片状态
       task.chunkStatus[chunkIndex] = true;
+
       await queryRunner.manager.save(TaskEntity, task);
       await queryRunner.commitTransaction();
       return formatResponse(
@@ -292,7 +303,7 @@ export class FileService {
       if (task) {
         task.chunkStatus = task.chunkStatus || {};
         task.chunkStatus[chunkIndex] = false;
-        await this.taskRepository.save(task);
+        await queryRunner.manager.save(task);
       }
       throw error;
     } finally {
