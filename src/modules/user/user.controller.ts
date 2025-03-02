@@ -1,7 +1,7 @@
 import { Roles } from '@/common/decorator/roles.decorator';
 import { Role } from '@/common/enum/role.enum';
 import { TypeormFilter } from '@/common/filters/typeorm.filter';
-import { AuthGuard } from '@/common/guards/auth.guard';
+import { AuthGuard, UserPayload } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import {
   Body,
@@ -11,6 +11,7 @@ import {
   Param,
   Post,
   Put,
+  Req,
   UploadedFile,
   UseFilters,
   UseGuards,
@@ -21,15 +22,19 @@ import fs from 'fs';
 import { diskStorage } from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { UserService } from './user.service';
+import { formatResponse } from '@/common/helpers/response.helper';
 
 @Controller('user')
 @UseGuards(AuthGuard)
 @UseFilters(TypeormFilter)
 export class UserController {
+  constructor(private readonly userService: UserService) {}
   // 获取个人信息
   @Get('profile')
-  async profileGet() {
-    return 'Get user profile';
+  async profileGet(@Req() req: { user: UserPayload }) {
+    const profile = await this.userService.getProfile(req.user.userId);
+    return formatResponse(200, profile, '个人信息获取成功');
   }
 
   // 更新个人信息

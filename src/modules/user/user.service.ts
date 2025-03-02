@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { hash } from 'bcryptjs';
 import { In, Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
+import { Profile } from './profile.entity';
 import { User } from './user.entity';
 
 @Injectable()
@@ -14,6 +15,8 @@ export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
+    @InjectRepository(Profile)
+    private readonly profileRepository: Repository<Profile>,
   ) {}
 
   async create(user: Partial<User>) {
@@ -42,8 +45,30 @@ export class UserService {
       user.password = '123456';
     }
     user.password = await hash(user.password, 10);
-    const newUser = this.userRepository.create({ ...user });
+    const newUser = this.userRepository.create(user);
     return this.userRepository.save(newUser);
+  }
+
+  async getProfile(id: number) {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+
+    let profile = await this.profileRepository.findOne({
+      where: { user },
+    });
+
+    if (!profile) {
+      profile = new Profile(); // 创建一个新的 Profile 实例
+      profile.user = user; // 关联用户
+      await this.profileRepository.save(profile);
+    }
+
+    return {
+      ...profile,
+      user: undefined,
+    };
   }
 
   async findByLogin(login: string): Promise<User | null> {

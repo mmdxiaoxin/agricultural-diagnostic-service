@@ -15,6 +15,7 @@ import { User } from './user/user.entity';
 import { UserModule } from './user/user.module';
 import { MenuModule } from './menu/menu.module';
 import { Menu } from './menu/menu.entity';
+import { Profile } from './user/profile.entity';
 
 @Module({
   imports: [
@@ -32,7 +33,7 @@ import { Menu } from './menu/menu.entity';
           username: configService.get(ConfigEnum.DB_USERNAME),
           password: configService.get(ConfigEnum.DB_PASSWORD),
           database: configService.get(ConfigEnum.DB_DATABASE),
-          entities: [User, Role, File, Dataset, Menu],
+          entities: [User, Role, File, Dataset, Menu, Profile],
           synchronize: configService.get(ConfigEnum.DB_SYNC),
           logging: process.env.NODE_ENV === 'development',
         }) as TypeOrmModuleOptions,
