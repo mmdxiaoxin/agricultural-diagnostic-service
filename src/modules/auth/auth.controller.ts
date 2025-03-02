@@ -28,4 +28,10 @@ export class AuthController {
     const { login, password } = dto;
     return this.authService.login(login, password);
   }
+
+  @Post('buttons')
+  @HttpCode(HttpStatus.OK)
+  async buttonsGet(@Body() dto: LoginDto) {
+    return this.authService.buttonsGet();
+  }
 }

@@ -45,4 +45,12 @@ export class AuthService {
       '登录成功',
     );
   }
+
+  async buttonsGet() {
+    return formatResponse(
+      200,
+      { useHooks: { add: true, delete: true } },
+      '获取按钮成功',
+    );
+  }
 }
