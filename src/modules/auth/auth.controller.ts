@@ -35,7 +35,7 @@ export class AuthController {
   @Get('buttons')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
-  async buttonsGet(@Body() dto: LoginDto) {
+  async buttonsGet() {
     return this.authService.buttonsGet();
   }
 }
