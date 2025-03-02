@@ -157,7 +157,7 @@ export class FileController {
   // 文件分片上传
   @Post('upload/chunk')
   @UseInterceptors(
-    FileInterceptor('file', {
+    FileInterceptor('chunk', {
       storage: diskStorage({
         destination: (req, file, cb) => {
           const folder = 'uploads/chunks';
