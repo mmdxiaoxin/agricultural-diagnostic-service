@@ -307,6 +307,8 @@ export class FileService {
     }
   }
 
+  async getUploadTaskStatus(taskId: number) {}
+
   async findById(fileId: number) {
     return this.fileRepository.findOne({
       where: { id: fileId },

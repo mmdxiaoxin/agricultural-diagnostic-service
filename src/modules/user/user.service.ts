@@ -70,10 +70,7 @@ export class UserService {
     return this.userRepository.save(newUser);
   }
 
-  async userGet(id: string) {
-    if (Number.isNaN(Number(id))) {
-      throw new BadRequestException('无效的用户 ID');
-    }
+  async userGet(id: number) {
     const user = await this.userRepository.findOne({
       where: { id: Number(id) },
       relations: ['profile', 'roles'],
@@ -89,14 +86,14 @@ export class UserService {
     return formatResponse(200, userData, '用户信息获取成功');
   }
 
-  async userDelete(id: string) {
+  async userDelete(id: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
       const user = await queryRunner.manager.findOne(User, {
-        where: { id: Number(id) },
+        where: { id },
       });
 
       if (!user) {
@@ -123,9 +120,9 @@ export class UserService {
     }
   }
 
-  async userUpdate(id: string, updateUserDto: UpdateUserDto) {
+  async userUpdate(id: number, updateUserDto: UpdateUserDto) {
     const user = await this.userRepository.findOne({
-      where: { id: Number(id) },
+      where: { id },
     });
 
     if (!user) {
@@ -147,9 +144,9 @@ export class UserService {
     return formatResponse(200, null, '用户信息更新成功');
   }
 
-  async userReset(id: string, newPassword?: string) {
+  async userReset(id: number, newPassword?: string) {
     const user = await this.userRepository.findOne({
-      where: { id: Number(id) },
+      where: { id },
     });
 
     if (!user) {

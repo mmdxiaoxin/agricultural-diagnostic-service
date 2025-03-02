@@ -12,6 +12,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -125,8 +126,14 @@ export class FileController {
 
   // 查询上传任务状态
   @Get('upload/status/:taskId')
-  async getUploadTaskStatus(@Param('taskId') taskId: string) {
-    // return this.fileService.getUploadTaskStatus(taskId);
+  async getUploadTaskStatus(
+    @Param(
+      'taskId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    taskId: number,
+  ) {
+    return this.fileService.getUploadTaskStatus(taskId);
   }
 
   // 合并分片
@@ -170,7 +177,13 @@ export class FileController {
   // 文件下载
   @Get('download/:fileId')
   @UseGuards(FileGuard)
-  async downloadFile(@Param('fileId') fileId: string) {
+  async downloadFile(
+    @Param(
+      'fileId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    fileId: number,
+  ) {
     // return this.fileService.downloadFile(fileId);
   }
 
@@ -184,7 +197,11 @@ export class FileController {
   // 文件修改
   @Put('update/:fileId')
   async updateFile(
-    @Param('fileId') fileId: string,
+    @Param(
+      'fileId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    fileId: number,
     @Body() updateFileDto: any,
   ) {
     // return this.fileService.updateFile(fileId, updateFileDto);
@@ -198,7 +215,13 @@ export class FileController {
 
   // 文件删除
   @Delete('delete/:fileId')
-  async deleteFile(@Param('fileId') fileId: string) {
+  async deleteFile(
+    @Param(
+      'fileId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    fileId: number,
+  ) {
     // return this.fileService.deleteFile(fileId);
   }
 

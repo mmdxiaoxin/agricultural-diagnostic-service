@@ -13,6 +13,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -163,7 +164,13 @@ export class UserController {
   @Get(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async userGet(@Param('id') id: string) {
+  async userGet(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     return this.userService.userGet(id);
   }
 
@@ -172,7 +179,13 @@ export class UserController {
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async userDelete(@Param('id') id: string) {
+  async userDelete(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     return this.userService.userDelete(id);
   }
 
@@ -181,7 +194,11 @@ export class UserController {
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async userUpdate(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.userService.userUpdate(id, updateUserDto);
@@ -192,7 +209,11 @@ export class UserController {
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async userReset(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
     return this.userService.userReset(id, resetPasswordDto.password);

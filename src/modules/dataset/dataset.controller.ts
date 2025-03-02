@@ -7,6 +7,8 @@ import {
   Param,
   Body,
   UseFilters,
+  ParseIntPipe,
+  HttpStatus,
 } from '@nestjs/common';
 import { DatasetService } from './dataset.service';
 import { CreateDatasetDto } from './dto/create-dataset.dto';
@@ -32,14 +34,24 @@ export class DatasetController {
 
   // 获取数据集详情
   @Get(':datasetId')
-  async getDatasetDetail(@Param('datasetId') datasetId: number) {
+  async getDatasetDetail(
+    @Param(
+      'datasetId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    datasetId: number,
+  ) {
     return this.datasetService.getDatasetDetail(datasetId);
   }
 
   // 更新数据集
   @Put(':datasetId')
   async updateDataset(
-    @Param('datasetId') datasetId: number,
+    @Param(
+      'datasetId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    datasetId: number,
     @Body() updateDatasetDto: UpdateDatasetDto,
   ) {
     return this.datasetService.updateDataset(datasetId, updateDatasetDto);
@@ -47,7 +59,13 @@ export class DatasetController {
 
   // 删除数据集
   @Delete(':datasetId')
-  async deleteDataset(@Param('datasetId') datasetId: number) {
+  async deleteDataset(
+    @Param(
+      'datasetId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    datasetId: number,
+  ) {
     return this.datasetService.deleteDataset(datasetId);
   }
 }

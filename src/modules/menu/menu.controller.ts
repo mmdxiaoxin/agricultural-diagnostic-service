@@ -9,6 +9,7 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Req,
@@ -57,7 +58,13 @@ export class MenuController {
   @Get(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async findOne(@Param('id') id: number) {
+  async findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     try {
       const menu = await this.menuService.findOne(id);
       if (!menu) {
@@ -87,7 +94,14 @@ export class MenuController {
   @Put(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async update(@Param('id') id: number, @Body() menuData: Partial<Menu>) {
+  async update(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+    @Body() menuData: Partial<Menu>,
+  ) {
     try {
       const updatedMenu = await this.menuService.update(id, menuData);
       if (!updatedMenu) {
@@ -103,7 +117,13 @@ export class MenuController {
   @Delete(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async remove(@Param('id') id: number) {
+  async remove(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     try {
       await this.menuService.remove(id);
       return formatResponse(200, null, 'Menu deleted successfully');
