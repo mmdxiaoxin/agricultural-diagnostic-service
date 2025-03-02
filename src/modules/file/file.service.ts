@@ -143,6 +143,8 @@ export class FileService {
     );
   }
 
+  async uploadSingle(file: Express.Multer.File) {}
+
   async findById(fileId: number) {
     return this.fileRepository.findOne({
       where: { id: fileId },

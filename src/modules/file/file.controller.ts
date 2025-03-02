@@ -23,6 +23,8 @@ import { Request } from 'express';
 import { FileService } from './file.service';
 import { ChunkFileInterceptor } from './interceptor/chunk.interceptor';
 import { SingleFileInterceptor } from './interceptor/single.interceptor';
+import { FileSizeValidationPipe } from './pipe/file.pipe';
+import { UploadFileDto } from './dto/upload.dto';
 
 @Controller('file')
 @Roles(Role.Admin, Role.Expert)
@@ -68,8 +70,11 @@ export class FileController {
   // 单文件上传
   @Post('upload/single')
   @UseInterceptors(SingleFileInterceptor)
-  async uploadSingle(@UploadedFile() file: Express.Multer.File) {
-    // return this.fileService.uploadSingle(file);
+  async uploadSingle(
+    @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
+    @Body() _: UploadFileDto, // 触发DTO验证
+  ) {
+    return this.fileService.uploadSingle(file);
   }
 
   // 创建上传任务
@@ -93,7 +98,10 @@ export class FileController {
   // 文件分片上传
   @Post('upload/chunk')
   @UseInterceptors(ChunkFileInterceptor)
-  async uploadChunk(@UploadedFile() file: Express.Multer.File) {
+  async uploadChunk(
+    @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
+    @Body() _: UploadFileDto, // 触发DTO验证
+  ) {
     //  return this.fileService.uploadChunk(file);
   }
 
