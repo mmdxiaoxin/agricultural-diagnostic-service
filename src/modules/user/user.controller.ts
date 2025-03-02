@@ -153,14 +153,9 @@ export class UserController {
   @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async userCreate(@Body() createUserDto: CreateUserDto) {
-    const { gender, name, phone, address, ...user } = createUserDto;
-    await this.userService.setRoles(user as User);
-    await this.userService.userCreate(user as User, {
-      gender,
-      name,
-      phone,
-      address,
-    });
+    const { profile, ...user } = createUserDto;
+    await this.userService.setRoles(user as any);
+    await this.userService.userCreate(user as any, profile);
     return formatResponse(201, null, '用户创建成功');
   }
 
