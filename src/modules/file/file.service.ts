@@ -1,16 +1,19 @@
-import { UserPayload } from '@/common/guards/auth.guard';
-import { getFileType } from '@/common/utils';
+import { formatResponse } from '@/common/helpers/response.helper';
+import { getFileType, getModelMimeType } from '@/common/utils';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as crypto from 'crypto';
+import * as path from 'path';
 import { In, Repository } from 'typeorm';
 import { File as FileEntity } from './models/file.entity';
-import { formatResponse } from '@/common/helpers/response.helper';
+import { FileOperationService } from './operation.service';
 
 @Injectable()
 export class FileService {
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
+    private readonly fileOperationService: FileOperationService,
   ) {}
 
   private async computeFileSizeByType(createdBy: number, fileTypes: string[]) {
@@ -143,7 +146,69 @@ export class FileService {
     );
   }
 
-  async uploadSingle(file: Express.Multer.File) {}
+  // 计算文件 MD5 并查找重复文件
+  private async checkRepeated(file: Express.Multer.File) {
+    const fileBuffer = await this.fileOperationService.readFile(file.path);
+    const fileMd5 = crypto.createHash('md5').update(fileBuffer).digest('hex');
+    const result = await this.fileRepository.findOne({
+      where: { fileMd5 },
+    });
+    return { result, fileMd5 };
+  }
+
+  // 获取文件类型
+  private checkFileType(file: Express.Multer.File): string {
+    return file.mimetype
+      ? file.mimetype
+      : getModelMimeType(path.extname(file.originalname));
+  }
+
+  // 创建文件元数据
+  private async createFile(
+    user_id: number,
+    fileData: any,
+  ): Promise<FileEntity> {
+    const fileMeta = this.fileRepository.create({
+      originalFileName: fileData.originalname,
+      storageFileName: fileData?.filename || fileData.storageFileName,
+      filePath: fileData?.path || fileData.filePath,
+      fileSize: fileData?.size || fileData.fileSize,
+      fileType: fileData.fileType,
+      fileMd5: fileData.fileMd5,
+      createdBy: user_id,
+      updatedBy: user_id,
+      version: 1,
+    });
+
+    return await this.fileRepository.save(fileMeta);
+  }
+
+  // 上传文件
+  async uploadSingle(user_id: number, file: Express.Multer.File) {
+    const { result: foundFile, fileMd5 } = await this.checkRepeated(file);
+    const fileType = this.checkFileType(file);
+
+    let fileMeta: FileEntity;
+    if (foundFile) {
+      foundFile.originalFileName = file.originalname;
+      await this.fileOperationService.deleteFile(file.path);
+      fileMeta = await this.createFile(user_id, foundFile);
+    } else {
+      fileMeta = await this.createFile(user_id, {
+        ...file,
+        fileMd5,
+        fileType,
+      });
+    }
+
+    return formatResponse(
+      200,
+      {
+        fileId: fileMeta.id,
+      },
+      '文件上传成功',
+    );
+  }
 
   async findById(fileId: number) {
     return this.fileRepository.findOne({

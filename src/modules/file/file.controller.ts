@@ -19,13 +19,13 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
+import { existsSync, mkdirSync } from 'fs';
+import { diskStorage } from 'multer';
+import { v4 as uuidv4 } from 'uuid';
 import { FileService } from './file.service';
-import { ChunkFileInterceptor } from './interceptor/chunk.interceptor';
-import { SingleFileInterceptor } from './interceptor/single.interceptor';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
-import { UploadFileDto } from './dto/upload.dto';
-
 @Controller('file')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
@@ -69,12 +69,48 @@ export class FileController {
 
   // 单文件上传
   @Post('upload/single')
-  @UseInterceptors(SingleFileInterceptor)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          // 根据文件 MIME 类型选择不同的文件夹
+          let folder = 'uploads/other'; // 默认存储在 "other" 文件夹
+          const mimeType = file.mimetype;
+
+          // 按 MIME 类型分文件夹存储
+          if (mimeType.startsWith('image')) {
+            folder = 'uploads/images'; // 存储图片文件
+          } else if (mimeType.startsWith('video')) {
+            folder = 'uploads/videos'; // 存储视频文件
+          } else if (mimeType.startsWith('application')) {
+            folder = 'uploads/documents'; // 存储文档文件
+          } else if (mimeType.startsWith('audio')) {
+            folder = 'uploads/audio'; // 存储音频文件
+          }
+
+          // 确保文件夹存在，如果没有则创建
+          const fs = require('fs');
+          if (!fs.existsSync(folder)) {
+            fs.mkdirSync(folder, { recursive: true });
+          }
+          cb(null, folder);
+        },
+        filename: (req, file, cb) => {
+          const uniqueName = Date.now() + '-' + uuidv4();
+          // 修复中文乱码问题
+          file.originalname = Buffer.from(file.originalname, 'latin1').toString(
+            'utf-8',
+          );
+          cb(null, uniqueName);
+        },
+      }),
+    }),
+  )
   async uploadSingle(
+    @Req() req: Request,
     @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
-    @Body() _: UploadFileDto, // 触发DTO验证
   ) {
-    return this.fileService.uploadSingle(file);
+    return this.fileService.uploadSingle(req.user.userId, file);
   }
 
   // 创建上传任务
@@ -97,10 +133,32 @@ export class FileController {
 
   // 文件分片上传
   @Post('upload/chunk')
-  @UseInterceptors(ChunkFileInterceptor)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          const folder = 'uploads/chunks';
+          if (!existsSync(folder)) {
+            mkdirSync(folder, { recursive: true });
+          }
+          cb(null, folder);
+        },
+        filename: (req, file, cb) => {
+          const { task_id, chunkIndex } = req.body;
+
+          if (!task_id || !chunkIndex) {
+            return cb(
+              new Error('Missing task_id or chunkIndex'),
+              file.filename,
+            );
+          }
+          cb(null, `${task_id}-${chunkIndex}`);
+        },
+      }),
+    }),
+  )
   async uploadChunk(
     @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
-    @Body() _: UploadFileDto, // 触发DTO验证
   ) {
     //  return this.fileService.uploadChunk(file);
   }

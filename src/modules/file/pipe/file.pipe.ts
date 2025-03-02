@@ -6,7 +6,7 @@ export class FileSizeValidationPipe implements PipeTransform {
   transform(file: Express.Multer.File) {
     const maxSize = 20 * 1024 * 1024; // 20MB
 
-    if (file.size > maxSize) {
+    if (file?.size > maxSize) {
       // 删除文件
       if (file.path) {
         try {
