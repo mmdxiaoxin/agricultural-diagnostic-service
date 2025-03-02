@@ -1,7 +1,8 @@
+import { formatResponse } from '@/common/helpers/response.helper';
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcryptjs';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {
@@ -15,7 +16,8 @@ export class AuthService {
     if (user) {
       throw new ForbiddenException('用户已存在');
     }
-    return this.usersService.userCreate({ email, password });
+    await this.usersService.userCreate({ email, password });
+    return formatResponse(201, null, '注册成功');
   }
 
   async login(login: string, password: string) {
@@ -30,10 +32,17 @@ export class AuthService {
     if (!isValid) {
       throw new ForbiddenException('账号或密码错误');
     }
-    return this.jwt.sign({
-      userId: user.id,
-      username: user.username,
-      roles: user.roles?.map((role) => role.name),
-    });
+
+    return formatResponse(
+      200,
+      {
+        access_token: this.jwt.sign({
+          userId: user.id,
+          username: user.username,
+          roles: user.roles?.map((role) => role.name),
+        }),
+      },
+      '登录成功',
+    );
   }
 }
