@@ -1,12 +1,17 @@
 import { formatResponse } from '@/common/helpers/response.helper';
 import { getFileType, getModelMimeType } from '@/common/utils';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
 import * as path from 'path';
 import { In, Repository } from 'typeorm';
 import { File as FileEntity } from './models/file.entity';
 import { FileOperationService } from './operation.service';
+import { unlink } from 'fs/promises';
 
 @Injectable()
 export class FileService {
@@ -169,7 +174,7 @@ export class FileService {
     fileData: any,
   ): Promise<FileEntity> {
     const fileMeta = this.fileRepository.create({
-      originalFileName: fileData.originalname,
+      originalFileName: fileData?.originalname || fileData.originalFileName,
       storageFileName: fileData?.filename || fileData.storageFileName,
       filePath: fileData?.path || fileData.filePath,
       fileSize: fileData?.size || fileData.fileSize,
@@ -185,29 +190,34 @@ export class FileService {
 
   // 上传文件
   async uploadSingle(user_id: number, file: Express.Multer.File) {
-    const { result: foundFile, fileMd5 } = await this.checkRepeated(file);
-    const fileType = this.checkFileType(file);
-
-    let fileMeta: FileEntity;
-    if (foundFile) {
-      foundFile.originalFileName = file.originalname;
-      await this.fileOperationService.deleteFile(file.path);
-      fileMeta = await this.createFile(user_id, foundFile);
-    } else {
-      fileMeta = await this.createFile(user_id, {
-        ...file,
-        fileMd5,
-        fileType,
-      });
+    if (!file) {
+      throw new BadRequestException('请上传文件');
     }
-
-    return formatResponse(
-      200,
-      {
-        fileId: fileMeta.id,
-      },
-      '文件上传成功',
-    );
+    try {
+      const { result: foundFile, fileMd5 } = await this.checkRepeated(file);
+      const fileType = this.checkFileType(file);
+      let fileMeta: FileEntity;
+      if (foundFile) {
+        await this.fileOperationService.deleteFile(file.path);
+        fileMeta = await this.createFile(user_id, foundFile);
+      } else {
+        fileMeta = await this.createFile(user_id, {
+          ...file,
+          fileMd5,
+          fileType,
+        });
+      }
+      return formatResponse(
+        200,
+        {
+          fileId: fileMeta.id,
+        },
+        '文件上传成功',
+      );
+    } catch (error) {
+      await unlink(file.path);
+      throw error;
+    }
   }
 
   async findById(fileId: number) {
