@@ -21,6 +21,7 @@ import {
 import { FileService } from './file.service';
 import { ChunkFileInterceptor } from './interceptor/chunk.interceptor';
 import { SingleFileInterceptor } from './interceptor/single.interceptor';
+import { Request } from 'express';
 
 @Controller('file')
 @Roles(Role.Admin, Role.Expert)
@@ -29,26 +30,16 @@ import { SingleFileInterceptor } from './interceptor/single.interceptor';
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
-  // 获取文件空间信息
+  // 获取空间使用信息
   @Get('disk-usage')
-  async getSpaceInfo(@Req() req) {
-    const user = req.user;
-    try {
-      const data = await this.fileService.computeDiskUsage(user);
-      return {
-        code: 200,
-        data,
-        message: '获取文件空间信息成功',
-      };
-    } catch (error) {
-      throw error;
-    }
+  async diskUsageGet(@Req() req: Request) {
+    return this.fileService.diskUsageGet(req.user.userId);
   }
 
   // 获取文件列表
   @Get('list')
-  async getFileList() {
-    // return this.fileService.getFileList();
+  async fileListGet() {
+    // return this.fileService.fileListGet();
   }
 
   // 单文件上传
