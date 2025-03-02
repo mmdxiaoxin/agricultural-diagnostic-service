@@ -188,7 +188,8 @@ export class UserService {
       {
         ...profile,
         avatar: avatarUrl,
-        user: undefined,
+        ...user,
+        password: undefined,
       },
       '个人信息获取成功',
     );
