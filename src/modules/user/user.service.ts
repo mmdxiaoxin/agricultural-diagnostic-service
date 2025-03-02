@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { hash } from 'bcryptjs';
 import { Request } from 'express';
 import { unlink } from 'fs';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, Like, Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
 import { Profile } from './models/profile.entity';
 import { User } from './models/user.entity';
@@ -182,6 +182,62 @@ export class UserService {
 
     user.password = await hash(password, 10);
     return this.userRepository.save(user);
+  }
+
+  async getUserList(
+    page: number = 1,
+    pageSize: number = 10,
+    filters: {
+      username?: string;
+      name?: string;
+      phone?: string;
+      address?: string;
+    },
+  ) {
+    try {
+      const offset = (page - 1) * pageSize;
+
+      // 使用 QueryBuilder 进行多表查询
+      const queryBuilder = this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.profile', 'profile');
+
+      // 添加查询条件
+      if (filters.username)
+        queryBuilder.andWhere('user.username LIKE :username', {
+          username: `%${filters.username}%`,
+        });
+      if (filters.name)
+        queryBuilder.andWhere('profile.name LIKE :name', {
+          name: `%${filters.name}%`,
+        });
+      if (filters.phone)
+        queryBuilder.andWhere('profile.phone LIKE :phone', {
+          phone: `%${filters.phone}%`,
+        });
+      if (filters.address)
+        queryBuilder.andWhere('profile.address LIKE :address', {
+          address: `%${filters.address}%`,
+        });
+
+      // 查询总数
+      const total = await queryBuilder.getCount();
+
+      // 分页
+      const users = await queryBuilder.skip(offset).take(pageSize).getMany();
+
+      // 过滤敏感信息
+      const list = users.map(({ password, ...user }) => user);
+
+      return {
+        list,
+        total,
+        page,
+        pageSize,
+      };
+    } catch (error) {
+      throw new BadRequestException('Failed to fetch user list.');
+    }
   }
 
   async findByLogin(login: string): Promise<User | null> {

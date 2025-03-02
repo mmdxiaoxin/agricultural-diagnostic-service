@@ -15,6 +15,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UploadedFile,
@@ -142,9 +143,26 @@ export class UserController {
   // 获取用户列表 (需要管理员权限)
   @Get('list')
   @Roles(Role.Admin)
-  @UseGuards(RolesGuard) // Assuming RolesGuard handles role-based access control
-  async userListGet() {
-    return 'Get users list';
+  @UseGuards(RolesGuard)
+  async userListGet(
+    @Query('page') page?: number,
+    @Query('pageSize') pageSize?: number,
+    @Query('username') username?: string,
+    @Query('name') name?: string,
+    @Query('phone') phone?: string,
+    @Query('address') address?: string,
+  ) {
+    try {
+      const data = await this.userService.getUserList(page, pageSize, {
+        username,
+        name,
+        phone,
+        address,
+      });
+      return formatResponse(200, data, '用户列表获取成功');
+    } catch (error) {
+      throw error;
+    }
   }
 
   // 创建单个用户 (需要管理员权限)
