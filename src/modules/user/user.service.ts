@@ -122,27 +122,55 @@ export class UserService {
   }
 
   async userUpdate(id: number, updateUserDto: UpdateUserDto) {
-    const user = await this.userRepository.findOne({
-      where: { id },
-    });
-
-    if (!user) {
-      throw new NotFoundException('用户未找到');
-    }
-
-    // 如果有任何需要更新的字段，进行更新
-    Object.assign(user, updateUserDto);
-
-    // 如果需要更新角色，处理角色更新
-    if (updateUserDto.roles) {
-      const roles = await this.roleRepository.find({
-        where: { id: In(updateUserDto.roles) },
+    const queryRunner =
+      this.userRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    const { profile, roles, ...userData } = updateUserDto;
+    try {
+      // 查找用户
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id },
+        relations: ['profile', 'roles'],
       });
-      user.roles = roles;
-    }
 
-    await this.userRepository.save(user);
-    return formatResponse(200, null, '用户信息更新成功');
+      if (!user) {
+        throw new NotFoundException('用户未找到');
+      }
+
+      // 处理信息更新
+      if (!user.profile && profile) {
+        user.profile = queryRunner.manager.create(Profile, profile);
+      } else if (user.profile && profile) {
+        Object.assign(user.profile, profile);
+      }
+
+      // 处理角色更新
+      if (roles) {
+        const newRoles = await queryRunner.manager.find(Role, {
+          where: { id: In(roles) },
+        });
+        user.roles = newRoles;
+      }
+
+      Object.assign(user, userData);
+
+      await queryRunner.manager.save(user);
+      if (profile) {
+        await queryRunner.manager.save(user.profile);
+      }
+      if (roles) {
+        await queryRunner.manager.save(user.roles);
+      }
+
+      await queryRunner.commitTransaction();
+      return formatResponse(200, null, '用户信息更新成功');
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async userReset(id: number, newPassword?: string) {
