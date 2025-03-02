@@ -25,14 +25,16 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { existsSync, mkdirSync } from 'fs';
+import { unlink } from 'fs/promises';
 import { diskStorage } from 'multer';
+import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { CompleteChunkDto } from './dto/complete-chunk.dto';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateFileDto } from './dto/update-file.dto';
 import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { FileService } from './file.service';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
-import { UpdateFileDto } from './dto/update-file.dto';
 
 @Controller('file')
 @Roles(Role.Admin, Role.Expert)
@@ -81,25 +83,22 @@ export class FileController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: (req, file, cb) => {
-          // 根据文件 MIME 类型选择不同的文件夹
           let folder = 'uploads/other'; // 默认存储在 "other" 文件夹
           const mimeType = file.mimetype;
 
           // 按 MIME 类型分文件夹存储
           if (mimeType.startsWith('image')) {
-            folder = 'uploads/images'; // 存储图片文件
+            folder = 'uploads/images';
           } else if (mimeType.startsWith('video')) {
-            folder = 'uploads/videos'; // 存储视频文件
+            folder = 'uploads/videos';
           } else if (mimeType.startsWith('application')) {
-            folder = 'uploads/documents'; // 存储文档文件
+            folder = 'uploads/documents';
           } else if (mimeType.startsWith('audio')) {
-            folder = 'uploads/audio'; // 存储音频文件
+            folder = 'uploads/audio';
           }
 
-          // 确保文件夹存在，如果没有则创建
-          const fs = require('fs');
-          if (!fs.existsSync(folder)) {
-            fs.mkdirSync(folder, { recursive: true });
+          if (!existsSync(folder)) {
+            mkdirSync(folder, { recursive: true });
           }
           cb(null, folder);
         },
@@ -118,7 +117,16 @@ export class FileController {
     @Req() req: Request,
     @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
   ) {
-    return this.fileService.uploadSingle(req.user.userId, file);
+    try {
+      return this.fileService.uploadSingle(req.user.userId, file);
+    } catch (error) {
+      // 清理上传失败的文件
+      const filePath = join('uploads', file.filename);
+      if (existsSync(filePath)) {
+        await unlink(filePath);
+      }
+      throw error;
+    }
   }
 
   // 创建上传任务
@@ -176,7 +184,19 @@ export class FileController {
     @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
     @Body() dto: UploadChunkDto,
   ) {
-    return this.fileService.uploadChunk(dto.taskId, dto.chunkIndex);
+    try {
+      return this.fileService.uploadChunk(dto.taskId, dto.chunkIndex);
+    } catch (error) {
+      // 清理上传失败的文件
+      const chunkPath = join(
+        'uploads/chunks',
+        `${dto.fileMd5}-${dto.chunkIndex}`,
+      );
+      if (existsSync(chunkPath)) {
+        await unlink(chunkPath);
+      }
+      throw error;
+    }
   }
 
   // 文件下载
