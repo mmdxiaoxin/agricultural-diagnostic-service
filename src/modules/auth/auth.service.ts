@@ -15,7 +15,7 @@ export class AuthService {
     if (user) {
       throw new ForbiddenException('用户已存在');
     }
-    return this.usersService.create({ email, password });
+    return this.usersService.userCreate({ email, password });
   }
 
   async login(login: string, password: string) {

@@ -151,7 +151,7 @@ export class UserController {
   async userCreate(@Body() createUserDto: CreateUserDto) {
     const { gender, name, phone, address, ...user } = createUserDto;
     await this.userService.setRoles(user as User);
-    await this.userService.create(user as User, {
+    await this.userService.userCreate(user as User, {
       gender,
       name,
       phone,

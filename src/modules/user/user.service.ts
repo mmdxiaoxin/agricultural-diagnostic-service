@@ -56,7 +56,7 @@ export class UserService {
     }
   }
 
-  async create(user: Partial<User>, profile?: Partial<Profile>) {
+  async userCreate(user: Partial<User>, profile?: Partial<Profile>) {
     await this.validateUserParams(user); // 验证参数
     await this.setRoles(user); // 设置角色
     await this.setDefaultPassword(user); // 设置默认密码
