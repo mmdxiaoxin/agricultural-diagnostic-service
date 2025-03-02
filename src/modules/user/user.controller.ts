@@ -47,12 +47,8 @@ export class UserController {
   // 获取个人信息
   @Get('profile')
   async profileGet(@Req() req: Request) {
-    try {
-      const profile = await this.userService.getProfile(req.user.userId, req);
-      return formatResponse(200, profile, '个人信息获取成功');
-    } catch (error) {
-      throw error;
-    }
+    const profile = await this.userService.getProfile(req.user.userId, req);
+    return formatResponse(200, profile, '个人信息获取成功');
   }
 
   // 更新个人信息
@@ -61,12 +57,8 @@ export class UserController {
     @Req() req: Request,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    try {
-      await this.userService.updateProfile(req.user.userId, updateProfileDto);
-      return formatResponse(200, null, '个人信息更新成功');
-    } catch (error) {
-      throw error;
-    }
+    await this.userService.updateProfile(req.user.userId, updateProfileDto);
+    return formatResponse(200, null, '个人信息更新成功');
   }
 
   // 上传个人头像
@@ -97,28 +89,20 @@ export class UserController {
     )
     file: Express.Multer.File,
   ) {
-    try {
-      await this.userService.updateAvatar(req.user.userId, file);
-      return formatResponse(HttpStatus.OK, null, '头像上传成功');
-    } catch (error) {
-      throw error;
-    }
+    await this.userService.updateAvatar(req.user.userId, file);
+    return formatResponse(HttpStatus.OK, null, '头像上传成功');
   }
 
   // 获取个人头像
   @Get('avatar/:token')
   async getAvatar(@Param('token') token: string, @Res() res: Response) {
-    try {
-      const avatarPath = await this.userService.getAvatar(token);
-      const filePath = join(process.cwd(), avatarPath);
-      if (!existsSync(filePath)) {
-        throw new BadRequestException('头像文件不存在');
-      }
-      // 以文件流方式返回头像
-      return res.sendFile(filePath);
-    } catch (error) {
-      throw error;
+    const avatarPath = await this.userService.getAvatar(token);
+    const filePath = join(process.cwd(), avatarPath);
+    if (!existsSync(filePath)) {
+      throw new BadRequestException('头像文件不存在');
     }
+    // 以文件流方式返回头像
+    return res.sendFile(filePath);
   }
 
   // 修改密码
@@ -128,12 +112,8 @@ export class UserController {
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     const { confirmPassword } = updatePasswordDto;
-    try {
-      await this.userService.updatePassword(req.user.userId, confirmPassword);
-      return formatResponse(200, null, '密码修改成功');
-    } catch (error) {
-      throw error;
-    }
+    await this.userService.updatePassword(req.user.userId, confirmPassword);
+    return formatResponse(200, null, '密码修改成功');
   }
 
   // 退出登陆
@@ -154,17 +134,13 @@ export class UserController {
     @Query('phone') phone?: string,
     @Query('address') address?: string,
   ) {
-    try {
-      const data = await this.userService.getUserList(page, pageSize, {
-        username,
-        name,
-        phone,
-        address,
-      });
-      return formatResponse(200, data, '用户列表获取成功');
-    } catch (error) {
-      throw error;
-    }
+    const data = await this.userService.getUserList(page, pageSize, {
+      username,
+      name,
+      phone,
+      address,
+    });
+    return formatResponse(200, data, '用户列表获取成功');
   }
 
   // 创建单个用户 (需要管理员权限)
