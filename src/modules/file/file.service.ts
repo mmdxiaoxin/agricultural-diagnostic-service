@@ -4,6 +4,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
@@ -307,7 +308,21 @@ export class FileService {
     }
   }
 
-  async getUploadTaskStatus(taskId: number) {}
+  async getUploadTaskStatus(taskId: number) {
+    const task = await this.taskRepository.findOne({
+      where: { id: taskId },
+    });
+    if (!task) {
+      throw new NotFoundException('未找到上传任务');
+    }
+    return formatResponse(200, {
+      taskId: task.id,
+      status: task.status,
+      chunkStatus: task.chunkStatus,
+      totalChunks: task.totalChunks,
+      uploadedChunks: task.uploadedChunks,
+    });
+  }
 
   async findById(fileId: number) {
     return this.fileRepository.findOne({
