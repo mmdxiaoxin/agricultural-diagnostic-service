@@ -3,9 +3,11 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Role } from '../role/role.entity';
+import { Profile } from './profile.entity';
 
 @Entity('user')
 export class User {
@@ -21,21 +23,17 @@ export class User {
   @Column({ type: 'varchar', length: 255 })
   password: string;
 
+  @Column({ type: 'tinyint', default: 0 })
+  status: 0 | 1;
+
+  // 用户和角色是多对多关系
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({ name: 'users_roles' })
   roles: Role[];
 
-  @Column({ type: 'tinyint', default: 0 })
-  status: 0 | 1;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  name: string | null;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  phone: string | null;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  address: string | null;
+  // 用户和个人信息是一对一关系
+  @OneToOne(() => Profile, (profile) => profile.user, { cascade: true })
+  profile: Profile;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
