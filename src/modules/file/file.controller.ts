@@ -213,6 +213,7 @@ export class FileController {
 
   // 文件删除
   @Delete('delete/:fileId')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteFile(
     @Param(
       'fileId',
@@ -220,7 +221,7 @@ export class FileController {
     )
     fileId: number,
   ) {
-    // return this.fileService.deleteFile(fileId);
+    return this.fileService.deleteFile(fileId);
   }
 
   // 生成临时访问链接

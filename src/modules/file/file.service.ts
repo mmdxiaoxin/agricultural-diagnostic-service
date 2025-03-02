@@ -220,6 +220,28 @@ export class FileService {
     }
   }
 
+  async deleteFile(fileId: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const file = await queryRunner.manager.findOne(FileEntity, {
+        where: { id: fileId },
+      });
+      if (!file) {
+        throw new NotFoundException('未找到文件');
+      }
+      await this.fileOperationService.deleteFile(file.filePath);
+      await queryRunner.manager.delete(FileEntity, fileId);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   // 上传文件
   async uploadSingle(user_id: number, file: Express.Multer.File) {
     if (!file) {
