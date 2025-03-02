@@ -11,8 +11,8 @@ import { Request } from 'express';
 import { unlink } from 'fs';
 import { DataSource, In, Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
-import { Profile } from './profile.entity';
-import { User } from './user.entity';
+import { Profile } from './models/profile.entity';
+import { User } from './models/user.entity';
 
 @Injectable()
 export class UserService {

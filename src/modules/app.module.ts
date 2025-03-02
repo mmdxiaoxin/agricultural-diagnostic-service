@@ -9,13 +9,13 @@ import { Dataset } from './dataset/dataset.entity';
 import { DatasetModule } from './dataset/dataset.module';
 import { File } from './file/file.entity';
 import { FileModule } from './file/file.module';
+import { Menu } from './menu/menu.entity';
+import { MenuModule } from './menu/menu.module';
 import { Role } from './role/role.entity';
 import { RoleModule } from './role/role.module';
-import { User } from './user/user.entity';
+import { Profile } from './user/models/profile.entity';
+import { User } from './user/models/user.entity';
 import { UserModule } from './user/user.module';
-import { MenuModule } from './menu/menu.module';
-import { Menu } from './menu/menu.entity';
-import { Profile } from './user/profile.entity';
 
 @Module({
   imports: [

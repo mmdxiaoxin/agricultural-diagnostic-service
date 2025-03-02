@@ -6,7 +6,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Role } from '../role/role.entity';
+import { Role } from '../../role/role.entity';
 import { Profile } from './profile.entity';
 
 @Entity('user')
