@@ -7,18 +7,23 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
-import * as path from 'path';
-import { In, Repository } from 'typeorm';
-import { File as FileEntity } from './models/file.entity';
-import { FileOperationService } from './operation.service';
 import { unlink } from 'fs/promises';
+import * as path from 'path';
+import { DataSource, In, Repository } from 'typeorm';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { File as FileEntity } from './models/file.entity';
+import { Task as TaskEntity } from './models/task.entity';
+import { FileOperationService } from './operation.service';
 
 @Injectable()
 export class FileService {
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
+    @InjectRepository(TaskEntity)
+    private readonly taskRepository: Repository<TaskEntity>,
     private readonly fileOperationService: FileOperationService,
+    private readonly dataSource: DataSource,
   ) {}
 
   private async computeFileSizeByType(createdBy: number, fileTypes: string[]) {
@@ -217,6 +222,88 @@ export class FileService {
     } catch (error) {
       await unlink(file.path);
       throw error;
+    }
+  }
+
+  async createUploadTask(userId: number, taskMeta: CreateTaskDto) {
+    const { fileName, fileSize, fileType, fileMd5, totalChunks } = taskMeta;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 查找已有文件
+      const file = await queryRunner.manager.findOne(FileEntity, {
+        where: { fileMd5 },
+      });
+
+      if (file) {
+        // 若找到重复文件，创建文件记录和任务记录，任务状态为 completed
+        const newFile = this.fileRepository.create({
+          originalFileName: fileName,
+          storageFileName: file.storageFileName,
+          filePath: file.filePath,
+          fileSize: file.fileSize,
+          fileType: file.fileType,
+          fileMd5: file.fileMd5,
+          createdBy: userId,
+          updatedBy: userId,
+          version: 1,
+        });
+
+        await queryRunner.manager.save(FileEntity, newFile);
+
+        // 创建任务记录，状态为 completed
+        const task = queryRunner.manager.create(TaskEntity, {
+          fileName: fileName,
+          fileSize: file.fileSize, // 复制已有文件的大小
+          fileType: file.fileType, // 使用已上传文件的类型
+          fileMd5: fileMd5,
+          totalChunks: totalChunks,
+          uploadedChunks: totalChunks,
+          status: 'completed',
+          createdBy: userId,
+          updatedBy: userId,
+          version: 1,
+        });
+        await queryRunner.manager.save(task);
+
+        await queryRunner.commitTransaction();
+
+        return formatResponse(
+          200,
+          { file_id: file.id, status: 'completed' },
+          '上传完毕',
+        );
+      }
+
+      // 文件不存在，创建任务并设置状态为 uploading
+      const task = queryRunner.manager.create(TaskEntity, {
+        fileName: fileName,
+        fileSize: fileSize,
+        fileType: fileType,
+        fileMd5: fileMd5,
+        totalChunks: totalChunks,
+        uploadedChunks: 0,
+        status: 'uploading',
+        createdBy: userId,
+        updatedBy: userId,
+        version: 1,
+      });
+      await queryRunner.manager.save(task);
+
+      await queryRunner.commitTransaction();
+
+      return formatResponse(
+        201,
+        { taskId: task.id, status: 'uploading' },
+        '任务创建成功',
+      );
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 

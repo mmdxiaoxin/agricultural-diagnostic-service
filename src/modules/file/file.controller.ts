@@ -9,6 +9,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
@@ -24,6 +26,7 @@ import { Request } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+import { CreateTaskDto } from './dto/create-task.dto';
 import { FileService } from './file.service';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
 @Controller('file')
@@ -115,8 +118,9 @@ export class FileController {
 
   // 创建上传任务
   @Post('upload/create')
-  async createUploadTask(@Body() taskDetails: any) {
-    // return this.fileService.createUploadTask(taskDetails);
+  @HttpCode(HttpStatus.CREATED)
+  async createUploadTask(@Req() req: Request, @Body() dto: CreateTaskDto) {
+    return this.fileService.createUploadTask(req.user.userId, dto);
   }
 
   // 查询上传任务状态
@@ -144,15 +148,15 @@ export class FileController {
           cb(null, folder);
         },
         filename: (req, file, cb) => {
-          const { task_id, chunkIndex } = req.body;
+          const { fileMd5, chunkIndex } = req.body;
 
-          if (!task_id || !chunkIndex) {
+          if (!fileMd5 || !chunkIndex) {
             return cb(
-              new Error('Missing task_id or chunkIndex'),
+              new Error('Missing fileMd5 or chunkIndex'),
               file.filename,
             );
           }
-          cb(null, `${task_id}-${chunkIndex}`);
+          cb(null, `${fileMd5}-${chunkIndex}`);
         },
       }),
     }),
