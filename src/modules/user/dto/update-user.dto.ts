@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  ArrayMinSize,
 } from 'class-validator';
 import { Profile } from '../models/profile.entity';
 
@@ -29,7 +30,7 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsArray({ message: '角色必须是数组' })
-  @Length(1, 10, { message: '请至少选择一个角色' })
+  @ArrayMinSize(1, { message: '请至少选择一个角色' })
   roles?: number[];
 
   @IsOptional()
