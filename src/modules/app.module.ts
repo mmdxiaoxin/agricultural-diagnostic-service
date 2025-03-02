@@ -16,6 +16,7 @@ import { RoleModule } from './role/role.module';
 import { Profile } from './user/models/profile.entity';
 import { User } from './user/models/user.entity';
 import { UserModule } from './user/user.module';
+import { Task } from './file/models/task.entity';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { UserModule } from './user/user.module';
           username: configService.get(ConfigEnum.DB_USERNAME),
           password: configService.get(ConfigEnum.DB_PASSWORD),
           database: configService.get(ConfigEnum.DB_DATABASE),
-          entities: [User, Role, File, Dataset, Menu, Profile],
+          entities: [User, Role, File, Dataset, Menu, Profile, Task],
           synchronize: configService.get(ConfigEnum.DB_SYNC),
           logging: process.env.NODE_ENV === 'development',
         }) as TypeOrmModuleOptions,

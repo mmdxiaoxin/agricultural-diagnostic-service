@@ -18,10 +18,10 @@ export class Task {
   fileMd5?: string;
 
   @Column({ type: 'int', nullable: false })
-  total_chunks: number;
+  totalChunks: number;
 
   @Column({ type: 'int', default: 0, nullable: false })
-  uploaded_chunks: number;
+  uploadedChunks: number;
 
   @Column({ type: 'varchar', length: 50, default: 'pending', nullable: true })
   status: string;
