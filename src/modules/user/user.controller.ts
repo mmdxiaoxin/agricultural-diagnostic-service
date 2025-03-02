@@ -28,6 +28,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { UpdatePasswordDto } from './dto/change-pass.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import {
   AvatarSizeValidationPipe,
@@ -119,14 +120,23 @@ export class UserController {
 
   // 修改密码
   @Put('reset/password')
-  async changePassword(@Body() changePasswordDto: any) {
-    return 'Password updated';
+  async updatePassword(
+    @Req() req: Request<null, any, UpdatePasswordDto>,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    const { confirmPassword } = updatePasswordDto;
+    try {
+      await this.userService.updatePassword(req.user.userId, confirmPassword);
+      return formatResponse(200, null, '密码修改成功');
+    } catch (error) {
+      throw error;
+    }
   }
 
   // 退出登陆
   @Post('logout')
   async logout() {
-    return 'User logged out';
+    return formatResponse(200, null, '退出登录成功');
   }
 
   // 获取用户列表 (需要管理员权限)

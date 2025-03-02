@@ -174,6 +174,16 @@ export class UserService {
     }
   }
 
+  async updatePassword(userId: number, password: string) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('用户不存在');
+    }
+
+    user.password = await hash(password, 10);
+    return this.userRepository.save(user);
+  }
+
   async findByLogin(login: string): Promise<User | null> {
     return this.userRepository
       .createQueryBuilder('user')
