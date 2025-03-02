@@ -231,7 +231,11 @@ export class FileService {
       let fileMeta: FileEntity;
       if (foundFile) {
         await this.fileOperationService.deleteFile(file.path);
-        fileMeta = await this.createFile(user_id, foundFile);
+        fileMeta = await this.createFile(user_id, {
+          ...foundFile,
+          originalFileName:
+            file.originalname || file.filename || foundFile.originalFileName,
+        });
       } else {
         fileMeta = await this.createFile(user_id, {
           ...file,
