@@ -11,11 +11,11 @@ import { Profile } from '../models/profile.entity';
 
 export class UpdateUserDto {
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: '邮箱格式不正确' })
   email?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: '用户名必须为字符串类型' })
   @Length(5, 20, { message: '用户名长度必须为5-20位' })
   username?: string;
 
@@ -25,7 +25,7 @@ export class UpdateUserDto {
   password?: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsNumber({}, { message: '状态必须为数字类型' })
   status?: 0 | 1;
 
   @IsOptional()

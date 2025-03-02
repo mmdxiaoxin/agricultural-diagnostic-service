@@ -1,11 +1,11 @@
 import { IsNumber, IsOptional, IsPhoneNumber, IsString } from 'class-validator';
 
 export class UpdateProfileDto {
-  @IsNumber()
+  @IsNumber({}, { message: '性别必须为数字类型！' })
   @IsOptional()
   gender?: number;
 
-  @IsString()
+  @IsString({ message: '昵称必须为字符串类型！' })
   @IsOptional()
   name?: string;
 
@@ -13,7 +13,7 @@ export class UpdateProfileDto {
   @IsOptional()
   phone?: string;
 
-  @IsString()
+  @IsString({ message: '地址必须为字符串类型！' })
   @IsOptional()
   address?: string;
 }
