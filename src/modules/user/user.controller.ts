@@ -1,10 +1,11 @@
 import { Roles } from '@/common/decorator/roles.decorator';
 import { Role } from '@/common/enum/role.enum';
 import { TypeormFilter } from '@/common/filters/typeorm.filter';
-import { AuthGuard, UserPayload } from '@/common/guards/auth.guard';
+import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { formatResponse } from '@/common/helpers/response.helper';
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -15,15 +16,17 @@ import {
   Post,
   Put,
   Req,
+  Res,
   UploadedFile,
   UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Request, Response } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import {
@@ -39,9 +42,9 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
   // 获取个人信息
   @Get('profile')
-  async profileGet(@Req() req: { user: UserPayload }) {
+  async profileGet(@Req() req: Request) {
     try {
-      const profile = await this.userService.getProfile(req.user.userId);
+      const profile = await this.userService.getProfile(req.user.userId, req);
       return formatResponse(200, profile, '个人信息获取成功');
     } catch (error) {
       throw error;
@@ -51,7 +54,7 @@ export class UserController {
   // 更新个人信息
   @Put('profile')
   async profileUpdate(
-    @Req() req: { user: UserPayload },
+    @Req() req: Request,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
     try {
@@ -83,7 +86,7 @@ export class UserController {
     }),
   )
   async uploadAvatar(
-    @Req() req: { user: UserPayload },
+    @Req() req,
     @UploadedFile(
       new AvatarSizeValidationPipe(),
       new AvatarTypeValidationPipe(),
@@ -99,9 +102,19 @@ export class UserController {
   }
 
   // 获取个人头像
-  @Get('avatar')
-  async getAvatar() {
-    return 'Get user avatar';
+  @Get('avatar/:token')
+  async getAvatar(@Param('token') token: string, @Res() res: Response) {
+    try {
+      const avatarPath = await this.userService.getAvatar(token);
+      const filePath = join(process.cwd(), avatarPath);
+      if (!existsSync(filePath)) {
+        throw new BadRequestException('头像文件不存在');
+      }
+      // 以文件流方式返回头像
+      return res.sendFile(filePath);
+    } catch (error) {
+      throw error;
+    }
   }
 
   // 修改密码

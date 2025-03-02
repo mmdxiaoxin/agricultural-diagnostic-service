@@ -2,9 +2,12 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash } from 'bcryptjs';
+import { Request } from 'express';
 import { unlink } from 'fs';
 import { DataSource, In, Repository } from 'typeorm';
 import { Role } from '../role/role.entity';
@@ -18,6 +21,7 @@ export class UserService {
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
     @InjectRepository(Profile)
     private readonly profileRepository: Repository<Profile>,
+    private jwt: JwtService,
     private dataSource: DataSource,
   ) {}
 
@@ -51,7 +55,7 @@ export class UserService {
     return this.userRepository.save(newUser);
   }
 
-  async getProfile(id: number) {
+  async getProfile(id: number, req: Request) {
     const user = await this.findById(id);
     if (!user) {
       throw new BadRequestException('用户不存在');
@@ -62,15 +66,41 @@ export class UserService {
     });
 
     if (!profile) {
-      profile = new Profile(); // 创建一个新的 Profile 实例
-      profile.user = user; // 关联用户
+      profile = new Profile();
+      profile.user = user;
       await this.profileRepository.save(profile);
+    }
+
+    let avatarUrl: string | null = null;
+    if (profile.avatar) {
+      const token = this.jwt.sign({ userId: user.id });
+      const serverUrl = `${req.protocol}://${req.get('host')}`; // 动态获取服务器地址
+      avatarUrl = `${serverUrl}/user/avatar/${token}`;
     }
 
     return {
       ...profile,
+      avatar: avatarUrl,
       user: undefined,
     };
+  }
+
+  async getAvatar(token: string) {
+    try {
+      const payload = this.jwt.verify(token);
+      const user = await this.findById(payload.userId);
+      if (!user) {
+        throw new BadRequestException('无效的用户');
+      }
+
+      const profile = await this.profileRepository.findOne({ where: { user } });
+      if (!profile || !profile.avatar) {
+        throw new NotFoundException('用户头像不存在');
+      }
+      return profile.avatar;
+    } catch (error) {
+      throw new BadRequestException('无效或过期的 token');
+    }
   }
 
   async updateProfile(userId: number, profile: Partial<Profile>) {
