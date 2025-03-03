@@ -7,8 +7,11 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { Dataset } from './dataset/dataset.entity';
 import { DatasetModule } from './dataset/dataset.module';
-import { File } from './file/models/file.entity';
 import { FileModule } from './file/file.module';
+import { File } from './file/models/file.entity';
+import { Task } from './file/models/task.entity';
+import { PlantDiseaseKnowledge } from './knowledge/knowledge.entity';
+import { KnowledgeModule } from './knowledge/knowledge.module';
 import { Menu } from './menu/menu.entity';
 import { MenuModule } from './menu/menu.module';
 import { Role } from './role/role.entity';
@@ -16,7 +19,6 @@ import { RoleModule } from './role/role.module';
 import { Profile } from './user/models/profile.entity';
 import { User } from './user/models/user.entity';
 import { UserModule } from './user/user.module';
-import { Task } from './file/models/task.entity';
 
 @Module({
   imports: [
@@ -34,7 +36,16 @@ import { Task } from './file/models/task.entity';
           username: configService.get(ConfigEnum.DB_USERNAME),
           password: configService.get(ConfigEnum.DB_PASSWORD),
           database: configService.get(ConfigEnum.DB_DATABASE),
-          entities: [User, Role, File, Dataset, Menu, Profile, Task],
+          entities: [
+            User,
+            Role,
+            File,
+            Dataset,
+            Menu,
+            Profile,
+            Task,
+            PlantDiseaseKnowledge,
+          ],
           synchronize: configService.get(ConfigEnum.DB_SYNC),
           logging: process.env.NODE_ENV === 'development',
         }) as TypeOrmModuleOptions,
@@ -45,6 +56,7 @@ import { Task } from './file/models/task.entity';
     FileModule,
     DatasetModule,
     MenuModule,
+    KnowledgeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
