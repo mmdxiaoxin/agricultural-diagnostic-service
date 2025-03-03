@@ -12,6 +12,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   UseFilters,
@@ -44,7 +45,13 @@ export class RoleController {
   @Get(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async findOne(@Param('id') id: number) {
+  async findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     const role = await this.roleService.findOne(id);
     return formatResponse(200, role, '获取角色成功');
   }
@@ -61,7 +68,14 @@ export class RoleController {
   @Put(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async update(@Param('id') id: number, @Body() dto: UpdateRoleDto) {
+  async update(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+    @Body() dto: UpdateRoleDto,
+  ) {
     const updatedRole = await this.roleService.update(id, dto);
     return formatResponse(200, updatedRole, '角色更新成功');
   }
@@ -70,7 +84,13 @@ export class RoleController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async remove(@Param('id') id: number) {
+  async remove(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     return await this.roleService.remove(id);
   }
 }
