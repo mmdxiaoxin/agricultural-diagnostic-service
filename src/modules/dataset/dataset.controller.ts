@@ -54,8 +54,8 @@ export class DatasetController {
 
   // 创建数据集
   @Post('create')
-  async createDataset(@Body() createDatasetDto: CreateDatasetDto) {
-    return this.manageService.createDataset(createDatasetDto);
+  async createDataset(@Req() req: Request, @Body() dto: CreateDatasetDto) {
+    return this.manageService.createDataset(req.user.userId, dto);
   }
 
   // 获取数据集详情

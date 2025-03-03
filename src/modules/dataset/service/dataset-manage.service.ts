@@ -1,4 +1,5 @@
 import { formatResponse } from '@/common/helpers/response.helper';
+import { FileService } from '@/modules/file/services/file.service';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,6 +12,7 @@ export class DatasetManageService {
   constructor(
     @InjectRepository(Dataset)
     private datasetRepository: Repository<Dataset>,
+    private fileService: FileService,
   ) {}
 
   async datasetsListGet(
@@ -70,9 +72,18 @@ export class DatasetManageService {
     );
   }
 
-  async createDataset(createDatasetDto: CreateDatasetDto): Promise<Dataset> {
-    const dataset = this.datasetRepository.create(createDatasetDto);
-    return this.datasetRepository.save(dataset);
+  async createDataset(userId: number, dto: CreateDatasetDto) {
+    const { fileIds, ...datasetData } = dto;
+    const dataset = this.datasetRepository.create({
+      ...datasetData,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+    if (fileIds && fileIds?.length > 0) {
+      dataset.files = await this.fileService.findByIds(fileIds);
+    }
+    await this.datasetRepository.save(dataset);
+    return formatResponse(200, dataset, '创建数据集成功');
   }
 
   async getDatasetDetail(datasetId: number) {
