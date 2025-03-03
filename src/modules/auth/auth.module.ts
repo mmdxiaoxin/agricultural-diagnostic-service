@@ -14,13 +14,10 @@ import { JwtStrategy } from './auth.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        // console.log({
-        //   secret: configService.get<string>(ConfigEnum.SECRET),
-        // });
         return {
           secret: configService.get<string>(ConfigEnum.SECRET),
           signOptions: {
-            expiresIn: '1d', //设置token过期时间，1天
+            expiresIn: '1d', // 默认一天
           },
         };
       },
