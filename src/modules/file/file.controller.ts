@@ -399,9 +399,6 @@ export class FileController {
   ) {
     const fileId = this.downloadService.verifyAccessLink(token);
     const fileMeta = await this.commonService.findById(fileId);
-    if (!fileMeta) {
-      return res.status(HttpStatus.NOT_FOUND).send('File not found');
-    }
     const filePath = join(process.cwd(), fileMeta.filePath); // 确保文件路径是绝对路径
 
     // 获取 Range 请求头

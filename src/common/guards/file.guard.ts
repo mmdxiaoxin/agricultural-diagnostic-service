@@ -37,9 +37,6 @@ export class FileGuard implements CanActivate {
 
     // 查询文件信息并将其存储到 request.file 中
     const file = await this.fileService.findById(fileId);
-    if (!file) {
-      throw new NotFoundException('没有找到文件.');
-    }
 
     // 处理权限验证
     if (
@@ -69,9 +66,6 @@ export class FilesGuard implements CanActivate {
 
     // 查询多个文件信息并将其存储到请求中
     const files = await this.fileService.findByIds(fileIds);
-    if (files.length !== fileIds.length) {
-      throw new NotFoundException('有文件不存在.');
-    }
 
     const filesWithAccess: FileEntity[] = [];
 

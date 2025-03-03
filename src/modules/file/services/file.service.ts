@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { File as FileEntity } from '../models/file.entity';
@@ -11,14 +11,22 @@ export class FileService {
   ) {}
 
   async findById(fileId: number) {
-    return this.fileRepository.findOne({
+    const file = await this.fileRepository.findOne({
       where: { id: fileId },
     });
+    if (!file) {
+      throw new NotFoundException('没有找到文件.');
+    }
+    return file;
   }
 
   async findByIds(fileIds: number[]) {
-    return this.fileRepository.find({
+    const files = await this.fileRepository.find({
       where: { id: In(fileIds) },
     });
+    if (!files.length) {
+      throw new NotFoundException('没有找到文件.');
+    }
+    return files;
   }
 }
