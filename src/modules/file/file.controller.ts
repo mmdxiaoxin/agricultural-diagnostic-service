@@ -240,94 +240,21 @@ export class FileController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const fileMeta = req.fileMeta; // 从请求中获取文件信息
-    const filePath = join(process.cwd(), fileMeta.filePath); // 确保文件路径是绝对路径
-
-    // 获取 Range 请求头
-    const range = req.headers.range;
-
-    // 如果没有 Range 头，正常返回文件
-    if (!range) {
-      res
-        .status(HttpStatus.OK)
-        .set({
-          'Content-Length': fileMeta.fileSize,
-          'Content-Type': fileMeta.fileType,
-          'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
-        })
-        .sendFile(filePath);
-      return;
-    }
-
-    // 如果有 Range 头，进行断点续传
-    const parts = range.replace(/bytes=/, '').split('-');
-    const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : fileMeta.fileSize - 1;
-
-    // 检查 Range 是否有效
-    if (start >= fileMeta.fileSize || end >= fileMeta.fileSize) {
-      return res
-        .status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE)
-        .send('Requested range not satisfiable');
-    }
-
-    // 设置响应头
-    res
-      .status(HttpStatus.PARTIAL_CONTENT)
-      .set({
-        'Content-Range': `bytes ${start}-${end}/${fileMeta.fileSize}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': end - start + 1,
-        'Content-Type': 'application/octet-stream',
-      })
-      .sendFile(filePath, {
-        headers: {
-          Range: `bytes=${start}-${end}`,
-        },
-        start, // 设置从文件流的哪个位置开始读取
-        end, // 设置读取的结束位置
-      });
+    const fileMeta = req.fileMeta;
+    return this.downloadService.downloadFile(fileMeta, req, res);
   }
 
   // 批量文件下载
   @Post('download')
   @Roles(Role.Admin, Role.Expert)
-  @UseGuards(AuthGuard, RolesGuard, FilesGuard)
+  @UseGuards(AuthGuard, RolesGuard, FileGuard)
   async downloadFiles(
     @Body() _: DownloadFilesDto,
     @Req() req: Request,
     @Res() res: Response,
   ) {
     const filesMeta = req.filesMeta;
-
-    // 创建一个可写流，准备将压缩包发送给客户端
-    const zipFileName = 'files.zip';
-    const zip = archiver('zip', {
-      zlib: { level: 9 },
-    });
-
-    res.attachment(zipFileName); // 设置响应头，指示浏览器下载文件
-    zip.pipe(res); // 将zip流管道到响应流
-
-    // 将文件添加到压缩包中
-    for (const fileMeta of filesMeta) {
-      const filePath = join(process.cwd(), fileMeta.filePath);
-
-      // 添加文件到压缩包
-      zip.append(createReadStream(filePath), {
-        name: fileMeta.originalFileName,
-      });
-    }
-
-    // 完成压缩包的创建
-    zip.finalize();
-
-    // 错误处理
-    zip.on('error', (err) => {
-      res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .send(`Error creating zip file: ${err.message}`);
-    });
+    return this.downloadService.downloadFilesAsZip(filesMeta, res);
   }
 
   // 文件修改
@@ -399,51 +326,6 @@ export class FileController {
   ) {
     const fileId = this.downloadService.verifyAccessLink(token);
     const fileMeta = await this.commonService.findById(fileId);
-    const filePath = join(process.cwd(), fileMeta.filePath); // 确保文件路径是绝对路径
-
-    // 获取 Range 请求头
-    const range = req.headers.range;
-
-    // 如果没有 Range 头，正常返回文件
-    if (!range) {
-      res
-        .status(HttpStatus.OK)
-        .set({
-          'Content-Length': fileMeta.fileSize,
-          'Content-Type': fileMeta.fileType,
-          'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
-        })
-        .sendFile(filePath);
-      return;
-    }
-
-    // 如果有 Range 头，进行断点续传
-    const parts = range.replace(/bytes=/, '').split('-');
-    const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : fileMeta.fileSize - 1;
-
-    // 检查 Range 是否有效
-    if (start >= fileMeta.fileSize || end >= fileMeta.fileSize) {
-      return res
-        .status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE)
-        .send('Requested range not satisfiable');
-    }
-
-    // 设置响应头
-    res
-      .status(HttpStatus.PARTIAL_CONTENT)
-      .set({
-        'Content-Range': `bytes ${start}-${end}/${fileMeta.fileSize}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': end - start + 1,
-        'Content-Type': 'application/octet-stream',
-      })
-      .sendFile(filePath, {
-        headers: {
-          Range: `bytes=${start}-${end}`,
-        },
-        start, // 设置从文件流的哪个位置开始读取
-        end, // 设置读取的结束位置
-      });
+    return this.downloadService.downloadFile(fileMeta, req, res);
   }
 }
