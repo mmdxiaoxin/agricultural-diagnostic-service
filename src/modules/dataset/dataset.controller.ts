@@ -1,35 +1,61 @@
+import { Roles } from '@/common/decorator/roles.decorator';
+import { Role } from '@/common/enum/role.enum';
+import { TypeormFilter } from '@/common/filters/typeorm.filter';
+import { AuthGuard } from '@/common/guards/auth.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { ParseStringDatePipe } from '@/common/pipe/string-date.pipe';
 import {
+  Body,
   Controller,
+  Delete,
   Get,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   Put,
-  Delete,
-  Param,
-  Body,
+  Query,
+  Req,
   UseFilters,
-  ParseIntPipe,
-  HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-import { DatasetService } from './dataset.service';
+import { Request } from 'express';
 import { CreateDatasetDto } from './dto/create-dataset.dto';
 import { UpdateDatasetDto } from './dto/update-dataset.dto';
-import { TypeormFilter } from '@/common/filters/typeorm.filter';
+import { DatasetManageService } from './service/dataset-manage.service';
 
 @Controller('dataset')
+@Roles(Role.Admin, Role.Expert)
+@UseGuards(AuthGuard, RolesGuard)
 @UseFilters(TypeormFilter)
 export class DatasetController {
-  constructor(private readonly datasetService: DatasetService) {}
+  constructor(private readonly manageService: DatasetManageService) {}
 
   // 获取数据集列表
   @Get('list')
-  async getDatasetsList() {
-    return this.datasetService.getDatasetsList();
+  async datasetsListGet(
+    @Req() req: Request,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
+    @Query('name') name?: string,
+    @Query('createdStart', ParseStringDatePipe) createdStart?: string,
+    @Query('createdEnd', ParseStringDatePipe) createdEnd?: string,
+    @Query('updatedStart', ParseStringDatePipe) updatedStart?: string,
+    @Query('updatedEnd', ParseStringDatePipe) updatedEnd?: string,
+  ) {
+    return this.manageService.datasetsListGet(page, pageSize, req.user.userId, {
+      name,
+      createdStart,
+      createdEnd,
+      updatedStart,
+      updatedEnd,
+    });
   }
 
   // 创建数据集
   @Post('create')
   async createDataset(@Body() createDatasetDto: CreateDatasetDto) {
-    return this.datasetService.createDataset(createDatasetDto);
+    return this.manageService.createDataset(createDatasetDto);
   }
 
   // 获取数据集详情
@@ -41,7 +67,7 @@ export class DatasetController {
     )
     datasetId: number,
   ) {
-    return this.datasetService.getDatasetDetail(datasetId);
+    return this.manageService.getDatasetDetail(datasetId);
   }
 
   // 更新数据集
@@ -54,7 +80,7 @@ export class DatasetController {
     datasetId: number,
     @Body() updateDatasetDto: UpdateDatasetDto,
   ) {
-    return this.datasetService.updateDataset(datasetId, updateDatasetDto);
+    return this.manageService.updateDataset(datasetId, updateDatasetDto);
   }
 
   // 删除数据集
@@ -66,6 +92,6 @@ export class DatasetController {
     )
     datasetId: number,
   ) {
-    return this.datasetService.deleteDataset(datasetId);
+    return this.manageService.deleteDataset(datasetId);
   }
 }
