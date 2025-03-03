@@ -269,7 +269,6 @@ export class FileController {
         'Accept-Ranges': 'bytes',
         'Content-Length': end - start + 1,
         'Content-Type': 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
       })
       .sendFile(filePath, {
         headers: {
@@ -431,7 +430,6 @@ export class FileController {
         'Accept-Ranges': 'bytes',
         'Content-Length': end - start + 1,
         'Content-Type': 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
       })
       .sendFile(filePath, {
         headers: {
