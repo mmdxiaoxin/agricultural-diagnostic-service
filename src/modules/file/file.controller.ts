@@ -24,19 +24,20 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import * as archiver from 'archiver';
 import { Request, Response } from 'express';
-import { existsSync, mkdirSync } from 'fs';
+import { createReadStream, existsSync, mkdirSync } from 'fs';
 import { unlink } from 'fs/promises';
 import { diskStorage } from 'multer';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { CompleteChunkDto } from './dto/complete-chunk.dto';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { DownloadFilesDto } from './dto/download-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
 import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { FileService } from './file.service';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
-
 @Controller('file')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
@@ -202,7 +203,7 @@ export class FileController {
 
   // 文件下载
   @Get('download/:fileId')
-  @UseGuards(FileGuard) // 使用FileGuard进行权限验证
+  @UseGuards(FileGuard)
   async downloadFile(
     @Param(
       'fileId',
@@ -251,6 +252,7 @@ export class FileController {
         'Accept-Ranges': 'bytes',
         'Content-Length': end - start + 1,
         'Content-Type': 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
       })
       .sendFile(filePath, {
         headers: {
@@ -264,8 +266,41 @@ export class FileController {
   // 批量文件下载
   @Post('download')
   @UseGuards(FilesGuard)
-  async downloadFiles(@Body() fileIds: string[]) {
-    // return this.fileService.downloadFiles(fileIds);
+  async downloadFiles(
+    @Body() _: DownloadFilesDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const filesMeta = req.filesMeta;
+
+    // 创建一个可写流，准备将压缩包发送给客户端
+    const zipFileName = 'files.zip';
+    const zip = archiver('zip', {
+      zlib: { level: 9 },
+    });
+
+    res.attachment(zipFileName); // 设置响应头，指示浏览器下载文件
+    zip.pipe(res); // 将zip流管道到响应流
+
+    // 将文件添加到压缩包中
+    for (const fileMeta of filesMeta) {
+      const filePath = join(process.cwd(), fileMeta.filePath);
+
+      // 添加文件到压缩包
+      zip.append(createReadStream(filePath), {
+        name: fileMeta.originalFileName,
+      });
+    }
+
+    // 完成压缩包的创建
+    zip.finalize();
+
+    // 错误处理
+    zip.on('error', (err) => {
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .send(`Error creating zip file: ${err.message}`);
+    });
   }
 
   // 文件修改
