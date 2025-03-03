@@ -122,7 +122,7 @@ export class FileUploadService {
   }
 
   // 上传文件
-  async uploadSingle(user_id: number, file: Express.Multer.File) {
+  async uploadSingle(userId: number, file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('请上传文件');
     }
@@ -132,13 +132,13 @@ export class FileUploadService {
       let fileMeta: FileEntity;
       if (foundFile) {
         await this.fileOperationService.deleteFile(file.path);
-        fileMeta = await this.createFile(user_id, {
+        fileMeta = await this.createFile(userId, {
           ...foundFile,
           originalFileName:
             file.originalname || file.filename || foundFile.originalFileName,
         });
       } else {
-        fileMeta = await this.createFile(user_id, {
+        fileMeta = await this.createFile(userId, {
           ...file,
           fileMd5,
           fileType,

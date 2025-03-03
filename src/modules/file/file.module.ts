@@ -38,6 +38,6 @@ import { FileStorageService } from './services/file-storage.service';
     FileStorageService,
   ],
   controllers: [FileController],
-  exports: [FileService],
+  exports: [FileService, FileUploadService],
 })
 export class FileModule {}

@@ -8,9 +8,11 @@ import { AiService } from './models/ai-service.entity';
 import { DiagnosisHistory } from './models/diagnosis-history.entity';
 import { AiManageService } from './services/ai-manage.service';
 import { DiagnosisService } from './services/diagnosis.service';
+import { FileModule } from '../file/file.module';
 
 @Module({
   imports: [
+    FileModule,
     TypeOrmModule.forFeature([
       DiagnosisHistory,
       AiService,
