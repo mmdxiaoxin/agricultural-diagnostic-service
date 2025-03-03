@@ -10,8 +10,10 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CreatePlantDiseaseKnowledgeDto } from './dto/create-knowledge.dto';
@@ -33,8 +35,12 @@ export class KnowledgeController {
 
   // 获取所有病害知识记录
   @Get('list')
-  knowledgeListGet() {
-    return this.manageService.knowledgeListGet();
+  knowledgeListGet(
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
+    @Query('category') category?: string,
+  ) {
+    return this.manageService.knowledgeListGet(page, pageSize, { category });
   }
 
   // 获取单个病害知识记录

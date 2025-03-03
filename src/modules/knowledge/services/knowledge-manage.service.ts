@@ -22,8 +22,26 @@ export class KnowledgeManageService {
   }
 
   // 获取所有病害知识记录
-  async knowledgeListGet() {
-    const list = await this.knowledgeRepository.find();
+  async knowledgeListGet(
+    page: number = 1,
+    pageSize: number = 10,
+    filters: {
+      category?: string;
+    },
+  ) {
+    const queryBuilder = this.knowledgeRepository.createQueryBuilder(
+      'plant_disease_knowledge',
+    );
+    if (filters.category) {
+      queryBuilder.where('knowledge.category = :category', {
+        category: filters.category,
+      });
+    }
+    const list = await queryBuilder
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getMany();
+
     return formatResponse(200, list, '病害知识列表获取成功');
   }
 
