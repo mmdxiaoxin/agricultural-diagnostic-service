@@ -7,14 +7,14 @@ import {
 } from 'class-validator';
 
 export class LoginDto {
-  @ValidateIf((o) => typeof o.login === 'string') // 只有当 login 是字符串时才进行验证
   @IsString({ message: '登陆必须为字符串类型！' })
   @IsNotEmpty({ message: '登陆输入不能为空！' })
-  @ValidateIf((o) => o.login && !/^\S+@\S+\.\S+$/.test(o.login)) // 如果不是邮箱格式，认为它是用户名
+  @ValidateIf((o) => /^\S+@\S+\.\S+$/.test(o.login)) // 如果是邮箱格式，执行邮箱验证
+  @IsEmail({}, { message: '请输入有效的邮箱地址！' }) // 邮箱格式验证
+  @ValidateIf((o) => !/^\S+@\S+\.\S+$/.test(o.login)) // 如果不是邮箱格式，认为它是用户名
   @Matches(/^[a-zA-Z0-9_-]{3,16}$/, {
     message: '用户名必须由3-16个字母、数字、下划线或破折号组成！',
   })
-  @IsEmail({}, { message: '请输入有效的邮箱地址！' }) // 如果是邮箱，使用 IsEmail
   login: string;
 
   @IsString({ message: '密码必须为字符串类型！' })
