@@ -1,22 +1,22 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { File as FileEntity } from '@/modules/file/models/file.entity';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('diagnosis_history')
-@Index('diagnosis_history_created_by_idx', ['createdBy']) // 可以加索引（可选）
+@Index('diagnosis_history_created_by_idx', ['createdBy']) // 为 createdBy 字段添加索引
 export class DiagnosisHistory {
   @PrimaryGeneratedColumn('increment')
   id: number; // 主键ID
 
-  @Column({ type: 'varchar', length: 255 })
-  filePath: string; // 文件路径
-
-  @Column({ type: 'varchar', length: 255 })
-  fileName: string; // 文件名称
-
-  @Column({ type: 'varchar', length: 25 })
-  fileType: string; // 文件类型
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  resultPath: string | null; // 结果路径
+  @ManyToOne(() => FileEntity, { nullable: true })
+  @JoinColumn({ name: 'fileId' })
+  file: FileEntity | null; // 上传的数据文件
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   diagnosisResult: string | null; // 诊断结果
