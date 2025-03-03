@@ -27,47 +27,69 @@ export class DatasetManageService {
       updatedEnd?: string;
     },
   ) {
-    const query = this.datasetRepository.createQueryBuilder('dataset');
-    query.where('dataset.createdBy = :userId', { userId });
+    const queryBuilder = this.datasetRepository.createQueryBuilder('dataset');
 
+    // 添加过滤条件
     if (filters?.name) {
-      query.andWhere('dataset.name like :name', {
+      queryBuilder.andWhere('dataset.name LIKE :name', {
         name: `%${filters.name}%`,
       });
     }
-
     if (filters?.createdStart) {
-      query.andWhere('dataset.created_at >= :createdStart', {
-        createdStart: new Date(filters.createdStart),
+      queryBuilder.andWhere('dataset.createdAt >= :createdStart', {
+        createdStart: filters.createdStart,
       });
     }
-
     if (filters?.createdEnd) {
-      query.andWhere('dataset.created_at <= :createdEnd', {
-        createdEnd: new Date(filters.createdEnd),
+      queryBuilder.andWhere('dataset.createdAt <= :createdEnd', {
+        createdEnd: filters.createdEnd,
       });
     }
-
     if (filters?.updatedStart) {
-      query.andWhere('dataset.updated_at >= :updatedStart', {
-        updatedStart: new Date(filters.updatedStart),
+      queryBuilder.andWhere('dataset.updatedAt >= :updatedStart', {
+        updatedStart: filters.updatedStart,
       });
     }
-
     if (filters?.updatedEnd) {
-      query.andWhere('dataset.updated_at <= :updatedEnd', {
-        updatedEnd: new Date(filters.updatedEnd),
+      queryBuilder.andWhere('dataset.updatedAt <= :updatedEnd', {
+        updatedEnd: filters.updatedEnd,
       });
     }
 
-    const [list, total] = await query
-      .skip((page - 1) * pageSize)
-      .take(pageSize)
-      .getManyAndCount();
+    // 使用 LEFT JOIN 加载 File 实体
+    queryBuilder.leftJoinAndSelect('dataset.files', 'file');
+
+    // 设置分页
+    queryBuilder.skip((page - 1) * pageSize).take(pageSize);
+
+    // 执行查询，获取数据和总数
+    const [datasets, total] = await queryBuilder.getManyAndCount();
+
+    // 计算 datasetSize 和 fileCount
+    const result = datasets.map((dataset) => {
+      const fileCount = dataset.files.length; // 文件的数量
+      // 计算 datasetSize
+      const datasetSize = dataset.files.reduce((totalSize, file) => {
+        const size = file.fileSize ? Number(file.fileSize) : 0;
+        return totalSize + size;
+      }, 0);
+
+      return {
+        ...dataset,
+        fileCount,
+        datasetSize,
+        files: undefined, // 不返回 files 字段
+      };
+    });
 
     return formatResponse(
       200,
-      { list, page, pageSize, total },
+      {
+        list: result,
+        total,
+        page,
+        pageSize,
+      },
       '获取数据集列表成功',
     );
   }
