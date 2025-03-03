@@ -37,12 +37,21 @@ export class KnowledgeManageService {
         category: filters.category,
       });
     }
-    const list = await queryBuilder
+    const [list, total] = await queryBuilder
       .skip((page - 1) * pageSize)
       .take(pageSize)
-      .getMany();
+      .getManyAndCount();
 
-    return formatResponse(200, list, '病害知识列表获取成功');
+    return formatResponse(
+      200,
+      {
+        list,
+        page,
+        pageSize,
+        total,
+      },
+      '病害知识列表获取成功',
+    );
   }
 
   // 获取单个病害知识记录
