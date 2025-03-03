@@ -19,6 +19,13 @@ export class FileDownloadService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /**
+   * 生成临时访问链接
+   * @param fileId
+   * @param request
+   * @param dto
+   * @returns
+   */
   async generateAccessLink(
     fileId: number,
     request: Request,
@@ -45,6 +52,11 @@ export class FileDownloadService {
     return formatResponse(200, { link: tempLink }, '临时链接生成成功');
   }
 
+  /**
+   * 验证访问链接
+   * @param token
+   * @returns
+   */
   verifyAccessLink(token: string) {
     try {
       const payload: { fileId: number } = this.jwtService.verify(token);

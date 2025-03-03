@@ -3,7 +3,11 @@ import { readFile, unlink } from 'fs/promises';
 
 @Injectable()
 export class FileOperationService {
-  // 读取文件并返回 buffer
+  /**
+   * 读取文件
+   * @param filePath
+   * @returns
+   */
   async readFile(filePath: string): Promise<Buffer> {
     try {
       return await readFile(filePath);
@@ -12,7 +16,11 @@ export class FileOperationService {
     }
   }
 
-  // 删除文件
+  /**
+   * 删除文件
+   * @param filePath
+   * @returns
+   */
   async deleteFile(filePath: string): Promise<void> {
     try {
       await unlink(filePath);

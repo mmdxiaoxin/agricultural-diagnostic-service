@@ -20,6 +20,14 @@ export class FileManageService {
     private readonly dataSource: DataSource,
   ) {}
 
+  /**
+   * 获取文件列表
+   * @param page
+   * @param pageSize
+   * @param filters
+   * @param userId
+   * @returns
+   */
   async fileListGet(
     page: number = 1,
     pageSize: number = 10,
@@ -92,23 +100,35 @@ export class FileManageService {
       '文件列表获取成功',
     );
   }
-  // 创建文件元数据
-  async createFile(user_id: number, fileData: any): Promise<FileEntity> {
-    const fileMeta = this.fileRepository.create({
-      originalFileName: fileData?.originalname || fileData.originalFileName,
-      storageFileName: fileData?.filename || fileData.storageFileName,
-      filePath: fileData?.path || fileData.filePath,
-      fileSize: fileData?.size || fileData.fileSize,
-      fileType: fileData.fileType,
-      fileMd5: fileData.fileMd5,
-      createdBy: user_id,
-      updatedBy: user_id,
-      version: 1,
-    });
 
-    return await this.fileRepository.save(fileMeta);
+  /**
+   * 创建文件
+   * @param userId 用户ID
+   * @param fileData 文件上传信息
+   * @returns 创建的文件实体
+   */
+  async createFile(userId: number, fileData: Partial<FileEntity>) {
+    try {
+      // 校验字段，根据不同实体类型处理
+      const fileMeta = this.fileRepository.create({
+        ...fileData,
+        createdBy: userId,
+        updatedBy: userId,
+      });
+      return await this.fileRepository.save(fileMeta);
+    } catch (error) {
+      throw new BadRequestException(
+        '创建实体失败：' + (error?.message || error),
+      );
+    }
   }
 
+  /**
+   * 更新文件信息
+   * @param userId
+   * @param dto
+   * @returns
+   */
   async updateFile(userId: number, dto: UpdateFileDto) {
     const { fileId, ...fileMeta } = dto;
     const queryRunner = this.dataSource.createQueryRunner();
@@ -138,6 +158,12 @@ export class FileManageService {
     }
   }
 
+  /**
+   * 批量更新文件权限
+   * @param userId
+   * @param dto
+   * @returns
+   */
   async updateFilesAccess(userId: number, dto: UpdateFilesAccessDto) {
     const { fileIds, access } = dto;
     const queryRunner = this.dataSource.createQueryRunner();
@@ -169,6 +195,12 @@ export class FileManageService {
     }
   }
 
+  /**
+   * 删除文件
+   * @param fileId
+   * @param userId
+   * @returns
+   */
   async deleteFile(fileId: number, userId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -202,6 +234,11 @@ export class FileManageService {
     }
   }
 
+  /**
+   * 批量删除文件
+   * @param fileIds
+   * @returns
+   */
   async deleteFiles(fileIds: number[]) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

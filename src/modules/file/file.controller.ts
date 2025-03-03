@@ -40,7 +40,7 @@ import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';
-import { FileService } from './services/file-common.service';
+import { FileService } from './services/file.service';
 import { FileDownloadService } from './services/file-download.service';
 import { FileManageService } from './services/file-manage.service';
 import { FileOperationService } from './services/file-operation.service';

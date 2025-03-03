@@ -1,4 +1,4 @@
-import { FileService } from '@/modules/file/services/file-common.service';
+import { FileService } from '@/modules/file/services/file.service';
 import { File as FileEntity } from '@/modules/file/models/file.entity';
 import {
   BadRequestException,
