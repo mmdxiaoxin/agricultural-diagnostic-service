@@ -305,8 +305,8 @@ export class FileController {
 
   // 文件修改
   @Put('update')
-  async updateFile(@Body() dto: UpdateFileDto) {
-    return this.fileService.updateFile(dto);
+  async updateFile(@Req() req: Request, @Body() dto: UpdateFileDto) {
+    return this.fileService.updateFile(req.user.userId, dto);
   }
 
   // 批量文件权限修改

@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
@@ -10,6 +11,7 @@ import {
 export class UpdateFileDto {
   @IsNotEmpty({ message: '文件ID不能为空！' })
   @IsInt({ message: '文件ID必须为数字类型！' })
+  @Type(() => Number)
   fileId: number;
 
   @IsOptional()

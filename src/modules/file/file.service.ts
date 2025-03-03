@@ -196,7 +196,7 @@ export class FileService {
     return await this.fileRepository.save(fileMeta);
   }
 
-  async updateFile(dto: UpdateFileDto) {
+  async updateFile(userId: number, dto: UpdateFileDto) {
     const { fileId, ...fileMeta } = dto;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -208,7 +208,12 @@ export class FileService {
       if (!file) {
         throw new NotFoundException('未找到文件');
       }
+      if (file.createdBy !== userId) {
+        throw new BadRequestException('无权修改他人文件');
+      }
       Object.assign(file, fileMeta);
+      file.updatedBy = userId;
+      file.version += 1;
       await queryRunner.manager.save(file);
       await queryRunner.commitTransaction();
       return formatResponse(200, null, '文件信息修改成功');
