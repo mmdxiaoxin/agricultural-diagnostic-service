@@ -94,7 +94,7 @@ export class FileService {
     page: number = 1,
     pageSize: number = 10,
     filters: {
-      fileType?: string;
+      fileType?: string[];
       originalFileName?: string;
       createdStart?: string;
       createdEnd?: string;
@@ -110,7 +110,7 @@ export class FileService {
 
     // 过滤文件类型
     if (filters.fileType) {
-      queryBuilder.andWhere('file.fileType = :fileType', {
+      queryBuilder.andWhere('file.fileType IN (:...fileType)', {
         fileType: filters.fileType,
       });
     }

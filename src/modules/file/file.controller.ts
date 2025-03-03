@@ -40,6 +40,7 @@ import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { FileService } from './file.service';
 import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
+import { ParseFileTypePipe } from './pipe/type.pipe';
 
 @Controller('file')
 @UseFilters(TypeormFilter)
@@ -62,7 +63,7 @@ export class FileController {
     @Req() req: Request,
     @Query('page', ParseIntPipe) page?: number,
     @Query('pageSize', ParseIntPipe) pageSize?: number,
-    @Query('fileType') fileType?: string,
+    @Query('fileType', ParseFileTypePipe) fileType?: string[],
     @Query('originalFileName') originalFileName?: string,
     @Query('createdStart') createdStart?: string,
     @Query('createdEnd') createdEnd?: string,
