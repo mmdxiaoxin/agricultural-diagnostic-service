@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, QueryRunner, Repository } from 'typeorm';
 import { UpdateFileDto, UpdateFilesAccessDto } from '../dto/update-file.dto';
 import { File as FileEntity } from '../models/file.entity';
 import { Task as TaskEntity } from '../models/task.entity';
@@ -118,6 +118,33 @@ export class FileManageService {
         updatedBy: userId,
       });
       return await this.fileRepository.save(fileMeta);
+    } catch (error) {
+      throw new BadRequestException(
+        '创建实体失败：' + (error?.message || error),
+      );
+    }
+  }
+
+  /**
+   * 创建文件并开启事务
+   * @param userId
+   * @param fileData
+   * @param queryRunner
+   * @returns
+   */
+  async createFileInTransaction(
+    userId: number,
+    fileData: Partial<FileEntity>,
+    queryRunner: QueryRunner,
+  ) {
+    try {
+      // 校验字段，根据不同实体类型处理
+      const fileMeta = this.fileRepository.create({
+        ...fileData,
+        createdBy: userId,
+        updatedBy: userId,
+      });
+      return await queryRunner.manager.save(fileMeta);
     } catch (error) {
       throw new BadRequestException(
         '创建实体失败：' + (error?.message || error),
