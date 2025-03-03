@@ -1,4 +1,5 @@
 import { FileService } from '@/modules/file/file.service';
+import { File as FileEntity } from '@/modules/file/models/file.entity';
 import {
   BadRequestException,
   CanActivate,
@@ -9,9 +10,20 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 
-interface CustomRequest extends Request<any> {
-  params: { fileId: number };
-  body: { file_ids: number[] };
+export type DownloadRequest = Request<
+  { fileId: number },
+  any,
+  { fileIds: number[] },
+  any
+>;
+
+declare global {
+  namespace Express {
+    interface Request {
+      fileMeta: FileEntity;
+      filesMeta: FileEntity[];
+    }
+  }
 }
 
 @Injectable()
@@ -19,19 +31,22 @@ export class FileGuard implements CanActivate {
   constructor(private readonly fileService: FileService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<CustomRequest>();
+    const request = context.switchToHttp().getRequest<DownloadRequest>();
     const fileId = request.params.fileId;
     const userId = request.user?.userId;
 
+    // 查询文件信息并将其存储到 request.file 中
     const file = await this.fileService.findById(fileId);
     if (!file) {
       throw new NotFoundException('没有找到文件.');
     }
 
+    // 处理权限验证
     if (
       file.access === 'public' ||
       (file.access === 'private' && userId === file.createdBy)
     ) {
+      request.fileMeta = file; // 将文件信息存储到请求中
       return true;
     }
 
@@ -44,29 +59,34 @@ export class FilesGuard implements CanActivate {
   constructor(private readonly fileService: FileService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<CustomRequest>();
-    const fileIds = request.body.file_ids;
+    const request = context.switchToHttp().getRequest<DownloadRequest>();
+    const fileIds = request.body.fileIds;
     const userId = request.user?.userId;
 
     if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
       throw new BadRequestException('非法参数');
     }
 
+    // 查询多个文件信息并将其存储到请求中
     const files = await this.fileService.findByIds(fileIds);
     if (files.length !== fileIds.length) {
       throw new NotFoundException('有文件不存在.');
     }
+
+    const filesWithAccess: FileEntity[] = [];
 
     for (const file of files) {
       if (
         file.access === 'public' ||
         (file.access === 'private' && userId === file.createdBy)
       ) {
-        continue;
+        filesWithAccess.push(file); // 只有有权限的文件才会被加入
+      } else {
+        throw new ForbiddenException('您无权操作.');
       }
-      throw new ForbiddenException('您无权操作.');
     }
 
+    request.filesMeta = filesWithAccess; // 将文件信息存储到请求中
     return true;
   }
 }

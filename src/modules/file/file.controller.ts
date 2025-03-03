@@ -17,13 +17,14 @@ import {
   Put,
   Query,
   Req,
+  Res,
   UploadedFile,
   UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { unlink } from 'fs/promises';
 import { diskStorage } from 'multer';
@@ -201,15 +202,63 @@ export class FileController {
 
   // 文件下载
   @Get('download/:fileId')
-  @UseGuards(FileGuard)
+  @UseGuards(FileGuard) // 使用FileGuard进行权限验证
   async downloadFile(
     @Param(
       'fileId',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
-    fileId: number,
+    _: number,
+    @Req() req: Request,
+    @Res() res: Response,
   ) {
-    // return this.fileService.downloadFile(fileId);
+    const fileMeta = req.fileMeta; // 从请求中获取文件信息
+    const filePath = join(process.cwd(), fileMeta.filePath); // 确保文件路径是绝对路径
+
+    // 获取 Range 请求头
+    const range = req.headers.range;
+
+    // 如果没有 Range 头，正常返回文件
+    if (!range) {
+      res
+        .status(HttpStatus.OK)
+        .set({
+          'Content-Length': fileMeta.fileSize,
+          'Content-Type': fileMeta.fileType,
+          'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
+        })
+        .sendFile(filePath);
+      return;
+    }
+
+    // 如果有 Range 头，进行断点续传
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileMeta.fileSize - 1;
+
+    // 检查 Range 是否有效
+    if (start >= fileMeta.fileSize || end >= fileMeta.fileSize) {
+      return res
+        .status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE)
+        .send('Requested range not satisfiable');
+    }
+
+    // 设置响应头
+    res
+      .status(HttpStatus.PARTIAL_CONTENT)
+      .set({
+        'Content-Range': `bytes ${start}-${end}/${fileMeta.fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': end - start + 1,
+        'Content-Type': 'application/octet-stream',
+      })
+      .sendFile(filePath, {
+        headers: {
+          Range: `bytes=${start}-${end}`,
+        },
+        start, // 设置从文件流的哪个位置开始读取
+        end, // 设置读取的结束位置
+      });
   }
 
   // 批量文件下载
