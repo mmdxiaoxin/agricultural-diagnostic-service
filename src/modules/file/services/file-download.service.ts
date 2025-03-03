@@ -1,13 +1,8 @@
 import { formatResponse } from '@/common/helpers/response.helper';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
-import { Repository } from 'typeorm';
 import { CreateTempLinkDto } from '../dto/create-link.dto';
 import { File as FileEntity } from '../models/file.entity';
 import { FileService } from './file.service';
@@ -16,7 +11,6 @@ import { FileService } from './file.service';
 export class FileDownloadService {
   constructor(
     @InjectRepository(FileEntity)
-    private readonly fileRepository: Repository<FileEntity>,
     private readonly fileService: FileService,
     private readonly jwtService: JwtService,
   ) {}
