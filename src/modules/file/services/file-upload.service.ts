@@ -340,7 +340,9 @@ export class FileUploadService {
 
       // 使用 Promise.all 并行合并分片
       await Promise.all(
-        chunkPaths.map((chunkPath) => this.mergeChunks(chunkPath, finalPath)),
+        chunkPaths.map((chunkPath) =>
+          this.fileOperationService.mergeFile(chunkPath, finalPath),
+        ),
       );
 
       // 删除分片文件
@@ -387,19 +389,6 @@ export class FileUploadService {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  // 合并分片文件
-  private mergeChunks(chunkPath: string, finalPath: string) {
-    return new Promise<void>((resolve, reject) => {
-      const chunkStream = fs.createReadStream(chunkPath);
-      const writeStream = fs.createWriteStream(finalPath, { flags: 'a' }); // 追加模式
-      chunkStream.pipe(writeStream, { end: false }); // 不结束流
-      chunkStream.on('end', resolve);
-      chunkStream.on('error', reject);
-      writeStream.on('finish', resolve);
-      writeStream.on('error', reject);
-    });
   }
 
   async getUploadTaskStatus(taskId: number) {
