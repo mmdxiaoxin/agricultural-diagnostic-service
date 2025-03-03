@@ -2,7 +2,7 @@ import { Roles } from '@/common/decorator/roles.decorator';
 import { Role } from '@/common/enum/role.enum';
 import { TypeormFilter } from '@/common/filters/typeorm.filter';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import { FileGuard, FilesGuard } from '@/common/guards/file.guard';
+import { FileGuard } from '@/common/guards/file.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import {
   Body,
@@ -24,9 +24,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import * as archiver from 'archiver';
 import { Request, Response } from 'express';
-import { createReadStream, existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { unlink } from 'fs/promises';
 import { diskStorage } from 'multer';
 import { join } from 'path';
