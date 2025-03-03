@@ -20,6 +20,16 @@ export class FileService {
     return file;
   }
 
+  async findByMd5(fileMd5: string) {
+    const file = await this.fileRepository.findOne({
+      where: { fileMd5 },
+    });
+    if (!file) {
+      throw new NotFoundException('没有找到文件.');
+    }
+    return file;
+  }
+
   async findByIds(fileIds: number[]) {
     const files = await this.fileRepository.find({
       where: { id: In(fileIds) },

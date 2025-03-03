@@ -10,12 +10,14 @@ import { Request } from 'express';
 import { Repository } from 'typeorm';
 import { CreateTempLinkDto } from '../dto/create-link.dto';
 import { File as FileEntity } from '../models/file.entity';
+import { FileService } from './file.service';
 
 @Injectable()
 export class FileDownloadService {
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
+    private readonly fileService: FileService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -31,12 +33,7 @@ export class FileDownloadService {
     request: Request,
     dto: CreateTempLinkDto,
   ) {
-    const file = await this.fileRepository.findOne({
-      where: { id: fileId },
-    });
-    if (!file) {
-      throw new NotFoundException('未找到文件');
-    }
+    const file = await this.fileService.findById(fileId);
     if (file.createdBy !== request.user.userId) {
       throw new BadRequestException('无权操作他人文件');
     }

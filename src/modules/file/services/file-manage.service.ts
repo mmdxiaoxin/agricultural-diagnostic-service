@@ -10,12 +10,14 @@ import { UpdateFileDto, UpdateFilesAccessDto } from '../dto/update-file.dto';
 import { File as FileEntity } from '../models/file.entity';
 import { Task as TaskEntity } from '../models/task.entity';
 import { FileOperationService } from './file-operation.service';
+import { FileService } from './file.service';
 
 @Injectable()
 export class FileManageService {
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
+    private readonly fileService: FileService,
     private readonly fileOperationService: FileOperationService,
     private readonly dataSource: DataSource,
   ) {}
@@ -135,12 +137,7 @@ export class FileManageService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const file = await this.fileRepository.findOne({
-        where: { id: fileId },
-      });
-      if (!file) {
-        throw new NotFoundException('未找到文件');
-      }
+      const file = await this.fileService.findById(fileId);
       if (file.createdBy !== userId) {
         throw new BadRequestException('无权修改他人文件');
       }

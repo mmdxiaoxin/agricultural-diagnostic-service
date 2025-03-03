@@ -17,6 +17,7 @@ import { UpdateFileDto, UpdateFilesAccessDto } from '../dto/update-file.dto';
 import { File as FileEntity } from '../models/file.entity';
 import { Task as TaskEntity } from '../models/task.entity';
 import { FileOperationService } from './file-operation.service';
+import { FileService } from './file.service';
 
 @Injectable()
 export class FileUploadService {
@@ -25,6 +26,7 @@ export class FileUploadService {
     private readonly fileRepository: Repository<FileEntity>,
     @InjectRepository(TaskEntity)
     private readonly taskRepository: Repository<TaskEntity>,
+    private readonly fileService: FileService,
     private readonly fileOperationService: FileOperationService,
     private readonly dataSource: DataSource,
   ) {}
@@ -33,9 +35,7 @@ export class FileUploadService {
   private async checkRepeated(file: Express.Multer.File) {
     const fileBuffer = await this.fileOperationService.readFile(file.path);
     const fileMd5 = crypto.createHash('md5').update(fileBuffer).digest('hex');
-    const result = await this.fileRepository.findOne({
-      where: { fileMd5 },
-    });
+    const result = await this.fileService.findByMd5(fileMd5);
     return { result, fileMd5 };
   }
 
@@ -72,12 +72,7 @@ export class FileUploadService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const file = await this.fileRepository.findOne({
-        where: { id: fileId },
-      });
-      if (!file) {
-        throw new NotFoundException('未找到文件');
-      }
+      const file = await this.fileService.findById(fileId);
       if (file.createdBy !== userId) {
         throw new BadRequestException('无权修改他人文件');
       }
