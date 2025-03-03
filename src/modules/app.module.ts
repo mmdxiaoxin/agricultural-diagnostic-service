@@ -19,6 +19,7 @@ import { RoleModule } from './role/role.module';
 import { Profile } from './user/models/profile.entity';
 import { User } from './user/models/user.entity';
 import { UserModule } from './user/user.module';
+import { DiagnosisModule } from './diagnosis/diagnosis.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { UserModule } from './user/user.module';
     DatasetModule,
     MenuModule,
     KnowledgeModule,
+    DiagnosisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
