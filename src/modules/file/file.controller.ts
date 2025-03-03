@@ -2,7 +2,7 @@ import { Roles } from '@/common/decorator/roles.decorator';
 import { Role } from '@/common/enum/role.enum';
 import { TypeormFilter } from '@/common/filters/typeorm.filter';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import { FileGuard } from '@/common/guards/file.guard';
+import { FileGuard, FilesGuard } from '@/common/guards/file.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import {
   Body,
@@ -281,7 +281,7 @@ export class FileController {
   // 批量文件下载
   @Post('download')
   @Roles(Role.Admin, Role.Expert)
-  @UseGuards(AuthGuard, RolesGuard, FileGuard)
+  @UseGuards(AuthGuard, RolesGuard, FilesGuard)
   async downloadFiles(
     @Body() _: DownloadFilesDto,
     @Req() req: Request,
