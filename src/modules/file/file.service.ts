@@ -13,7 +13,7 @@ import * as path from 'path';
 import { DataSource, In, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateFileDto } from './dto/update-file.dto';
+import { UpdateFileDto, UpdateFilesAccessDto } from './dto/update-file.dto';
 import { File as FileEntity } from './models/file.entity';
 import { Task as TaskEntity } from './models/task.entity';
 import { FileOperationService } from './operation.service';
@@ -217,6 +217,37 @@ export class FileService {
       await queryRunner.manager.save(file);
       await queryRunner.commitTransaction();
       return formatResponse(200, null, '文件信息修改成功');
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateFilesAccess(userId: number, dto: UpdateFilesAccessDto) {
+    const { fileIds, access } = dto;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const files = await queryRunner.manager.find(FileEntity, {
+        where: { id: In(fileIds) },
+      });
+      if (files.length === 0) {
+        throw new NotFoundException('未找到文件');
+      }
+      for (const file of files) {
+        if (file.createdBy !== userId) {
+          throw new BadRequestException('无权修改他人文件');
+        }
+        file.access = access;
+        file.updatedBy = userId;
+        file.version += 1;
+      }
+      await queryRunner.manager.save(files);
+      await queryRunner.commitTransaction();
+      return formatResponse(200, null, '文件权限修改成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

@@ -34,7 +34,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CompleteChunkDto } from './dto/complete-chunk.dto';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { DownloadFilesDto } from './dto/download-file.dto';
-import { UpdateFileDto } from './dto/update-file.dto';
+import { UpdateFileDto, UpdateFilesAccessDto } from './dto/update-file.dto';
 import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { FileService } from './file.service';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
@@ -311,8 +311,11 @@ export class FileController {
 
   // 批量文件权限修改
   @Put('access')
-  async updateFilesAccess(@Body() filesAccessDto: any) {
-    // return this.fileService.updateFilesAccess(filesAccessDto);
+  async updateFilesAccess(
+    @Req() req: Request,
+    @Body() dto: UpdateFilesAccessDto,
+  ) {
+    return this.fileService.updateFilesAccess(req.user.userId, dto);
   }
 
   // 文件删除

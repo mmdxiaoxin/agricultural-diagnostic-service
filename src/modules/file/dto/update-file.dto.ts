@@ -1,5 +1,7 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
+  ArrayMinSize,
+  IsArray,
   IsIn,
   IsInt,
   IsNotEmpty,
@@ -27,4 +29,20 @@ export class UpdateFileDto {
     message: '请使用 "public" 或者 "private" 来设置权限',
   })
   access?: string;
+}
+
+export class UpdateFilesAccessDto {
+  @IsNotEmpty({ message: '文件ID不能为空！' })
+  @IsArray({ message: '文件ID必须为数组类型！' })
+  @ArrayMinSize(1, { message: '文件ID数组长度至少为1！' })
+  @Transform(({ value }) => value.map((v: string) => Number(v)), {
+    toClassOnly: true,
+  })
+  fileIds: number[];
+
+  @IsNotEmpty({ message: '权限不能为空！' })
+  @IsIn(['public', 'private'], {
+    message: '请使用 "public" 或者 "private" 来设置权限',
+  })
+  access: string;
 }
