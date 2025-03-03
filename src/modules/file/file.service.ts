@@ -260,7 +260,7 @@ export class FileService {
     }
   }
 
-  async deleteFile(fileId: number) {
+  async deleteFile(fileId: number, userId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -270,6 +270,9 @@ export class FileService {
       });
       if (!file) {
         throw new NotFoundException('未找到文件');
+      }
+      if (file.createdBy !== userId) {
+        throw new BadRequestException('无权删除他人文件');
       }
       // 检查是否有引用该文件
       const referenceCount = await queryRunner.manager.count(TaskEntity, {
@@ -281,6 +284,42 @@ export class FileService {
       }
       // 删除文件元数据
       await queryRunner.manager.delete(FileEntity, fileId);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async deleteFiles(fileIds: number[]) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const files = await queryRunner.manager.find(FileEntity, {
+        where: { id: In(fileIds) },
+      });
+      if (files.length === 0) {
+        throw new NotFoundException('未找到文件');
+      }
+      // 检查是否有引用该文件
+      const fileMd5s = files.map((file) => file.fileMd5);
+      const referenceCount = await queryRunner.manager.count(TaskEntity, {
+        where: { fileMd5: In(fileMd5s) },
+      });
+      const filesToDelete = files.filter((file) => {
+        const count = referenceCount[file.fileMd5];
+        return count === 0;
+      });
+      // 删除文件
+      const deletionPromises = filesToDelete.map((file) =>
+        this.fileOperationService.deleteFile(file.filePath),
+      );
+      await Promise.all(deletionPromises);
+      // 删除文件元数据
+      await queryRunner.manager.delete(FileEntity, fileIds);
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();

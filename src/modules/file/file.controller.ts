@@ -38,6 +38,7 @@ import { DownloadFilesDto } from './dto/download-file.dto';
 import { UpdateFileDto, UpdateFilesAccessDto } from './dto/update-file.dto';
 import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { FileService } from './file.service';
+import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
 
 @Controller('file')
@@ -349,8 +350,18 @@ export class FileController {
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     fileId: number,
+    @Req() req: Request,
   ) {
-    return this.fileService.deleteFile(fileId);
+    return this.fileService.deleteFile(fileId, req.user.userId);
+  }
+
+  // 批量文件删除接口
+  @Delete('delete')
+  @Roles(Role.Admin, Role.Expert)
+  @UseGuards(AuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteFiles(@Query('fileIds', ParseFileIdsPipe) fileIds: number[]) {
+    await this.fileService.deleteFiles(fileIds);
   }
 
   // 生成临时访问链接
