@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FileController } from './file.controller';
-import { FileService } from './file.service';
+import { FileService } from './services/file-common.service';
 import { File } from './models/file.entity';
 import { Task } from './models/task.entity';
-import { FileOperationService } from './operation.service';
+import { FileOperationService } from './services/file-operation.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ConfigEnum } from '@/common/enum/config.enum';
+import { FileDownloadService } from './services/file-download.service';
+import { FileUploadService } from './services/file-upload.service';
+import { FileManageService } from './services/file-manage.service';
 
 @Module({
   imports: [
@@ -25,7 +28,13 @@ import { ConfigEnum } from '@/common/enum/config.enum';
       inject: [ConfigService],
     }),
   ],
-  providers: [FileService, FileOperationService],
+  providers: [
+    FileService,
+    FileOperationService,
+    FileDownloadService,
+    FileUploadService,
+    FileManageService,
+  ],
   controllers: [FileController],
   exports: [FileService],
 })

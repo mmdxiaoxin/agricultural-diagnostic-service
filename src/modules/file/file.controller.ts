@@ -37,22 +37,32 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { DownloadFilesDto } from './dto/download-file.dto';
 import { UpdateFileDto, UpdateFilesAccessDto } from './dto/update-file.dto';
 import { UploadChunkDto } from './dto/upload-chunk.dto';
-import { FileService } from './file.service';
 import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';
+import { FileService } from './services/file-common.service';
+import { FileDownloadService } from './services/file-download.service';
+import { FileManageService } from './services/file-manage.service';
+import { FileOperationService } from './services/file-operation.service';
+import { FileUploadService } from './services/file-upload.service';
 
 @Controller('file')
 @UseFilters(TypeormFilter)
 export class FileController {
-  constructor(private readonly fileService: FileService) {}
+  constructor(
+    private readonly commonService: FileService,
+    private readonly downloadService: FileDownloadService,
+    private readonly uploadService: FileUploadService,
+    private readonly manageService: FileManageService,
+    private readonly operationService: FileOperationService,
+  ) {}
 
   // 获取空间使用信息
   @Get('disk-usage')
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async diskUsageGet(@Req() req: Request) {
-    return this.fileService.diskUsageGet(req.user.userId);
+    return this.commonService.diskUsageGet(req.user.userId);
   }
 
   // 获取文件列表
@@ -70,7 +80,7 @@ export class FileController {
     @Query('updatedStart') updatedStart?: string,
     @Query('updatedEnd') updatedEnd?: string,
   ) {
-    return this.fileService.fileListGet(
+    return this.manageService.fileListGet(
       page,
       pageSize,
       {
@@ -128,7 +138,7 @@ export class FileController {
     @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
   ) {
     try {
-      return this.fileService.uploadSingle(req.user.userId, file);
+      return this.uploadService.uploadSingle(req.user.userId, file);
     } catch (error) {
       // 清理上传失败的文件
       const filePath = join('uploads', file.filename);
@@ -145,7 +155,7 @@ export class FileController {
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async createUploadTask(@Req() req: Request, @Body() dto: CreateTaskDto) {
-    return this.fileService.createUploadTask(req.user.userId, dto);
+    return this.uploadService.createUploadTask(req.user.userId, dto);
   }
 
   // 查询上传任务状态
@@ -159,7 +169,7 @@ export class FileController {
     )
     taskId: number,
   ) {
-    return this.fileService.getUploadTaskStatus(taskId);
+    return this.uploadService.getUploadTaskStatus(taskId);
   }
 
   // 合并分片
@@ -167,7 +177,7 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async completeUpload(@Req() req: Request, @Body() dto: CompleteChunkDto) {
-    return this.fileService.completeUpload(req.user.userId, dto.taskId);
+    return this.uploadService.completeUpload(req.user.userId, dto.taskId);
   }
 
   // 文件分片上传
@@ -203,7 +213,7 @@ export class FileController {
     @Body() dto: UploadChunkDto,
   ) {
     try {
-      return this.fileService.uploadChunk(dto.taskId, dto.chunkIndex);
+      return this.uploadService.uploadChunk(dto.taskId, dto.chunkIndex);
     } catch (error) {
       // 清理上传失败的文件
       const chunkPath = join(
@@ -325,7 +335,7 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async updateFile(@Req() req: Request, @Body() dto: UpdateFileDto) {
-    return this.fileService.updateFile(req.user.userId, dto);
+    return this.manageService.updateFile(req.user.userId, dto);
   }
 
   // 批量文件权限修改
@@ -336,7 +346,7 @@ export class FileController {
     @Req() req: Request,
     @Body() dto: UpdateFilesAccessDto,
   ) {
-    return this.fileService.updateFilesAccess(req.user.userId, dto);
+    return this.manageService.updateFilesAccess(req.user.userId, dto);
   }
 
   // 文件删除
@@ -352,7 +362,7 @@ export class FileController {
     fileId: number,
     @Req() req: Request,
   ) {
-    return this.fileService.deleteFile(fileId, req.user.userId);
+    return this.manageService.deleteFile(fileId, req.user.userId);
   }
 
   // 批量文件删除接口
@@ -361,7 +371,7 @@ export class FileController {
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteFiles(@Query('fileIds', ParseFileIdsPipe) fileIds: number[]) {
-    await this.fileService.deleteFiles(fileIds);
+    await this.manageService.deleteFiles(fileIds);
   }
 
   // 生成临时访问链接
@@ -377,7 +387,7 @@ export class FileController {
     @Req() req: Request,
     @Body() dto: CreateTempLinkDto,
   ) {
-    return this.fileService.generateAccessLink(fileId, req, dto);
+    return this.downloadService.generateAccessLink(fileId, req, dto);
   }
 
   // 获取临时访问链接
@@ -387,8 +397,8 @@ export class FileController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const fileId = this.fileService.verifyAccessLink(token);
-    const fileMeta = await this.fileService.findById(fileId);
+    const fileId = this.downloadService.verifyAccessLink(token);
+    const fileMeta = await this.commonService.findById(fileId);
     if (!fileMeta) {
       return res.status(HttpStatus.NOT_FOUND).send('File not found');
     }

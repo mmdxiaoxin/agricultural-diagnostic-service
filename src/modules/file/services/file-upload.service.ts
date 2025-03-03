@@ -1,28 +1,25 @@
 import { formatResponse } from '@/common/helpers/response.helper';
-import { getFileType, getModelMimeType } from '@/common/utils';
+import { getModelMimeType } from '@/common/utils';
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
-import { Request } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { DataSource, In, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
-import { CreateTempLinkDto } from './dto/create-link.dto';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateFileDto, UpdateFilesAccessDto } from './dto/update-file.dto';
-import { File as FileEntity } from './models/file.entity';
-import { Task as TaskEntity } from './models/task.entity';
-import { FileOperationService } from './operation.service';
+import { CreateTaskDto } from '../dto/create-task.dto';
+import { UpdateFileDto, UpdateFilesAccessDto } from '../dto/update-file.dto';
+import { File as FileEntity } from '../models/file.entity';
+import { Task as TaskEntity } from '../models/task.entity';
+import { FileOperationService } from './file-operation.service';
 
 @Injectable()
-export class FileService {
+export class FileUploadService {
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
@@ -30,138 +27,7 @@ export class FileService {
     private readonly taskRepository: Repository<TaskEntity>,
     private readonly fileOperationService: FileOperationService,
     private readonly dataSource: DataSource,
-    private readonly jwtService: JwtService,
   ) {}
-
-  private async computeFileSizeByType(createdBy: number, fileTypes: string[]) {
-    const queryBuilder = this.fileRepository
-      .createQueryBuilder('file')
-      .select([
-        'SUM(file.fileSize) AS used',
-        'MAX(file.updatedAt) AS last_updated',
-      ])
-      .where('file.createdBy = :createdBy', { createdBy });
-
-    if (fileTypes.length > 0) {
-      queryBuilder.andWhere('file.fileType IN (:...fileTypes)', { fileTypes });
-    }
-
-    return queryBuilder.getRawOne();
-  }
-
-  async diskUsageGet(userId: number) {
-    if (!userId) {
-      throw new InternalServerErrorException('用户信息错误');
-    }
-
-    const imageTypes = getFileType('image');
-    const videoTypes = getFileType('video');
-    const appTypes = getFileType('app');
-    const audioTypes = getFileType('audio');
-    const docTypes = getFileType('application');
-    const otherTypes = getFileType('other');
-
-    try {
-      const [total, image, video, app, audio, docs, other] = await Promise.all([
-        this.computeFileSizeByType(userId, []),
-        this.computeFileSizeByType(userId, imageTypes),
-        this.computeFileSizeByType(userId, videoTypes),
-        this.computeFileSizeByType(userId, appTypes),
-        this.computeFileSizeByType(userId, audioTypes),
-        this.computeFileSizeByType(userId, docTypes),
-        this.computeFileSizeByType(userId, otherTypes),
-      ]);
-
-      return formatResponse(
-        200,
-        {
-          total: total || { used: 0, last_updated: null },
-          image: image || { used: 0, last_updated: null },
-          video: video || { used: 0, last_updated: null },
-          app: app || { used: 0, last_updated: null },
-          audio: audio || { used: 0, last_updated: null },
-          docs: docs || { used: 0, last_updated: null },
-          other: other || { used: 0, last_updated: null },
-        },
-        '空间信息获取成功',
-      );
-    } catch (error) {
-      throw new InternalServerErrorException('获取文件空间信息失败: ' + error);
-    }
-  }
-
-  async fileListGet(
-    page: number = 1,
-    pageSize: number = 10,
-    filters: {
-      fileType?: string[];
-      originalFileName?: string;
-      createdStart?: string;
-      createdEnd?: string;
-      updatedStart?: string;
-      updatedEnd?: string;
-    },
-    userId: number, // 添加用户ID
-  ) {
-    const queryBuilder = this.fileRepository.createQueryBuilder('file');
-
-    // 过滤当前用户的文件
-    queryBuilder.andWhere('file.createdBy = :userId', { userId });
-
-    // 过滤文件类型
-    if (filters.fileType) {
-      queryBuilder.andWhere('file.fileType IN (:...fileType)', {
-        fileType: filters.fileType,
-      });
-    }
-
-    // 模糊匹配文件名
-    if (filters.originalFileName) {
-      queryBuilder.andWhere('file.originalFileName LIKE :originalFileName', {
-        originalFileName: `%${filters.originalFileName}%`,
-      });
-    }
-
-    // 创建时间范围
-    if (filters.createdStart && filters.createdEnd) {
-      queryBuilder.andWhere(
-        'file.createdAt BETWEEN :createdStart AND :createdEnd',
-        {
-          createdStart: new Date(filters.createdStart),
-          createdEnd: new Date(filters.createdEnd),
-        },
-      );
-    }
-
-    // 更新时间范围
-    if (filters.updatedStart && filters.updatedEnd) {
-      queryBuilder.andWhere(
-        'file.updatedAt BETWEEN :updatedStart AND :updatedEnd',
-        {
-          updatedStart: new Date(filters.updatedStart),
-          updatedEnd: new Date(filters.updatedEnd),
-        },
-      );
-    }
-
-    // 获取文件列表及总数
-    const [files, total] = await queryBuilder
-      .orderBy('file.id', 'DESC')
-      .skip((page - 1) * pageSize)
-      .take(pageSize)
-      .getManyAndCount();
-
-    return formatResponse(
-      200,
-      {
-        list: files,
-        total,
-        page,
-        pageSize,
-      },
-      '文件列表获取成功',
-    );
-  }
 
   // 计算文件 MD5 并查找重复文件
   private async checkRepeated(file: Express.Multer.File) {
@@ -252,75 +118,6 @@ export class FileService {
       await queryRunner.manager.save(files);
       await queryRunner.commitTransaction();
       return formatResponse(200, null, '文件权限修改成功');
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  async deleteFile(fileId: number, userId: number) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const file = await queryRunner.manager.findOne(FileEntity, {
-        where: { id: fileId },
-      });
-      if (!file) {
-        throw new NotFoundException('未找到文件');
-      }
-      if (file.createdBy !== userId) {
-        throw new BadRequestException('无权删除他人文件');
-      }
-      // 检查是否有引用该文件
-      const referenceCount = await queryRunner.manager.count(TaskEntity, {
-        where: { fileMd5: file.fileMd5 },
-      });
-      if (referenceCount === 0) {
-        // 如果没有被引用，删除文件
-        await this.fileOperationService.deleteFile(file.filePath);
-      }
-      // 删除文件元数据
-      await queryRunner.manager.delete(FileEntity, fileId);
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  async deleteFiles(fileIds: number[]) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const files = await queryRunner.manager.find(FileEntity, {
-        where: { id: In(fileIds) },
-      });
-      if (files.length === 0) {
-        throw new NotFoundException('未找到文件');
-      }
-      // 检查是否有引用该文件
-      const fileMd5s = files.map((file) => file.fileMd5);
-      const referenceCount = await queryRunner.manager.count(TaskEntity, {
-        where: { fileMd5: In(fileMd5s) },
-      });
-      const filesToDelete = files.filter((file) => {
-        const count = referenceCount[file.fileMd5];
-        return count === 0;
-      });
-      // 删除文件
-      const deletionPromises = filesToDelete.map((file) =>
-        this.fileOperationService.deleteFile(file.filePath),
-      );
-      await Promise.all(deletionPromises);
-      // 删除文件元数据
-      await queryRunner.manager.delete(FileEntity, fileIds);
-      await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -623,53 +420,6 @@ export class FileService {
       chunkStatus: task.chunkStatus,
       totalChunks: task.totalChunks,
       uploadedChunks: task.uploadedChunks,
-    });
-  }
-
-  async generateAccessLink(
-    fileId: number,
-    request: Request,
-    dto: CreateTempLinkDto,
-  ) {
-    const file = await this.fileRepository.findOne({
-      where: { id: fileId },
-    });
-    if (!file) {
-      throw new NotFoundException('未找到文件');
-    }
-    if (file.createdBy !== request.user.userId) {
-      throw new BadRequestException('无权操作他人文件');
-    }
-    const payload = {
-      fileId: file.id,
-    };
-    const token = this.jwtService.sign(payload, {
-      expiresIn: dto.expiresIn || '1h',
-    });
-    const tempLink = `${request.protocol}://${request.get(
-      'host',
-    )}/file/access-link/${token}`;
-    return formatResponse(200, { link: tempLink }, '临时链接生成成功');
-  }
-
-  verifyAccessLink(token: string) {
-    try {
-      const payload: { fileId: number } = this.jwtService.verify(token);
-      return payload.fileId;
-    } catch (error) {
-      throw new BadRequestException('链接验证失败');
-    }
-  }
-
-  async findById(fileId: number) {
-    return this.fileRepository.findOne({
-      where: { id: fileId },
-    });
-  }
-
-  async findByIds(fileIds: number[]) {
-    return this.fileRepository.find({
-      where: { id: In(fileIds) },
     });
   }
 }
