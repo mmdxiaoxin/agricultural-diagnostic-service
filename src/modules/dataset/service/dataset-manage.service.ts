@@ -31,6 +31,8 @@ export class DatasetManageService {
   ) {
     const queryBuilder = this.datasetRepository.createQueryBuilder('dataset');
 
+    queryBuilder.where('dataset.createdBy = :userId', { userId });
+
     // 添加过滤条件
     if (filters?.name) {
       queryBuilder.andWhere('dataset.name LIKE :name', {
