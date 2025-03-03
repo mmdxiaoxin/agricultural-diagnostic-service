@@ -40,11 +40,11 @@ import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';
-import { FileService } from './services/file.service';
 import { FileDownloadService } from './services/file-download.service';
 import { FileManageService } from './services/file-manage.service';
-import { FileOperationService } from './services/file-operation.service';
+import { FileStorageService } from './services/file-storage.service';
 import { FileUploadService } from './services/file-upload.service';
+import { FileService } from './services/file.service';
 
 @Controller('file')
 @UseFilters(TypeormFilter)
@@ -54,7 +54,7 @@ export class FileController {
     private readonly downloadService: FileDownloadService,
     private readonly uploadService: FileUploadService,
     private readonly manageService: FileManageService,
-    private readonly operationService: FileOperationService,
+    private readonly storageService: FileStorageService,
   ) {}
 
   // 获取空间使用信息
@@ -62,7 +62,7 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async diskUsageGet(@Req() req: Request) {
-    return this.commonService.diskUsageGet(req.user.userId);
+    return this.storageService.diskUsageGet(req.user.userId);
   }
 
   // 获取文件列表

@@ -11,6 +11,7 @@ import { ConfigEnum } from '@/common/enum/config.enum';
 import { FileDownloadService } from './services/file-download.service';
 import { FileUploadService } from './services/file-upload.service';
 import { FileManageService } from './services/file-manage.service';
+import { FileStorageService } from './services/file-storage.service';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { FileManageService } from './services/file-manage.service';
     FileDownloadService,
     FileUploadService,
     FileManageService,
+    FileStorageService,
   ],
   controllers: [FileController],
   exports: [FileService],
