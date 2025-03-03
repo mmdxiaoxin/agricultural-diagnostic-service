@@ -9,6 +9,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -78,20 +79,23 @@ export class DatasetController {
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     datasetId: number,
-    @Body() updateDatasetDto: UpdateDatasetDto,
+    @Req() req: Request,
+    @Body() dto: UpdateDatasetDto,
   ) {
-    return this.manageService.updateDataset(datasetId, updateDatasetDto);
+    return this.manageService.updateDataset(datasetId, req.user.userId, dto);
   }
 
   // 删除数据集
   @Delete(':datasetId')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDataset(
     @Param(
       'datasetId',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     datasetId: number,
+    @Req() req: Request,
   ) {
-    return this.manageService.deleteDataset(datasetId);
+    return this.manageService.deleteDataset(datasetId, req.user.userId);
   }
 }

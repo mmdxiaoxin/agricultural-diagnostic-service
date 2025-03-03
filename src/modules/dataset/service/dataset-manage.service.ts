@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { Dataset } from '../dataset.entity';
 import { CreateDatasetDto } from '../dto/create-dataset.dto';
 import { UpdateDatasetDto } from '../dto/update-dataset.dto';
+import { DatasetService } from './dataset.service';
 
 @Injectable()
 export class DatasetManageService {
@@ -13,6 +14,7 @@ export class DatasetManageService {
     @InjectRepository(Dataset)
     private datasetRepository: Repository<Dataset>,
     private fileService: FileService,
+    private datasetService: DatasetService,
   ) {}
 
   async datasetsListGet(
@@ -109,15 +111,37 @@ export class DatasetManageService {
   }
 
   async getDatasetDetail(datasetId: number) {
-    return this.datasetRepository.findOne({ where: { id: datasetId } });
+    const dataset = await this.datasetService.findById(datasetId);
+    const result = {
+      ...dataset,
+      fileIds: dataset.files.map((file) => file.id),
+      files: undefined, // 不返回 files 字段
+    };
+    return formatResponse(200, result, '获取数据集详情成功');
   }
 
-  async updateDataset(datasetId: number, updateDatasetDto: UpdateDatasetDto) {
-    await this.datasetRepository.update(datasetId, updateDatasetDto);
-    return this.getDatasetDetail(datasetId);
+  async updateDataset(
+    datasetId: number,
+    userId: number,
+    dto: UpdateDatasetDto,
+  ) {
+    const dataset = await this.datasetService.findById(datasetId);
+    const { fileIds, ...datasetData } = dto;
+    dataset.name = datasetData.name || dataset.name;
+    dataset.description = datasetData.description || dataset.description;
+    dataset.updatedBy = userId;
+    if (fileIds && fileIds?.length > 0) {
+      dataset.files = await this.fileService.findByIds(fileIds);
+    }
+    await this.datasetRepository.save(dataset);
+    return formatResponse(200, dataset, '更新数据集成功');
   }
 
-  async deleteDataset(datasetId: number): Promise<void> {
-    await this.datasetRepository.delete(datasetId);
+  async deleteDataset(datasetId: number, userId: number): Promise<void> {
+    const dataset = await this.datasetService.findById(datasetId);
+    if (dataset.createdBy !== userId) {
+      throw new Error('无权限删除该数据集');
+    }
+    await this.datasetRepository.remove(dataset);
   }
 }
