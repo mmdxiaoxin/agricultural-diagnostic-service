@@ -1,4 +1,82 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CreateAiServiceDto } from '../dto/create-ai-service.dto';
+import { UpdateAiServiceDto } from '../dto/update-ai-service.dto';
+import { AiServiceAccessLog } from '../models/ai-service-access-log';
+import { AiServiceConfig } from '../models/ai-service-config';
+import { AiServiceLog } from '../models/ai-service-log';
+import { AiService } from '../models/ai-service.entity';
 
 @Injectable()
-export class AiServiceService {}
+export class AiServiceService {
+  constructor(
+    @InjectRepository(AiService)
+    private aiServiceRepository: Repository<AiService>,
+
+    @InjectRepository(AiServiceLog)
+    private aiServiceLogRepository: Repository<AiServiceLog>,
+
+    @InjectRepository(AiServiceConfig)
+    private aiServiceConfigRepository: Repository<AiServiceConfig>,
+
+    @InjectRepository(AiServiceAccessLog)
+    private aiServiceAccessLogRepository: Repository<AiServiceAccessLog>,
+  ) {}
+
+  // 创建AI服务
+  async create(dto: CreateAiServiceDto): Promise<AiService> {
+    const aiService = this.aiServiceRepository.create(dto);
+    return await this.aiServiceRepository.save(aiService);
+  }
+
+  // 获取全部AI服务
+  async findAll(): Promise<AiService[]> {
+    return this.aiServiceRepository.find({
+      relations: ['aiServiceLogs', 'aiServiceConfigs', 'aiServiceAccessLogs'], // 加载关联的表
+    });
+  }
+
+  // 分页查询AI服务
+  async findPaginated(page: number, pageSize: number): Promise<AiService[]> {
+    const skip = (page - 1) * pageSize;
+    return this.aiServiceRepository.find({
+      relations: ['aiServiceLogs', 'aiServiceConfigs', 'aiServiceAccessLogs'],
+      skip,
+      take: pageSize,
+    });
+  }
+
+  // 获取单个AI服务
+  async findOne(serviceId: number) {
+    return this.aiServiceRepository.findOne({
+      where: { serviceId },
+      relations: ['aiServiceLogs', 'aiServiceConfigs', 'aiServiceAccessLogs'],
+    });
+  }
+
+  // 更新AI服务
+  async update(serviceId: number, dto: UpdateAiServiceDto): Promise<AiService> {
+    const aiService = await this.aiServiceRepository.findOne({
+      where: { serviceId },
+    });
+    if (!aiService) {
+      throw new Error('AI Service not found');
+    }
+
+    Object.assign(aiService, dto);
+    return this.aiServiceRepository.save(aiService);
+  }
+
+  // 删除AI服务
+  async remove(serviceId: number): Promise<void> {
+    const aiService = await this.aiServiceRepository.findOne({
+      where: { serviceId },
+    });
+    if (!aiService) {
+      throw new Error('AI Service not found');
+    }
+
+    await this.aiServiceRepository.remove(aiService);
+  }
+}

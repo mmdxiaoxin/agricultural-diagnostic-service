@@ -29,7 +29,7 @@ export class AiService {
     enum: ['active', 'inactive', 'under_maintenance'],
     default: 'active',
   })
-  status: 'active' | 'inactive' | 'underMaintenance'; // 服务状态
+  status: 'active' | 'inactive' | 'under_maintenance'; // 服务状态
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   endpointUrl: string; // 服务的访问URL
