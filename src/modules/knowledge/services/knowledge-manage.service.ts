@@ -21,6 +21,10 @@ export class KnowledgeManageService {
     return formatResponse(201, null, '病害知识创建成功');
   }
 
+  async knowledgeGet() {
+    return await this.knowledgeRepository.find();
+  }
+
   // 获取所有病害知识记录
   async knowledgeListGet(
     page: number = 1,

@@ -34,6 +34,12 @@ export class KnowledgeController {
   }
 
   // 获取所有病害知识记录
+  @Get()
+  knowledgeGet() {
+    return this.manageService.knowledgeGet();
+  }
+
+  // 获取所有病害知识记录分页
   @Get('list')
   knowledgeListGet(
     @Query('page', ParseIntPipe) page: number = 1,
