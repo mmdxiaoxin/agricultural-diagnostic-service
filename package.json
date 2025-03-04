@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "doc": "npx @compodoc/compodoc -p tsconfig.json -s -d docs -n 病害智能诊断系统服务文档",
+    "doc": "npx @compodoc/compodoc -p tsconfig.json -s -d docs -n 病害智能诊断系统服务文档 -c .compodoc.json",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",

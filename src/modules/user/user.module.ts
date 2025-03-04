@@ -9,6 +9,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ConfigEnum } from '@/common/enum/config.enum';
 
+/**
+ * 用户模块
+ */
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Role, Profile]),

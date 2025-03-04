@@ -17,6 +17,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Profile } from './models/profile.entity';
 import { User } from './models/user.entity';
 
+/**
+ * 用户模块服务
+ */
 @Injectable()
 export class UserService {
   constructor(

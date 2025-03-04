@@ -1,0 +1,1574 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>病害智能诊断系统服务文档</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">病害智能诊断系统服务文档</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content injectable">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Injectables</li>
+  <li class="breadcrumb-item" >FileUploadService</li>
+</ol>
+
+<ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a href="#info" 
+                class="nav-link"
+                class="nav-link active"
+                role="tab" id="info-tab" data-bs-toggle="tab" data-link="info">Info</a>
+        </li>
+        <li class="nav-item">
+            <a href="#source" 
+                class="nav-link"
+                
+                role="tab" id="source-tab" data-bs-toggle="tab" data-link="source">Source</a>
+        </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade active in" id="info">
+        <p class="comment">
+            <h3>File</h3>
+        </p>
+        <p class="comment">
+            <code>src/modules/file/services/file-upload.service.ts</code>
+        </p>
+
+
+
+
+
+            <section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Methods</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#checkFileType" >checkFileType</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#checkRepeated" >checkRepeated</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#completeUpload" >completeUpload</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#createFile" >createFile</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#createUploadTask" >createUploadTask</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getUploadTaskStatus" >getUploadTaskStatus</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateFile" >updateFile</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateFilesAccess" >updateFilesAccess</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#uploadChunk" >uploadChunk</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#uploadSingle" >uploadSingle</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+
+
+
+
+        </tbody>
+    </table>
+</section>
+
+            <section data-compodoc="block-constructor">
+    <h3 id="constructor">Constructor</h3>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+<code>constructor(fileRepository: <a href="../classes/File.html" target="_self">Repository&lt;FileEntity&gt;</a>, taskRepository: <a href="../entitys/Task.html" target="_self">Repository&lt;TaskEntity&gt;</a>, fileService: <a href="../injectables/FileService.html" target="_self">FileService</a>, fileOperationService: <a href="../injectables/FileOperationService.html" target="_self">FileOperationService</a>, dataSource: DataSource)</code>
+                    </td>
+                </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="23" class="link-to-prism">src/modules/file/services/file-upload.service.ts:23</a></div>
+                            </td>
+                        </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                            <div>
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>fileRepository</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../classes/File.html" target="_self" >Repository&lt;FileEntity&gt;</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>taskRepository</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../entitys/Task.html" target="_self" >Repository&lt;TaskEntity&gt;</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>fileService</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/FileService.html" target="_self" >FileService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>fileOperationService</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/FileOperationService.html" target="_self" >FileOperationService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>dataSource</td>
+                                                  
+                                                        <td>
+                                                                    <code>DataSource</code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</section>
+
+            <section data-compodoc="block-methods">
+    
+    <h3 id="methods">
+        Methods
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="checkFileType"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>checkFileType</b></span>
+                        <a href="#checkFileType"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>checkFileType(file: <a href="../classes/File.html" target="_self">Express.Multer.File</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="45"
+                                    class="link-to-prism">src/modules/file/services/file-upload.service.ts:45</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>file</td>
+                                            <td>
+                                                            <code><a href="../classes/File.html" target="_self" >Express.Multer.File</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="checkRepeated"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>checkRepeated</b></span>
+                        <a href="#checkRepeated"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>checkRepeated(file: <a href="../classes/File.html" target="_self">Express.Multer.File</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="35"
+                                    class="link-to-prism">src/modules/file/services/file-upload.service.ts:35</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>file</td>
+                                            <td>
+                                                            <code><a href="../classes/File.html" target="_self" >Express.Multer.File</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="completeUpload"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>completeUpload</b></span>
+                        <a href="#completeUpload"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>completeUpload(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, taskId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="299"
+                                    class="link-to-prism">src/modules/file/services/file-upload.service.ts:299</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>taskId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createFile"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>createFile</b></span>
+                        <a href="#createFile"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>createFile(user_id: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, fileData: <a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank">any</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="52"
+                                    class="link-to-prism">src/modules/file/services/file-upload.service.ts:52</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>user_id</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>fileData</td>
+                                            <td>
+                                                            <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../classes/File.html" target="_self" >Promise&lt;FileEntity&gt;</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createUploadTask"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>createUploadTask</b></span>
+                        <a href="#createUploadTask"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>createUploadTask(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, taskMeta: <a href="../classes/CreateTaskDto.html" target="_self">CreateTaskDto</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="217"
+                                    class="link-to-prism">src/modules/file/services/file-upload.service.ts:217</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>taskMeta</td>
+                                            <td>
+                                                            <code><a href="../classes/CreateTaskDto.html" target="_self" >CreateTaskDto</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getUploadTaskStatus"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getUploadTaskStatus</b></span>
+                        <a href="#getUploadTaskStatus"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getUploadTaskStatus(taskId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="396"
+                                    class="link-to-prism">src/modules/file/services/file-upload.service.ts:396</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>taskId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateFile"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>updateFile</b></span>
+                        <a href="#updateFile"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateFile(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, dto: <a href="../classes/UpdateFileDto.html" target="_self">UpdateFileDto</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="71"
+                                    class="link-to-prism">src/modules/file/services/file-upload.service.ts:71</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>dto</td>
+                                            <td>
+                                                            <code><a href="../classes/UpdateFileDto.html" target="_self" >UpdateFileDto</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateFilesAccess"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>updateFilesAccess</b></span>
+                        <a href="#updateFilesAccess"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateFilesAccess(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, dto: <a href="../classes/UpdateFilesAccessDto.html" target="_self">UpdateFilesAccessDto</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="95"
+                                    class="link-to-prism">src/modules/file/services/file-upload.service.ts:95</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>dto</td>
+                                            <td>
+                                                            <code><a href="../classes/UpdateFilesAccessDto.html" target="_self" >UpdateFilesAccessDto</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="uploadChunk"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>uploadChunk</b></span>
+                        <a href="#uploadChunk"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>uploadChunk(taskId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, chunkIndex: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="163"
+                                    class="link-to-prism">src/modules/file/services/file-upload.service.ts:163</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>taskId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>chunkIndex</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="uploadSingle"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>uploadSingle</b></span>
+                        <a href="#uploadSingle"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>uploadSingle(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, file: <a href="../classes/File.html" target="_self">Express.Multer.File</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="127"
+                                    class="link-to-prism">src/modules/file/services/file-upload.service.ts:127</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>file</td>
+                                            <td>
+                                                            <code><a href="../classes/File.html" target="_self" >Express.Multer.File</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+    </div>
+
+
+    <div class="tab-pane fade  tab-source-code" id="source">
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { formatResponse } from &#x27;@/common/helpers/response.helper&#x27;;
+import { getModelMimeType } from &#x27;@/common/utils&#x27;;
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from &#x27;@nestjs/common&#x27;;
+import { InjectRepository } from &#x27;@nestjs/typeorm&#x27;;
+import * as crypto from &#x27;crypto&#x27;;
+import * as fs from &#x27;fs&#x27;;
+import * as path from &#x27;path&#x27;;
+import { DataSource, In, Repository } from &#x27;typeorm&#x27;;
+import { v4 as uuidv4 } from &#x27;uuid&#x27;;
+import { CreateTaskDto } from &#x27;../dto/create-task.dto&#x27;;
+import { UpdateFileDto, UpdateFilesAccessDto } from &#x27;../dto/update-file.dto&#x27;;
+import { File as FileEntity } from &#x27;../models/file.entity&#x27;;
+import { Task as TaskEntity } from &#x27;../models/task.entity&#x27;;
+import { FileOperationService } from &#x27;./file-operation.service&#x27;;
+import { FileService } from &#x27;./file.service&#x27;;
+
+@Injectable()
+export class FileUploadService {
+  constructor(
+    @InjectRepository(FileEntity)
+    private readonly fileRepository: Repository&lt;FileEntity&gt;,
+    @InjectRepository(TaskEntity)
+    private readonly taskRepository: Repository&lt;TaskEntity&gt;,
+    private readonly fileService: FileService,
+    private readonly fileOperationService: FileOperationService,
+    private readonly dataSource: DataSource,
+  ) {}
+
+  // 计算文件 MD5 并查找重复文件
+  private async checkRepeated(file: Express.Multer.File) {
+    const fileBuffer &#x3D; await this.fileOperationService.readFile(file.path);
+    const fileMd5 &#x3D; crypto.createHash(&#x27;md5&#x27;).update(fileBuffer).digest(&#x27;hex&#x27;);
+    const result &#x3D; await this.fileRepository.findOne({
+      where: { fileMd5 },
+    });
+    return { result, fileMd5 };
+  }
+
+  // 获取文件类型
+  private checkFileType(file: Express.Multer.File): string {
+    return file.mimetype
+      ? file.mimetype
+      : getModelMimeType(path.extname(file.originalname));
+  }
+
+  // 创建文件元数据
+  private async createFile(
+    user_id: number,
+    fileData: any,
+  ): Promise&lt;FileEntity&gt; {
+    const fileMeta &#x3D; this.fileRepository.create({
+      originalFileName: fileData?.originalname || fileData.originalFileName,
+      storageFileName: fileData?.filename || fileData.storageFileName,
+      filePath: fileData?.path || fileData.filePath,
+      fileSize: fileData?.size || fileData.fileSize,
+      fileType: fileData.fileType,
+      fileMd5: fileData.fileMd5,
+      createdBy: user_id,
+      updatedBy: user_id,
+      version: 1,
+    });
+
+    return await this.fileRepository.save(fileMeta);
+  }
+
+  async updateFile(userId: number, dto: UpdateFileDto) {
+    const { fileId, ...fileMeta } &#x3D; dto;
+    const queryRunner &#x3D; this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const file &#x3D; await this.fileService.findById(fileId);
+      if (file.createdBy !&#x3D;&#x3D; userId) {
+        throw new BadRequestException(&#x27;无权修改他人文件&#x27;);
+      }
+      Object.assign(file, fileMeta);
+      file.updatedBy &#x3D; userId;
+      file.version +&#x3D; 1;
+      await queryRunner.manager.save(file);
+      await queryRunner.commitTransaction();
+      return formatResponse(200, null, &#x27;文件信息修改成功&#x27;);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateFilesAccess(userId: number, dto: UpdateFilesAccessDto) {
+    const { fileIds, access } &#x3D; dto;
+    const queryRunner &#x3D; this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const files &#x3D; await queryRunner.manager.find(FileEntity, {
+        where: { id: In(fileIds) },
+      });
+      if (files.length &#x3D;&#x3D;&#x3D; 0) {
+        throw new NotFoundException(&#x27;未找到文件&#x27;);
+      }
+      for (const file of files) {
+        if (file.createdBy !&#x3D;&#x3D; userId) {
+          throw new BadRequestException(&#x27;无权修改他人文件&#x27;);
+        }
+        file.access &#x3D; access;
+        file.updatedBy &#x3D; userId;
+        file.version +&#x3D; 1;
+      }
+      await queryRunner.manager.save(files);
+      await queryRunner.commitTransaction();
+      return formatResponse(200, null, &#x27;文件权限修改成功&#x27;);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // 上传文件
+  async uploadSingle(userId: number, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException(&#x27;请上传文件&#x27;);
+    }
+    try {
+      const { result: foundFile, fileMd5 } &#x3D; await this.checkRepeated(file);
+      const fileType &#x3D; this.checkFileType(file);
+      let fileMeta: FileEntity;
+      if (foundFile) {
+        await this.fileOperationService.deleteFile(file.path);
+        fileMeta &#x3D; await this.createFile(userId, {
+          ...foundFile,
+          originalFileName:
+            file.originalname || file.filename || foundFile.originalFileName,
+        });
+      } else {
+        fileMeta &#x3D; await this.createFile(userId, {
+          ...file,
+          fileMd5,
+          fileType,
+        });
+      }
+      return formatResponse(
+        200,
+        {
+          fileId: fileMeta.id,
+        },
+        &#x27;文件上传成功&#x27;,
+      );
+    } catch (error) {
+      await fs.promises.unlink(file.path);
+      throw error;
+    }
+  }
+
+  // 分片上传：更新任务中已上传分片数和 chunk_status 状态
+  async uploadChunk(taskId: number, chunkIndex: number) {
+    const queryRunner &#x3D; this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    let task: TaskEntity | null &#x3D; null;
+    try {
+      // 使用悲观锁，防止并发修改
+      task &#x3D; await queryRunner.manager.findOne(TaskEntity, {
+        where: { id: taskId },
+        lock: { mode: &#x27;pessimistic_write&#x27; }, // 悲观锁定该任务行
+      });
+      if (!task) {
+        throw new NotFoundException(&#x27;Task not found&#x27;);
+      }
+      if (task.status &#x3D;&#x3D;&#x3D; &#x27;completed&#x27;) {
+        throw new BadRequestException(&#x27;Task already completed&#x27;);
+      }
+      // 确保 chunkStatus 存在并初始化
+      task.chunkStatus &#x3D; task.chunkStatus || {};
+
+      // 检查是否已经上传该分片
+      if (task.chunkStatus[chunkIndex] &#x3D;&#x3D;&#x3D; true) {
+        throw new BadRequestException(&#x60;Chunk ${chunkIndex} already uploaded&#x60;);
+      }
+
+      // 更新已上传分片数
+      task.uploadedChunks &#x3D; (task.uploadedChunks || 0) + 1;
+
+      // 更新分片状态
+      task.chunkStatus[chunkIndex] &#x3D; true;
+
+      await queryRunner.manager.save(TaskEntity, task);
+      await queryRunner.commitTransaction();
+      return formatResponse(
+        200,
+        {
+          taskId: task.id,
+          chunkIndex,
+        },
+        &#x60;Chunk ${chunkIndex} uploaded successfully&#x60;,
+      );
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (task) {
+        task.chunkStatus &#x3D; task.chunkStatus || {};
+        task.chunkStatus[chunkIndex] &#x3D; false;
+        await queryRunner.manager.save(task);
+      }
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async createUploadTask(userId: number, taskMeta: CreateTaskDto) {
+    const { fileName, fileSize, fileType, fileMd5, totalChunks } &#x3D; taskMeta;
+    const queryRunner &#x3D; this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 查找已有文件
+      const file &#x3D; await queryRunner.manager.findOne(FileEntity, {
+        where: { fileMd5 },
+      });
+
+      if (file) {
+        // 若找到重复文件，创建文件记录和任务记录，任务状态为 completed
+        const newFile &#x3D; this.fileRepository.create({
+          originalFileName: fileName,
+          storageFileName: file.storageFileName,
+          filePath: file.filePath,
+          fileSize: file.fileSize,
+          fileType: file.fileType,
+          fileMd5: file.fileMd5,
+          createdBy: userId,
+          updatedBy: userId,
+          version: 1,
+        });
+
+        await queryRunner.manager.save(FileEntity, newFile);
+
+        // 创建任务记录，状态为 completed
+        const task &#x3D; queryRunner.manager.create(TaskEntity, {
+          fileName: fileName,
+          fileSize: file.fileSize, // 复制已有文件的大小
+          fileType: file.fileType, // 使用已上传文件的类型
+          fileMd5: fileMd5,
+          totalChunks: totalChunks,
+          uploadedChunks: totalChunks,
+          status: &#x27;completed&#x27;,
+          createdBy: userId,
+          updatedBy: userId,
+          version: 1,
+        });
+        await queryRunner.manager.save(task);
+
+        await queryRunner.commitTransaction();
+
+        return formatResponse(
+          200,
+          { file_id: file.id, status: &#x27;completed&#x27; },
+          &#x27;上传完毕&#x27;,
+        );
+      }
+
+      // 文件不存在，创建任务并设置状态为 uploading
+      const task &#x3D; queryRunner.manager.create(TaskEntity, {
+        fileName: fileName,
+        fileSize: fileSize,
+        fileType: fileType,
+        fileMd5: fileMd5,
+        totalChunks: totalChunks,
+        uploadedChunks: 0,
+        status: &#x27;uploading&#x27;,
+        createdBy: userId,
+        updatedBy: userId,
+        version: 1,
+      });
+      await queryRunner.manager.save(task);
+
+      await queryRunner.commitTransaction();
+
+      return formatResponse(
+        201,
+        { taskId: task.id, status: &#x27;uploading&#x27; },
+        &#x27;任务创建成功&#x27;,
+      );
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async completeUpload(userId: number, taskId: number) {
+    const queryRunner &#x3D; this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    let task: TaskEntity | null &#x3D; null;
+    try {
+      task &#x3D; await queryRunner.manager.findOne(TaskEntity, {
+        where: { id: taskId },
+      });
+      if (!task) {
+        throw new NotFoundException(&#x27;未找到上传任务&#x27;);
+      }
+      if (task.status &#x3D;&#x3D;&#x3D; &#x27;completed&#x27;) {
+        return formatResponse(200, null, &#x27;当前任务已完成&#x27;);
+      }
+      if (task.status &#x3D;&#x3D;&#x3D; &#x27;failed&#x27;) {
+        throw new InternalServerErrorException(&#x27;当前任务失败，请重新上传&#x27;);
+      }
+      if (task.uploadedChunks !&#x3D;&#x3D; task.totalChunks) {
+        return formatResponse(202, null, &#x27;当前任务还未完成&#x27;);
+      }
+
+      // 确保文件夹存在
+      let folder &#x3D; &#x27;uploads/other&#x27;; // 默认存储
+      if (task.fileType.startsWith(&#x27;image&#x27;)) folder &#x3D; &#x27;uploads/images&#x27;;
+      else if (task.fileType.startsWith(&#x27;video&#x27;)) folder &#x3D; &#x27;uploads/videos&#x27;;
+      else if (task.fileType.startsWith(&#x27;application&#x27;))
+        folder &#x3D; &#x27;uploads/documents&#x27;;
+      else if (task.fileType.startsWith(&#x27;audio&#x27;)) folder &#x3D; &#x27;uploads/audio&#x27;;
+
+      // 使用异步文件夹创建
+      await fs.promises.mkdir(folder, { recursive: true });
+
+      const fileExtension &#x3D; path.extname(task.fileName);
+      const storageFileName &#x3D; &#x60;${uuidv4()}${fileExtension}&#x60;;
+      const finalPath &#x3D; path.join(folder, storageFileName);
+
+      // 合并文件分片，按顺序进行处理
+      const chunkPaths: string[] &#x3D; [];
+      for (let i &#x3D; 1; i &lt;&#x3D; task.totalChunks; i++) {
+        const chunkPath &#x3D; path.join(&#x27;uploads/chunks&#x27;, &#x60;${task.fileMd5}-${i}&#x60;);
+        chunkPaths.push(chunkPath);
+      }
+
+      // 使用 Promise.all 并行合并分片
+      await Promise.all(
+        chunkPaths.map((chunkPath) &#x3D;&gt;
+          this.fileOperationService.mergeFile(chunkPath, finalPath),
+        ),
+      );
+
+      // 删除分片文件
+      const chunkDeletionPromises &#x3D; chunkPaths.map((chunkPath) &#x3D;&gt;
+        fs.promises.unlink(chunkPath),
+      );
+      await Promise.all(chunkDeletionPromises);
+
+      // 更新任务状态
+      task.status &#x3D; &#x27;completed&#x27;;
+      task.fileSize &#x3D; fs.statSync(finalPath).size;
+      await queryRunner.manager.save(task);
+
+      const newFile &#x3D; this.fileRepository.create({
+        originalFileName: task.fileName,
+        storageFileName: storageFileName,
+        filePath: finalPath,
+        fileSize: task.fileSize,
+        fileType: task.fileType,
+        fileMd5: task.fileMd5,
+        createdBy: userId,
+        updatedBy: userId,
+      });
+      await queryRunner.manager.save(newFile);
+
+      await queryRunner.commitTransaction();
+      return formatResponse(201, null, &#x27;File uploaded and merged successfully&#x27;);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (task) {
+        // 清理文件
+        const chunkDeletionPromises: Promise&lt;void&gt;[] &#x3D; [];
+        for (let i &#x3D; 1; i &lt;&#x3D; task.totalChunks; i++) {
+          const chunkPath &#x3D; path.join(&#x27;uploads/chunks&#x27;, &#x60;${task.fileMd5}-${i}&#x60;);
+          chunkDeletionPromises.push(
+            fs.promises.unlink(chunkPath).catch((err) &#x3D;&gt; {
+              console.error(&#x60;Failed to delete chunk ${i}: ${err.message}&#x60;);
+            }),
+          );
+        }
+        await Promise.all(chunkDeletionPromises);
+      }
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getUploadTaskStatus(taskId: number) {
+    const task &#x3D; await this.taskRepository.findOne({
+      where: { id: taskId },
+    });
+    if (!task) {
+      throw new NotFoundException(&#x27;未找到上传任务&#x27;);
+    }
+    return formatResponse(200, {
+      taskId: task.id,
+      status: task.status,
+      chunkStatus: task.chunkStatus,
+      totalChunks: task.totalChunks,
+      uploadedChunks: task.uploadedChunks,
+    });
+  }
+}
+</code></pre>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'injectable';
+            var COMPODOC_CURRENT_PAGE_URL = 'FileUploadService.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

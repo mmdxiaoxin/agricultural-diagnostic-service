@@ -1,0 +1,523 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>病害智能诊断系统服务文档</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">病害智能诊断系统服务文档</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content miscellaneous-variables">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Miscellaneous</li>
+  <li class="breadcrumb-item">Variables</li>
+</ol>
+
+<section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <ul class="index-list">
+                        <li>
+                            <a href="#formatResponse" title="src/common/helpers/response.helper.ts" ><b>formatResponse</b>&nbsp;&nbsp;&nbsp;(src/.../response.helper.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#getFileType" title="src/common/utils/mime.ts" ><b>getFileType</b>&nbsp;&nbsp;&nbsp;(src/.../mime.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#getModelMimeType" title="src/common/utils/mime.ts" ><b>getModelMimeType</b>&nbsp;&nbsp;&nbsp;(src/.../mime.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#MIME_TYPE" title="src/common/constants/mime.ts" ><b>MIME_TYPE</b>&nbsp;&nbsp;&nbsp;(src/.../mime.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#parseSize" title="src/common/utils/parse.ts" ><b>parseSize</b>&nbsp;&nbsp;&nbsp;(src/.../parse.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#Roles" title="src/common/decorator/roles.decorator.ts" ><b>Roles</b>&nbsp;&nbsp;&nbsp;(src/.../roles.decorator.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#ROLES_KEY" title="src/common/decorator/roles.decorator.ts" ><b>ROLES_KEY</b>&nbsp;&nbsp;&nbsp;(src/.../roles.decorator.ts)</a>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+    <h3>src/common/helpers/response.helper.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="formatResponse"></a>
+                    <span class="name">
+                        <span ><b>formatResponse</b></span>
+                        <a href="#formatResponse"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&lt;T &#x3D; any&gt;(
+  code: number &#x3D; 200,
+  data: T | null &#x3D; null,
+  message: string &#x3D; &#x27;Success&#x27;,
+): ApiResponse&lt;T&gt; &#x3D;&gt; {
+  return { code, data, message };
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/common/utils/mime.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getFileType"></a>
+                    <span class="name">
+                        <span ><b>getFileType</b></span>
+                        <a href="#getFileType"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(type: string): MIMETypeValue[] &#x3D;&gt; {
+  switch (type) {
+    case &#x27;image&#x27;:
+      return Object.values(MIME_TYPE.Image);
+    case &#x27;video&#x27;:
+      return [...Object.values(MIME_TYPE.Video)];
+    case &#x27;application&#x27;:
+      return [...Object.values(MIME_TYPE.Application)];
+    case &#x27;audio&#x27;:
+      return [...Object.values(MIME_TYPE.Audio)];
+    case &#x27;other&#x27;:
+      return [
+        ...Object.values(MIME_TYPE.Other),
+        ...Object.values(MIME_TYPE.Font),
+      ];
+    default:
+      return [];
+  }
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getModelMimeType"></a>
+                    <span class="name">
+                        <span ><b>getModelMimeType</b></span>
+                        <a href="#getModelMimeType"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(extension: string): string &#x3D;&gt; {
+  const modelMimeTypes: { [key: string]: string } &#x3D; {
+    pth: &#x27;application/pytorch-model&#x27;,
+    pt: &#x27;application/pytorch-model&#x27;,
+    h5: &#x27;application/tensorflow-model&#x27;,
+    pb: &#x27;application/tensorflow-model&#x27;,
+    onnx: &#x27;application/onnx-model&#x27;,
+    caffemodel: &#x27;application/caffe-model&#x27;,
+    weights: &#x27;application/darknet-weights&#x27;,
+    params: &#x27;application/mxnet-model&#x27;,
+    bin: &#x27;application/huggingface-model&#x27;,
+  };
+
+  return modelMimeTypes[extension.toLowerCase()] || &#x27;application/octet-stream&#x27;;
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/common/constants/mime.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="MIME_TYPE"></a>
+                    <span class="name">
+                        <span ><b>MIME_TYPE</b></span>
+                        <a href="#MIME_TYPE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>{
+    // 视频文件类型
+    Video: {
+        MP4: &quot;video/mp4&quot;,
+        AVI: &quot;video/avi&quot;,
+        MPEG: &quot;video/mpeg&quot;,
+        OGG: &quot;video/ogg&quot;,
+        WebM: &quot;video/webm&quot;,
+        &quot;3GPP&quot;: &quot;video/3gpp&quot;,
+        QuickTime: &quot;video/quicktime&quot;,
+        XMSVideo: &quot;video/x-msvideo&quot;,
+    },
+
+    // 音频文件类型
+    Audio: {
+        MP3: &quot;audio/mpeg&quot;,
+        WAV: &quot;audio/wav&quot;,
+        OGG: &quot;audio/ogg&quot;,
+        AAC: &quot;audio/aac&quot;,
+        FLAC: &quot;audio/flac&quot;,
+        WebM: &quot;audio/webm&quot;,
+        Opus: &quot;audio/opus&quot;,
+    },
+
+    // 图像文件类型
+    Image: {
+        JPEG: &quot;image/jpeg&quot;,
+        PNG: &quot;image/png&quot;,
+        GIF: &quot;image/gif&quot;,
+        WebP: &quot;image/webp&quot;,
+        BMP: &quot;image/bmp&quot;,
+        SVG: &quot;image/svg+xml&quot;,
+        TIFF: &quot;image/tiff&quot;,
+    },
+
+    // 文档文件类型
+    Application: {
+        PDF: &quot;application/pdf&quot;,
+        Word: &quot;application/msword&quot;,
+        Excel: &quot;application/vnd.ms-excel&quot;,
+        PowerPoint: &quot;application/vnd.ms-powerpoint&quot;,
+        WordOpenXML:
+            &quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot;,
+        ExcelOpenXML:
+            &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;,
+        PPTXOpenXML:
+            &quot;application/vnd.openxmlformats-officedocument.presentationml.presentation&quot;,
+        JSON: &quot;application/json&quot;,
+        XML: &quot;application/xml&quot;,
+
+        // 深度学习模型文件类型
+        PyTorch: &quot;application/pytorch-model&quot;,
+        TensorFlow: &quot;application/tensorflow-model&quot;,
+        ONNX: &quot;application/onnx-model&quot;,
+        Caffe: &quot;application/caffe-model&quot;,
+        Darknet: &quot;application/darknet-weights&quot;,
+        MXNet: &quot;application/mxnet-model&quot;,
+        HuggingFace: &quot;application/huggingface-model&quot;,
+    },
+
+    // 应用程序文件类型
+    App: {
+        Zip: &quot;application/zip&quot;,
+        XZip: &quot;application/x-zip-compressed&quot;,
+        RAR: &quot;application/x-rar-compressed&quot;,
+        TAR: &quot;application/x-tar&quot;,
+        &quot;7z&quot;: &quot;application/x-7z-compressed&quot;,
+        SH: &quot;application/x-sh&quot;,
+        JAR: &quot;application/java-archive&quot;,
+    },
+
+    // 字体文件类型
+    Font: {
+        WOFF: &quot;font/woff&quot;,
+        WOFF2: &quot;font/woff2&quot;,
+        FontWOFF: &quot;application/font-woff&quot;,
+        FontTTF: &quot;application/font-ttf&quot;,
+        FontOTF: &quot;application/font-otf&quot;,
+    },
+
+    // 其他类型
+    Other: {
+        CSV: &quot;text/csv&quot;,
+        PHP: &quot;application/x-httpd-php&quot;,
+        OctetStream: &quot;application/octet-stream&quot;,
+    },
+} as const</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/common/utils/parse.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="parseSize"></a>
+                    <span class="name">
+                        <span ><b>parseSize</b></span>
+                        <a href="#parseSize"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(size: string): number &#x3D;&gt; {
+  const regex &#x3D; /^(\d+)(kb|mb|gb|tb)$/i;
+  const match &#x3D; size.match(regex);
+
+  if (!match) {
+    throw new Error(&#x60;无效的大小格式: ${size}&#x60;);
+  }
+
+  const value &#x3D; parseInt(match[1], 10);
+  const unit &#x3D; match[2].toLowerCase();
+
+  switch (unit) {
+    case &#x27;kb&#x27;:
+      return value * 1024; // KB -&gt; 字节
+    case &#x27;mb&#x27;:
+      return value * 1024 * 1024; // MB -&gt; 字节
+    case &#x27;gb&#x27;:
+      return value * 1024 * 1024 * 1024; // GB -&gt; 字节
+    case &#x27;tb&#x27;:
+      return value * 1024 * 1024 * 1024 * 1024; // TB -&gt; 字节
+    default:
+      throw new Error(&#x60;不支持的单位: ${unit}&#x60;);
+  }
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/common/decorator/roles.decorator.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="Roles"></a>
+                    <span class="name">
+                        <span ><b>Roles</b></span>
+                        <a href="#Roles"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(...roles: Role[]) &#x3D;&gt; SetMetadata(ROLES_KEY, roles)</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="ROLES_KEY"></a>
+                    <span class="name">
+                        <span ><b>ROLES_KEY</b></span>
+                        <a href="#ROLES_KEY"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&#x27;roles&#x27;</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'miscellaneous-variables';
+            var COMPODOC_CURRENT_PAGE_URL = 'variables.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

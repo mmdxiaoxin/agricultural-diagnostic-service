@@ -1,0 +1,10 @@
+{
+  "port": 5050,
+  "theme": "gitbook",
+  "name": "病害智能诊断系统",
+  "description": "这是一个NestJs项目",
+  "version": "1.0.0",
+  "language": "zh-CN",
+  "title": "病害智能诊断系统API文档",
+  "cleanOutput": true
+}
