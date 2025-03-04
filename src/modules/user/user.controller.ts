@@ -1,4 +1,5 @@
 import { Roles } from '@/common/decorator/roles.decorator';
+import { MIME_TYPE } from '@/common/enum/mime.enum';
 import { Role } from '@/common/enum/role.enum';
 import { TypeormFilter } from '@/common/filters/typeorm.filter';
 import { AuthGuard } from '@/common/guards/auth.guard';
@@ -83,7 +84,7 @@ export class UserController {
     @Req() req,
     @UploadedFile(
       new FileSizeValidationPipe('10MB'),
-      new FileTypeValidationPipe(['image/jpeg', 'image/png']),
+      new FileTypeValidationPipe([MIME_TYPE.PNG, MIME_TYPE.JPEG]),
     )
     file: Express.Multer.File,
   ) {

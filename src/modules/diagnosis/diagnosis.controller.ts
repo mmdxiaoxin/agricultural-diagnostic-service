@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { DiagnosisService } from './services/diagnosis.service';
+import { MIME_TYPE } from '@/common/enum/mime.enum';
 
 @Controller('diagnosis')
 export class DiagnosisController {
@@ -60,7 +61,7 @@ export class DiagnosisController {
     @Req() req: Request,
     @Body() dto: any,
     @UploadedFile(
-      new FileTypeValidationPipe(['image/jpeg', 'image/png']),
+      new FileTypeValidationPipe([MIME_TYPE.PNG, MIME_TYPE.JPEG]),
       new FileSizeValidationPipe('10MB'),
     )
     file: Express.Multer.File,
