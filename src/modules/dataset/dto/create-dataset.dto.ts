@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsString,
@@ -10,10 +11,18 @@ import {
 export class CreateDatasetDto {
   @IsString({ message: '数据集name必须是字符串！' })
   @IsNotEmpty({ message: '数据集name不能为空！' })
+  @ApiProperty({
+    description: '数据集名称',
+    example: '数据集1',
+  })
   name: string;
 
   @IsOptional()
   @IsString({ message: '数据集description必须是字符串！' })
+  @ApiProperty({
+    description: '数据集描述',
+    example: '这是一个数据集',
+  })
   description?: string;
 
   @IsOptional()
@@ -28,5 +37,9 @@ export class CreateDatasetDto {
     }
   })
   @IsInt({ each: true, message: 'fileIds 必须是数字' })
+  @ApiProperty({
+    description: '文件ID',
+    example: [1, 2, 3],
+  })
   fileIds?: number[];
 }

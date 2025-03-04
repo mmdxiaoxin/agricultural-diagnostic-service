@@ -1,5 +1,6 @@
 import { ArrayMinSize, IsArray, IsNotEmpty, IsInt } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class DownloadFilesDto {
   @IsNotEmpty({ message: 'fileIds 参数不能为空！' })
@@ -9,5 +10,9 @@ export class DownloadFilesDto {
     toClassOnly: true,
   })
   @IsInt({ each: true })
+  @ApiProperty({
+    description: '文件ID',
+    example: [1, 2, 3],
+  })
   fileIds: number[];
 }
