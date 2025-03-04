@@ -10,14 +10,12 @@ import { UpdateFileDto, UpdateFilesAccessDto } from '../dto/update-file.dto';
 import { File as FileEntity } from '../models/file.entity';
 import { Task as TaskEntity } from '../models/task.entity';
 import { FileOperationService } from './file-operation.service';
-import { FileService } from './file.service';
 
 @Injectable()
 export class FileManageService {
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
-    private readonly fileService: FileService,
     private readonly fileOperationService: FileOperationService,
     private readonly dataSource: DataSource,
   ) {}
