@@ -188,6 +188,7 @@ export class FileManageService {
     try {
       const file = await queryRunner.manager.findOne(FileEntity, {
         where: { id: fileId },
+        lock: { mode: 'pessimistic_write' },
       });
       if (!file) {
         throw new NotFoundException('未找到文件');
@@ -195,17 +196,20 @@ export class FileManageService {
       if (file.createdBy !== userId) {
         throw new BadRequestException('无权删除他人文件');
       }
-      // 检查是否有引用该文件
+      // 检查文件是否被引用
       const referenceCount = await queryRunner.manager.count(TaskEntity, {
         where: { fileMd5: file.fileMd5 },
       });
+      // 如果文件没有被引用，删除文件元数据及文件
       if (referenceCount === 0) {
-        // 如果没有被引用，删除文件
+        await queryRunner.manager.delete(FileEntity, fileId);
+        await queryRunner.commitTransaction();
         await this.fileOperationService.deleteFile(file.filePath);
+      } else {
+        // 如果文件被引用，直接删除文件元数据，不删除实际文件
+        await queryRunner.manager.delete(FileEntity, fileId);
+        await queryRunner.commitTransaction();
       }
-      // 删除文件元数据
-      await queryRunner.manager.delete(FileEntity, fileId);
-      await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
