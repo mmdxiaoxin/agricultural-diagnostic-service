@@ -60,8 +60,8 @@ export class RoleController {
   @Roles(Role.Admin)
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(RolesGuard)
-  async create(@Body() createRoleDto: CreateRoleDto) {
-    await this.roleService.create(createRoleDto);
+  async create(@Body() dto: CreateRoleDto) {
+    await this.roleService.create(dto);
     return formatResponse(201, null, '角色创建成功');
   }
 
