@@ -32,16 +32,13 @@ export class AiServiceService {
 
   // 获取全部AI服务
   async findAll(): Promise<AiService[]> {
-    return this.aiServiceRepository.find({
-      relations: ['aiServiceLogs', 'aiServiceConfigs', 'aiServiceAccessLogs'], // 加载关联的表
-    });
+    return this.aiServiceRepository.find();
   }
 
   // 分页查询AI服务
   async findPaginated(page: number, pageSize: number) {
     const skip = (page - 1) * pageSize;
     return await this.aiServiceRepository.findAndCount({
-      relations: ['aiServiceLogs', 'aiServiceConfigs', 'aiServiceAccessLogs'],
       skip,
       take: pageSize,
     });
