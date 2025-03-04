@@ -121,7 +121,7 @@ export class FileDownloadService {
     });
     const tempLink = `${request.protocol}://${request.get(
       'host',
-    )}/file/access-link/${token}`;
+    )}/api/file/access-link/${token}`;
     return formatResponse(200, { link: tempLink }, '临时链接生成成功');
   }
 
