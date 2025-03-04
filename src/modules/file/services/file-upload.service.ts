@@ -35,7 +35,9 @@ export class FileUploadService {
   private async checkRepeated(file: Express.Multer.File) {
     const fileBuffer = await this.fileOperationService.readFile(file.path);
     const fileMd5 = crypto.createHash('md5').update(fileBuffer).digest('hex');
-    const result = await this.fileService.findByMd5(fileMd5);
+    const result = await this.fileRepository.findOne({
+      where: { fileMd5 },
+    });
     return { result, fileMd5 };
   }
 
