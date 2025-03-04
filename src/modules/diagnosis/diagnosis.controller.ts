@@ -20,11 +20,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { DiagnosisService } from './services/diagnosis.service';
+import { FileOperationService } from '../file/services/file-operation.service';
+import { formatResponse } from '@/common/helpers/response.helper';
 
 @Controller('diagnosis')
 @UseGuards(AuthGuard)
 export class DiagnosisController {
-  constructor(private readonly diagnosisService: DiagnosisService) {}
+  constructor(
+    private readonly diagnosisService: DiagnosisService,
+    private readonly fileOperationService: FileOperationService,
+  ) {}
 
   // 上传待诊断数据接口
   @Post('upload')
@@ -67,7 +72,13 @@ export class DiagnosisController {
     )
     file: Express.Multer.File,
   ) {
-    return await this.diagnosisService.uploadData(req.user.userId, file);
+    try {
+      await this.diagnosisService.uploadData(req.user.userId, file);
+      return formatResponse(200, null, '上传成功');
+    } catch (error) {
+      await this.fileOperationService.deleteFile(file.path);
+      throw error;
+    }
   }
 
   // 开始诊断数据接口
