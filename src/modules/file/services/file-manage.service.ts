@@ -164,7 +164,13 @@ export class FileManageService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const file = await this.fileService.findById(fileId);
+      const file = await queryRunner.manager.findOne(FileEntity, {
+        where: { id: fileId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!file) {
+        throw new NotFoundException('未找到文件');
+      }
       if (file.createdBy !== userId) {
         throw new BadRequestException('无权修改他人文件');
       }
@@ -179,6 +185,39 @@ export class FileManageService {
       throw error;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  /**
+   * 更新文件信息并开启事务
+   * @param userId
+   * @param dto
+   * @param queryRunner
+   * @returns 文件实体
+   */
+  async updateFileInTransaction(
+    userId: number,
+    dto: UpdateFileDto,
+    queryRunner: QueryRunner,
+  ) {
+    const { fileId, ...fileMeta } = dto;
+    try {
+      const file = await queryRunner.manager.findOne(FileEntity, {
+        where: { id: fileId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!file) {
+        throw new NotFoundException('未找到文件');
+      }
+      if (file.createdBy !== userId) {
+        throw new BadRequestException('无权修改他人文件');
+      }
+      Object.assign(file, fileMeta);
+      file.updatedBy = userId;
+      file.version += 1;
+      return await queryRunner.manager.save(file);
+    } catch (error) {
+      throw error;
     }
   }
 
