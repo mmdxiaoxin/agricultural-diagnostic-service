@@ -35,7 +35,6 @@ export class FileDownloadService {
         .set({
           'Content-Length': fileMeta.fileSize,
           'Content-Type': fileMeta.fileType,
-          'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
         })
         .sendFile(filePath);
       return;
