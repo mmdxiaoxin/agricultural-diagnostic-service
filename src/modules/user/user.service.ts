@@ -224,7 +224,6 @@ export class UserService {
       {
         ...user,
         profile: { ...user.profile, avatar: avatarBase64 },
-        roles: user.roles?.map((role) => role.alias),
         password: undefined,
       },
       '个人信息获取成功',
