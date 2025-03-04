@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
@@ -15,9 +16,17 @@ export class LoginDto {
   @Matches(/^[a-zA-Z0-9_-]{3,16}$/, {
     message: '用户名必须由3-16个字母、数字、下划线或破折号组成！',
   })
+  @ApiProperty({
+    description: '用户名/邮箱',
+    example: 'admin',
+  })
   login: string;
 
   @IsString({ message: '密码必须为字符串类型！' })
   @IsNotEmpty({ message: '密码输入不能为空！' })
+  @ApiProperty({
+    description: '密码',
+    example: '123456',
+  })
   password: string;
 }
