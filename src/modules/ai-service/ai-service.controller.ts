@@ -1,5 +1,6 @@
 import { Roles } from '@/common/decorator/roles.decorator';
 import { Role } from '@/common/enum/role.enum';
+import { TypeormFilter } from '@/common/filters/typeorm.filter';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { formatResponse } from '@/common/helpers/response.helper';
@@ -14,6 +15,7 @@ import {
   Post,
   Put,
   Query,
+  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import { CreateAiServiceDto } from './dto/create-ai-service.dto';
@@ -23,6 +25,7 @@ import { AiServiceService } from './services/ai-service.service';
 @Controller('ai-service')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
+@UseFilters(TypeormFilter)
 export class AiServiceController {
   constructor(private readonly aiServiceService: AiServiceService) {}
 
@@ -47,11 +50,11 @@ export class AiServiceController {
     @Query('page') page: number,
     @Query('pageSize') pageSize: number,
   ) {
-    const [list, count] = await this.aiServiceService.findPaginated(
+    const [list, total] = await this.aiServiceService.findPaginated(
       page,
       pageSize,
     );
-    return formatResponse(200, { list, count, page, pageSize }, '获取成功');
+    return formatResponse(200, { list, total, page, pageSize }, '获取成功');
   }
 
   // 获取单个AI服务
