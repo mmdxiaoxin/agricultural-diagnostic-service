@@ -65,6 +65,14 @@ export class FileController {
   }
 
   // 获取文件列表
+  @Get()
+  @Roles(Role.Admin, Role.Expert)
+  @UseGuards(AuthGuard, RolesGuard)
+  async filesGet(@Req() req: Request) {
+    return this.commonService.filesGet(req.user.userId);
+  }
+
+  // 获取文件列表分页
   @Get('list')
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
@@ -79,7 +87,7 @@ export class FileController {
     @Query('updatedStart') updatedStart?: string,
     @Query('updatedEnd') updatedEnd?: string,
   ) {
-    return this.manageService.fileListGet(
+    return this.commonService.filesListGet(
       page,
       pageSize,
       {
