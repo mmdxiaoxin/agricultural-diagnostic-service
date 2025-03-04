@@ -22,7 +22,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { FileOperationService } from '../file/services/file-operation.service';
-import { DiagnosisService } from './services/diagnosis.service';
+import { DiagnosisService } from './diagnosis.service';
 
 @Controller('diagnosis')
 @UseGuards(AuthGuard)

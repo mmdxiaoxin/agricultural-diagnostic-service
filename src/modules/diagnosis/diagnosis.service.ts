@@ -5,7 +5,7 @@ import { FileOperationService } from '@/modules/file/services/file-operation.ser
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { DiagnosisHistory } from '../models/diagnosis-history.entity';
+import { DiagnosisHistory } from './models/diagnosis-history.entity';
 
 @Injectable()
 export class DiagnosisService {
