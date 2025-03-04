@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Get,
   Param,
@@ -7,9 +6,12 @@ import {
   Query,
   Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 
+import { MIME_TYPE } from '@/common/enum/mime.enum';
+import { AuthGuard } from '@/common/guards/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { existsSync, mkdirSync } from 'fs';
@@ -18,9 +20,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { DiagnosisService } from './services/diagnosis.service';
-import { MIME_TYPE } from '@/common/enum/mime.enum';
 
 @Controller('diagnosis')
+@UseGuards(AuthGuard)
 export class DiagnosisController {
   constructor(private readonly diagnosisService: DiagnosisService) {}
 
@@ -59,14 +61,13 @@ export class DiagnosisController {
   )
   async uploadData(
     @Req() req: Request,
-    @Body() dto: any,
     @UploadedFile(
       new FileTypeValidationPipe([MIME_TYPE.PNG, MIME_TYPE.JPEG]),
       new FileSizeValidationPipe('10MB'),
     )
     file: Express.Multer.File,
   ) {
-    return await this.diagnosisService.uploadData(req.user.userId, dto);
+    return await this.diagnosisService.uploadData(req.user.userId, file);
   }
 
   // 开始诊断数据接口

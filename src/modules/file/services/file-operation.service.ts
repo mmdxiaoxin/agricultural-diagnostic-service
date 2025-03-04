@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { createReadStream, createWriteStream } from 'fs';
 import { readFile, unlink } from 'fs/promises';
 
@@ -46,5 +47,26 @@ export class FileOperationService {
       writeStream.on('finish', resolve);
       writeStream.on('error', reject);
     });
+  }
+
+  /**
+   * 计算文件 MD5
+   * @param filePath
+   * @returns MD5 值
+   */
+  async calculateFileMd5(filePath: string): Promise<string> {
+    try {
+      const hash = crypto.createHash('md5');
+      const stream = createReadStream(filePath);
+      return await new Promise<string>((resolve, reject) => {
+        stream.on('data', (data) => hash.update(data));
+        stream.on('end', () => resolve(hash.digest('hex')));
+        stream.on('error', (error) =>
+          reject(new InternalServerErrorException('读取文件时出错', error)),
+        );
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('无法读取文件', error);
+    }
   }
 }
