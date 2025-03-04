@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { createReadStream, createWriteStream } from 'fs';
+import { createReadStream, createWriteStream, existsSync } from 'fs';
 import { readFile, unlink } from 'fs/promises';
 
 @Injectable()
@@ -23,9 +23,13 @@ export class FileOperationService {
    * @param filePath
    * @returns
    */
-  async deleteFile(filePath: string): Promise<void> {
+  async deleteFile(filePath: string) {
     try {
-      await unlink(filePath);
+      if (existsSync(filePath)) {
+        await unlink(filePath);
+        return true;
+      }
+      return false;
     } catch (error) {
       throw new InternalServerErrorException('删除文件失败', error);
     }

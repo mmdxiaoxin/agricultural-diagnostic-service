@@ -1,7 +1,9 @@
 import {
   Controller,
   Get,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Query,
   Req,
@@ -19,9 +21,8 @@ import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
-import { DiagnosisService } from './services/diagnosis.service';
 import { FileOperationService } from '../file/services/file-operation.service';
-import { formatResponse } from '@/common/helpers/response.helper';
+import { DiagnosisService } from './services/diagnosis.service';
 
 @Controller('diagnosis')
 @UseGuards(AuthGuard)
@@ -73,29 +74,54 @@ export class DiagnosisController {
     file: Express.Multer.File,
   ) {
     try {
-      await this.diagnosisService.uploadData(req.user.userId, file);
-      return formatResponse(200, null, '上传成功');
+      return this.diagnosisService.uploadData(req.user.userId, file);
     } catch (error) {
       await this.fileOperationService.deleteFile(file.path);
       throw error;
     }
   }
 
-  // 开始诊断数据接口
+  // TODO: 开始诊断数据接口
   @Post(':id/start')
-  async startDiagnosis(@Param('id') id: number) {
+  async startDiagnosis(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     return await this.diagnosisService.startDiagnosis(id);
   }
 
   // 获取诊断服务状态接口
   @Get(':id/status')
-  async getDiagnosisStatus(@Param('id') id: number) {
+  async getDiagnosisStatus(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     return await this.diagnosisService.getDiagnosisStatus(id);
   }
 
   // 获取诊断历史记录接口
   @Get('history')
-  async getDiagnosisHistory(@Query('userId') userId: number) {
-    return await this.diagnosisService.getDiagnosisHistory(userId);
+  async diagnosisHistoryGet(@Req() req: Request) {
+    return await this.diagnosisService.diagnosisHistoryGet(req.user.userId);
+  }
+
+  // 获取诊断历史记录接口
+  @Get('history/list')
+  async diagnosisHistoryListGet(
+    @Req() req: Request,
+    @Query('page', ParseIntPipe) page?: number,
+    @Query('pageSize', ParseIntPipe) pageSize?: number,
+  ) {
+    return await this.diagnosisService.diagnosisHistoryListGet(
+      page,
+      pageSize,
+      req.user.userId,
+    );
   }
 }
