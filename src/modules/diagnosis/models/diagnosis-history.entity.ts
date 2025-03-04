@@ -14,9 +14,9 @@ export class DiagnosisHistory {
   @PrimaryGeneratedColumn('increment')
   id: number; // 主键ID
 
-  @ManyToOne(() => FileEntity, { nullable: true })
-  @JoinColumn({ name: 'fileId' })
-  file: FileEntity | null; // 上传的数据文件
+  @ManyToOne(() => FileEntity, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'fileId' }) // 关联的文件外键名
+  file: FileEntity | null; // 上传的数据文件，允许为空（0..0关系）
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   diagnosisResult: string | null; // 诊断结果
