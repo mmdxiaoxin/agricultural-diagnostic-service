@@ -2,6 +2,7 @@ import { Roles } from '@/common/decorator/roles.decorator';
 import { Role } from '@/common/enum/role.enum';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
+import { formatResponse } from '@/common/helpers/response.helper';
 import {
   Body,
   Controller,
@@ -18,56 +19,74 @@ import {
 } from '@nestjs/common';
 import { CreatePlantDiseaseKnowledgeDto } from './dto/create-knowledge.dto';
 import { UpdatePlantDiseaseKnowledgeDto } from './dto/update-knowledge.dto';
-import { KnowledgeManageService } from './services/knowledge-manage.service';
+import { KnowledgeService } from './knowledge.service';
 
 @Controller('knowledge')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
 export class KnowledgeController {
-  constructor(private readonly manageService: KnowledgeManageService) {}
+  constructor(private readonly KnowledgeService: KnowledgeService) {}
 
   // 创建病害知识记录
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  knowledgeCreate(@Body() dto: CreatePlantDiseaseKnowledgeDto) {
-    this.manageService.knowledgeCreate(dto);
+  async knowledgeCreate(@Body() dto: CreatePlantDiseaseKnowledgeDto) {
+    await this.KnowledgeService.create(dto);
+    return formatResponse(201, null, '病害知识记录创建成功');
   }
 
   // 获取所有病害知识记录
   @Get()
-  knowledgeGet() {
-    return this.manageService.knowledgeGet();
+  async knowledgeGet() {
+    const knowledge = await this.KnowledgeService.knowledgeGet();
+    return formatResponse(200, knowledge, '病害知识记录获取成功');
   }
 
   // 获取所有病害知识记录分页
   @Get('list')
-  knowledgeListGet(
+  async knowledgeListGet(
     @Query('page', ParseIntPipe) page: number = 1,
     @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('category') category?: string,
   ) {
-    return this.manageService.knowledgeListGet(page, pageSize, { category });
+    const [list, total] = await this.KnowledgeService.knowledgeListGet(
+      page,
+      pageSize,
+      { category },
+    );
+    return formatResponse(
+      200,
+      {
+        list,
+        page,
+        pageSize,
+        total,
+      },
+      '病害知识列表获取成功',
+    );
   }
 
   // 获取单个病害知识记录
   @Get(':id')
-  knowledgeDetailGet(@Param('id') id: number) {
-    return this.manageService.knowledgeDetailGet(id);
+  async knowledgeDetailGet(@Param('id') id: number) {
+    const knowledge = await this.KnowledgeService.findById(id);
+    return formatResponse(200, knowledge, '病害知识记录获取成功');
   }
 
   // 更新病害知识记录
   @Put(':id')
-  knowledgeUpdate(
+  async knowledgeUpdate(
     @Param('id') id: number,
     @Body() dto: UpdatePlantDiseaseKnowledgeDto,
   ) {
-    return this.manageService.knowledgeUpdate(id, dto);
+    await this.KnowledgeService.update(id, dto);
+    return formatResponse(200, null, '病害知识记录更新成功');
   }
 
   // 删除病害知识记录
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  knowledgeDelete(@Param('id') id: number) {
-    return this.manageService.knowledgeDelete(id);
+  async knowledgeDelete(@Param('id') id: number) {
+    await this.KnowledgeService.remove(id);
   }
 }

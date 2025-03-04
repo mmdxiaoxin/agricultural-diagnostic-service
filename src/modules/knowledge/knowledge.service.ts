@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreatePlantDiseaseKnowledgeDto } from '../dto/create-knowledge.dto';
-import { UpdatePlantDiseaseKnowledgeDto } from '../dto/update-knowledge.dto';
-import { PlantDiseaseKnowledge } from '../knowledge.entity';
+import { CreatePlantDiseaseKnowledgeDto } from './dto/create-knowledge.dto';
+import { UpdatePlantDiseaseKnowledgeDto } from './dto/update-knowledge.dto';
+import { PlantDiseaseKnowledge } from './knowledge.entity';
+import { formatResponse } from '@/common/helpers/response.helper';
 
 @Injectable()
 export class KnowledgeService {
@@ -13,7 +14,7 @@ export class KnowledgeService {
   ) {}
 
   // 创建病害知识记录
-  create(dto: CreatePlantDiseaseKnowledgeDto) {
+  async create(dto: CreatePlantDiseaseKnowledgeDto) {
     const knowledge = this.knowledgeRepository.create(dto);
     return this.knowledgeRepository.save(knowledge);
   }
@@ -21,6 +22,32 @@ export class KnowledgeService {
   // 获取所有病害知识记录
   findAll() {
     return this.knowledgeRepository.find();
+  }
+
+  // 获取所有病害知识记录
+  async knowledgeListGet(
+    page: number = 1,
+    pageSize: number = 10,
+    filters: {
+      category?: string;
+    },
+  ) {
+    const queryBuilder = this.knowledgeRepository.createQueryBuilder(
+      'plant_disease_knowledge',
+    );
+    if (filters.category) {
+      queryBuilder.where('knowledge.category = :category', {
+        category: filters.category,
+      });
+    }
+    return await queryBuilder
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+  }
+
+  async knowledgeGet() {
+    return await this.knowledgeRepository.find();
   }
 
   // 获取单个病害知识记录
