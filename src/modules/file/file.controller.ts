@@ -37,7 +37,7 @@ import { DownloadFilesDto } from './dto/download-file.dto';
 import { UpdateFileDto, UpdateFilesAccessDto } from './dto/update-file.dto';
 import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { ParseFileIdsPipe } from './pipe/delete.pipe';
-import { FileSizeValidationPipe } from './pipe/file.pipe';
+import { FileSizeValidationPipe } from './pipe/file-size.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';
 import { FileDownloadService } from './services/file-download.service';
 import { FileManageService } from './services/file-manage.service';
@@ -134,7 +134,7 @@ export class FileController {
   )
   async uploadSingle(
     @Req() req: Request,
-    @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
+    @UploadedFile(new FileSizeValidationPipe('10MB')) file: Express.Multer.File,
   ) {
     try {
       return this.uploadService.uploadSingle(req.user.userId, file);
@@ -208,7 +208,7 @@ export class FileController {
     }),
   )
   async uploadChunk(
-    @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
+    @UploadedFile(new FileSizeValidationPipe('20MB')) file: Express.Multer.File,
     @Body() dto: UploadChunkDto,
   ) {
     try {

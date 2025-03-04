@@ -30,16 +30,13 @@ import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
+import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { UpdatePasswordDto } from './dto/change-pass.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ResetPasswordDto } from './dto/reset-pass.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './models/user.entity';
-import {
-  AvatarSizeValidationPipe,
-  AvatarTypeValidationPipe,
-} from './pipe/avatar.pipe';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -85,8 +82,8 @@ export class UserController {
   async uploadAvatar(
     @Req() req,
     @UploadedFile(
-      new AvatarSizeValidationPipe(),
-      new AvatarTypeValidationPipe(),
+      new FileSizeValidationPipe('10MB'),
+      new FileTypeValidationPipe(['image/jpeg', 'image/png']),
     )
     file: Express.Multer.File,
   ) {
