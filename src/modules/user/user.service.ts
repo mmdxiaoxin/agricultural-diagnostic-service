@@ -193,46 +193,38 @@ export class UserService {
   }
 
   async profileGet(id: number) {
-    const user = await this.findById(id);
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['profile', 'roles'],
+    });
     if (!user) {
       throw new BadRequestException('用户不存在');
     }
-
-    let profile = await this.profileRepository.findOne({
-      where: { user },
-    });
-
-    if (!profile) {
-      profile = new Profile();
+    if (!user.profile) {
+      const profile = this.profileRepository.create();
       profile.user = user;
       await this.profileRepository.save(profile);
     }
-
     let avatarBase64: string | null = null;
-    if (profile.avatar) {
+    if (user.profile.avatar) {
       // 获取头像的绝对路径
-      const avatarPath = profile.avatar;
-
+      const avatarPath = user.profile.avatar;
       try {
         // 读取头像文件并转为 Base64
         const avatarBuffer = await readFile(avatarPath);
-        // 获取文件的扩展名
-        const fileExtension = extname(profile.avatar).toLowerCase();
-        // 根据文件扩展名设置 MIME 类型
+        const fileExtension = extname(user.profile.avatar).toLowerCase();
         const mimeType = fileExtension === '.png' ? 'image/png' : 'image/jpeg';
-        // 转换为 Base64 字符串
         avatarBase64 = `data:${mimeType};base64,${avatarBuffer.toString('base64')}`;
       } catch (err) {
-        console.error('读取头像文件出错:', err);
+        throw new InternalServerErrorException('头像文件读取失败');
       }
     }
-
     return formatResponse(
       200,
       {
-        ...profile,
-        avatar: avatarBase64,
         ...user,
+        profile: { ...user.profile, avatar: avatarBase64 },
+        roles: user.roles?.map((role) => role.alias),
         password: undefined,
       },
       '个人信息获取成功',
