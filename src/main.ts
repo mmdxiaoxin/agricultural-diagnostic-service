@@ -2,10 +2,21 @@ import { NestFactory } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { AppModule } from './modules/app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Swagger 文档配置
+  const config = new DocumentBuilder()
+    .setTitle('病害智能诊断系统')
+    .setDescription('病害智能诊断系统的API文档')
+    .setVersion('1.0')
+    .build();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, documentFactory);
+
   // 启用全局验证管道
   app.useGlobalPipes(
     new ValidationPipe({
