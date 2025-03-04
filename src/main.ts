@@ -6,7 +6,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalFilters(new HttpExceptionFilter());
 
   // Swagger 文档配置
   const config = new DocumentBuilder()
@@ -17,6 +16,12 @@ async function bootstrap() {
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
+
+  // 全局前缀
+  app.setGlobalPrefix('api');
+
+  // 全局异常过滤器
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   // 启用全局验证管道
   app.useGlobalPipes(
