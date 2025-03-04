@@ -13,6 +13,7 @@ import { MenuModule } from './menu/menu.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
 import { AiServiceModule } from './ai-service/ai-service.module';
+import { TestModule } from './test/test.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { AiServiceModule } from './ai-service/ai-service.module';
     KnowledgeModule,
     DiagnosisModule,
     AiServiceModule,
+    TestModule,
   ],
   controllers: [AppController],
   providers: [AppService],
