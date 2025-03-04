@@ -21,11 +21,14 @@ export class Menu {
   @Column({ type: 'varchar', length: 255 })
   path: string;
 
+  @Column({ type: 'int', default: 0 })
+  sort: number;
+
   @Column({ nullable: true })
-  parentId: number | null;
+  parentId?: number;
 
   @Column({ type: 'varchar', nullable: true })
-  isLink: string | null;
+  isLink?: string;
 
   // 定义父级菜单（OneToMany）
   @ManyToOne(() => Menu, (menu) => menu.children)

@@ -10,23 +10,24 @@ export class MenuService {
     private readonly menuRepository: Repository<Menu>,
   ) {}
 
-  // 获取个人路由权限
   async findAuthRoutes(roleId: number) {
     const menus = await this.menuRepository.find({
       relations: ['parent', 'children'],
+      // TODO: 这里可以根据实际情况加入角色ID过滤
       // where: {
-      //   // TODO: 根据角色ID过滤菜单
-      //   // 假设角色与菜单的关系表存在，这里根据 roleId 过滤相关菜单
-      //   // 请根据实际表结构和关系来修改查询条件
-      //   // roleId: roleId, // 角色ID
+      //   roleId: roleId,
       // },
       order: { id: 'ASC' }, // 按照ID升序排列
     });
+
+    // 按照 sort 属性对菜单进行排序
+    menus.sort((a, b) => a.sort - b.sort); // 升序排序，如果是降序则改为 b.sort - a.sort
 
     // 构建菜单树
     const buildMenuTree = (parentId: number | null): any[] => {
       return menus
         .filter((menu) => menu.parentId === parentId)
+        .sort((a, b) => a.sort - b.sort) // 对每一层级的菜单进行排序
         .map((menu) => ({
           icon: menu.icon,
           title: menu.title,
