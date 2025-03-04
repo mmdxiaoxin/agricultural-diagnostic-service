@@ -12,6 +12,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('病害智能诊断系统')
     .setDescription('病害智能诊断系统的API文档')
+    .addBearerAuth() // 添加Bearer认证
     .setVersion('1.0')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
