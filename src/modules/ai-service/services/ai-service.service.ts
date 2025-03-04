@@ -38,9 +38,9 @@ export class AiServiceService {
   }
 
   // 分页查询AI服务
-  async findPaginated(page: number, pageSize: number): Promise<AiService[]> {
+  async findPaginated(page: number, pageSize: number) {
     const skip = (page - 1) * pageSize;
-    return this.aiServiceRepository.find({
+    return await this.aiServiceRepository.findAndCount({
       relations: ['aiServiceLogs', 'aiServiceConfigs', 'aiServiceAccessLogs'],
       skip,
       take: pageSize,
