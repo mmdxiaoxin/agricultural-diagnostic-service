@@ -12,6 +12,7 @@ import { KnowledgeModule } from './knowledge/knowledge.module';
 import { MenuModule } from './menu/menu.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
+import { AiServiceModule } from './ai-service/ai-service.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { UserModule } from './user/user.module';
     MenuModule,
     KnowledgeModule,
     DiagnosisModule,
+    AiServiceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
