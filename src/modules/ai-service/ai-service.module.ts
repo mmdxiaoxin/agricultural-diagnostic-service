@@ -6,6 +6,7 @@ import { AiServiceConfig } from './models/ai-service-config.entity';
 import { AiServiceLog } from './models/ai-service-log.entity';
 import { AiService } from './models/ai-service.entity';
 import { AiServiceService } from './services/ai-service.service';
+import { AiConfigsService } from './services/ai-service-config.service';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { AiServiceService } from './services/ai-service.service';
       AiServiceLog,
     ]),
   ],
-  providers: [AiServiceService],
+  providers: [AiServiceService, AiConfigsService],
   controllers: [AiServiceController],
 })
 export class AiServiceModule {}
