@@ -15,8 +15,11 @@ export class FileSizeValidationPipe implements PipeTransform {
       throw new BadRequestException(`无效的文件大小限制: ${this.maxSize}`);
     }
 
+    if (!file) {
+      throw new BadRequestException('未找到上传的文件');
+    }
     // 判断文件大小是否超出限制
-    if (file?.size > parsedSize) {
+    if (file.size > parsedSize) {
       // 删除文件
       if (file.path) {
         try {
@@ -28,7 +31,6 @@ export class FileSizeValidationPipe implements PipeTransform {
 
       throw new BadRequestException(`单次上传数据大小不能超过 ${this.maxSize}`);
     }
-
     return file;
   }
 }
