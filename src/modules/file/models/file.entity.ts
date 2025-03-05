@@ -54,7 +54,9 @@ export class File {
   @Column({ type: 'int', default: 1 })
   version: number;
 
-  // 多对多关系：一个 File 可能属于多个 Dataset
-  @ManyToMany(() => Dataset, (dataset) => dataset.files)
-  datasets: Dataset[];
+  @ManyToMany(() => Dataset, (dataset) => dataset.files, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  datasets: Dataset[] | null;
 }

@@ -40,12 +40,11 @@ export class Dataset {
   @Column({ type: 'int' })
   updatedBy: number;
 
-  // 多对多关系：一个 Dataset 可以有多个 File，一个 File 也可以属于多个 Dataset
-  @ManyToMany(() => File, (file) => file.datasets)
+  @ManyToMany(() => File, (file) => file.datasets, { nullable: true })
   @JoinTable({
     name: 'datasets_files', // 中间表的名字
-    joinColumn: { name: 'dataset_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'file_id', referencedColumnName: 'id' },
+    joinColumn: { name: 'datasetId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'fileId', referencedColumnName: 'id' },
   })
-  files: File[];
+  files: File[] | null;
 }
