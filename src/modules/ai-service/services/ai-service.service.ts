@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateAiServiceDto } from '../dto/create-ai-service.dto';
 import { UpdateAiServiceDto } from '../dto/update-ai-service.dto';
-import { AiServiceAccessLog } from '../models/ai-service-access-log';
-import { AiServiceConfig } from '../models/ai-service-config';
-import { AiServiceLog } from '../models/ai-service-log';
+import { AiServiceAccessLog } from '../models/ai-service-access-log.entity';
+import { AiServiceConfig } from '../models/ai-service-config.entity';
+import { AiServiceLog } from '../models/ai-service-log.entity';
 import { AiService } from '../models/ai-service.entity';
 
 @Injectable()

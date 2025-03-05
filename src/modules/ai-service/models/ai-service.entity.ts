@@ -5,9 +5,9 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { AiServiceAccessLog } from './ai-service-access-log';
-import { AiServiceConfig } from './ai-service-config';
-import { AiServiceLog } from './ai-service-log';
+import { AiServiceAccessLog } from './ai-service-access-log.entity';
+import { AiServiceConfig } from './ai-service-config.entity';
+import { AiServiceLog } from './ai-service-log.entity';
 
 @Entity('ai_services')
 @Index('serviceNameIdx', ['serviceName'], { unique: true }) // 为 serviceName 添加索引（可选）
