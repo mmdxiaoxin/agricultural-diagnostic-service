@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 // 定义单个配置项的数据结构
 class ConfigDto {
@@ -35,6 +35,8 @@ export class CreateAiConfigsDto {
       },
     ],
   })
+  @IsNotEmpty({ message: '配置项列表不能为空' })
+  @IsArray({ message: '配置项列表必须是数组' })
   @Type(() => ConfigDto)
   configs: ConfigDto[];
 }
