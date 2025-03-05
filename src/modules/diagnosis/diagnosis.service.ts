@@ -98,6 +98,17 @@ export class DiagnosisService {
     return formatResponse(200, diagnosisHistory, '获取诊断历史记录成功');
   }
 
+  async diagnosisSupportGet() {
+    return formatResponse(
+      200,
+      {
+        plantId: 1,
+        modelId: 1,
+      },
+      '获取诊断支持成功',
+    );
+  }
+
   // 获取诊断历史记录
   async diagnosisHistoryListGet(
     page: number = 1,
