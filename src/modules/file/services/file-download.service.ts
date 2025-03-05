@@ -36,6 +36,10 @@ export class FileDownloadService {
           'Content-Length': fileMeta.fileSize,
           'Content-Type': fileMeta.fileType,
         })
+        .setHeader(
+          'Content-Disposition',
+          `attachment; filename="${encodeURIComponent(fileMeta.originalFileName)}"`,
+        )
         .sendFile(filePath);
       return;
     }
@@ -59,6 +63,10 @@ export class FileDownloadService {
         'Content-Length': end - start + 1,
         'Content-Type': fileMeta.fileType,
       })
+      .setHeader(
+        'Content-Disposition',
+        `attachment; filename="${encodeURIComponent(fileMeta.originalFileName)}"`,
+      )
       .sendFile(filePath, {
         headers: { Range: `bytes=${start}-${end}` },
         start, // 设置文件读取的起始位置
