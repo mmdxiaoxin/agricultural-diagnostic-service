@@ -71,9 +71,9 @@ export class DatasetManageService {
 
     // 计算 datasetSize 和 fileCount
     const result = datasets.map((dataset) => {
-      const fileCount = dataset.files.length; // 文件的数量
+      const fileCount = dataset.files?.length; // 文件的数量
       // 计算 datasetSize
-      const datasetSize = dataset.files.reduce((totalSize, file) => {
+      const datasetSize = dataset.files?.reduce((totalSize, file) => {
         const size = file.fileSize ? Number(file.fileSize) : 0;
         return totalSize + size;
       }, 0);
@@ -116,7 +116,7 @@ export class DatasetManageService {
     const dataset = await this.datasetService.findById(datasetId);
     const result = {
       ...dataset,
-      fileIds: dataset.files.map((file) => file.id),
+      fileIds: dataset.files?.map((file) => file.id),
       files: undefined, // 不返回 files 字段
     };
     return formatResponse(200, result, '获取数据集详情成功');
