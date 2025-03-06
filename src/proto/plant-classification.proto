@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package plant_classification;
+
+service PlantClassification {
+  rpc ClassifyImage (ImageRequest) returns (ImageResponse);
+}
+
+message ImageRequest {
+  bytes image_data = 1;
+}
+
+message ImageResponse {
+  string label = 1;
+  float confidence = 2;
+}

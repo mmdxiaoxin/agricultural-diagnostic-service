@@ -111,6 +111,7 @@ export class DiagnosisController {
     return await this.diagnosisService.diagnosisHistoryGet(req.user.userId);
   }
 
+  // 获取诊断支持接口
   @Get('support')
   async diagnosisSupportGet() {
     return await this.diagnosisService.diagnosisSupportGet();
