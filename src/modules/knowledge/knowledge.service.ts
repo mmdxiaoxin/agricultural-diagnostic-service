@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { CreatePlantDiseaseKnowledgeDto } from './dto/create-knowledge.dto';
 import { UpdatePlantDiseaseKnowledgeDto } from './dto/update-knowledge.dto';
 import { PlantDiseaseKnowledge } from './knowledge.entity';
-import { formatResponse } from '@/common/helpers/response.helper';
+import { formatResponse } from '@/shared/helpers/response.helper';
 
 @Injectable()
 export class KnowledgeService {

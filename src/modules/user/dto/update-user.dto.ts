@@ -10,7 +10,7 @@ import {
   Length,
 } from 'class-validator';
 import { Profile } from '../models/profile.entity';
-import { UserStatus } from '@/common/enum/user.enum';
+import { UserStatus } from '@/shared/enum/user.enum';
 
 export class UpdateUserDto {
   @IsOptional()

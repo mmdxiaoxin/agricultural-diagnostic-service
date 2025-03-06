@@ -7,7 +7,7 @@ import { UserService } from './user.service';
 import { Profile } from './models/profile.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ConfigEnum } from '@/common/enum/config.enum';
+import { ConfigEnum } from '@/shared/enum/config.enum';
 
 /**
  * 用户模块

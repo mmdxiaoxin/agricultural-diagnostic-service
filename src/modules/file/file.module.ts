@@ -7,7 +7,7 @@ import { Task } from './models/task.entity';
 import { FileOperationService } from './services/file-operation.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ConfigEnum } from '@/common/enum/config.enum';
+import { ConfigEnum } from '@/shared/enum/config.enum';
 import { FileDownloadService } from './services/file-download.service';
 import { FileUploadService } from './services/file-upload.service';
 import { FileManageService } from './services/file-manage.service';

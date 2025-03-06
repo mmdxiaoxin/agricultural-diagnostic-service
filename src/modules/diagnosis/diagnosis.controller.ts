@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 
-import { MIME_TYPE } from '@/common/enum/mime.enum';
+import { MIME_TYPE } from '@/shared/enum/mime.enum';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';

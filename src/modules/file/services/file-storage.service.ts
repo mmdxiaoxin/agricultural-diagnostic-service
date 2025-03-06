@@ -1,5 +1,5 @@
-import { formatResponse } from '@/common/helpers/response.helper';
-import { getFileType } from '@/common/utils';
+import { formatResponse } from '@/shared/helpers/response.helper';
+import { getFileType } from '@/shared/utils';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

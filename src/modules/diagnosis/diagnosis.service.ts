@@ -1,5 +1,5 @@
-import { Status } from '@/common/enum/status.enum';
-import { formatResponse } from '@/common/helpers/response.helper';
+import { Status } from '@/shared/enum/status.enum';
+import { formatResponse } from '@/shared/helpers/response.helper';
 import { FileManageService } from '@/modules/file/services/file-manage.service';
 import { FileOperationService } from '@/modules/file/services/file-operation.service';
 import { Injectable, NotFoundException } from '@nestjs/common';

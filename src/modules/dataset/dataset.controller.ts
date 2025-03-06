@@ -1,5 +1,5 @@
 import { Roles } from '@/common/decorator/roles.decorator';
-import { Role } from '@/common/enum/role.enum';
+import { Role } from '@/shared/enum/role.enum';
 import { TypeormFilter } from '@/common/filters/typeorm.filter';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';

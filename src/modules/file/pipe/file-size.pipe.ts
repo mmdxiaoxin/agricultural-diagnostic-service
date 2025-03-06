@@ -1,4 +1,4 @@
-import { parseSize } from '@/common/utils';
+import { parseSize } from '@/shared/utils';
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import { unlinkSync } from 'fs';
 

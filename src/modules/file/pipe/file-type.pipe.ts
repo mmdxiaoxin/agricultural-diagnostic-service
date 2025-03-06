@@ -1,4 +1,4 @@
-import { MIME_TYPE } from '@/common/enum/mime.enum';
+import { MIME_TYPE } from '@/shared/enum/mime.enum';
 import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
 
 @Injectable()

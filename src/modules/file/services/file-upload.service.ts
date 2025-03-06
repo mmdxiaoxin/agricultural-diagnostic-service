@@ -1,5 +1,5 @@
-import { formatResponse } from '@/common/helpers/response.helper';
-import { getModelMimeType } from '@/common/utils';
+import { formatResponse } from '@/shared/helpers/response.helper';
+import { getModelMimeType } from '@/shared/utils';
 import {
   BadRequestException,
   Injectable,

@@ -1,4 +1,4 @@
-import { formatResponse } from '@/common/helpers/response.helper';
+import { formatResponse } from '@/shared/helpers/response.helper';
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';

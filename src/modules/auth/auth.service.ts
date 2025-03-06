@@ -1,4 +1,4 @@
-import { formatResponse } from '@/common/helpers/response.helper';
+import { formatResponse } from '@/shared/helpers/response.helper';
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcryptjs';

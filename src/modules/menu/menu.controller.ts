@@ -1,5 +1,5 @@
 import { AuthGuard } from '@/common/guards/auth.guard';
-import { formatResponse } from '@/common/helpers/response.helper';
+import { formatResponse } from '@/shared/helpers/response.helper';
 import {
   Body,
   Controller,
@@ -19,7 +19,7 @@ import {
 import { Menu } from './menu.entity';
 import { MenuService } from './menu.service';
 import { Roles } from '@/common/decorator/roles.decorator';
-import { Role } from '@/common/enum/role.enum';
+import { Role } from '@/shared/enum/role.enum';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { TypeormFilter } from '@/common/filters/typeorm.filter';
 
