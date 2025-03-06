@@ -13,7 +13,6 @@ import { FileService } from './file.service';
 @Injectable()
 export class FileDownloadService {
   constructor(
-    @InjectRepository(FileEntity)
     private readonly fileService: FileService,
     private readonly jwtService: JwtService,
   ) {}
