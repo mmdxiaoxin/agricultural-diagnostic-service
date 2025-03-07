@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Plant } from './plants.entity';
+import { AiService } from '@/modules/ai-service/models/ai-service.entity';
 
 @Entity('ai_model')
 export class AIModel {
@@ -28,6 +29,16 @@ export class AIModel {
     inverseJoinColumn: { name: 'plantId', referencedColumnName: 'id' },
   })
   supportPlants: Plant[] | null; // 支持的植物
+
+  @ManyToMany(() => AiService, (service) => service.supportModels, {
+    nullable: true,
+  })
+  @JoinTable({
+    name: 'models_aiServices',
+    joinColumn: { name: 'modelId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'plantId', referencedColumnName: 'id' },
+  })
+  supportServices: AiService[] | null; // 支持的植物
 
   @Column({ type: 'int' })
   createdBy: number; // 创建者
