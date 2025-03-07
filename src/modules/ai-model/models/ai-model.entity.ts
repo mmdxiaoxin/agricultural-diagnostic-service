@@ -5,7 +5,7 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Plant } from '../../diagnosis/models/plants.entity';
+import { Plant } from '../../plant/models/plant.entity';
 import { AiService } from '@/modules/ai-service/models/ai-service.entity';
 
 @Entity('ai_model')

@@ -5,7 +5,7 @@ import { DiagnosisController } from './diagnosis.controller';
 import { DiagnosisHistory } from './models/diagnosis-history.entity';
 import { DiagnosisService } from './diagnosis.service';
 import { AIModel } from '../ai-model/models/ai-model.entity';
-import { Plant } from './models/plants.entity';
+import { Plant } from '../plant/models/plant.entity';
 
 @Module({
   imports: [

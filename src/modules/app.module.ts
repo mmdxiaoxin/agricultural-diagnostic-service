@@ -14,6 +14,7 @@ import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
 import { AiServiceModule } from './ai-service/ai-service.module';
 import { AiModelModule } from './ai-model/ai-model.module';
+import { PlantModule } from './plant/plant.module';
 
 /**
  * 根模块
@@ -53,6 +54,7 @@ import { AiModelModule } from './ai-model/ai-model.module';
     DiagnosisModule,
     AiServiceModule,
     AiModelModule,
+    PlantModule,
   ],
   controllers: [AppController],
   providers: [AppService],
