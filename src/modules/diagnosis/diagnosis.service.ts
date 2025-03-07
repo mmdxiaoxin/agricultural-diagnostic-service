@@ -6,6 +6,7 @@ import {
   BadGatewayException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -60,7 +61,7 @@ export class DiagnosisService {
   }
 
   // 开始诊断数据
-  async startDiagnosis(id: number) {
+  async startDiagnosis(id: number, userId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -72,6 +73,9 @@ export class DiagnosisService {
       });
       if (!diagnosis) {
         throw new NotFoundException('未找到诊断记录');
+      }
+      if (diagnosis.createdBy !== userId) {
+        throw new UnauthorizedException('无权操作');
       }
       diagnosis.status = Status.IN_PROGRESS;
       await queryRunner.manager.save(diagnosis);

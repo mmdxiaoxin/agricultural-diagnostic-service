@@ -84,13 +84,14 @@ export class DiagnosisController {
   // TODO: 开始诊断数据接口
   @Post(':id/start')
   async startDiagnosis(
+    @Req() req: Request,
     @Param(
       'id',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     id: number,
   ) {
-    return await this.diagnosisService.startDiagnosis(id);
+    return await this.diagnosisService.startDiagnosis(id, req.user.userId);
   }
 
   // 获取诊断服务状态接口
