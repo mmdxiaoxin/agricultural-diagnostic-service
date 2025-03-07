@@ -38,7 +38,7 @@ export class AIModel {
     joinColumn: { name: 'modelId', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'serviceId', referencedColumnName: 'serviceId' },
   })
-  supportServices: AiService[] | null; // 支持的植物
+  supportServices: AiService[] | null; // 支持的服务
 
   @Column({ type: 'int' })
   createdBy: number; // 创建者

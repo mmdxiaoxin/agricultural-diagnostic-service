@@ -2,11 +2,15 @@ import { Status } from '@/shared/enum/status.enum';
 import { formatResponse } from '@/shared/helpers/response.helper';
 import { FileManageService } from '@/modules/file/services/file-manage.service';
 import { FileOperationService } from '@/modules/file/services/file-operation.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { DiagnosisHistory } from './models/diagnosis-history.entity';
-
+import axios from 'axios';
 @Injectable()
 export class DiagnosisService {
   constructor(
@@ -64,16 +68,40 @@ export class DiagnosisService {
       const diagnosis = await queryRunner.manager.findOne(DiagnosisHistory, {
         where: { id },
         lock: { mode: 'pessimistic_write' },
+        relations: ['file'],
       });
       if (!diagnosis) {
         throw new NotFoundException('未找到诊断记录');
       }
       diagnosis.status = Status.IN_PROGRESS;
-      await this.diagnosisRepository.save(diagnosis);
-      return formatResponse(200, null, '开始诊断成功');
+      await queryRunner.manager.save(diagnosis);
+      const file = diagnosis.file;
+      if (!file) {
+        throw new NotFoundException('未找到文件');
+      }
+      const fileStream = await this.fileOperationService.readFile(
+        file.filePath,
+      );
+      const fileBlob = new Blob([fileStream]);
+      const formData = new FormData();
+      formData.append('image', fileBlob, file.originalFileName);
+      const response = await axios.post(
+        'http://localhost:5001/yolo11/plant/classify',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+      diagnosis.status = Status.COMPLETED;
+      diagnosis.diagnosisResult = response.data;
+      await queryRunner.manager.save(diagnosis);
+      await queryRunner.commitTransaction();
+      return formatResponse(200, response.data, '诊断成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new error();
+      throw new BadGatewayException('诊断失败');
     } finally {
       await queryRunner.release();
     }
