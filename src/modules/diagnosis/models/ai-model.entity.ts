@@ -36,7 +36,7 @@ export class AIModel {
   @JoinTable({
     name: 'models_aiServices',
     joinColumn: { name: 'modelId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'plantId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'serviceId', referencedColumnName: 'serviceId' },
   })
   supportServices: AiService[] | null; // 支持的植物
 
