@@ -9,7 +9,7 @@ import {
 import { AiServiceAccessLog } from './ai-service-access-log.entity';
 import { AiServiceConfig } from './ai-service-config.entity';
 import { AiServiceLog } from './ai-service-log.entity';
-import { AIModel } from '@/modules/diagnosis/models/ai-model.entity';
+import { AIModel } from '@/modules/ai-model/models/ai-model.entity';
 
 @Entity('ai_services')
 @Index('serviceNameIdx', ['serviceName'], { unique: true }) // 为 serviceName 添加索引（可选）

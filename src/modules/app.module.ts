@@ -13,6 +13,7 @@ import { MenuModule } from './menu/menu.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
 import { AiServiceModule } from './ai-service/ai-service.module';
+import { AiModelModule } from './ai-model/ai-model.module';
 
 /**
  * 根模块
@@ -51,6 +52,7 @@ import { AiServiceModule } from './ai-service/ai-service.module';
     KnowledgeModule,
     DiagnosisModule,
     AiServiceModule,
+    AiModelModule,
   ],
   controllers: [AppController],
   providers: [AppService],
