@@ -8,8 +8,8 @@ import {
   USER_SERVICE_NAME,
   USER_SERVICE_PORT,
 } from 'config/microservice.config';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { JwtStrategy } from './auth.strategy';
 
 @Module({
@@ -35,7 +35,7 @@ import { JwtStrategy } from './auth.strategy';
       },
     ]),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  controllers: [AppController],
+  providers: [AppService, JwtStrategy],
 })
-export class AuthModule {}
+export class AppModule {}

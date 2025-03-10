@@ -1,10 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { AuthService } from './auth.service';
+import { AppService } from './app.service';
 
 @Controller()
-export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+export class AppController {
+  constructor(private readonly authService: AppService) {}
 
   @MessagePattern('login')
   async login(data: { login: string; password: string }) {

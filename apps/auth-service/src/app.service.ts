@@ -6,7 +6,7 @@ import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 
 @Injectable()
-export class AuthService {
+export class AppService {
   constructor(
     private jwt: JwtService,
     @Inject(USER_SERVICE_NAME) private readonly userClient: ClientProxy,
