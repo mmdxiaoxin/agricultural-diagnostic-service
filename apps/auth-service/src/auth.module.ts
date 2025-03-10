@@ -38,4 +38,4 @@ import { JwtStrategy } from './auth.strategy';
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
 })
-export class AuthServiceModule {}
+export class AuthModule {}
