@@ -1,41 +1,37 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from './modules/auth/auth.module';
+import { RoleModule } from './modules/role/role.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { PassportModule } from '@nestjs/passport';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigEnum } from '@shared/enum/config.enum';
-import {
-  USER_SERVICE_NAME,
-  USER_SERVICE_PORT,
-} from 'config/microservice.config';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { JwtStrategy } from './auth.strategy';
 
 @Module({
   imports: [
-    PassportModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => {
-        return {
-          secret: configService.get<string>(ConfigEnum.SECRET),
-          signOptions: {
-            expiresIn: '1d',
-          },
-        };
-      },
-      inject: [ConfigService],
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [
+        '.env',
+        `.env.${process.env.NODE_ENV || 'development'}.local`,
+      ],
     }),
-    ClientsModule.register([
-      {
-        name: USER_SERVICE_NAME,
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: USER_SERVICE_PORT },
-      },
-    ]),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) =>
+        ({
+          type: configService.get(ConfigEnum.DB_TYPE),
+          host: configService.get(ConfigEnum.DB_HOST),
+          port: configService.get(ConfigEnum.DB_PORT),
+          username: configService.get(ConfigEnum.DB_USERNAME),
+          password: configService.get(ConfigEnum.DB_PASSWORD),
+          database: configService.get(ConfigEnum.DB_DATABASE),
+          autoLoadEntities: true, // 自动加载实体
+          synchronize: configService.get(ConfigEnum.DB_SYNC),
+          logging: process.env.NODE_ENV === 'development',
+        }) as TypeOrmModuleOptions,
+    }),
+    AuthModule,
+    RoleModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, JwtStrategy],
 })
 export class AppModule {}
