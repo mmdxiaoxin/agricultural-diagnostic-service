@@ -1,0 +1,5 @@
+export const AUTH_SERVICE_PORT = 3001;
+export const AUTH_SERVICE_NAME = 'AUTH_SERVICE';
+
+export const USER_SERVICE_PORT = 3002;
+export const USER_SERVICE_NAME = 'USER_SERVICE';
