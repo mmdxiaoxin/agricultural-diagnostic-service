@@ -126,6 +126,7 @@ export class DiagnosisService {
     const diagnosisHistory = await this.diagnosisRepository.find({
       where: { createdBy: userId },
       order: { createdAt: 'DESC' },
+      relations: ['file'],
     });
     return formatResponse(200, diagnosisHistory, '获取诊断历史记录成功');
   }
@@ -150,6 +151,7 @@ export class DiagnosisService {
     const [list, total] = await this.diagnosisRepository.findAndCount({
       where: { createdBy: userId },
       order: { createdAt: 'DESC' },
+      relations: ['file'],
       take: pageSize,
       skip: (page - 1) * pageSize,
     });

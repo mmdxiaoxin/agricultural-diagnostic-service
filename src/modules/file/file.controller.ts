@@ -236,7 +236,7 @@ export class FileController {
 
   // 文件下载
   @Get('download/:fileId')
-  @Roles(Role.Admin, Role.Expert)
+  @Roles(Role.Admin, Role.Expert, Role.User)
   @UseGuards(AuthGuard, RolesGuard, FileGuard)
   async downloadFile(
     @Param(
