@@ -4,6 +4,7 @@ import { RoleModule } from './modules/role/role.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigEnum } from '@shared/enum/config.enum';
+import { MenuModule } from './modules/menu/menu.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ConfigEnum } from '@shared/enum/config.enum';
     }),
     AuthModule,
     RoleModule,
+    MenuModule,
   ],
 })
 export class AppModule {}
