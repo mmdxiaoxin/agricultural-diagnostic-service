@@ -56,7 +56,6 @@ export class CreateUserDto {
   })
   roles?: number[];
 
-  @IsOptional()
   @IsObject({ message: 'Profile 必须为一个对象！' })
   @IsOptional()
   @ApiProperty({

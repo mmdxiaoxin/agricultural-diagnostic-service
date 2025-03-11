@@ -13,10 +13,10 @@ export class AuthService {
   ) {}
 
   async register(email: string, password: string) {
-    const user = await firstValueFrom(
-      this.userClient.send({ cmd: 'user.find.byEmail' }, email),
+    const result = await firstValueFrom(
+      this.userClient.send({ cmd: 'user.find.byEmail' }, { email }),
     );
-    if (user) {
+    if (result) {
       throw new RpcException({
         code: 400,
         message: '邮箱已被注册',

@@ -4,13 +4,12 @@ import {
   Controller,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
   Inject,
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { AUTH_SERVICE_NAME } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
@@ -27,10 +26,10 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto) {
     const { email, password } = dto;
-    const newUser = await firstValueFrom(
+    await firstValueFrom(
       this.authClient.send({ cmd: 'auth.register' }, { email, password }),
     );
-    return formatResponse(201, newUser, '注册成功');
+    return formatResponse(201, null, '注册成功');
   }
 
   @Post('login')
