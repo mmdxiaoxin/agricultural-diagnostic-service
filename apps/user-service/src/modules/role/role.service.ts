@@ -1,8 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -28,7 +25,10 @@ export class RoleService {
       relations: ['users'],
     });
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new RpcException({
+        code: 404,
+        message: '角色不存在',
+      });
     }
     return role;
   }
@@ -36,7 +36,10 @@ export class RoleService {
   // 创建角色
   async create(dto: CreateRoleDto) {
     if (await this.roleRepository.findOne({ where: { name: dto.name } })) {
-      throw new BadRequestException('角色已存在');
+      throw new RpcException({
+        code: 400,
+        message: '角色已存在',
+      });
     }
     const role = this.roleRepository.create(dto);
     return await this.roleRepository.save(role);
