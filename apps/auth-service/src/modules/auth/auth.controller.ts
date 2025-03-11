@@ -10,19 +10,19 @@ import { RegisterDto } from './dto/register.dto';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @MessagePattern({ cmd: 'register' })
+  @MessagePattern({ cmd: 'auth.register' })
   async register(@Payload() dto: RegisterDto) {
     const { email, password } = dto;
     return this.authService.register(email, password);
   }
 
-  @MessagePattern({ cmd: 'login' })
+  @MessagePattern({ cmd: 'auth.login' })
   async login(@Payload() dto: LoginDto) {
     const { login, password } = dto;
     return this.authService.login(login, password);
   }
 
-  @MessagePattern({ cmd: 'buttonsGet' })
+  @MessagePattern({ cmd: 'auth.buttonsGet' })
   async buttonsGet() {
     return this.authService.buttonsGet();
   }

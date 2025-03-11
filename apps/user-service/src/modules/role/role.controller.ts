@@ -8,33 +8,33 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
-  @MessagePattern('role.dict')
+  @MessagePattern({ cmd: 'role.dict' })
   async getRoleDict() {
     return this.roleService.findDict();
   }
 
-  @MessagePattern('role.findAll')
+  @MessagePattern({ cmd: 'role.findAll' })
   async findAll() {
     return this.roleService.findAll();
   }
 
-  @MessagePattern('role.findOne')
-  async findOne(@Payload() id: number) {
-    return this.roleService.findOne(id);
+  @MessagePattern({ cmd: 'role.findOne' })
+  async findOne(@Payload() payload: { id: number }) {
+    return this.roleService.findOne(payload.id);
   }
 
-  @MessagePattern('role.create')
-  async create(@Payload() dto: CreateRoleDto) {
-    return this.roleService.create(dto);
+  @MessagePattern({ cmd: 'role.create' })
+  async create(@Payload() payload: { dto: CreateRoleDto }) {
+    return this.roleService.create(payload.dto);
   }
 
-  @MessagePattern('role.update')
+  @MessagePattern({ cmd: 'role.update' })
   async update(@Payload() payload: { id: number; dto: UpdateRoleDto }) {
     return this.roleService.update(payload.id, payload.dto);
   }
 
-  @MessagePattern('role.remove')
-  async remove(@Payload() id: number) {
-    return this.roleService.remove(id);
+  @MessagePattern({ cmd: 'role.remove' })
+  async remove(@Payload() payload: { id: number }) {
+    return this.roleService.remove(payload.id);
   }
 }
