@@ -1,5 +1,4 @@
-import { TypeormFilter } from '@common/filters/typeorm.filter';
-import { Controller, UseFilters } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -10,14 +9,14 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @MessagePattern({ cmd: 'auth.register' })
-  async register(@Payload() dto: RegisterDto) {
-    const { email, password } = dto;
+  async register(@Payload() payload: { dto: RegisterDto }) {
+    const { email, password } = payload.dto;
     return this.authService.register(email, password);
   }
 
   @MessagePattern({ cmd: 'auth.login' })
-  async login(@Payload() dto: LoginDto) {
-    const { login, password } = dto;
+  async login(@Payload() payload: { dto: LoginDto }) {
+    const { login, password } = payload.dto;
     return this.authService.login(login, password);
   }
 

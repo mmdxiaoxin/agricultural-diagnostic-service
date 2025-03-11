@@ -27,9 +27,8 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto) {
-    const { email, password } = dto;
     await firstValueFrom(
-      this.authClient.send({ cmd: 'auth.register' }, { email, password }),
+      this.authClient.send({ cmd: 'auth.register' }, { dto }),
     );
     return formatResponse(201, null, '注册成功');
   }
@@ -37,9 +36,8 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
-    const { login, password } = dto;
     const result = await lastValueFrom(
-      this.authClient.send({ cmd: 'auth.login' }, { login, password }),
+      this.authClient.send({ cmd: 'auth.login' }, { dto }),
     );
     return formatResponse(
       200,
