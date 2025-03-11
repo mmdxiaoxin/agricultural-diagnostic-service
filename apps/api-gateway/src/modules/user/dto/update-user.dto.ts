@@ -9,8 +9,8 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { Profile } from '../models/profile.entity';
 import { UserStatus } from '@shared/enum/user.enum';
+import { Profile } from 'apps/user-service/src/modules/user/models/profile.entity';
 
 export class UpdateUserDto {
   @IsOptional()
