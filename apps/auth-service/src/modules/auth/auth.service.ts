@@ -14,20 +14,20 @@ export class AuthService {
 
   async register(email: string, password: string) {
     const user = await firstValueFrom(
-      this.userClient.send({ cmd: 'findByEmail' }, email),
+      this.userClient.send({ cmd: 'user.find.byEmail' }, email),
     );
     if (user) {
       throw new ForbiddenException('用户已存在');
     }
     const newUser = await lastValueFrom(
-      this.userClient.send({ cmd: 'userCreate' }, { email, password }),
+      this.userClient.send({ cmd: 'user.create' }, { email, password }),
     );
     return newUser;
   }
 
   async login(login: string, password: string) {
     const user = await firstValueFrom(
-      this.userClient.send({ cmd: 'findByLogin' }, login),
+      this.userClient.send({ cmd: 'user.find.byLogin' }, login),
     );
     if (!user) {
       throw new ForbiddenException('账号或密码错误');

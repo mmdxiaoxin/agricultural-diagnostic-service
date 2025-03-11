@@ -1,12 +1,11 @@
-import { formatResponse } from '@shared/helpers/response.helper';
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import { formatResponse } from '@shared/helpers/response.helper';
 import { hash } from 'bcryptjs';
 import { unlink } from 'fs';
 import { readFile } from 'fs/promises';
@@ -24,10 +23,12 @@ import { User } from './models/user.entity';
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
+
     @InjectRepository(Profile)
     private readonly profileRepository: Repository<Profile>,
-    private jwt: JwtService,
+
     private dataSource: DataSource,
   ) {}
 

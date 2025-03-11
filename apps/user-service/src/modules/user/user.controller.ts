@@ -111,4 +111,22 @@ export class UserController {
   async userReset(@Payload() payload: { id: number; dto: ResetPasswordDto }) {
     return this.userService.userReset(payload.id, payload.dto.password);
   }
+
+  // 根据邮箱和用户名查找用户
+  @MessagePattern({ cmd: 'user.find.byLogin' })
+  async findByEmailAndUsername(@Payload() payload: { login: string }) {
+    return this.userService.findByLogin(payload.login);
+  }
+
+  // 根据用户名查找用户
+  @MessagePattern({ cmd: 'user.find.byUsername' })
+  async findByUsername(@Payload() payload: { username: string }) {
+    return this.userService.findByUsername(payload.username);
+  }
+
+  // 根据邮箱查找用户
+  @MessagePattern({ cmd: 'user.find.byEmail' })
+  async findByEmail(@Payload() payload: { email: string }) {
+    return this.userService.findByEmail(payload.email);
+  }
 }
