@@ -1,8 +1,9 @@
-import { NestFactory } from '@nestjs/core';
 import { HttpExceptionFilter } from '@common/filters/http-exception.filter';
-import { AppModule } from './modules/app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppModule } from './modules/app.module';
+import { OtherExceptionsFilter } from '@common/filters/other-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,7 +22,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   // 全局异常过滤器
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new HttpExceptionFilter(), new OtherExceptionsFilter());
 
   // 启用全局验证管道
   app.useGlobalPipes(

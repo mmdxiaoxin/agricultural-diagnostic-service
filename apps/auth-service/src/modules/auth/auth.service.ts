@@ -1,6 +1,6 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { compare } from 'bcryptjs';
 import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
@@ -17,7 +17,10 @@ export class AuthService {
       this.userClient.send({ cmd: 'user.find.byEmail' }, email),
     );
     if (user) {
-      throw new ForbiddenException('用户已存在');
+      throw new RpcException({
+        code: 400,
+        message: '邮箱已被注册',
+      });
     }
     const newUser = await lastValueFrom(
       this.userClient.send({ cmd: 'user.create' }, { email, password }),
@@ -30,14 +33,23 @@ export class AuthService {
       this.userClient.send({ cmd: 'user.find.byLogin' }, { login }),
     );
     if (!user) {
-      throw new ForbiddenException('账号或密码错误');
+      throw new RpcException({
+        code: 400,
+        message: '账号或密码错误',
+      });
     }
     if (user.status === 0) {
-      throw new ForbiddenException('账号未激活或已经被禁用');
+      throw new RpcException({
+        code: 400,
+        message: '账号未激活或已经被禁用',
+      });
     }
     const isValid = await compare(password, user.password);
     if (!isValid) {
-      throw new ForbiddenException('账号或密码错误');
+      throw new RpcException({
+        code: 400,
+        message: '账号或密码错误',
+      });
     }
 
     return {
