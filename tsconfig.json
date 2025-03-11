@@ -18,8 +18,18 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@common/*": ["packages/common/src/*"],
-      "@shared/*": ["packages/shared/src/*"]
+      "@app/mail": [
+        "libs/mail/src"
+      ],
+      "@app/mail/*": [
+        "libs/mail/src/*"
+      ],
+      "@common/*": [
+        "packages/common/src/*"
+      ],
+      "@shared/*": [
+        "packages/shared/src/*"
+      ]
     }
   }
 }

@@ -8,15 +8,18 @@ import {
   Inject,
   Param,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { ApiTags } from '@nestjs/swagger';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { AUTH_SERVICE_NAME } from 'config/microservice.config';
+import { Request } from 'express';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { verifyHtml } from '@shared/constants/html';
 
 @ApiTags('权限认证模块')
 @Controller('auth')
@@ -27,11 +30,15 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() dto: RegisterDto) {
-    await firstValueFrom(
+  async register(@Req() req: Request, @Body() dto: RegisterDto) {
+    const token = await firstValueFrom(
       this.authClient.send({ cmd: 'auth.register' }, { dto }),
     );
-    return formatResponse(201, null, '注册成功');
+    const link = `${req.protocol}://${req.get('host')}/auth/verify/${token}`;
+    await firstValueFrom(
+      this.authClient.send({ cmd: 'auth.notify' }, { email: dto.email, link }),
+    );
+    return formatResponse(201, null, '注册成功，请查看邮箱验证');
   }
 
   @Post('login')
@@ -53,7 +60,7 @@ export class AuthController {
     await lastValueFrom(
       this.authClient.send({ cmd: 'auth.verify' }, { token }),
     );
-    return formatResponse(200, null, '验证成功');
+    return verifyHtml;
   }
 
   @Get('buttons')

@@ -20,9 +20,14 @@ export class AuthController {
     return this.authService.login(login, password);
   }
 
+  @MessagePattern({ cmd: 'auth.notify' })
+  async notify(@Payload() payload: { email: string; token: string }) {
+    return this.authService.notifyAccount(payload.email, payload.token);
+  }
+
   @MessagePattern({ cmd: 'auth.verify' })
   async verify(@Payload() payload: { token: string }) {
-    return this.authService.verify(payload.token);
+    return this.authService.verifyAccount(payload.token);
   }
 
   @MessagePattern({ cmd: 'auth.buttonsGet' })
