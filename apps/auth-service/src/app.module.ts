@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from './modules/auth/auth.module';
-import { RoleModule } from './modules/role/role.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigEnum } from '@shared/enum/config.enum';
+import { AuthModule } from './modules/auth/auth.module';
 import { MenuModule } from './modules/menu/menu.module';
 
 @Module({
@@ -32,7 +31,6 @@ import { MenuModule } from './modules/menu/menu.module';
         }) as TypeOrmModuleOptions,
     }),
     AuthModule,
-    RoleModule,
     MenuModule,
   ],
 })

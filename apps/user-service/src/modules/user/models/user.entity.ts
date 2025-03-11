@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Profile } from './profile.entity';
-import { Role } from 'apps/auth-service/src/modules/role/role.entity';
+import { Role } from 'apps/user-service/src/modules/role/role.entity';
 
 @Entity('user')
 export class User {
