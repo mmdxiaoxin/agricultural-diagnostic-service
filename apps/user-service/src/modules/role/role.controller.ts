@@ -1,96 +1,40 @@
-import { Roles } from '@common/decorator/roles.decorator';
-import { Role } from '@shared/enum/role.enum';
-import { TypeormFilter } from '@common/filters/typeorm.filter';
-import { AuthGuard } from '@common/guards/auth.guard';
-import { RolesGuard } from '@common/guards/roles.guard';
-import { formatResponse } from '@shared/helpers/response.helper';
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  ParseIntPipe,
-  Post,
-  Put,
-  UseFilters,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { RoleService } from './role.service';
 
-@Controller('role')
-@UseGuards(AuthGuard)
-@UseFilters(TypeormFilter)
+@Controller()
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
-  @Get('dict')
-  async dict() {
-    const dict = await this.roleService.findDict();
-    return formatResponse(200, dict, '角色字典获取成功');
+  @MessagePattern('role.dict')
+  async getRoleDict() {
+    return this.roleService.findDict();
   }
 
-  @Get()
-  @Roles(Role.Admin)
-  @UseGuards(RolesGuard)
+  @MessagePattern('role.findAll')
   async findAll() {
-    const roles = await this.roleService.findAll();
-    return formatResponse(200, roles, '获取角色列表成功');
+    return this.roleService.findAll();
   }
 
-  @Get(':id')
-  @Roles(Role.Admin)
-  @UseGuards(RolesGuard)
-  async findOne(
-    @Param(
-      'id',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    id: number,
-  ) {
-    const role = await this.roleService.findOne(id);
-    return formatResponse(200, role, '获取角色成功');
+  @MessagePattern('role.findOne')
+  async findOne(@Payload() id: number) {
+    return this.roleService.findOne(id);
   }
 
-  @Post()
-  @Roles(Role.Admin)
-  @HttpCode(HttpStatus.CREATED)
-  @UseGuards(RolesGuard)
-  async create(@Body() dto: CreateRoleDto) {
-    await this.roleService.create(dto);
-    return formatResponse(201, null, '角色创建成功');
+  @MessagePattern('role.create')
+  async create(@Payload() dto: CreateRoleDto) {
+    return this.roleService.create(dto);
   }
 
-  @Put(':id')
-  @Roles(Role.Admin)
-  @UseGuards(RolesGuard)
-  async update(
-    @Param(
-      'id',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    id: number,
-    @Body() dto: UpdateRoleDto,
-  ) {
-    const updatedRole = await this.roleService.update(id, dto);
-    return formatResponse(200, updatedRole, '角色更新成功');
+  @MessagePattern('role.update')
+  async update(@Payload() payload: { id: number; dto: UpdateRoleDto }) {
+    return this.roleService.update(payload.id, payload.dto);
   }
 
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles(Role.Admin)
-  @UseGuards(RolesGuard)
-  async remove(
-    @Param(
-      'id',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    id: number,
-  ) {
-    return await this.roleService.remove(id);
+  @MessagePattern('role.remove')
+  async remove(@Payload() id: number) {
+    return this.roleService.remove(id);
   }
 }
