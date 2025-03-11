@@ -22,7 +22,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   // 全局异常过滤器
-  app.useGlobalFilters(new HttpExceptionFilter(), new OtherExceptionsFilter());
+  app.useGlobalFilters(new OtherExceptionsFilter(), new HttpExceptionFilter());
 
   // 启用全局验证管道
   app.useGlobalPipes(
