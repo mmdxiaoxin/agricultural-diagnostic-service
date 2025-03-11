@@ -23,7 +23,9 @@ import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { FileOperationService } from '../file/services/file-operation.service';
 import { DiagnosisService } from './diagnosis.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('病害诊断模块')
 @Controller('diagnosis')
 @UseGuards(AuthGuard)
 export class DiagnosisController {

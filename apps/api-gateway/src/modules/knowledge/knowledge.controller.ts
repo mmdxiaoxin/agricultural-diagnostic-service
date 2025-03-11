@@ -20,7 +20,9 @@ import {
 import { CreatePlantDiseaseKnowledgeDto } from './dto/create-knowledge.dto';
 import { UpdatePlantDiseaseKnowledgeDto } from './dto/update-knowledge.dto';
 import { KnowledgeService } from './knowledge.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('病害知识库管理')
 @Controller('knowledge')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)

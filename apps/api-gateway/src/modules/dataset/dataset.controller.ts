@@ -24,7 +24,9 @@ import { Request } from 'express';
 import { CreateDatasetDto } from './dto/create-dataset.dto';
 import { UpdateDatasetDto } from './dto/update-dataset.dto';
 import { DatasetManageService } from './service/dataset-manage.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('数据集管理模块')
 @Controller('dataset')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)

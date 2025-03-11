@@ -22,7 +22,9 @@ import { Roles } from '@common/decorator/roles.decorator';
 import { Role } from '@shared/enum/role.enum';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { TypeormFilter } from '@common/filters/typeorm.filter';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('菜单管理')
 @Controller('menu')
 @UseGuards(AuthGuard)
 @UseFilters(TypeormFilter)

@@ -15,7 +15,9 @@ import { AUTH_SERVICE_NAME } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('权限认证模块')
 @Controller('auth')
 export class AuthController {
   constructor(

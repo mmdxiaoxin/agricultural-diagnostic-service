@@ -44,7 +44,9 @@ import { FileManageService } from './services/file-manage.service';
 import { FileStorageService } from './services/file-storage.service';
 import { FileUploadService } from './services/file-upload.service';
 import { FileService } from './services/file.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('文件模块')
 @Controller('file')
 @UseFilters(TypeormFilter)
 export class FileController {

@@ -1,8 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AiModelService } from './ai-model.service';
 import { CreateAiModelDto } from './dto/create-ai-model.dto';
 import { UpdateAiModelDto } from './dto/update-ai-model.dto';
 
+@ApiTags('病害诊断模型管理模块')
 @Controller('ai-model')
 export class AiModelController {
   constructor(private readonly aiModelService: AiModelService) {}

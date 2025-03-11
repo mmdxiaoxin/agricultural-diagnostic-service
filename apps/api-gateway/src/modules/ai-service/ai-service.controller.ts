@@ -25,7 +25,9 @@ import { CreateAiServiceDto } from './dto/create-ai-service.dto';
 import { UpdateAiServiceDto } from './dto/update-ai-service.dto';
 import { AiConfigsService } from './services/ai-service-config.service';
 import { AiServiceService } from './services/ai-service.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('诊断服务管理模块')
 @Controller('ai-service')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)

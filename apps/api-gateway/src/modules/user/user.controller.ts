@@ -39,10 +39,9 @@ import { ResetPasswordDto } from './dto/reset-pass.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
+import { ApiTags } from '@nestjs/swagger';
 
-/**
- * 用户模块控制器
- */
+@ApiTags('用户模块')
 @Controller('user')
 @UseGuards(AuthGuard)
 @UseFilters(TypeormFilter)
