@@ -31,7 +31,7 @@ import { Request, Response } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
-import { lastValueFrom } from 'rxjs';
+import { defaultIfEmpty, lastValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
@@ -101,12 +101,15 @@ export class UserController {
     )
     file: Express.Multer.File,
   ) {
-    // 假设文件上传后 API Gateway 将文件信息（例如存储路径）发送给用户微服务
-    const payload = { userId: req.user.userId, file };
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.avatar.upload' }, payload),
-    );
-    return formatResponse(200, result, '上传头像成功');
+    try {
+      const payload = { userId: req.user.userId, file };
+      const result = await lastValueFrom(
+        this.userClient.send({ cmd: 'user.avatar.upload' }, payload),
+      );
+      return formatResponse(200, result, '上传头像成功');
+    } catch (error) {
+      throw error;
+    }
   }
 
   // HTTP GET /user/avatar —— 获取个人头像
@@ -134,8 +137,10 @@ export class UserController {
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     const payload = { userId: req.user.userId, dto: updatePasswordDto };
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.password.update' }, payload),
+    await lastValueFrom(
+      this.userClient
+        .send({ cmd: 'user.password.update' }, payload)
+        .pipe(defaultIfEmpty(null)),
     );
     return formatResponse(200, null, '修改密码成功');
   }
@@ -143,8 +148,10 @@ export class UserController {
   // HTTP POST /user/logout —— 退出登录
   @Post('logout')
   async logout() {
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.logout' }, {}),
+    await lastValueFrom(
+      this.userClient
+        .send({ cmd: 'user.logout' }, {})
+        .pipe(defaultIfEmpty(null)),
     );
     return formatResponse(200, null, '退出登录成功');
   }
@@ -174,8 +181,10 @@ export class UserController {
   @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async userCreate(@Body() createUserDto: CreateUserDto) {
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.create' }, createUserDto),
+    await lastValueFrom(
+      this.userClient
+        .send({ cmd: 'user.create' }, createUserDto)
+        .pipe(defaultIfEmpty(null)),
     );
     return formatResponse(201, null, '创建用户成功');
   }
@@ -211,7 +220,9 @@ export class UserController {
     id: number,
   ) {
     const payload = { id };
-    return this.userClient.send({ cmd: 'user.delete' }, payload);
+    return this.userClient
+      .send({ cmd: 'user.delete' }, payload)
+      .pipe(defaultIfEmpty(null));
   }
 
   // HTTP PUT /user/:id —— 更新单个用户（需要管理员权限）
@@ -227,8 +238,10 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     const payload = { id, dto: updateUserDto };
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.update' }, payload),
+    await lastValueFrom(
+      this.userClient
+        .send({ cmd: 'user.update' }, payload)
+        .pipe(defaultIfEmpty(null)),
     );
     return formatResponse(200, null, '更新用户信息成功');
   }
@@ -246,8 +259,10 @@ export class UserController {
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
     const payload = { id, dto: resetPasswordDto };
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.password.reset' }, payload),
+    await lastValueFrom(
+      this.userClient
+        .send({ cmd: 'user.password.reset' }, payload)
+        .pipe(defaultIfEmpty(null)),
     );
     return formatResponse(200, null, '重置用户密码成功');
   }
