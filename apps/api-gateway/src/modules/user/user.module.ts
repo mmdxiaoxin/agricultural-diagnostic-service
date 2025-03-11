@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import {
+  USER_SERVICE_NAME,
+  USER_SERVICE_PORT,
+} from 'config/microservice.config';
 import { Role } from '../role/role.entity';
-import { UserController } from './user.controller';
-import { User } from './models/user.entity';
-import { UserService } from './user.service';
 import { Profile } from './models/profile.entity';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ConfigEnum } from '@shared/enum/config.enum';
+import { User } from './models/user.entity';
+import { UserController } from './user.controller';
 
 /**
  * 用户模块
@@ -15,21 +16,14 @@ import { ConfigEnum } from '@shared/enum/config.enum';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Role, Profile]),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => {
-        return {
-          secret: configService.get<string>(ConfigEnum.SECRET),
-          signOptions: {
-            expiresIn: '1d',
-          },
-        };
+    ClientsModule.register([
+      {
+        name: USER_SERVICE_NAME,
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: USER_SERVICE_PORT },
       },
-      inject: [ConfigService],
-    }),
+    ]),
   ],
   controllers: [UserController],
-  providers: [UserService],
-  exports: [UserService],
 })
 export class UserModule {}

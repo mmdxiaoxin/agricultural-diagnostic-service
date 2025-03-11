@@ -1,10 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
-import { MIME_TYPE } from '@shared/enum/mime.enum';
-import { Role } from '@shared/enum/role.enum';
-import { TypeormFilter } from '@common/filters/typeorm.filter';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
-import { formatResponse } from '@shared/helpers/response.helper';
 import {
   BadRequestException,
   Body,
@@ -13,6 +9,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
@@ -20,16 +17,21 @@ import {
   Query,
   Req,
   Res,
-  UploadedFile,
-  UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags } from '@nestjs/swagger';
+import { MIME_TYPE } from '@shared/enum/mime.enum';
+import { Role } from '@shared/enum/role.enum';
+import { formatResponse } from '@shared/helpers/response.helper';
+import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { Request, Response } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
+import { lastValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
@@ -38,31 +40,39 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { ResetPasswordDto } from './dto/reset-pass.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserService } from './user.service';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('用户模块')
 @Controller('user')
 @UseGuards(AuthGuard)
-@UseFilters(TypeormFilter)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
-  // 获取个人信息
+  constructor(
+    @Inject(USER_SERVICE_NAME) private readonly userClient: ClientProxy,
+  ) {}
+
+  // HTTP GET /user/profile —— 获取个人信息
   @Get('profile')
   async profileGet(@Req() req: Request) {
-    return this.userService.profileGet(req.user.userId);
+    const payload = { userId: req.user.userId };
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.profile.get' }, payload),
+    );
+    return formatResponse(200, result, '获取个人信息成功');
   }
 
-  // 更新个人信息
+  // HTTP PUT /user/profile —— 更新个人信息
   @Put('profile')
   async profileUpdate(
     @Req() req: Request,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    return this.userService.profileUpdate(req.user.userId, updateProfileDto);
+    const payload = { userId: req.user.userId, dto: updateProfileDto };
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.profile.update' }, payload),
+    );
+    return formatResponse(200, result, '更新个人信息成功');
   }
 
-  // 上传个人头像
+  // HTTP POST /user/avatar —— 上传个人头像
   @Post('avatar')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(
@@ -83,51 +93,63 @@ export class UserController {
     }),
   )
   async uploadAvatar(
-    @Req() req,
-    @UploadedFile(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body(
       new FileSizeValidationPipe('10MB'),
       new FileTypeValidationPipe([MIME_TYPE.PNG, MIME_TYPE.JPEG]),
     )
     file: Express.Multer.File,
   ) {
-    return this.userService.updateAvatar(req.user.userId, file);
+    // 假设文件上传后 API Gateway 将文件信息（例如存储路径）发送给用户微服务
+    const payload = { userId: req.user.userId, file };
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.avatar.upload' }, payload),
+    );
+    return formatResponse(200, result, '上传头像成功');
   }
 
-  // 获取个人头像
+  // HTTP GET /user/avatar —— 获取个人头像
   @Get('avatar')
   async getAvatar(@Req() req: Request, @Res() res: Response) {
-    const avatarPath = await this.userService.getAvatar(req.user.userId);
+    const payload = { userId: req.user.userId };
+    const avatarPath = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.avatar.get' }, payload),
+    );
     if (avatarPath) {
       const filePath = join(process.cwd(), avatarPath);
       if (!existsSync(filePath)) {
         throw new BadRequestException('头像文件不存在');
       }
-      // 以文件流方式返回头像
       return res.sendFile(filePath);
     } else {
       return formatResponse(404, null, '头像不存在');
     }
   }
 
-  // 修改密码
+  // HTTP PUT /user/reset/password —— 修改密码
   @Put('reset/password')
   async updatePassword(
-    @Req() req: Request<null, any, UpdatePasswordDto>,
+    @Req() req: Request,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
-    return this.userService.updatePassword(
-      req.user.userId,
-      updatePasswordDto.confirmPassword,
+    const payload = { userId: req.user.userId, dto: updatePasswordDto };
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.password.update' }, payload),
     );
+    return formatResponse(200, null, '修改密码成功');
   }
 
-  // 退出登陆
+  // HTTP POST /user/logout —— 退出登录
   @Post('logout')
   async logout() {
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.logout' }, {}),
+    );
     return formatResponse(200, null, '退出登录成功');
   }
 
-  // 获取用户列表 (需要管理员权限)
+  // HTTP GET /user/list —— 获取用户列表（需要管理员权限）
   @Get('list')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
@@ -139,27 +161,26 @@ export class UserController {
     @Query('phone') phone?: string,
     @Query('address') address?: string,
   ) {
-    return this.userService.userListGet(page, pageSize, {
-      username,
-      name,
-      phone,
-      address,
-    });
+    const payload = { page, pageSize, username, name, phone, address };
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.list.get' }, payload),
+    );
+    return formatResponse(200, result, '获取用户列表成功');
   }
 
-  // 创建单个用户 (需要管理员权限)
+  // HTTP POST /user/create —— 创建单个用户（需要管理员权限）
   @Post('create')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async userCreate(@Body() createUserDto: CreateUserDto) {
-    const { profile, ...user } = createUserDto;
-    await this.userService.setRoles(user as any);
-    await this.userService.userCreate(user as any, profile);
-    return formatResponse(201, null, '用户创建成功');
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.create' }, createUserDto),
+    );
+    return formatResponse(201, null, '创建用户成功');
   }
 
-  // 获取单个用户信息 (需要管理员权限)
+  // HTTP GET /user/:id —— 获取单个用户信息（需要管理员权限）
   @Get(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
@@ -170,10 +191,14 @@ export class UserController {
     )
     id: number,
   ) {
-    return this.userService.userGet(id);
+    const payload = { id };
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.get' }, payload),
+    );
+    return formatResponse(200, result, '获取用户信息成功');
   }
 
-  // 删除单个用户信息 (需要管理员权限)
+  // HTTP DELETE /user/:id —— 删除单个用户（需要管理员权限）
   @Delete(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
@@ -185,10 +210,11 @@ export class UserController {
     )
     id: number,
   ) {
-    return this.userService.userDelete(id);
+    const payload = { id };
+    return this.userClient.send({ cmd: 'user.delete' }, payload);
   }
 
-  // 更新单个用户 (需要管理员权限)
+  // HTTP PUT /user/:id —— 更新单个用户（需要管理员权限）
   @Put(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
@@ -200,10 +226,14 @@ export class UserController {
     id: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.userUpdate(id, updateUserDto);
+    const payload = { id, dto: updateUserDto };
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.update' }, payload),
+    );
+    return formatResponse(200, null, '更新用户信息成功');
   }
 
-  // 重置用户密码 (需要管理员权限)
+  // HTTP PUT /user/:id/reset/password —— 重置用户密码（需要管理员权限）
   @Put(':id/reset/password')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
@@ -215,6 +245,10 @@ export class UserController {
     id: number,
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
-    return this.userService.userReset(id, resetPasswordDto.password);
+    const payload = { id, dto: resetPasswordDto };
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.password.reset' }, payload),
+    );
+    return formatResponse(200, null, '重置用户密码成功');
   }
 }

@@ -1,33 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from '../role/role.entity';
-import { UserController } from './user.controller';
-import { User } from './models/user.entity';
-import { UserService } from './user.service';
 import { Profile } from './models/profile.entity';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ConfigEnum } from '@shared/enum/config.enum';
+import { User } from './models/user.entity';
+import { UserController } from './user.controller';
+import { UserService } from './user.service';
 
 /**
  * 用户模块
  */
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User, Role, Profile]),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => {
-        return {
-          secret: configService.get<string>(ConfigEnum.SECRET),
-          signOptions: {
-            expiresIn: '1d',
-          },
-        };
-      },
-      inject: [ConfigService],
-    }),
-  ],
+  imports: [TypeOrmModule.forFeature([User, Role, Profile])],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService],

@@ -1,9 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { hash } from 'bcryptjs';
@@ -15,7 +11,6 @@ import { Role } from '../role/role.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Profile } from './models/profile.entity';
 import { User } from './models/user.entity';
-import { RpcException } from '@nestjs/microservices';
 
 /**
  * 用户模块服务
@@ -258,7 +253,10 @@ export class UserService {
   async getAvatar(userId: number) {
     const user = await this.findById(userId);
     if (!user) {
-      throw new BadRequestException('无效的用户');
+      throw new RpcException({
+        code: 404,
+        message: '用户未找到',
+      });
     }
     const profile = await this.profileRepository.findOne({ where: { user } });
     if (!profile || !profile.avatar) {
@@ -270,7 +268,10 @@ export class UserService {
   async profileUpdate(userId: number, profile: Partial<Profile>) {
     const user = await this.findById(userId);
     if (!user) {
-      throw new BadRequestException('用户不存在');
+      throw new RpcException({
+        code: 404,
+        message: '用户未找到',
+      });
     }
 
     let userProfile = await this.profileRepository.findOne({
@@ -288,7 +289,10 @@ export class UserService {
 
   async updateAvatar(userId: number, file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('缺少文件参数或上传失败');
+      throw new RpcException({
+        code: 400,
+        message: '缺少文件参数或上传失败',
+      });
     }
 
     // 创建 queryRunner 进行事务管理
@@ -301,7 +305,10 @@ export class UserService {
         where: { id: userId },
       });
       if (!user) {
-        throw new BadRequestException('用户不存在');
+        throw new RpcException({
+          code: 404,
+          message: '用户未找到',
+        });
       }
 
       let profile = await queryRunner.manager.findOne(Profile, {
