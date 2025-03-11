@@ -27,7 +27,7 @@ export class AuthService {
 
   async login(login: string, password: string) {
     const user = await firstValueFrom(
-      this.userClient.send({ cmd: 'user.find.byLogin' }, login),
+      this.userClient.send({ cmd: 'user.find.byLogin' }, { login }),
     );
     if (!user) {
       throw new ForbiddenException('账号或密码错误');

@@ -1,47 +1,30 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { compare } from 'bcryptjs';
-import { UserService } from '../user/user.service';
+import { AUTH_SERVICE_NAME } from 'config/microservice.config';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UserService,
-    private jwt: JwtService,
+    @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientProxy,
   ) {}
 
   async register(email: string, password: string) {
-    const user = await this.usersService.findByEmail(email);
-    if (user) {
-      throw new ForbiddenException('用户已存在');
-    }
-    await this.usersService.userCreate({ email, password });
-    return formatResponse(201, null, '注册成功');
+    const newUser = await firstValueFrom(
+      this.authClient.send({ cmd: 'auth.register' }, { email, password }),
+    );
+    return newUser;
   }
 
   async login(login: string, password: string) {
-    const user = await this.usersService.findByLogin(login);
-    if (!user) {
-      throw new ForbiddenException('账号或密码错误');
-    }
-    if (user.status === 0) {
-      throw new ForbiddenException('账号未激活或已经被禁用');
-    }
-    const isValid = await compare(password, user.password);
-    if (!isValid) {
-      throw new ForbiddenException('账号或密码错误');
-    }
+    const result = await lastValueFrom(
+      this.authClient.send({ cmd: 'auth.login' }, { login, password }),
+    );
 
     return formatResponse(
       200,
-      {
-        access_token: this.jwt.sign({
-          userId: user.id,
-          username: user.username,
-          roles: user.roles.map((role) => role.name),
-        }),
-      },
+      { access_token: result.access_token },
       '登录成功',
     );
   }
