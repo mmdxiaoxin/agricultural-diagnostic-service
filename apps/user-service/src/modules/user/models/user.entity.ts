@@ -6,8 +6,8 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Role } from '../../role/role.entity';
 import { Profile } from './profile.entity';
+import { Role } from 'apps/auth-service/src/modules/role/role.entity';
 
 @Entity('user')
 export class User {
