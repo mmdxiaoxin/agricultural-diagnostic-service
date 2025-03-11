@@ -17,6 +17,7 @@ import {
   Query,
   Req,
   Res,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -94,8 +95,7 @@ export class UserController {
   )
   async uploadAvatar(
     @Req() req: Request,
-    @Res() res: Response,
-    @Body(
+    @UploadedFile(
       new FileSizeValidationPipe('10MB'),
       new FileTypeValidationPipe([MIME_TYPE.PNG, MIME_TYPE.JPEG]),
     )
@@ -103,10 +103,12 @@ export class UserController {
   ) {
     try {
       const payload = { userId: req.user.userId, file };
-      const result = await lastValueFrom(
-        this.userClient.send({ cmd: 'user.avatar.upload' }, payload),
+      await lastValueFrom(
+        this.userClient
+          .send({ cmd: 'user.avatar.upload' }, payload)
+          .pipe(defaultIfEmpty(null)),
       );
-      return formatResponse(200, result, '上传头像成功');
+      return formatResponse(200, null, '上传头像成功');
     } catch (error) {
       throw error;
     }
