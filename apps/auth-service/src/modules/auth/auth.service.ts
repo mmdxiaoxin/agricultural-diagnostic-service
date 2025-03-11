@@ -61,6 +61,20 @@ export class AuthService {
     };
   }
 
+  async verify(token: string) {
+    try {
+      const { userId } = this.jwt.decode(token);
+      await firstValueFrom(
+        this.userClient.send({ cmd: 'user.activate' }, { id: userId }),
+      );
+    } catch (error) {
+      throw new RpcException({
+        code: 400,
+        message: '验证失败',
+      });
+    }
+  }
+
   async buttonsGet() {
     return { useHooks: { add: true, delete: true } };
   }

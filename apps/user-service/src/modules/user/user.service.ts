@@ -15,6 +15,7 @@ import { Role } from '../role/role.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Profile } from './models/profile.entity';
 import { User } from './models/user.entity';
+import { RpcException } from '@nestjs/microservices';
 
 /**
  * 用户模块服务
@@ -34,7 +35,7 @@ export class UserService {
 
   private async validateUserParams(user: Partial<User>) {
     if (!user.email && !user.username) {
-      throw new BadRequestException('缺少关键参数-email或-username');
+      throw new RpcException('缺少关键参数-email或-username');
     }
   }
 
@@ -51,7 +52,7 @@ export class UserService {
         where: { name: 'user' },
       });
       if (!role) {
-        throw new InternalServerErrorException('user角色未创建');
+        throw new RpcException('user角色未创建');
       }
       user.roles = [role];
     }
@@ -82,13 +83,16 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundException('用户未找到');
+      throw new RpcException({
+        code: 404,
+        message: '用户未找到',
+      });
     }
 
     // 避免返回敏感数据
     const { password, ...userData } = user;
 
-    return formatResponse(200, userData, '用户信息获取成功');
+    return userData;
   }
 
   async userDelete(id: number) {
@@ -102,23 +106,21 @@ export class UserService {
       });
 
       if (!user) {
-        throw new NotFoundException('用户未找到');
+        throw new RpcException({
+          code: 404,
+          message: '用户未找到',
+        });
       }
 
-      // 删除用户的 Profile 数据
-      await queryRunner.manager.delete(Profile, { user });
-
       // 删除用户
+      await queryRunner.manager.delete(Profile, { user });
       await queryRunner.manager.remove(User, user);
 
-      // 提交事务
       await queryRunner.commitTransaction();
-
-      return { message: '用户及相关数据已删除' };
     } catch (error) {
       // 回滚事务
       await queryRunner.rollbackTransaction();
-      throw new BadRequestException('删除用户失败');
+      throw new RpcException('删除用户失败');
     } finally {
       // 释放 queryRunner
       await queryRunner.release();
@@ -139,7 +141,10 @@ export class UserService {
       });
 
       if (!user) {
-        throw new NotFoundException('用户未找到');
+        throw new RpcException({
+          code: 404,
+          message: '用户未找到',
+        });
       }
 
       // 处理信息更新
@@ -168,7 +173,7 @@ export class UserService {
       }
 
       await queryRunner.commitTransaction();
-      return formatResponse(200, null, '用户信息更新成功');
+      return true;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -177,13 +182,33 @@ export class UserService {
     }
   }
 
+  async userActivate(id: number) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new RpcException({
+        code: 404,
+        message: '用户未找到',
+      });
+    }
+
+    user.status = 1;
+    await this.userRepository.save(user);
+    return true;
+  }
+
   async userReset(id: number, newPassword?: string) {
     const user = await this.userRepository.findOne({
       where: { id },
     });
 
     if (!user) {
-      throw new NotFoundException('用户未找到');
+      throw new RpcException({
+        code: 404,
+        message: '用户未找到',
+      });
     }
 
     // 密码加密
@@ -199,7 +224,10 @@ export class UserService {
       relations: ['profile', 'roles'],
     });
     if (!user) {
-      throw new BadRequestException('用户不存在');
+      throw new RpcException({
+        code: 404,
+        message: '用户未找到',
+      });
     }
     if (!user.profile) {
       const profile = this.profileRepository.create();
@@ -217,18 +245,14 @@ export class UserService {
         const mimeType = fileExtension === '.png' ? 'image/png' : 'image/jpeg';
         avatarBase64 = `data:${mimeType};base64,${avatarBuffer.toString('base64')}`;
       } catch (err) {
-        throw new InternalServerErrorException('头像文件读取失败');
+        throw new RpcException('头像文件读取失败');
       }
     }
-    return formatResponse(
-      200,
-      {
-        ...user,
-        profile: { ...user.profile, avatar: avatarBase64 },
-        password: undefined,
-      },
-      '个人信息获取成功',
-    );
+    return {
+      ...user,
+      profile: { ...user.profile, avatar: avatarBase64 },
+      password: undefined,
+    };
   }
 
   async getAvatar(userId: number) {
@@ -260,8 +284,6 @@ export class UserService {
 
     Object.assign(userProfile, profile);
     await this.profileRepository.save(userProfile);
-
-    return formatResponse(200, null, '个人信息更新成功');
   }
 
   async updateAvatar(userId: number, file: Express.Multer.File) {
@@ -303,8 +325,6 @@ export class UserService {
 
       // 提交事务
       await queryRunner.commitTransaction();
-
-      return formatResponse(200, null, '头像上传成功');
     } catch (error) {
       // 发生错误时回滚
       await queryRunner.rollbackTransaction();
@@ -318,12 +338,13 @@ export class UserService {
   async updatePassword(userId: number, password: string) {
     const user = await this.findById(userId);
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throw new RpcException({
+        code: 404,
+        message: '用户未找到',
+      });
     }
-
     user.password = await hash(password, 10);
     await this.userRepository.save(user);
-    return formatResponse(200, null, '密码修改成功');
   }
 
   async userListGet(
@@ -372,18 +393,14 @@ export class UserService {
       // 过滤敏感信息
       const list = users.map(({ password, ...user }) => user);
 
-      return formatResponse(
-        200,
-        {
-          list,
-          total,
-          page,
-          pageSize,
-        },
-        '用户列表获取成功',
-      );
+      return {
+        list,
+        total,
+        page,
+        pageSize,
+      };
     } catch (error) {
-      throw new BadRequestException('Failed to fetch user list.');
+      throw new RpcException('Failed to fetch user list.');
     }
   }
 

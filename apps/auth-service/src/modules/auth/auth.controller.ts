@@ -20,6 +20,11 @@ export class AuthController {
     return this.authService.login(login, password);
   }
 
+  @MessagePattern({ cmd: 'auth.verify' })
+  async verify(@Payload() payload: { token: string }) {
+    return this.authService.verify(payload.token);
+  }
+
   @MessagePattern({ cmd: 'auth.buttonsGet' })
   async buttonsGet() {
     return this.authService.buttonsGet();

@@ -59,7 +59,7 @@ export class UserController {
     return { status: 200, message: '退出登录成功' };
   }
 
-  // 获取用户列表 (需要管理员权限)
+  // 获取用户列表
   @MessagePattern({ cmd: 'user.list.get' })
   async userListGet(
     @Payload()
@@ -88,25 +88,30 @@ export class UserController {
     return { status: 201, message: '用户创建成功' };
   }
 
-  // 获取单个用户信息 (需要管理员权限)
+  // 获取单个用户信息
   @MessagePattern({ cmd: 'user.get' })
   async userGet(@Payload() payload: { id: number }) {
     return this.userService.userGet(payload.id);
   }
 
-  // 删除用户 (需要管理员权限)
+  // 删除用户
   @MessagePattern({ cmd: 'user.delete' })
   async userDelete(@Payload() payload: { id: number }) {
     return this.userService.userDelete(payload.id);
   }
 
-  // 更新用户 (需要管理员权限)
+  // 更新用户
   @MessagePattern({ cmd: 'user.update' })
   async userUpdate(@Payload() payload: { id: number; dto: UpdateUserDto }) {
     return this.userService.userUpdate(payload.id, payload.dto);
   }
 
-  // 重置用户密码 (需要管理员权限)
+  @MessagePattern({ cmd: 'user.update.activate' })
+  async userActivate(@Payload() payload: { id: number }) {
+    return this.userService.userActivate(payload.id);
+  }
+
+  // 重置用户密码
   @MessagePattern({ cmd: 'user.password.reset' })
   async userReset(@Payload() payload: { id: number; dto: ResetPasswordDto }) {
     return this.userService.userReset(payload.id, payload.dto.password);

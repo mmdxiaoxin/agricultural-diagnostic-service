@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -44,6 +45,15 @@ export class AuthController {
       { access_token: result.access_token },
       '登录成功',
     );
+  }
+
+  @Post('verify/:token')
+  @HttpCode(HttpStatus.OK)
+  async verify(@Param('token') token: string) {
+    await lastValueFrom(
+      this.authClient.send({ cmd: 'auth.verify' }, { token }),
+    );
+    return formatResponse(200, null, '验证成功');
   }
 
   @Get('buttons')
