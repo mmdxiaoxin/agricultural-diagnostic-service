@@ -46,6 +46,15 @@
         "tsConfigPath": "apps/diagnosis-service/tsconfig.app.json"
       }
     },
+    "download-service": {
+      "type": "application",
+      "root": "apps/download-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/download-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/download-service/tsconfig.app.json"
+      }
+    },
     "file-operation": {
       "type": "library",
       "root": "libs/file-operation",
@@ -71,6 +80,15 @@
       "sourceRoot": "libs/metrics/src",
       "compilerOptions": {
         "tsConfigPath": "libs/metrics/tsconfig.lib.json"
+      }
+    },
+    "upload-service": {
+      "type": "application",
+      "root": "apps/upload-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/upload-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/upload-service/tsconfig.app.json"
       }
     },
     "user-service": {
