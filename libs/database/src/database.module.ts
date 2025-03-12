@@ -1,12 +1,13 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
 import { ConfigEnum } from '@shared/enum/config.enum';
 
 @Global()
 @Module({})
 export class DatabaseModule {
-  static forRoot(entities = []): DynamicModule {
+  static register(): DynamicModule {
     return {
       module: DatabaseModule,
       imports: [
@@ -31,7 +32,7 @@ export class DatabaseModule {
     };
   }
 
-  static forFeature(entities = []): DynamicModule {
+  static forFeature(entities: EntityClassOrSchema[] = []): DynamicModule {
     return {
       module: DatabaseModule,
       imports: [TypeOrmModule.forFeature(entities)],
