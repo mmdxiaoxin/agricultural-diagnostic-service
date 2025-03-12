@@ -7,7 +7,7 @@ import { ConfigEnum } from '@shared/enum/config.enum';
 @Global()
 @Module({})
 export class DatabaseModule {
-  static register(): DynamicModule {
+  static register(entities: EntityClassOrSchema[] = []): DynamicModule {
     return {
       module: DatabaseModule,
       imports: [
@@ -25,6 +25,7 @@ export class DatabaseModule {
               autoLoadEntities: true, // 自动加载实体
               synchronize: configService.get<boolean>(ConfigEnum.DB_SYNC),
               logging: process.env.NODE_ENV === 'development',
+              entities,
             }) as TypeOrmModuleOptions,
         }),
       ],
