@@ -1,4 +1,3 @@
-import { CreateTaskDto } from '@common/dto/file/create-task.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UploadService } from './app.service';
@@ -30,14 +29,12 @@ export class UploadController {
   }
 
   @MessagePattern({ cmd: 'task.create' })
-  async createTask(
-    @Payload() data: { userId: number; taskMeta: CreateTaskDto },
-  ) {
-    return this.uploadService.createTask(data.userId, data.taskMeta);
+  async createTask(@Payload() data: any) {
+    return { message: 'task create', data };
   }
 
   @MessagePattern({ cmd: 'task.get' })
-  async getTask(@Payload() data: { taskId: number }) {
-    return this.uploadService.getTask(data.taskId);
+  async getTask(@Payload() data: any) {
+    return { message: 'task get', data };
   }
 }
