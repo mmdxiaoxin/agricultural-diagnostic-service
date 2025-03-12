@@ -1,18 +1,14 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import * as crypto from 'crypto';
-import { createReadStream, createWriteStream, existsSync } from 'fs';
+import { createReadStream, createWriteStream } from 'fs';
 import {
-  readFile,
-  unlink,
-  rename,
   access,
   constants,
   mkdir,
+  readFile,
+  rename,
+  unlink,
 } from 'fs/promises';
 import * as path from 'path';
 
@@ -148,7 +144,9 @@ export class FileOperationService {
     try {
       await access(filePath, constants.F_OK | constants.R_OK);
     } catch {
-      throw new RpcException({ message: `文件不存在或无法访问: ${filePath}` });
+      throw new NotFoundException({
+        message: `文件不存在或无法访问: ${filePath}`,
+      });
     }
   }
 }
