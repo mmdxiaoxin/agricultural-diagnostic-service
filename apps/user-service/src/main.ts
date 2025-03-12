@@ -1,9 +1,10 @@
+import { MetricsService } from '@app/metrics';
+import { startMetricsServer } from '@app/metrics/metrics.http';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { USER_SERVICE_PORT } from 'config/microservice.config';
+import { USER_SERVICE_PROMETHEUS_PORT } from 'config/prometheus.config';
 import { AppModule } from './app.module';
-import { MetricsService } from '@app/metrics';
-import { startMetricsServer } from '@app/metrics/metrics.http';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
@@ -17,7 +18,7 @@ async function bootstrap() {
   );
 
   const metricsService = app.get(MetricsService);
-  startMetricsServer(metricsService, 9200);
+  startMetricsServer(metricsService, USER_SERVICE_PROMETHEUS_PORT);
 
   await app.listen();
 }

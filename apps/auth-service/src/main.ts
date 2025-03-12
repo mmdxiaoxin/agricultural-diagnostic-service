@@ -4,6 +4,7 @@ import { CustomRpcExceptionFilter } from '@common/filters/rpc-exception.filter';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { AUTH_SERVICE_PORT } from 'config/microservice.config';
+import { AUTH_SERVICE_PROMETHEUS_PORT } from 'config/prometheus.config';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -18,7 +19,7 @@ async function bootstrap() {
   );
 
   const metricsService = app.get(MetricsService);
-  startMetricsServer(metricsService, 9100);
+  startMetricsServer(metricsService, AUTH_SERVICE_PROMETHEUS_PORT);
 
   app.useGlobalFilters(new CustomRpcExceptionFilter());
   await app.listen();
