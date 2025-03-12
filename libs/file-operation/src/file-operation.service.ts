@@ -82,6 +82,24 @@ export class FileOperationService {
   }
 
   /**
+   * 合并单个文件
+   * @param chunkPath
+   * @param finalPath
+   * @returns
+   */
+  mergeFile(chunkPath: string, finalPath: string) {
+    return new Promise<void>((resolve, reject) => {
+      const chunkStream = createReadStream(chunkPath);
+      const writeStream = createWriteStream(finalPath, { flags: 'a' }); // 追加模式
+      chunkStream.pipe(writeStream, { end: false }); // 不结束流
+      chunkStream.on('end', resolve);
+      chunkStream.on('error', reject);
+      writeStream.on('finish', resolve);
+      writeStream.on('error', reject);
+    });
+  }
+
+  /**
    * 合并多个文件（支持大文件合并）
    * @param chunkPaths 需要合并的文件路径数组
    * @param finalPath 合并后的文件路径
