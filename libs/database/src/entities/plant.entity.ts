@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { AIModel } from '../../ai-model/models/ai-model.entity';
+import { AIModel } from './ai-model.entity';
 
 @Entity('plants')
 export class Plant {

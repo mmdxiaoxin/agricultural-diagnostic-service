@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AiServiceController } from './ai-service.controller';
-import { AiServiceAccessLog } from './models/ai-service-access-log.entity';
-import { AiServiceConfig } from './models/ai-service-config.entity';
-import { AiServiceLog } from './models/ai-service-log.entity';
-import { AiService } from './models/ai-service.entity';
+import { AiServiceAccessLog } from '../../../../../libs/database/src/entities/ai-service-access-log.entity';
+import { AiServiceConfig } from '../../../../../libs/database/src/entities/ai-service-config.entity';
+import { AiServiceLog } from '../../../../../libs/database/src/entities/ai-service-log.entity';
+import { AiService } from '../../../../../libs/database/src/entities/ai-service.entity';
 import { AiServiceService } from './services/ai-service.service';
 import { AiConfigsService } from './services/ai-service-config.service';
 

@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { DiagnosisHistory } from './models/diagnosis-history.entity';
+import { DiagnosisHistory } from '../../../../../libs/database/src/entities/diagnosis-history.entity';
 import axios from 'axios';
 @Injectable()
 export class DiagnosisService {
