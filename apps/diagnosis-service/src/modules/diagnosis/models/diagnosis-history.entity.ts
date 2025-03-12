@@ -1,4 +1,4 @@
-import { File as FileEntity } from '../../file/models/file.entity';
+import { File as FileEntity } from 'apps/api-gateway/src/modules/file/models/file.entity';
 import {
   Column,
   Entity,

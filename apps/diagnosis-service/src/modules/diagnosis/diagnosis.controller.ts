@@ -1,135 +1,55 @@
 import { FileOperationService } from '@app/file-operation';
-import { AuthGuard } from '@common/guards/auth.guard';
-import {
-  Controller,
-  Get,
-  HttpStatus,
-  Param,
-  ParseIntPipe,
-  Post,
-  Query,
-  Req,
-  UploadedFile,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
-import { MIME_TYPE } from '@shared/enum/mime.enum';
-import { FileSizeValidationPipe } from 'apps/api-gateway/src/modules/file/pipe/file-size.pipe';
-import { FileTypeValidationPipe } from 'apps/api-gateway/src/modules/file/pipe/file-type.pipe';
-import { Request } from 'express';
-import { existsSync, mkdirSync } from 'fs';
-import { diskStorage } from 'multer';
-import { v4 as uuidv4 } from 'uuid';
+import { Controller } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DiagnosisService } from './diagnosis.service';
 
-@ApiTags('病害诊断模块')
-@Controller('diagnosis')
-@UseGuards(AuthGuard)
+@Controller()
 export class DiagnosisController {
   constructor(
     private readonly diagnosisService: DiagnosisService,
     private readonly fileOperationService: FileOperationService,
   ) {}
 
-  // 上传待诊断数据接口
-  @Post('upload')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: (req, file, cb) => {
-          let folder = 'uploads/other';
-          const mimeType = file.mimetype;
-          // 按 MIME 类型分文件夹存储
-          if (mimeType.startsWith('image')) {
-            folder = 'uploads/images';
-          } else if (mimeType.startsWith('video')) {
-            folder = 'uploads/videos';
-          } else if (mimeType.startsWith('application')) {
-            folder = 'uploads/documents';
-          } else if (mimeType.startsWith('audio')) {
-            folder = 'uploads/audio';
-          }
-          if (!existsSync(folder)) {
-            mkdirSync(folder, { recursive: true });
-          }
-          cb(null, folder);
-        },
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + '-' + uuidv4();
-          file.originalname = Buffer.from(file.originalname, 'latin1').toString(
-            'utf-8',
-          );
-          cb(null, uniqueName);
-        },
-      }),
-    }),
-  )
+  @MessagePattern({ cmd: 'diagnosis.upload' })
   async uploadData(
-    @Req() req: Request,
-    @UploadedFile(
-      new FileTypeValidationPipe([MIME_TYPE.PNG, MIME_TYPE.JPEG]),
-      new FileSizeValidationPipe('10MB'),
-    )
-    file: Express.Multer.File,
+    @Payload() data: { userId: number; file: Express.Multer.File },
   ) {
     try {
-      return this.diagnosisService.uploadData(req.user.userId, file);
+      return this.diagnosisService.uploadData(data.userId, data.file);
     } catch (error) {
-      await this.fileOperationService.deleteFile(file.path);
+      await this.fileOperationService.deleteFile(data.file.path);
       throw error;
     }
   }
 
-  // TODO: 开始诊断数据接口
-  @Post(':id/start')
-  async startDiagnosis(
-    @Req() req: Request,
-    @Param(
-      'id',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    id: number,
-  ) {
-    return await this.diagnosisService.startDiagnosis(id, req.user.userId);
+  @MessagePattern({ cmd: 'diagnosis.start' })
+  async startDiagnosis(@Payload() data: { id: number; userId: number }) {
+    return await this.diagnosisService.startDiagnosis(data.id, data.userId);
   }
 
-  // 获取诊断服务状态接口
-  @Get(':id/status')
-  async getDiagnosisStatus(
-    @Param(
-      'id',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    id: number,
-  ) {
-    return await this.diagnosisService.getDiagnosisStatus(id);
+  @MessagePattern({ cmd: 'diagnosis.status' })
+  async getDiagnosisStatus(@Payload() data: { id: number }) {
+    return await this.diagnosisService.getDiagnosisStatus(data.id);
   }
 
-  // 获取诊断历史记录接口
-  @Get('history')
-  async diagnosisHistoryGet(@Req() req: Request) {
-    return await this.diagnosisService.diagnosisHistoryGet(req.user.userId);
+  @MessagePattern({ cmd: 'diagnosis.history' })
+  async diagnosisHistoryGet(@Payload() data: { userId: number }) {
+    return await this.diagnosisService.diagnosisHistoryGet(data.userId);
   }
 
-  // 获取诊断支持接口
-  @Get('support')
+  @MessagePattern({ cmd: 'diagnosis.support' })
   async diagnosisSupportGet() {
     return await this.diagnosisService.diagnosisSupportGet();
   }
 
-  // 获取诊断历史记录接口
-  @Get('history/list')
+  @MessagePattern({ cmd: 'diagnosis.history.list' })
   async diagnosisHistoryListGet(
-    @Req() req: Request,
-    @Query('page', ParseIntPipe) page?: number,
-    @Query('pageSize', ParseIntPipe) pageSize?: number,
+    @Payload() data: { page?: number; pageSize?: number; userId: number },
   ) {
     return await this.diagnosisService.diagnosisHistoryListGet(
-      page,
-      pageSize,
-      req.user.userId,
+      data.page,
+      data.pageSize,
+      data.userId,
     );
   }
 }

@@ -1,16 +1,17 @@
+import { FileOperationModule } from '@app/file-operation';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { FileModule } from '../file/file.module';
+import { AIModel } from 'apps/api-gateway/src/modules/ai-model/models/ai-model.entity';
+import { Plant } from 'apps/api-gateway/src/modules/plant/models/plant.entity';
 import { DiagnosisController } from './diagnosis.controller';
-import { DiagnosisHistory } from './models/diagnosis-history.entity';
 import { DiagnosisService } from './diagnosis.service';
-import { AIModel } from '../ai-model/models/ai-model.entity';
-import { Plant } from '../plant/models/plant.entity';
+import { DiagnosisHistory } from './models/diagnosis-history.entity';
+import { DatabaseModule } from '@app/database';
 
 @Module({
   imports: [
-    FileModule,
-    TypeOrmModule.forFeature([DiagnosisHistory, AIModel, Plant]),
+    FileOperationModule,
+    DatabaseModule.forFeature([DiagnosisHistory, AIModel, Plant]),
   ],
   providers: [DiagnosisService],
   controllers: [DiagnosisController],
