@@ -1,25 +1,19 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { formatResponse } from '@shared/helpers/response.helper';
-import { getModelMimeType } from '@shared/utils';
-import * as crypto from 'crypto';
-import * as fs from 'fs';
-import * as path from 'path';
-import { DataSource, In, Repository } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
-
 import { File as FileEntity, Task as TaskEntity } from '@app/database/entities';
 import { FileOperationService } from '@app/file-operation';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { InjectRepository } from '@nestjs/typeorm';
+import { getModelMimeType } from '@shared/utils';
 import { CreateTaskDto } from 'apps/api-gateway/src/modules/file/dto/create-task.dto';
 import {
   UpdateFileDto,
   UpdateFilesAccessDto,
 } from 'apps/api-gateway/src/modules/file/dto/update-file.dto';
+import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
+import { DataSource, In, Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UploadService {
@@ -68,7 +62,6 @@ export class UploadService {
       updatedBy: user_id,
       version: 1,
     });
-
     return await this.fileRepository.save(fileMeta);
   }
 
@@ -82,17 +75,23 @@ export class UploadService {
         where: { id: fileId },
       });
       if (!file) {
-        throw new NotFoundException('未找到文件');
+        throw new RpcException({
+          message: '未找到文件',
+          code: HttpStatus.NOT_FOUND,
+        });
       }
       if (file.createdBy !== userId) {
-        throw new BadRequestException('无权修改他人文件');
+        throw new RpcException({
+          message: '无权修改他人文件',
+          code: HttpStatus.FORBIDDEN,
+        });
       }
       Object.assign(file, fileMeta);
       file.updatedBy = userId;
       file.version += 1;
       await queryRunner.manager.save(file);
       await queryRunner.commitTransaction();
-      return formatResponse(200, null, '文件信息修改成功');
+      return null; // 直接返回数据，这里返回 null 表示无需返回内容
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -111,11 +110,17 @@ export class UploadService {
         where: { id: In(fileIds) },
       });
       if (files.length === 0) {
-        throw new NotFoundException('未找到文件');
+        throw new RpcException({
+          message: '未找到文件',
+          code: HttpStatus.NOT_FOUND,
+        });
       }
       for (const file of files) {
         if (file.createdBy !== userId) {
-          throw new BadRequestException('无权修改他人文件');
+          throw new RpcException({
+            message: '无权修改他人文件',
+            code: HttpStatus.FORBIDDEN,
+          });
         }
         file.access = access;
         file.updatedBy = userId;
@@ -123,7 +128,7 @@ export class UploadService {
       }
       await queryRunner.manager.save(files);
       await queryRunner.commitTransaction();
-      return formatResponse(200, null, '文件权限修改成功');
+      return null;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -135,7 +140,10 @@ export class UploadService {
   // 上传文件
   async uploadSingle(userId: number, file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('请上传文件');
+      throw new RpcException({
+        message: '请上传文件',
+        code: HttpStatus.NOT_FOUND,
+      });
     }
     try {
       const { result: foundFile, fileMd5 } = await this.checkRepeated(file);
@@ -155,13 +163,7 @@ export class UploadService {
           fileType,
         });
       }
-      return formatResponse(
-        200,
-        {
-          fileId: fileMeta.id,
-        },
-        '文件上传成功',
-      );
+      return { fileId: fileMeta.id };
     } catch (error) {
       await fs.promises.unlink(file.path);
       throw error;
@@ -175,41 +177,31 @@ export class UploadService {
     await queryRunner.startTransaction();
     let task: TaskEntity | null = null;
     try {
-      // 使用悲观锁，防止并发修改
       task = await queryRunner.manager.findOne(TaskEntity, {
         where: { id: taskId },
-        lock: { mode: 'pessimistic_write' }, // 悲观锁定该任务行
+        lock: { mode: 'pessimistic_write' },
       });
       if (!task) {
-        throw new NotFoundException('Task not found');
+        throw new RpcException({
+          message: '未找到上传任务',
+          code: HttpStatus.NOT_FOUND,
+        });
       }
       if (task.status === 'completed') {
-        throw new BadRequestException('Task already completed');
+        return { taskId: task.id, chunkIndex, status: 'completed' };
       }
-      // 确保 chunkStatus 存在并初始化
       task.chunkStatus = task.chunkStatus || {};
-
-      // 检查是否已经上传该分片
       if (task.chunkStatus[chunkIndex] === true) {
-        throw new BadRequestException(`Chunk ${chunkIndex} already uploaded`);
+        throw new RpcException({
+          message: '当前分片已上传',
+          code: HttpStatus.CONFLICT,
+        });
       }
-
-      // 更新已上传分片数
       task.uploadedChunks = (task.uploadedChunks || 0) + 1;
-
-      // 更新分片状态
       task.chunkStatus[chunkIndex] = true;
-
       await queryRunner.manager.save(TaskEntity, task);
       await queryRunner.commitTransaction();
-      return formatResponse(
-        200,
-        {
-          taskId: task.id,
-          chunkIndex,
-        },
-        `Chunk ${chunkIndex} uploaded successfully`,
-      );
+      return { taskId: task.id, chunkIndex, status: 'uploaded' };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (task) {
@@ -230,13 +222,10 @@ export class UploadService {
     await queryRunner.startTransaction();
 
     try {
-      // 查找已有文件
       const file = await queryRunner.manager.findOne(FileEntity, {
         where: { fileMd5 },
       });
-
       if (file) {
-        // 若找到重复文件，创建文件记录和任务记录，任务状态为 completed
         const newFile = this.fileRepository.create({
           originalFileName: fileName,
           storageFileName: file.storageFileName,
@@ -248,14 +237,12 @@ export class UploadService {
           updatedBy: userId,
           version: 1,
         });
-
         await queryRunner.manager.save(FileEntity, newFile);
 
-        // 创建任务记录，状态为 completed
         const task = queryRunner.manager.create(TaskEntity, {
           fileName: fileName,
-          fileSize: file.fileSize, // 复制已有文件的大小
-          fileType: file.fileType, // 使用已上传文件的类型
+          fileSize: file.fileSize,
+          fileType: file.fileType,
           fileMd5: fileMd5,
           totalChunks: totalChunks,
           uploadedChunks: totalChunks,
@@ -265,17 +252,11 @@ export class UploadService {
           version: 1,
         });
         await queryRunner.manager.save(task);
-
         await queryRunner.commitTransaction();
 
-        return formatResponse(
-          200,
-          { file_id: file.id, status: 'completed' },
-          '上传完毕',
-        );
+        return { file_id: file.id, status: 'completed' };
       }
 
-      // 文件不存在，创建任务并设置状态为 uploading
       const task = queryRunner.manager.create(TaskEntity, {
         fileName: fileName,
         fileSize: fileSize,
@@ -289,14 +270,9 @@ export class UploadService {
         version: 1,
       });
       await queryRunner.manager.save(task);
-
       await queryRunner.commitTransaction();
 
-      return formatResponse(
-        201,
-        { taskId: task.id, status: 'uploading' },
-        '任务创建成功',
-      );
+      return { taskId: task.id, status: 'uploading' };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -315,54 +291,54 @@ export class UploadService {
         where: { id: taskId },
       });
       if (!task) {
-        throw new NotFoundException('未找到上传任务');
+        throw new RpcException({
+          message: '未找到上传任务',
+          code: HttpStatus.NOT_FOUND,
+        });
       }
       if (task.status === 'completed') {
-        return formatResponse(200, null, '当前任务已完成');
+        return { status: 'completed' };
       }
       if (task.status === 'failed') {
-        throw new InternalServerErrorException('当前任务失败，请重新上传');
+        throw new RpcException({
+          message: '当前任务失败，请重新上传',
+          code: HttpStatus.INTERNAL_SERVER_ERROR,
+        });
       }
       if (task.uploadedChunks !== task.totalChunks) {
-        return formatResponse(202, null, '当前任务还未完成');
+        return { status: 'processing' };
       }
 
-      // 确保文件夹存在
-      let folder = 'uploads/other'; // 默认存储
+      let folder = 'uploads/other';
       if (task.fileType.startsWith('image')) folder = 'uploads/images';
       else if (task.fileType.startsWith('video')) folder = 'uploads/videos';
       else if (task.fileType.startsWith('application'))
         folder = 'uploads/documents';
       else if (task.fileType.startsWith('audio')) folder = 'uploads/audio';
 
-      // 使用异步文件夹创建
       await fs.promises.mkdir(folder, { recursive: true });
 
       const fileExtension = path.extname(task.fileName);
       const storageFileName = `${uuidv4()}${fileExtension}`;
       const finalPath = path.join(folder, storageFileName);
 
-      // 合并文件分片，按顺序进行处理
       const chunkPaths: string[] = [];
       for (let i = 1; i <= task.totalChunks; i++) {
         const chunkPath = path.join('uploads/chunks', `${task.fileMd5}-${i}`);
         chunkPaths.push(chunkPath);
       }
 
-      // 使用 Promise.all 并行合并分片
       await Promise.all(
         chunkPaths.map((chunkPath) =>
           this.fileOperationService.mergeFile(chunkPath, finalPath),
         ),
       );
 
-      // 删除分片文件
       const chunkDeletionPromises = chunkPaths.map((chunkPath) =>
         fs.promises.unlink(chunkPath),
       );
       await Promise.all(chunkDeletionPromises);
 
-      // 更新任务状态
       task.status = 'completed';
       task.fileSize = fs.statSync(finalPath).size;
       await queryRunner.manager.save(task);
@@ -380,18 +356,19 @@ export class UploadService {
       await queryRunner.manager.save(newFile);
 
       await queryRunner.commitTransaction();
-      return formatResponse(201, null, 'File uploaded and merged successfully');
+      return { message: 'File uploaded and merged successfully' };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (task) {
-        // 清理文件
         const chunkDeletionPromises: Promise<void>[] = [];
         for (let i = 1; i <= task.totalChunks; i++) {
           const chunkPath = path.join('uploads/chunks', `${task.fileMd5}-${i}`);
           chunkDeletionPromises.push(
-            fs.promises.unlink(chunkPath).catch((err) => {
-              console.error(`Failed to delete chunk ${i}: ${err.message}`);
-            }),
+            fs.promises
+              .unlink(chunkPath)
+              .catch((err) =>
+                console.error(`Failed to delete chunk ${i}: ${err.message}`),
+              ),
           );
         }
         await Promise.all(chunkDeletionPromises);
@@ -403,18 +380,19 @@ export class UploadService {
   }
 
   async getUploadTaskStatus(taskId: number) {
-    const task = await this.taskRepository.findOne({
-      where: { id: taskId },
-    });
+    const task = await this.taskRepository.findOne({ where: { id: taskId } });
     if (!task) {
-      throw new NotFoundException('未找到上传任务');
+      throw new RpcException({
+        message: '未找到上传任务',
+        code: HttpStatus.NOT_FOUND,
+      });
     }
-    return formatResponse(200, {
+    return {
       taskId: task.id,
       status: task.status,
       chunkStatus: task.chunkStatus,
       totalChunks: task.totalChunks,
       uploadedChunks: task.uploadedChunks,
-    });
+    };
   }
 }
