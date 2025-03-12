@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigEnum } from '@shared/enum/config.enum';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { AiModelModule } from './ai-model/ai-model.module';
+import { AiServiceModule } from './ai-service/ai-service.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -10,11 +13,9 @@ import { DiagnosisModule } from './diagnosis/diagnosis.module';
 import { FileModule } from './file/file.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { MenuModule } from './menu/menu.module';
+import { PlantModule } from './plant/plant.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
-import { AiServiceModule } from './ai-service/ai-service.module';
-import { AiModelModule } from './ai-model/ai-model.module';
-import { PlantModule } from './plant/plant.module';
 
 /**
  * 根模块
@@ -55,6 +56,7 @@ import { PlantModule } from './plant/plant.module';
     AiServiceModule,
     AiModelModule,
     PlantModule,
+    PrometheusModule.register(),
   ],
   controllers: [AppController],
   providers: [AppService],
