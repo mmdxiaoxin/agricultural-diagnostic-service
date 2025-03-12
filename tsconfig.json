@@ -24,6 +24,12 @@
       "@app/mail/*": [
         "libs/mail/src/*"
       ],
+      "@app/metrics": [
+        "libs/metrics/src"
+      ],
+      "@app/metrics/*": [
+        "libs/metrics/src/*"
+      ],
       "@common/*": [
         "packages/common/src/*"
       ],

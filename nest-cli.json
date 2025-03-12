@@ -37,6 +37,15 @@
         "tsConfigPath": "libs/mail/tsconfig.lib.json"
       }
     },
+    "metrics": {
+      "type": "library",
+      "root": "libs/metrics",
+      "entryFile": "index",
+      "sourceRoot": "libs/metrics/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/metrics/tsconfig.lib.json"
+      }
+    },
     "user-service": {
       "type": "application",
       "root": "apps/user-service",

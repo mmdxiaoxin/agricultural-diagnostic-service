@@ -1,3 +1,4 @@
+import { MetricsModule } from '@app/metrics';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -32,6 +33,7 @@ import { MenuModule } from './modules/menu/menu.module';
     }),
     AuthModule,
     MenuModule,
+    MetricsModule,
   ],
 })
 export class AppModule {}

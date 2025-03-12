@@ -32,6 +32,11 @@ async function bootstrap() {
       transform: true, // 自动转换类型（如把字符串转为数字）
     }),
   );
+
   await app.listen(process.env.PORT ?? 3000);
+
+  console.log(
+    `Metrics server is running on http://localhost:${process.env.PORT}/api/metrics`,
+  );
 }
 bootstrap();
