@@ -42,6 +42,12 @@
       "@app/metrics/*": [
         "libs/metrics/src/*"
       ],
+      "@app/redis": [
+        "libs/redis/src"
+      ],
+      "@app/redis/*": [
+        "libs/redis/src/*"
+      ],
       "@common/*": [
         "packages/common/src/*"
       ],

@@ -21,6 +21,7 @@
     "test:e2e": "jest --config ./apps/agricultural-diagnostic-service/test/jest-e2e.json"
   },
   "dependencies": {
+    "@nestjs/cache-manager": "^3.0.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.1",
@@ -35,6 +36,8 @@
     "archiver": "^7.0.1",
     "axios": "^1.8.2",
     "bcryptjs": "^3.0.2",
+    "cache-manager": "^6.4.1",
+    "cache-manager-redis-store": "^3.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "express": "^4.21.2",
@@ -104,7 +107,8 @@
       "^@app/database(|/.*)$": "<rootDir>/libs/database/src/$1",
       "^@app/file-operation(|/.*)$": "<rootDir>/libs/file-operation/src/$1",
       "^@app/mail(|/.*)$": "<rootDir>/libs/mail/src/$1",
-      "^@app/metrics(|/.*)$": "<rootDir>/libs/metrics/src/$1"
+      "^@app/metrics(|/.*)$": "<rootDir>/libs/metrics/src/$1",
+      "^@app/redis(|/.*)$": "<rootDir>/libs/redis/src/$1"
     }
   }
 }

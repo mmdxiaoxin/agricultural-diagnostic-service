@@ -18,6 +18,8 @@
     "@app/mail": "<rootDir>/../libs/mail/src",
     "@app/mail/(.*)": "<rootDir>/../libs/mail/src/$1",
     "@app/metrics": "<rootDir>/../libs/metrics/src",
-    "@app/metrics/(.*)": "<rootDir>/../libs/metrics/src/$1"
+    "@app/metrics/(.*)": "<rootDir>/../libs/metrics/src/$1",
+    "@app/redis": "<rootDir>/../libs/redis/src",
+    "@app/redis/(.*)": "<rootDir>/../libs/redis/src/$1"
   }
 }
