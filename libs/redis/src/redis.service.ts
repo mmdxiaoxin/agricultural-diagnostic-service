@@ -1,43 +1,45 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
-import { Redis } from 'ioredis';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class RedisService {
-  constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {}
+  constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
-  async set(key: string, value: string, ttl?: number) {
-    if (ttl) {
-      await this.redisClient.set(key, value, 'EX', ttl);
-    } else {
-      await this.redisClient.set(key, value);
-    }
+  /**
+   * 设置缓存，支持可选 TTL 时间（单位：秒）
+   * @param key 缓存键
+   * @param value 缓存值
+   * @param ttl 可选过期时间
+   */
+  async set(key: string, value: any, ttl?: number): Promise<void> {
+    await this.cacheManager.set(key, value, ttl);
   }
 
-  async get(key: string): Promise<string | null> {
-    return await this.redisClient.get(key);
+  /**
+   * 获取缓存内容
+   * @param key 缓存键
+   * @returns 缓存值或 null
+   */
+  async get<T>(key: string): Promise<T | null> {
+    return await this.cacheManager.get<T>(key);
   }
 
-  async del(key: string) {
-    await this.redisClient.del(key);
+  /**
+   * 删除缓存
+   * @param key 缓存键
+   */
+  async del(key: string): Promise<void> {
+    await this.cacheManager.del(key);
   }
 
-  async hset(hash: string, key: string, value: string) {
-    await this.redisClient.hset(hash, key, value);
-  }
-
-  async hget(hash: string, key: string): Promise<string | null> {
-    return await this.redisClient.hget(hash, key);
-  }
-
-  async pipelineSet(keys: string[], values: string[]) {
-    const pipeline = this.redisClient.pipeline();
-    keys.forEach((key, index) => {
-      pipeline.set(key, values[index]);
-    });
-    await pipeline.exec();
-  }
-
-  async quit() {
-    await this.redisClient.quit();
+  /**
+   * 增加缓存中数字值
+   * @param key 缓存键
+   * @param delta 增加值
+   */
+  async increment(key: string, delta: number = 1): Promise<void> {
+    const current = (await this.get<number>(key)) || 0;
+    await this.set(key, current + delta);
   }
 }
