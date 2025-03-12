@@ -1,12 +1,21 @@
 import { Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import {
+  AUTH_SERVICE_NAME,
+  AUTH_SERVICE_PORT,
+} from 'config/microservice.config';
 import { MenuController } from './menu.controller';
-import { MenuService } from './menu.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Menu } from './menu.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Menu])],
+  imports: [
+    ClientsModule.register([
+      {
+        name: AUTH_SERVICE_NAME,
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: AUTH_SERVICE_PORT },
+      },
+    ]),
+  ],
   controllers: [MenuController],
-  providers: [MenuService],
 })
 export class MenuModule {}
