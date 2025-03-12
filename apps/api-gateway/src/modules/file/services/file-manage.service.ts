@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, QueryRunner, Repository } from 'typeorm';
-import { UpdateFileDto, UpdateFilesAccessDto } from '../dto/update-file.dto';
+import {
+  UpdateFileDto,
+  UpdateFilesAccessDto,
+} from '../../../../../../packages/common/src/dto/file/update-file.dto';
 import { Task as TaskEntity, File as FileEntity } from '@app/database/entities';
 import { FileOperationService } from './file-operation.service';
 

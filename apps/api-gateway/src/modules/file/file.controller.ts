@@ -30,12 +30,15 @@ import { unlink } from 'fs/promises';
 import { diskStorage } from 'multer';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { CompleteChunkDto } from './dto/complete-chunk.dto';
-import { CreateTempLinkDto } from './dto/create-link.dto';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { DownloadFilesDto } from './dto/download-file.dto';
-import { UpdateFileDto, UpdateFilesAccessDto } from './dto/update-file.dto';
-import { UploadChunkDto } from './dto/upload-chunk.dto';
+import { CompleteChunkDto } from '../../../../../packages/common/src/dto/file/complete-chunk.dto';
+import { CreateTempLinkDto } from '../../../../../packages/common/src/dto/file/create-link.dto';
+import { CreateTaskDto } from '../../../../../packages/common/src/dto/file/create-task.dto';
+import { DownloadFilesDto } from '../../../../../packages/common/src/dto/file/download-file.dto';
+import {
+  UpdateFileDto,
+  UpdateFilesAccessDto,
+} from '../../../../../packages/common/src/dto/file/update-file.dto';
+import { UploadChunkDto } from '../../../../../packages/common/src/dto/file/upload-chunk.dto';
 import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file-size.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';

@@ -1,22 +1,22 @@
 import { File as FileEntity, Task as TaskEntity } from '@app/database/entities';
-import { FileOperationService } from '@app/file-operation';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { CreateTaskDto } from '@common/dto/file/create-task.dto';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getModelMimeType } from '@shared/utils';
-import { CreateTaskDto } from 'apps/api-gateway/src/modules/file/dto/create-task.dto';
-import {
-  UpdateFileDto,
-  UpdateFilesAccessDto,
-} from 'apps/api-gateway/src/modules/file/dto/update-file.dto';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import { DataSource, In, Repository } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
+import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class UploadService {
+  private readonly logger = new Logger(UploadService.name);
+  // 用于临时存储分片数据的目录
+  private chunkDir = path.join(__dirname, '..', 'chunks');
+  // 用于保存最终上传文件的目录
+  private uploadDir = path.join(__dirname, '..', 'uploads');
+
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
@@ -24,208 +24,152 @@ export class UploadService {
     @InjectRepository(TaskEntity)
     private readonly taskRepository: Repository<TaskEntity>,
 
-    private readonly fileOperationService: FileOperationService,
-
     private readonly dataSource: DataSource,
-  ) {}
-
-  // 计算文件 MD5 并查找重复文件
-  private async checkRepeated(file: Express.Multer.File) {
-    const fileBuffer = await this.fileOperationService.readFile(file.path);
-    const fileMd5 = crypto.createHash('md5').update(fileBuffer).digest('hex');
-    const result = await this.fileRepository.findOne({
-      where: { fileMd5 },
-    });
-    return { result, fileMd5 };
+  ) {
+    // 初始化文件存储目录，确保目录存在
+    if (!fs.existsSync(this.chunkDir)) {
+      fs.mkdirSync(this.chunkDir, { recursive: true });
+      this.logger.log(`创建分片存储目录: ${this.chunkDir}`);
+    }
+    if (!fs.existsSync(this.uploadDir)) {
+      fs.mkdirSync(this.uploadDir, { recursive: true });
+      this.logger.log(`创建文件上传目录: ${this.uploadDir}`);
+    }
   }
 
-  // 获取文件类型
-  private checkFileType(file: Express.Multer.File): string {
+  private handleFileType = (file: Express.Multer.File) => {
     return file.mimetype
       ? file.mimetype
       : getModelMimeType(path.extname(file.originalname));
-  }
+  };
 
-  // 创建文件元数据
-  private async createFile(
-    user_id: number,
-    fileData: any,
-  ): Promise<FileEntity> {
-    const fileMeta = this.fileRepository.create({
-      originalFileName: fileData?.originalname || fileData.originalFileName,
-      storageFileName: fileData?.filename || fileData.storageFileName,
-      filePath: fileData?.path || fileData.filePath,
-      fileSize: fileData?.size || fileData.fileSize,
-      fileType: fileData.fileType,
-      fileMd5: fileData.fileMd5,
-      createdBy: user_id,
-      updatedBy: user_id,
-      version: 1,
+  private handleFileMd5 = (filePath: string) => {
+    return new Promise<string>((resolve, reject) => {
+      const hash = crypto.createHash('md5');
+      const stream = fs.createReadStream(filePath);
+      stream.on('data', (data) => hash.update(data));
+      stream.on('end', () => resolve(hash.digest('hex')));
+      stream.on('error', (error) => reject(error));
     });
-    return await this.fileRepository.save(fileMeta);
-  }
+  };
 
-  async updateFile(userId: number, dto: UpdateFileDto) {
-    const { fileId, ...fileMeta } = dto;
+  // 处理单文件上传，直接将文件数据写入目标目录
+  async saveFile(
+    fileMeta: Express.Multer.File,
+    fileData: Buffer,
+    userId: number,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+    const filePath = path.join(this.uploadDir, fileMeta.filename);
+    const fileType = this.handleFileType(fileMeta);
+    const fileMd5 = await this.handleFileMd5(filePath);
     try {
-      const file = await this.fileRepository.findOne({
-        where: { id: fileId },
+      const found = await queryRunner.manager.findOne(FileEntity, {
+        where: { fileMd5 },
       });
-      if (!file) {
-        throw new RpcException({
-          message: '未找到文件',
-          code: HttpStatus.NOT_FOUND,
+      if (found) {
+        const file = this.fileRepository.create({
+          originalFileName: fileMeta.originalname,
+          storageFileName: found.storageFileName,
+          filePath: found.filePath,
+          fileType: found.fileType,
+          fileMd5: found.fileMd5,
+          createdBy: userId,
+          updatedBy: userId,
         });
-      }
-      if (file.createdBy !== userId) {
-        throw new RpcException({
-          message: '无权修改他人文件',
-          code: HttpStatus.FORBIDDEN,
-        });
-      }
-      Object.assign(file, fileMeta);
-      file.updatedBy = userId;
-      file.version += 1;
-      await queryRunner.manager.save(file);
-      await queryRunner.commitTransaction();
-      return null; // 直接返回数据，这里返回 null 表示无需返回内容
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  async updateFilesAccess(userId: number, dto: UpdateFilesAccessDto) {
-    const { fileIds, access } = dto;
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const files = await queryRunner.manager.find(FileEntity, {
-        where: { id: In(fileIds) },
-      });
-      if (files.length === 0) {
-        throw new RpcException({
-          message: '未找到文件',
-          code: HttpStatus.NOT_FOUND,
-        });
-      }
-      for (const file of files) {
-        if (file.createdBy !== userId) {
-          throw new RpcException({
-            message: '无权修改他人文件',
-            code: HttpStatus.FORBIDDEN,
-          });
-        }
-        file.access = access;
-        file.updatedBy = userId;
-        file.version += 1;
-      }
-      await queryRunner.manager.save(files);
-      await queryRunner.commitTransaction();
-      return null;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  // 上传文件
-  async uploadSingle(userId: number, file: Express.Multer.File) {
-    if (!file) {
-      throw new RpcException({
-        message: '请上传文件',
-        code: HttpStatus.NOT_FOUND,
-      });
-    }
-    try {
-      const { result: foundFile, fileMd5 } = await this.checkRepeated(file);
-      const fileType = this.checkFileType(file);
-      let fileMeta: FileEntity;
-      if (foundFile) {
-        await this.fileOperationService.deleteFile(file.path);
-        fileMeta = await this.createFile(userId, {
-          ...foundFile,
-          originalFileName:
-            file.originalname || file.filename || foundFile.originalFileName,
-        });
+        this.logger.log(`文件已存在: ${found.id}`);
+        await queryRunner.manager.save(file);
+        await queryRunner.commitTransaction();
+        this.logger.log(`成功保存文件: ${filePath}`);
+        return { success: true, file };
       } else {
-        fileMeta = await this.createFile(userId, {
-          ...file,
-          fileMd5,
+        await fs.promises.writeFile(filePath, fileData);
+        const file = this.fileRepository.create({
+          originalFileName: fileMeta.originalname,
+          storageFileName: fileMeta.filename,
+          filePath,
           fileType,
+          fileMd5,
+          createdBy: userId,
+          updatedBy: userId,
         });
+        await queryRunner.manager.save(file);
+        await queryRunner.commitTransaction();
+        this.logger.log(`成功保存文件: ${filePath}`);
+        return { success: true, file };
       }
-      return { fileId: fileMeta.id };
     } catch (error) {
-      await fs.promises.unlink(file.path);
-      throw error;
-    }
-  }
-
-  // 分片上传：更新任务中已上传分片数和 chunk_status 状态
-  async uploadChunk(taskId: number, chunkIndex: number) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    let task: TaskEntity | null = null;
-    try {
-      task = await queryRunner.manager.findOne(TaskEntity, {
-        where: { id: taskId },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!task) {
-        throw new RpcException({
-          message: '未找到上传任务',
-          code: HttpStatus.NOT_FOUND,
-        });
-      }
-      if (task.status === 'completed') {
-        return { taskId: task.id, chunkIndex, status: 'completed' };
-      }
-      task.chunkStatus = task.chunkStatus || {};
-      if (task.chunkStatus[chunkIndex] === true) {
-        throw new RpcException({
-          message: '当前分片已上传',
-          code: HttpStatus.CONFLICT,
-        });
-      }
-      task.uploadedChunks = (task.uploadedChunks || 0) + 1;
-      task.chunkStatus[chunkIndex] = true;
-      await queryRunner.manager.save(TaskEntity, task);
-      await queryRunner.commitTransaction();
-      return { taskId: task.id, chunkIndex, status: 'uploaded' };
-    } catch (error) {
+      this.logger.error(`保存文件失败: ${error.message}`);
       await queryRunner.rollbackTransaction();
-      if (task) {
-        task.chunkStatus = task.chunkStatus || {};
-        task.chunkStatus[chunkIndex] = false;
-        await queryRunner.manager.save(task);
-      }
       throw error;
     } finally {
       await queryRunner.release();
     }
   }
 
-  async createUploadTask(userId: number, taskMeta: CreateTaskDto) {
+  // 保存分片文件，依据上传时传入的元数据构造唯一标识
+  async chunkFile(chunkMeta: Express.Multer.File, chunkData: Buffer) {
+    // 假设 chunkMeta 内含 fileId 与 chunkIndex 信息，如不存在则作默认处理
+    const fileId = (chunkMeta as any).fileId || chunkMeta.originalname;
+    const chunkIndex = (chunkMeta as any).chunkIndex ?? Date.now();
+    const chunkFileName = `${fileId}.part-${chunkIndex}`;
+    const chunkFilePath = path.join(this.chunkDir, chunkFileName);
+
+    try {
+      await fs.promises.writeFile(chunkFilePath, chunkData);
+      this.logger.log(`成功保存分片: ${chunkFilePath}`);
+      return { success: true, chunkFilePath };
+    } catch (error) {
+      this.logger.error(`保存分片失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // 完成分片上传，将所有分片按顺序拼接成完整文件
+  async completeFile(data: { fileName: string; totalChunks: number }) {
+    const { fileName, totalChunks } = data;
+    const finalFilePath = path.join(this.uploadDir, fileName);
+
+    try {
+      const writeStream = fs.createWriteStream(finalFilePath);
+      for (let i = 0; i < totalChunks; i++) {
+        const chunkFileName = `${fileName}.part-${i}`;
+        const chunkFilePath = path.join(this.chunkDir, chunkFileName);
+        if (!fs.existsSync(chunkFilePath)) {
+          throw new Error(`缺失分片文件: ${chunkFilePath}`);
+        }
+        const chunkData = await fs.promises.readFile(chunkFilePath);
+        writeStream.write(chunkData);
+        // 写入成功后删除分片文件以节省空间
+        await fs.promises.unlink(chunkFilePath);
+        this.logger.log(`处理完毕分片: ${chunkFilePath}`);
+      }
+      writeStream.end();
+      this.logger.log(`文件重组成功: ${finalFilePath}`);
+      return { success: true, finalFilePath };
+    } catch (error) {
+      this.logger.error(`文件重组失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // 创建任务：检查任务是否已存在后再进行创建
+  async createTask(userId: number, taskMeta: CreateTaskDto) {
     const { fileName, fileSize, fileType, fileMd5, totalChunks } = taskMeta;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      // 查找已有文件
       const file = await queryRunner.manager.findOne(FileEntity, {
         where: { fileMd5 },
       });
+
       if (file) {
+        // 若找到重复文件，创建文件记录和任务记录，任务状态为 completed
         const newFile = this.fileRepository.create({
           originalFileName: fileName,
           storageFileName: file.storageFileName,
@@ -237,12 +181,14 @@ export class UploadService {
           updatedBy: userId,
           version: 1,
         });
+
         await queryRunner.manager.save(FileEntity, newFile);
 
+        // 创建任务记录，状态为 completed
         const task = queryRunner.manager.create(TaskEntity, {
           fileName: fileName,
-          fileSize: file.fileSize,
-          fileType: file.fileType,
+          fileSize: file.fileSize, // 复制已有文件的大小
+          fileType: file.fileType, // 使用已上传文件的类型
           fileMd5: fileMd5,
           totalChunks: totalChunks,
           uploadedChunks: totalChunks,
@@ -252,11 +198,17 @@ export class UploadService {
           version: 1,
         });
         await queryRunner.manager.save(task);
+
         await queryRunner.commitTransaction();
 
-        return { file_id: file.id, status: 'completed' };
+        return {
+          success: true,
+          result: { fileId: file.id, status: 'completed' },
+          completed: true,
+        };
       }
 
+      // 文件不存在，创建任务并设置状态为 uploading
       const task = queryRunner.manager.create(TaskEntity, {
         fileName: fileName,
         fileSize: fileSize,
@@ -270,9 +222,14 @@ export class UploadService {
         version: 1,
       });
       await queryRunner.manager.save(task);
+
       await queryRunner.commitTransaction();
 
-      return { taskId: task.id, status: 'uploading' };
+      return {
+        success: true,
+        result: { taskId: task.id, status: 'uploading' },
+        completed: false,
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -281,118 +238,26 @@ export class UploadService {
     }
   }
 
-  async completeUpload(userId: number, taskId: number) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    let task: TaskEntity | null = null;
-    try {
-      task = await queryRunner.manager.findOne(TaskEntity, {
-        where: { id: taskId },
-      });
-      if (!task) {
-        throw new RpcException({
-          message: '未找到上传任务',
-          code: HttpStatus.NOT_FOUND,
-        });
-      }
-      if (task.status === 'completed') {
-        return { status: 'completed' };
-      }
-      if (task.status === 'failed') {
-        throw new RpcException({
-          message: '当前任务失败，请重新上传',
-          code: HttpStatus.INTERNAL_SERVER_ERROR,
-        });
-      }
-      if (task.uploadedChunks !== task.totalChunks) {
-        return { status: 'processing' };
-      }
-
-      let folder = 'uploads/other';
-      if (task.fileType.startsWith('image')) folder = 'uploads/images';
-      else if (task.fileType.startsWith('video')) folder = 'uploads/videos';
-      else if (task.fileType.startsWith('application'))
-        folder = 'uploads/documents';
-      else if (task.fileType.startsWith('audio')) folder = 'uploads/audio';
-
-      await fs.promises.mkdir(folder, { recursive: true });
-
-      const fileExtension = path.extname(task.fileName);
-      const storageFileName = `${uuidv4()}${fileExtension}`;
-      const finalPath = path.join(folder, storageFileName);
-
-      const chunkPaths: string[] = [];
-      for (let i = 1; i <= task.totalChunks; i++) {
-        const chunkPath = path.join('uploads/chunks', `${task.fileMd5}-${i}`);
-        chunkPaths.push(chunkPath);
-      }
-
-      await Promise.all(
-        chunkPaths.map((chunkPath) =>
-          this.fileOperationService.mergeFile(chunkPath, finalPath),
-        ),
-      );
-
-      const chunkDeletionPromises = chunkPaths.map((chunkPath) =>
-        fs.promises.unlink(chunkPath),
-      );
-      await Promise.all(chunkDeletionPromises);
-
-      task.status = 'completed';
-      task.fileSize = fs.statSync(finalPath).size;
-      await queryRunner.manager.save(task);
-
-      const newFile = this.fileRepository.create({
-        originalFileName: task.fileName,
-        storageFileName: storageFileName,
-        filePath: finalPath,
-        fileSize: task.fileSize,
-        fileType: task.fileType,
-        fileMd5: task.fileMd5,
-        createdBy: userId,
-        updatedBy: userId,
-      });
-      await queryRunner.manager.save(newFile);
-
-      await queryRunner.commitTransaction();
-      return { message: 'File uploaded and merged successfully' };
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      if (task) {
-        const chunkDeletionPromises: Promise<void>[] = [];
-        for (let i = 1; i <= task.totalChunks; i++) {
-          const chunkPath = path.join('uploads/chunks', `${task.fileMd5}-${i}`);
-          chunkDeletionPromises.push(
-            fs.promises
-              .unlink(chunkPath)
-              .catch((err) =>
-                console.error(`Failed to delete chunk ${i}: ${err.message}`),
-              ),
-          );
-        }
-        await Promise.all(chunkDeletionPromises);
-      }
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  async getUploadTaskStatus(taskId: number) {
-    const task = await this.taskRepository.findOne({ where: { id: taskId } });
+  // 获取任务：依据任务标识返回任务详细信息
+  async getTask(taskId: number) {
+    const task = await this.taskRepository.findOne({
+      where: { id: taskId },
+    });
     if (!task) {
       throw new RpcException({
-        message: '未找到上传任务',
         code: HttpStatus.NOT_FOUND,
+        message: `任务 ${taskId} 不存在`,
       });
     }
     return {
-      taskId: task.id,
-      status: task.status,
-      chunkStatus: task.chunkStatus,
-      totalChunks: task.totalChunks,
-      uploadedChunks: task.uploadedChunks,
+      success: true,
+      result: {
+        taskId: task.id,
+        status: task.status,
+        chunkStatus: task.chunkStatus,
+        totalChunks: task.totalChunks,
+        uploadedChunks: task.uploadedChunks,
+      },
     };
   }
 }

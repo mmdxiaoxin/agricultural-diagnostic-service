@@ -6,7 +6,7 @@ import * as archiver from 'archiver';
 import { Request, Response } from 'express';
 import { createReadStream } from 'fs';
 import { join } from 'path';
-import { CreateTempLinkDto } from '../dto/create-link.dto';
+import { CreateTempLinkDto } from '../../../../../../packages/common/src/dto/file/create-link.dto';
 import { File as FileEntity } from '@app/database/entities';
 import { FileService } from './file.service';
 

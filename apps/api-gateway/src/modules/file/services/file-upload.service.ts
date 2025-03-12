@@ -13,8 +13,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { DataSource, In, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
-import { CreateTaskDto } from '../dto/create-task.dto';
-import { UpdateFileDto, UpdateFilesAccessDto } from '../dto/update-file.dto';
+import { CreateTaskDto } from '../../../../../../packages/common/src/dto/file/create-task.dto';
+import {
+  UpdateFileDto,
+  UpdateFilesAccessDto,
+} from '../../../../../../packages/common/src/dto/file/update-file.dto';
 import { FileOperationService } from './file-operation.service';
 import { FileService } from './file.service';
 
