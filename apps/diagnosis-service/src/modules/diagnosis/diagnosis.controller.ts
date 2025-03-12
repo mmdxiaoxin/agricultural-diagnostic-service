@@ -1,3 +1,5 @@
+import { FileOperationService } from '@app/file-operation';
+import { AuthGuard } from '@common/guards/auth.guard';
 import {
   Controller,
   Get,
@@ -11,20 +13,16 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-
-import { MIME_TYPE } from '@shared/enum/mime.enum';
-import { AuthGuard } from '@common/guards/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags } from '@nestjs/swagger';
+import { MIME_TYPE } from '@shared/enum/mime.enum';
+import { FileSizeValidationPipe } from 'apps/api-gateway/src/modules/file/pipe/file-size.pipe';
+import { FileTypeValidationPipe } from 'apps/api-gateway/src/modules/file/pipe/file-type.pipe';
 import { Request } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-
-import { FileOperationService } from '../file/services/file-operation.service';
 import { DiagnosisService } from './diagnosis.service';
-import { ApiTags } from '@nestjs/swagger';
-import { FileTypeValidationPipe } from 'apps/api-gateway/src/modules/file/pipe/file-type.pipe';
-import { FileSizeValidationPipe } from 'apps/api-gateway/src/modules/file/pipe/file-size.pipe';
 
 @ApiTags('病害诊断模块')
 @Controller('diagnosis')

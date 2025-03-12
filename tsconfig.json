@@ -18,6 +18,12 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "@app/file-operation": [
+        "libs/file-operation/src"
+      ],
+      "@app/file-operation/*": [
+        "libs/file-operation/src/*"
+      ],
       "@app/mail": [
         "libs/mail/src"
       ],

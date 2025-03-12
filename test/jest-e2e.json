@@ -11,6 +11,8 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
+    "@app/file-operation": "<rootDir>/../libs/file-operation/src",
+    "@app/file-operation/(.*)": "<rootDir>/../libs/file-operation/src/$1",
     "@app/mail": "<rootDir>/../libs/mail/src",
     "@app/mail/(.*)": "<rootDir>/../libs/mail/src/$1",
     "@app/metrics": "<rootDir>/../libs/metrics/src",

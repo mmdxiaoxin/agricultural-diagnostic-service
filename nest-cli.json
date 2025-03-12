@@ -37,6 +37,15 @@
         "tsConfigPath": "apps/diagnosis-service/tsconfig.app.json"
       }
     },
+    "file-operation": {
+      "type": "library",
+      "root": "libs/file-operation",
+      "entryFile": "index",
+      "sourceRoot": "libs/file-operation/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/file-operation/tsconfig.lib.json"
+      }
+    },
     "mail": {
       "type": "library",
       "root": "libs/mail",
