@@ -1,4 +1,5 @@
-import { File as FileEntity, Task as TaskEntity } from '@app/database/entities';
+import { formatResponse } from '@shared/helpers/response.helper';
+import { getModelMimeType } from '@shared/utils';
 import {
   BadRequestException,
   Injectable,
@@ -6,8 +7,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { formatResponse } from '@shared/helpers/response.helper';
-import { getModelMimeType } from '@shared/utils';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -15,6 +14,8 @@ import { DataSource, In, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateTaskDto } from '../dto/create-task.dto';
 import { UpdateFileDto, UpdateFilesAccessDto } from '../dto/update-file.dto';
+import { File as FileEntity } from '../models/file.entity';
+import { Task as TaskEntity } from '../models/task.entity';
 import { FileOperationService } from './file-operation.service';
 import { FileService } from './file.service';
 
@@ -25,7 +26,7 @@ export class FileUploadService {
     private readonly fileRepository: Repository<FileEntity>,
     @InjectRepository(TaskEntity)
     private readonly taskRepository: Repository<TaskEntity>,
-    private readonly fileService: FileService,
+
     private readonly fileOperationService: FileOperationService,
     private readonly dataSource: DataSource,
   ) {}

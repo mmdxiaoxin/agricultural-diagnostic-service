@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { File as FileEntity } from '../models/file.entity';
+import { File as FileEntity } from '@app/database/entities';
 import { formatResponse } from '@shared/helpers/response.helper';
 
 @Injectable()

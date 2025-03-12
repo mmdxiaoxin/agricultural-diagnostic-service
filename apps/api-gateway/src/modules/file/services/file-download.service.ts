@@ -7,7 +7,7 @@ import { Request, Response } from 'express';
 import { createReadStream } from 'fs';
 import { join } from 'path';
 import { CreateTempLinkDto } from '../dto/create-link.dto';
-import { File as FileEntity } from '../models/file.entity';
+import { File as FileEntity } from '@app/database/entities';
 import { FileService } from './file.service';
 
 @Injectable()

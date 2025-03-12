@@ -1,6 +1,6 @@
+import { Profile } from '@app/database/entities';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserStatus } from '@shared/enum/user.enum';
-import { Profile } from 'apps/user-service/src/modules/user/models/profile.entity';
 import {
   ArrayMinSize,
   IsArray,

@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Profile, Role, User } from '@app/database/entities';
+import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -7,10 +8,7 @@ import { unlink } from 'fs';
 import { readFile } from 'fs/promises';
 import { extname } from 'path';
 import { DataSource, In, Repository } from 'typeorm';
-import { Role } from '../role/role.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Profile } from './models/profile.entity';
-import { User } from './models/user.entity';
 
 /**
  * 用户模块服务

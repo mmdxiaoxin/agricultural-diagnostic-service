@@ -1,5 +1,5 @@
 import { FileService } from '../../file/services/file.service';
-import { File as FileEntity } from '../..//file/models/file.entity';
+import { File as FileEntity } from '@app/database/entities';
 import {
   BadRequestException,
   CanActivate,

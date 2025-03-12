@@ -1,17 +1,16 @@
+import { File, Task } from '@app/database/entities';
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { FileController } from './file.controller';
-import { FileService } from './services/file.service';
-import { File } from './models/file.entity';
-import { Task } from './models/task.entity';
-import { FileOperationService } from './services/file-operation.service';
-import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigEnum } from '@shared/enum/config.enum';
+import { FileController } from './file.controller';
 import { FileDownloadService } from './services/file-download.service';
-import { FileUploadService } from './services/file-upload.service';
 import { FileManageService } from './services/file-manage.service';
+import { FileOperationService } from './services/file-operation.service';
 import { FileStorageService } from './services/file-storage.service';
+import { FileUploadService } from './services/file-upload.service';
+import { FileService } from './services/file.service';
 
 @Module({
   imports: [

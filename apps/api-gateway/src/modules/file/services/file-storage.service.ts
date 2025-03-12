@@ -3,7 +3,7 @@ import { getFileType } from '@shared/utils';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { File as FileEntity } from '../models/file.entity';
+import { File as FileEntity } from '@app/database/entities';
 
 @Injectable()
 export class FileStorageService {

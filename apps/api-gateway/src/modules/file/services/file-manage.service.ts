@@ -7,8 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, QueryRunner, Repository } from 'typeorm';
 import { UpdateFileDto, UpdateFilesAccessDto } from '../dto/update-file.dto';
-import { File as FileEntity } from '../models/file.entity';
-import { Task as TaskEntity } from '../models/task.entity';
+import { Task as TaskEntity, File as FileEntity } from '@app/database/entities';
 import { FileOperationService } from './file-operation.service';
 
 @Injectable()

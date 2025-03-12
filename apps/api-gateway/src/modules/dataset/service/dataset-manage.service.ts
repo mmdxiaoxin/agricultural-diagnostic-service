@@ -3,7 +3,7 @@ import { FileService } from '../../file/services/file.service';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Dataset } from '../dataset.entity';
+import { Dataset } from '../../../../../../libs/database/src/entities/dataset.entity';
 import { CreateDatasetDto } from '../dto/create-dataset.dto';
 import { UpdateDatasetDto } from '../dto/update-dataset.dto';
 import { DatasetService } from './dataset.service';

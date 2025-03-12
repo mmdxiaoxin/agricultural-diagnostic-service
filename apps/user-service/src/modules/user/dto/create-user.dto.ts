@@ -1,4 +1,6 @@
+import { Profile } from '@app/database/entities';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserStatus } from '@shared/enum/user.enum';
 import {
   ArrayMinSize,
   IsArray,
@@ -9,8 +11,6 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { Profile } from '../models/profile.entity';
-import { UserStatus } from '@shared/enum/user.enum';
 
 export class CreateUserDto {
   @IsOptional()
