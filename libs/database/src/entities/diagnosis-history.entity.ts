@@ -1,19 +1,10 @@
 import { File as FileEntity } from '@app/database/entities';
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { BaseEntity } from './base.entity';
 
 @Entity('diagnosis_history')
 @Index('diagnosis_history_created_by_idx', ['createdBy']) // 为 createdBy 字段添加索引
-export class DiagnosisHistory {
-  @PrimaryGeneratedColumn('increment')
-  id: number; // 主键ID
-
+export class DiagnosisHistory extends BaseEntity {
   @ManyToOne(() => FileEntity, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'fileId' }) // 关联的文件外键名
   file: FileEntity | null; // 上传的数据文件，允许为空（0..0关系）
@@ -33,19 +24,4 @@ export class DiagnosisHistory {
 
   @Column({ type: 'int' })
   updatedBy: number; // 更新者
-
-  @Column({
-    type: 'datetime',
-    nullable: true,
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  createdAt: Date; // 创建时间
-
-  @Column({
-    type: 'datetime',
-    nullable: true,
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date; // 更新时间
 }

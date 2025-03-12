@@ -6,14 +6,12 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Dataset } from './dataset.entity';
+import { BaseEntity } from './base.entity';
 
 @Entity('file')
 @Index('file_user_id_fk', ['createdBy'])
 @Index('file_user_id_fk_2', ['updatedBy'])
-export class File {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class File extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
   originalFileName: string;
 
@@ -34,16 +32,6 @@ export class File {
 
   @Column({ type: 'varchar', length: 30, default: 'private' })
   access: string;
-
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @Column({
-    type: 'datetime',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date;
 
   @Column({ type: 'int' })
   createdBy: number;

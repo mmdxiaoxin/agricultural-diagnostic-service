@@ -1,11 +1,9 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToMany } from 'typeorm';
+import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
 
 @Entity('role')
-export class Role {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Role extends BaseEntity {
   @Column({ type: 'varchar', length: 255, unique: true })
   name: string;
 
@@ -14,14 +12,4 @@ export class Role {
 
   @ManyToMany(() => User, (user) => user.roles)
   users: User[];
-
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @Column({
-    type: 'datetime',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date;
 }

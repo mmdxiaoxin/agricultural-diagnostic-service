@@ -1,10 +1,8 @@
 import { Column, Entity, PrimaryGeneratedColumn, VersionColumn } from 'typeorm';
+import { BaseEntity } from './base.entity';
 
 @Entity('task')
-export class Task {
-  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
-  id: number;
-
+export class Task extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false })
   fileName: string;
 
@@ -28,16 +26,6 @@ export class Task {
 
   @Column({ type: 'json', nullable: true })
   chunkStatus?: any;
-
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @Column({
-    type: 'datetime',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date;
 
   @Column({ type: 'int', nullable: true })
   createdBy?: number;

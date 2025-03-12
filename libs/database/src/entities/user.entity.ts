@@ -1,19 +1,10 @@
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, OneToOne } from 'typeorm';
+import { BaseEntity } from './base.entity';
 import { Profile } from './profile.entity';
 import { Role } from './role.entity';
 
 @Entity('user')
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
   email: string | null;
 
@@ -34,14 +25,4 @@ export class User {
   // 用户和个人信息是一对一关系
   @OneToOne(() => Profile, (profile) => profile.user, { cascade: true })
   profile: Profile;
-
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @Column({
-    type: 'datetime',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date;
 }
