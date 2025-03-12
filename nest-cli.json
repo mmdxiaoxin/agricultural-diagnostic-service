@@ -28,6 +28,15 @@
         "tsConfigPath": "apps/auth-service/tsconfig.app.json"
       }
     },
+    "diagnosis-service": {
+      "type": "application",
+      "root": "apps/diagnosis-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/diagnosis-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/diagnosis-service/tsconfig.app.json"
+      }
+    },
     "mail": {
       "type": "library",
       "root": "libs/mail",
