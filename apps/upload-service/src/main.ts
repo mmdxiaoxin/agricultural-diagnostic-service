@@ -1,8 +1,27 @@
+import { MetricsService } from '@app/metrics';
+import { startMetricsServer } from '@app/metrics/metrics.http';
+import { CustomRpcExceptionFilter } from '@common/filters/rpc-exception.filter';
 import { NestFactory } from '@nestjs/core';
-import { UploadServiceModule } from './upload-service.module';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { UPLOAD_SERVICE_PORT } from 'config/microservice.config';
+import { UPLOAD_SERVICE_PROMETHEUS_PORT } from 'config/prometheus.config';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(UploadServiceModule);
-  await app.listen(process.env.port ?? 3000);
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+    AppModule,
+    {
+      transport: Transport.TCP,
+      options: {
+        port: UPLOAD_SERVICE_PORT,
+      },
+    },
+  );
+
+  const metricsService = app.get(MetricsService);
+  startMetricsServer(metricsService, UPLOAD_SERVICE_PROMETHEUS_PORT);
+
+  app.useGlobalFilters(new CustomRpcExceptionFilter());
+  await app.listen();
 }
 bootstrap();
