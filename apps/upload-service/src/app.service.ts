@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { DataSource, Repository } from 'typeorm';
 
-interface UploadTask {
+export interface UploadTask {
   taskId: string;
   userId: number;
   fileName: string;
@@ -112,7 +112,7 @@ export class UploadService {
   }
   //———————————————————————————————————————
   // 分片上传：写入单个分片，并更新 Redis 中的任务状态
-  async handleChunk(
+  async chunkFile(
     chunkMeta: Express.Multer.File & {
       taskId: string;
       chunkIndex: number;
@@ -232,7 +232,7 @@ export class UploadService {
     userId: number;
     fileName: string;
     totalChunks: number;
-    fileMeta?: any;
+    fileMeta?: Express.Multer.File;
   }) {
     const taskId = crypto.randomBytes(16).toString('hex');
     const task: UploadTask = {
@@ -250,12 +250,46 @@ export class UploadService {
   //———————————————————————————————————————
   // 获取上传任务信息：从 Redis 中检索任务详情
   async getTask(taskId: string) {
-    const taskStr = await this.redisService.get<string>(
+    const task = await this.redisService.get<UploadTask>(
       `upload:task:${taskId}`,
     );
-    if (!taskStr) {
+    if (!task) {
       throw new Error('上传任务不存在或已过期');
     }
-    return JSON.parse(taskStr);
+    return { success: true, result: task };
+  }
+  //———————————————————————————————————————
+  // 预载文件：如果文件存在则直接保存文件元数据
+  async preloadFile(fileMd5: string, originalFileName: string, userId: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const found = await queryRunner.manager.findOne(FileEntity, {
+        where: { fileMd5 },
+      });
+      if (!found) {
+        return { success: false, result: null };
+      }
+      const file = this.fileRepository.create({
+        originalFileName,
+        storageFileName: found.storageFileName,
+        filePath: found.filePath,
+        fileType: found.fileType,
+        fileMd5: found.fileMd5,
+        createdBy: userId,
+        updatedBy: userId,
+      });
+      await queryRunner.manager.save(file);
+      await queryRunner.commitTransaction();
+      this.logger.log(`成功保存文件元数据: ${found.storageFileName}`);
+      return { success: true, result: file };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(`保存文件元数据失败: ${error.message}`);
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }
