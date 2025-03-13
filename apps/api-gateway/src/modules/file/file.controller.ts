@@ -47,7 +47,6 @@ import { ParseFileTypePipe } from './pipe/type.pipe';
 import { FileDownloadService } from './services/file-download.service';
 import { FileManageService } from './services/file-manage.service';
 import { FileStorageService } from './services/file-storage.service';
-import { FileUploadService } from './services/file-upload.service';
 import { FileService } from './services/file.service';
 
 @ApiTags('文件模块')
@@ -57,7 +56,6 @@ export class FileController {
   constructor(
     private readonly commonService: FileService,
     private readonly downloadService: FileDownloadService,
-    private readonly uploadService: FileUploadService,
     private readonly manageService: FileManageService,
     private readonly storageService: FileStorageService,
     @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,

@@ -14,7 +14,6 @@ import { FileDownloadService } from './services/file-download.service';
 import { FileManageService } from './services/file-manage.service';
 import { FileOperationService } from './services/file-operation.service';
 import { FileStorageService } from './services/file-storage.service';
-import { FileUploadService } from './services/file-upload.service';
 import { FileService } from './services/file.service';
 
 @Module({
@@ -44,7 +43,6 @@ import { FileService } from './services/file.service';
     FileService,
     FileOperationService,
     FileDownloadService,
-    FileUploadService,
     FileManageService,
     FileStorageService,
   ],
