@@ -1,8 +1,8 @@
 export class UploadChunkDto {
-  chunkMeta: Express.Multer.File & {
+  taskMeta: {
     taskId: string;
     chunkIndex: number;
     totalChunks: number;
   };
-  chunkData: Buffer;
+  chunkData: string;
 }

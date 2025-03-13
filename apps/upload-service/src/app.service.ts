@@ -1,6 +1,7 @@
 import { File as FileEntity } from '@app/database/entities';
 import { RedisService } from '@app/redis';
 import { Injectable, Logger } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getModelMimeType } from '@shared/utils';
 import * as crypto from 'crypto';
@@ -8,16 +9,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { DataSource, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import { TaskCreateDto } from './dto/task-create.dto';
 import { UploadSingleDto } from './dto/upload-single.dto';
 
-export interface UploadTask {
+export type UploadTask = TaskCreateDto & {
   taskId: string;
-  userId: number;
-  fileName: string;
-  totalChunks: number;
   uploadedChunks: number[];
-  fileMeta?: any;
-}
+};
 
 @Injectable()
 export class UploadService {
@@ -113,63 +111,81 @@ export class UploadService {
     }
   }
   //———————————————————————————————————————
+  // 创建上传任务：基于 CreateTaskDto 的属性生成任务，并缓存至 Redis
+  async createTask(taskMeta: TaskCreateDto): Promise<UploadTask> {
+    const taskId = crypto.randomBytes(16).toString('hex');
+    const task: UploadTask = {
+      taskId,
+      userId: taskMeta.userId,
+      fileName: taskMeta.fileName,
+      fileSize: taskMeta.fileSize,
+      fileType: taskMeta.fileType,
+      fileMd5: taskMeta.fileMd5,
+      totalChunks: taskMeta.totalChunks,
+      uploadedChunks: [],
+    };
+    await this.redisService.set(`upload:task:${taskId}`, task);
+    this.logger.log(`创建上传任务: ${taskId}`);
+    return task;
+  }
+  //———————————————————————————————————————
   // 分片上传：写入单个分片，并更新 Redis 中的任务状态
   async chunkFile(
-    chunkMeta: Express.Multer.File & {
+    taskMeta: {
       taskId: string;
       chunkIndex: number;
       totalChunks: number;
     },
     chunkData: Buffer,
-  ) {
-    const { taskId, chunkIndex, totalChunks } = chunkMeta;
-    // 从 Redis 中获取对应上传任务信息
+  ): Promise<{ message: string; chunkIndex: number }> {
+    const { taskId, chunkIndex } = taskMeta;
+    // 从 Redis 中获取上传任务信息
     const task = await this.redisService.get<UploadTask>(
       `upload:task:${taskId}`,
     );
     if (!task) {
-      throw new Error('上传任务不存在或已过期');
+      throw new RpcException('上传任务不存在或已过期');
     }
-    // 以任务ID和分片索引命名存储分片
+    // 构造分片文件名并写入临时目录
     const chunkFileName = `${taskId}_chunk_${chunkIndex}`;
     const chunkFilePath = path.join(this.chunkDir, chunkFileName);
     await fs.promises.writeFile(chunkFilePath, chunkData);
     this.logger.log(`成功保存分片: ${chunkFileName}`);
-    // 更新任务记录，避免重复分片上传
+    // 更新任务记录，确保每个分片只记录一次
     if (!task.uploadedChunks.includes(chunkIndex)) {
       task.uploadedChunks.push(chunkIndex);
     }
-    if (!task.totalChunks && totalChunks) {
-      task.totalChunks = totalChunks;
-    }
-    // 将更新后的任务数据重新存入 Redis
-    await this.redisService.set(`upload:task:${taskId}`, JSON.stringify(task));
+    // 将更新后的任务重新存入 Redis
+    await this.redisService.set(`upload:task:${taskId}`, task);
     return { message: '分片上传成功', chunkIndex };
   }
   //———————————————————————————————————————
-  // 合并文件：在所有分片接收完成后合并文件，并保存数据库记录
+  // 合并文件：当所有分片上传完毕后，按顺序合并文件，并保存数据库记录
   async completeUpload(taskId: string) {
     const task = await this.redisService.get<UploadTask>(
       `upload:task:${taskId}`,
     );
     if (!task) {
-      throw new Error('上传任务不存在或已过期');
+      throw new RpcException('上传任务不存在或已过期');
     }
     if (task.uploadedChunks.length !== task.totalChunks) {
-      throw new Error('尚未接收到所有分片，无法合并文件');
+      console.log('task', task.uploadedChunks.length, task.totalChunks);
+      throw new RpcException('尚未接收到所有分片，无法合并文件');
     }
-    // 对分片索引排序以确保正确的文件顺序
+    // 对分片索引排序，确保正确合并顺序
     task.uploadedChunks.sort((a, b) => a - b);
-    const finalFilePath = path.join(this.uploadDir, task.fileName);
+    const finalFileName = Date.now() + uuidv4();
+    const finalFilePath = path.join(this.uploadDir, finalFileName);
     const writeStream = fs.createWriteStream(finalFilePath);
-    for (let i = 0; i < task.totalChunks; i++) {
+    for (let i = 1; i <= task.totalChunks; i++) {
       const chunkFileName = `${taskId}_chunk_${i}`;
       const chunkFilePath = path.join(this.chunkDir, chunkFileName);
       if (!fs.existsSync(chunkFilePath)) {
-        throw new Error(`缺失分片文件: ${chunkFileName}`);
+        throw new RpcException(`缺失分片文件: ${chunkFileName}`);
       }
       const chunkData = await fs.promises.readFile(chunkFilePath);
       writeStream.write(chunkData);
+      // 合并后清理临时分片
       await fs.promises.unlink(chunkFilePath);
       this.logger.log(`删除分片文件: ${chunkFileName}`);
     }
@@ -179,45 +195,42 @@ export class UploadService {
       writeStream.on('error', reject);
     });
     this.logger.log(`文件合并完成: ${finalFilePath}`);
-    const fileMd5 = await this.handleFileMd5(finalFilePath);
+    // 开启数据库事务，确保写入操作的原子性
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       const found = await queryRunner.manager.findOne(FileEntity, {
-        where: { fileMd5 },
+        where: { fileMd5: task.fileMd5 },
       });
       let fileEntity;
       if (found) {
         fileEntity = this.fileRepository.create({
-          originalFileName: task.fileMeta?.originalname || task.fileName,
+          originalFileName: task.fileName,
           storageFileName: found.storageFileName,
           filePath: found.filePath,
           fileType: found.fileType,
+          fileSize: task.fileSize,
           fileMd5: found.fileMd5,
           createdBy: task.userId,
           updatedBy: task.userId,
         });
         this.logger.log(`文件已存在: ${found.id}`);
       } else {
-        const fileType = task.fileMeta?.mimetype
-          ? task.fileMeta.mimetype
-          : getModelMimeType(
-              path.extname(task.fileMeta?.originalname || task.fileName),
-            );
         fileEntity = this.fileRepository.create({
-          originalFileName: task.fileMeta?.originalname || task.fileName,
-          storageFileName: task.fileName,
+          originalFileName: task.fileName,
+          storageFileName: finalFileName,
           filePath: finalFilePath,
-          fileType,
-          fileMd5,
+          fileType: task.fileType,
+          fileSize: task.fileSize,
+          fileMd5: task.fileMd5,
           createdBy: task.userId,
           updatedBy: task.userId,
         });
       }
       await queryRunner.manager.save(fileEntity);
       await queryRunner.commitTransaction();
-      // 合并成功后清理 Redis 中的任务缓存
+      // 合并成功后，清理 Redis 中的任务缓存
       await this.redisService.del(`upload:task:${taskId}`);
       return { success: true, file: fileEntity };
     } catch (error) {
@@ -229,34 +242,13 @@ export class UploadService {
     }
   }
   //———————————————————————————————————————
-  // 创建上传任务：生成唯一任务ID，并缓存任务初始数据至 Redis
-  async createTask(taskData: {
-    userId: number;
-    fileName: string;
-    totalChunks: number;
-    fileMeta?: Express.Multer.File;
-  }) {
-    const taskId = crypto.randomBytes(16).toString('hex');
-    const task: UploadTask = {
-      taskId,
-      userId: taskData.userId,
-      fileName: taskData.fileName,
-      totalChunks: taskData.totalChunks,
-      uploadedChunks: [],
-      fileMeta: taskData.fileMeta || {},
-    };
-    await this.redisService.set(`upload:task:${taskId}`, JSON.stringify(task));
-    this.logger.log(`创建上传任务: ${taskId}`);
-    return task;
-  }
-  //———————————————————————————————————————
   // 获取上传任务信息：从 Redis 中检索任务详情
   async getTask(taskId: string) {
     const task = await this.redisService.get<UploadTask>(
       `upload:task:${taskId}`,
     );
     if (!task) {
-      throw new Error('上传任务不存在或已过期');
+      throw new RpcException('上传任务不存在或已过期');
     }
     return { success: true, result: task };
   }

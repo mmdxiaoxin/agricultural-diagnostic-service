@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Post,
@@ -29,11 +30,7 @@ import { Role } from '@shared/enum/role.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { UPLOAD_SERVICE_NAME } from 'config/microservice.config';
 import { Request, Response } from 'express';
-import { existsSync, mkdirSync } from 'fs';
-import { unlink } from 'fs/promises';
-import { diskStorage } from 'multer';
-import { join } from 'path';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { CompleteChunkDto } from '../../../../../packages/common/src/dto/file/complete-chunk.dto';
 import { CreateTempLinkDto } from '../../../../../packages/common/src/dto/file/create-link.dto';
 import { CreateTaskDto } from '../../../../../packages/common/src/dto/file/create-task.dto';
@@ -148,7 +145,32 @@ export class FileController {
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async createUploadTask(@Req() req: Request, @Body() dto: CreateTaskDto) {
-    return this.uploadService.createUploadTask(req.user.userId, dto);
+    const preloadResponse = await lastValueFrom(
+      this.uploadClient.send(
+        { cmd: 'upload.preload' },
+        {
+          fileMd5: dto.fileMd5,
+          originalFileName: dto.fileName,
+          userId: req.user.userId,
+        },
+      ),
+    );
+    if (!preloadResponse) {
+      throw new InternalServerErrorException('文件预加载失败');
+    }
+    if (preloadResponse.success) {
+      return formatResponse(200, preloadResponse, '文件已快速上传');
+    }
+    const createResponse = await firstValueFrom(
+      this.uploadClient.send(
+        { cmd: 'task.create' },
+        {
+          ...dto,
+          userId: req.user.userId,
+        },
+      ),
+    );
+    return formatResponse(201, createResponse, '任务创建成功');
   }
 
   // 查询上传任务状态
@@ -156,68 +178,48 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async getUploadTaskStatus(
-    @Param(
-      'taskId',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    taskId: number,
+    @Param('taskId')
+    taskId: string,
   ) {
-    return this.uploadService.getUploadTaskStatus(taskId);
+    const rpcResponse = await lastValueFrom(
+      this.uploadClient.send({ cmd: 'task.get' }, { taskId }),
+    );
+    return formatResponse(200, rpcResponse?.result, '任务查询成功');
   }
 
   // 合并分片
   @Post('upload/complete')
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
-  async completeUpload(@Req() req: Request, @Body() dto: CompleteChunkDto) {
-    return this.uploadService.completeUpload(req.user.userId, dto.taskId);
+  async completeUpload(@Body() dto: CompleteChunkDto) {
+    const rpcResponse = await lastValueFrom(
+      this.uploadClient.send(
+        { cmd: 'upload.complete' },
+        { taskId: dto.taskId },
+      ),
+    );
+    return formatResponse(200, rpcResponse?.result, '上传成功');
   }
 
   // 文件分片上传
   @Post('upload/chunk')
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
-  @UseInterceptors(
-    FileInterceptor('chunk', {
-      storage: diskStorage({
-        destination: (req, file, cb) => {
-          const folder = 'uploads/chunks';
-          if (!existsSync(folder)) {
-            mkdirSync(folder, { recursive: true });
-          }
-          cb(null, folder);
-        },
-        filename: (req, file, cb) => {
-          const { fileMd5, chunkIndex } = req.body;
-
-          if (!fileMd5 || !chunkIndex) {
-            return cb(
-              new Error('Missing fileMd5 or chunkIndex'),
-              file.filename,
-            );
-          }
-          cb(null, `${fileMd5}-${chunkIndex}`);
-        },
-      }),
-    }),
-  )
+  @UseInterceptors(FileInterceptor('chunk'))
   async uploadChunk(
-    @UploadedFile(new FileSizeValidationPipe('20MB')) file: Express.Multer.File,
+    @UploadedFile(new FileSizeValidationPipe('10MB')) file: Express.Multer.File,
     @Body() dto: UploadChunkDto,
   ) {
-    try {
-      return this.uploadService.uploadChunk(dto.taskId, dto.chunkIndex);
-    } catch (error) {
-      // 清理上传失败的文件
-      const chunkPath = join(
-        'uploads/chunks',
-        `${dto.fileMd5}-${dto.chunkIndex}`,
-      );
-      if (existsSync(chunkPath)) {
-        await unlink(chunkPath);
-      }
-      throw error;
-    }
+    const rpcResponse = await lastValueFrom(
+      this.uploadClient.send(
+        { cmd: 'upload.chunk' },
+        {
+          taskMeta: dto,
+          chunkData: file.buffer.toString('base64'),
+        },
+      ),
+    );
+    return formatResponse(200, rpcResponse?.result, '上传成功');
   }
 
   // 文件下载

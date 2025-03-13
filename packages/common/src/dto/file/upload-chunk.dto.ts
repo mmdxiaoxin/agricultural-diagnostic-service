@@ -4,13 +4,11 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UploadChunkDto {
   @IsNotEmpty({ message: '任务ID不能为空！' })
-  @IsInt({ message: '任务ID必须为数字类型！' })
-  @Type(() => Number) // 自动转换为 number
   @ApiProperty({
     description: '任务ID',
     example: 1,
   })
-  taskId: number;
+  taskId: string;
 
   @IsNotEmpty({ message: '文件MD5不能为空！' })
   @IsString({ message: '文件MD5必须为字符串类型！' })

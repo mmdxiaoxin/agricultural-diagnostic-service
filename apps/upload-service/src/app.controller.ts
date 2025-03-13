@@ -30,7 +30,10 @@ export class UploadController {
 
   @MessagePattern({ cmd: 'upload.chunk' })
   async chunkFile(@Payload() payload: UploadChunkDto) {
-    return this.uploadService.chunkFile(payload.chunkMeta, payload.chunkData);
+    return this.uploadService.chunkFile(
+      payload.taskMeta,
+      Buffer.from(payload.chunkData, 'base64'),
+    );
   }
 
   @MessagePattern({ cmd: 'upload.complete' })
