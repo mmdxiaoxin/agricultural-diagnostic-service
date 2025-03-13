@@ -23,9 +23,9 @@ export interface UploadTask {
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
   // 用于临时存储分片的目录
-  private chunkDir = path.join(__dirname, '..', 'chunks');
+  private chunkDir = path.join(__dirname, '../..', 'chunks');
   // 用于保存最终文件的目录
-  private uploadDir = path.join(__dirname, '..', 'uploads');
+  private uploadDir = path.join(__dirname, '../..', 'uploads');
 
   constructor(
     @InjectRepository(FileEntity)
