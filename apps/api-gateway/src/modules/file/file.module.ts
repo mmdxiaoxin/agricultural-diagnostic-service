@@ -13,7 +13,6 @@ import {
 } from 'config/microservice.config';
 import { FileController } from './file.controller';
 import { FileDownloadService } from './services/file-download.service';
-import { FileManageService } from './services/file-manage.service';
 import { FileOperationService } from './services/file-operation.service';
 import { FileStorageService } from './services/file-storage.service';
 import { FileService } from './services/file.service';
@@ -50,10 +49,9 @@ import { FileService } from './services/file.service';
     FileService,
     FileOperationService,
     FileDownloadService,
-    FileManageService,
     FileStorageService,
   ],
   controllers: [FileController],
-  exports: [FileService, FileManageService, FileOperationService],
+  exports: [FileService, FileOperationService],
 })
 export class FileModule {}

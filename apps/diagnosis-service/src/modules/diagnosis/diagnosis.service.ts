@@ -1,7 +1,3 @@
-import { Status } from '@shared/enum/status.enum';
-import { formatResponse } from '@shared/helpers/response.helper';
-import { FileManageService } from '../file/services/file-manage.service';
-import { FileOperationService } from '../file/services/file-operation.service';
 import {
   BadGatewayException,
   Injectable,
@@ -9,18 +5,35 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { DiagnosisHistory } from './models/diagnosis-history.entity';
+import { Status } from '@shared/enum/status.enum';
+import { formatResponse } from '@shared/helpers/response.helper';
 import axios from 'axios';
+import { DataSource, Repository } from 'typeorm';
+import {
+  DiagnosisHistory,
+  File as FileEntity,
+} from '../../../../../libs/database/src/entities';
+import * as crypto from 'crypto';
+import * as fs from 'fs';
+import { FileOperationService } from 'apps/api-gateway/src/modules/file/services/file-operation.service';
+
 @Injectable()
 export class DiagnosisService {
   constructor(
     @InjectRepository(DiagnosisHistory)
     private readonly diagnosisRepository: Repository<DiagnosisHistory>,
-    private readonly fileManageService: FileManageService,
     private readonly fileOperationService: FileOperationService,
     private readonly dataSource: DataSource,
   ) {}
+
+  private handleFileMd5 = (filePath: string) =>
+    new Promise<string>((resolve, reject) => {
+      const hash = crypto.createHash('md5');
+      const stream = fs.createReadStream(filePath);
+      stream.on('data', (data) => hash.update(data));
+      stream.on('end', () => resolve(hash.digest('hex')));
+      stream.on('error', (error) => reject(error));
+    });
 
   // 上传待诊断数据
   async uploadData(userId: number, file: Express.Multer.File) {
@@ -33,21 +46,17 @@ export class DiagnosisService {
         updatedBy: userId,
         status: Status.PENDING,
       });
-      const fileMd5 = await this.fileOperationService.calculateFileMd5(
-        file.path,
-      );
-      const fileEntity = await this.fileManageService.createFileInTransaction(
-        userId,
-        {
-          originalFileName: file.originalname,
-          storageFileName: file.filename,
-          fileSize: file.size,
-          fileType: file.mimetype,
-          filePath: file.path,
-          fileMd5,
-        },
-        queryRunner,
-      );
+      const fileMd5 = await this.handleFileMd5(file.path);
+      const fileEntity = queryRunner.manager.create(FileEntity, {
+        originalFileName: file.originalname,
+        storageFileName: file.filename,
+        fileSize: file.size,
+        fileType: file.mimetype,
+        filePath: file.path,
+        createdBy: userId,
+        updatedBy: userId,
+        fileMd5,
+      });
       diagnosisHistory.file = fileEntity;
       await queryRunner.manager.save(diagnosisHistory);
       await queryRunner.commitTransaction();
