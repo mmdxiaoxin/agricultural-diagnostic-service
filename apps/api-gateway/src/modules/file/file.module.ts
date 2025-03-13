@@ -6,6 +6,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigEnum } from '@shared/enum/config.enum';
 import {
+  FILE_SERVICE_NAME,
+  FILE_SERVICE_PORT,
   UPLOAD_SERVICE_NAME,
   UPLOAD_SERVICE_PORT,
 } from 'config/microservice.config';
@@ -36,6 +38,11 @@ import { FileService } from './services/file.service';
         name: UPLOAD_SERVICE_NAME,
         transport: Transport.TCP,
         options: { host: 'localhost', port: UPLOAD_SERVICE_PORT },
+      },
+      {
+        name: FILE_SERVICE_NAME,
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: FILE_SERVICE_PORT },
       },
     ]),
   ],

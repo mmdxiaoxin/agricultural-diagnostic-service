@@ -28,9 +28,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
-import { UPLOAD_SERVICE_NAME } from 'config/microservice.config';
+import {
+  FILE_SERVICE_NAME,
+  UPLOAD_SERVICE_NAME,
+} from 'config/microservice.config';
 import { Request, Response } from 'express';
-import { firstValueFrom, lastValueFrom } from 'rxjs';
+import { defaultIfEmpty, firstValueFrom, lastValueFrom } from 'rxjs';
 import { CompleteChunkDto } from '../../../../../packages/common/src/dto/file/complete-chunk.dto';
 import { CreateTempLinkDto } from '../../../../../packages/common/src/dto/file/create-link.dto';
 import { CreateTaskDto } from '../../../../../packages/common/src/dto/file/create-task.dto';
@@ -45,7 +48,6 @@ import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file-size.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';
 import { FileDownloadService } from './services/file-download.service';
-import { FileManageService } from './services/file-manage.service';
 import { FileStorageService } from './services/file-storage.service';
 import { FileService } from './services/file.service';
 
@@ -56,9 +58,9 @@ export class FileController {
   constructor(
     private readonly commonService: FileService,
     private readonly downloadService: FileDownloadService,
-    private readonly manageService: FileManageService,
     private readonly storageService: FileStorageService,
     @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
+    @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
   ) {}
 
   // 获取空间使用信息
@@ -255,7 +257,16 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async updateFile(@Req() req: Request, @Body() dto: UpdateFileDto) {
-    return this.manageService.updateFile(req.user.userId, dto);
+    await firstValueFrom(
+      this.fileClient.send(
+        { cmd: 'file.update' },
+        {
+          userId: req.user.userId,
+          dto,
+        },
+      ),
+    );
+    return formatResponse(200, null, '文件修改成功');
   }
 
   // 批量文件权限修改
@@ -266,7 +277,16 @@ export class FileController {
     @Req() req: Request,
     @Body() dto: UpdateFilesAccessDto,
   ) {
-    return this.manageService.updateFilesAccess(req.user.userId, dto);
+    await firstValueFrom(
+      this.fileClient.send(
+        { cmd: 'files.update.access' },
+        {
+          userId: req.user.userId,
+          dto,
+        },
+      ),
+    );
+    return formatResponse(200, null, '权限修改成功');
   }
 
   // 文件删除
@@ -282,7 +302,17 @@ export class FileController {
     fileId: number,
     @Req() req: Request,
   ) {
-    return this.manageService.deleteFile(fileId, req.user.userId);
+    return this.fileClient
+      .send(
+        {
+          cmd: 'file.delete',
+        },
+        {
+          fileId,
+          userId: req.user.userId,
+        },
+      )
+      .pipe(defaultIfEmpty(null));
   }
 
   // 批量文件删除接口
@@ -290,8 +320,21 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteFiles(@Query('fileIds', ParseFileIdsPipe) fileIds: number[]) {
-    await this.manageService.deleteFiles(fileIds);
+  async deleteFiles(
+    @Query('fileIds', ParseFileIdsPipe) fileIds: number[],
+    @Req() req: Request,
+  ) {
+    return this.fileClient
+      .send(
+        {
+          cmd: 'files.delete',
+        },
+        {
+          fileIds,
+          userId: req.user.userId,
+        },
+      )
+      .pipe(defaultIfEmpty(null));
   }
 
   // 生成临时访问链接
