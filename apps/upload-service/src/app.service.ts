@@ -85,7 +85,6 @@ export class UploadService {
           createdBy: userId,
           updatedBy: userId,
         });
-        this.logger.log(`文件已存在: ${found.id}`);
       } else {
         file = this.fileRepository.create({
           originalFileName: fileMeta.originalname,
@@ -100,7 +99,6 @@ export class UploadService {
       }
       await queryRunner.manager.save(file);
       await queryRunner.commitTransaction();
-      this.logger.log(`成功保存文件: ${filePath}`);
       return { success: true, file };
     } catch (error) {
       this.logger.error(`保存文件失败: ${error.message}`);
@@ -126,7 +124,6 @@ export class UploadService {
       uploadedChunks: [],
     };
     await this.redisService.set(`upload:task:${taskId}`, task);
-    this.logger.log(`创建上传任务: ${taskId}`);
     return task;
   }
 
@@ -156,7 +153,6 @@ export class UploadService {
       const chunkFileName = `${taskId}_chunk_${chunkIndex}`;
       const chunkFilePath = path.join(this.chunkDir, chunkFileName);
       await fs.promises.writeFile(chunkFilePath, chunkData);
-      this.logger.log(`成功保存分片: ${chunkFileName}`);
       // 更新任务记录，确保每个分片只记录一次
       if (!task.uploadedChunks.includes(chunkIndex)) {
         task.uploadedChunks.push(chunkIndex);
@@ -195,14 +191,12 @@ export class UploadService {
       writeStream.write(chunkData);
       // 合并后清理临时分片
       await fs.promises.unlink(chunkFilePath);
-      this.logger.log(`删除分片文件: ${chunkFileName}`);
     }
     writeStream.end();
     await new Promise((resolve, reject) => {
       writeStream.on('finish', () => resolve(true));
       writeStream.on('error', reject);
     });
-    this.logger.log(`文件合并完成: ${finalFilePath}`);
     // 开启数据库事务，确保写入操作的原子性
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -223,7 +217,6 @@ export class UploadService {
           createdBy: task.userId,
           updatedBy: task.userId,
         });
-        this.logger.log(`文件已存在: ${found.id}`);
       } else {
         fileEntity = this.fileRepository.create({
           originalFileName: task.fileName,
@@ -287,7 +280,6 @@ export class UploadService {
       });
       await queryRunner.manager.save(file);
       await queryRunner.commitTransaction();
-      this.logger.log(`成功保存文件元数据: ${found.storageFileName}`);
       return { success: true, result: file };
     } catch (error) {
       await queryRunner.rollbackTransaction();
