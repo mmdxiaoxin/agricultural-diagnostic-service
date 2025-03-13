@@ -6,14 +6,13 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.connectMicroservice<MicroserviceOptions>({
+  const microservice = app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
       port: FILE_SERVICE_PORT,
     },
   });
-
-  app.useGlobalFilters(new CustomRpcExceptionFilter());
+  microservice.useGlobalFilters(new CustomRpcExceptionFilter());
   await app.startAllMicroservices();
   await app.listen(FILE_SERVICE_PORT);
 }
