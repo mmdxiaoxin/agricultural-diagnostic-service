@@ -4,17 +4,20 @@ import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { hash } from 'bcryptjs';
-import { unlink } from 'fs';
 import { readFile } from 'fs/promises';
-import { extname } from 'path';
+import { extname, join } from 'path';
 import { DataSource, In, Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * 用户模块服务
  */
 @Injectable()
 export class UserService {
+  private avatarPath = path.join(__dirname, '..', '..', 'avatar');
+
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
 
@@ -24,7 +27,12 @@ export class UserService {
     private readonly profileRepository: Repository<Profile>,
 
     private dataSource: DataSource,
-  ) {}
+  ) {
+    // 检查头像文件夹是否存在
+    if (!fs.existsSync(this.avatarPath)) {
+      fs.mkdirSync(this.avatarPath);
+    }
+  }
 
   private async validateUserParams(user: Partial<User>) {
     if (!user.email && !user.username) {
@@ -227,23 +235,10 @@ export class UserService {
       profile.user = user;
       await this.profileRepository.save(profile);
     }
-    let avatarBase64: string | null = null;
-    if (user.profile.avatar) {
-      // 获取头像的绝对路径
-      const avatarPath = user.profile.avatar;
-      try {
-        // 读取头像文件并转为 Base64
-        const avatarBuffer = await readFile(avatarPath);
-        const fileExtension = extname(user.profile.avatar).toLowerCase();
-        const mimeType = fileExtension === '.png' ? 'image/png' : 'image/jpeg';
-        avatarBase64 = `data:${mimeType};base64,${avatarBuffer.toString('base64')}`;
-      } catch (err) {
-        throw new RpcException('头像文件读取失败');
-      }
-    }
+
     return {
       ...user,
-      profile: { ...user.profile, avatar: avatarBase64 },
+      profile: { ...user.profile, avatar: undefined },
       password: undefined,
     };
   }
@@ -285,19 +280,17 @@ export class UserService {
     await this.profileRepository.save(userProfile);
   }
 
-  async updateAvatar(userId: number, file: Express.Multer.File) {
-    if (!file) {
+  async updateAvatar(userId: number, fileData: Buffer, mimetype: string) {
+    if (!fileData) {
       throw new RpcException({
         code: 400,
         message: '缺少文件参数或上传失败',
       });
     }
-
     // 创建 queryRunner 进行事务管理
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
     try {
       const user = await queryRunner.manager.findOne(User, {
         where: { id: userId },
@@ -308,34 +301,31 @@ export class UserService {
           message: '用户未找到',
         });
       }
-
       let profile = await queryRunner.manager.findOne(Profile, {
         where: { user },
       });
-
       if (!profile) {
-        profile = new Profile();
+        profile = this.profileRepository.create();
         profile.user = user;
       } else if (profile.avatar) {
-        // **不能直接使用 fs.unlinkSync，因为事务可能回滚**
-        unlink(profile.avatar, (err) => {
+        fs.unlink(profile.avatar, (err) => {
           if (err) console.error('删除旧头像失败:', err);
         });
       }
 
-      profile.avatar = file.path;
+      // 保存头像文件
+      const fileExtension = mimetype === 'image/png' ? '.png' : '.jpg';
+      const fileName = `${userId}${fileExtension}`;
+      const filePath = path.join(this.avatarPath, fileName);
+      fs.writeFileSync(filePath, fileData);
 
-      // 使用事务管理器保存
       await queryRunner.manager.save(profile);
-
-      // 提交事务
       await queryRunner.commitTransaction();
     } catch (error) {
       // 发生错误时回滚
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
-      // 释放 queryRunner
       await queryRunner.release();
     }
   }

@@ -31,9 +31,13 @@ export class UserController {
   // 上传个人头像
   @MessagePattern({ cmd: 'user.avatar.upload' })
   async uploadAvatar(
-    @Payload() payload: { userId: number; file: Express.Multer.File },
+    @Payload() payload: { userId: number; fileData: string; mimetype: string },
   ) {
-    return this.userService.updateAvatar(payload.userId, payload.file);
+    return this.userService.updateAvatar(
+      payload.userId,
+      Buffer.from(payload.fileData, 'base64'),
+      payload.mimetype,
+    );
   }
 
   // 获取个人头像路径

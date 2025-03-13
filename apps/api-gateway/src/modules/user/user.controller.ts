@@ -76,36 +76,26 @@ export class UserController {
   // HTTP POST /user/avatar —— 上传个人头像
   @Post('avatar')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: (req, file, cb) => {
-          if (!existsSync('uploads/avatar')) {
-            mkdirSync('uploads/avatar', { recursive: true });
-          }
-          cb(null, 'uploads/avatar');
-        },
-        filename: (req, file, cb) => {
-          const uniquePrefix = uuidv4();
-          const fileExtension = extname(file.originalname);
-          cb(null, `${uniquePrefix}${fileExtension}`);
-        },
-      }),
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file'))
   async uploadAvatar(
     @Req() req: Request,
     @UploadedFile(
-      new FileSizeValidationPipe('10MB'),
+      new FileSizeValidationPipe('1MB'),
       new FileTypeValidationPipe([MIME_TYPE.PNG, MIME_TYPE.JPEG]),
     )
     file: Express.Multer.File,
   ) {
     try {
-      const payload = { userId: req.user.userId, file };
       await lastValueFrom(
         this.userClient
-          .send({ cmd: 'user.avatar.upload' }, payload)
+          .send(
+            { cmd: 'user.avatar.upload' },
+            {
+              userId: req.user.userId,
+              fileData: file.buffer.toString('base64'),
+              mimetype: file.mimetype,
+            },
+          )
           .pipe(defaultIfEmpty(null)),
       );
       return formatResponse(200, null, '上传头像成功');
