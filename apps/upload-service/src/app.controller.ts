@@ -14,7 +14,7 @@ export class UploadController {
   async saveFile(@Payload() payload: UploadSingleDto) {
     return this.uploadService.saveFile(
       payload.fileMeta,
-      payload.fileData,
+      Buffer.from(payload.fileData, 'base64'),
       payload.userId,
     );
   }

@@ -1,9 +1,7 @@
 import { Roles } from '@common/decorator/roles.decorator';
-import { Role } from '@shared/enum/role.enum';
 import { TypeormFilter } from '@common/filters/typeorm.filter';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
-import { FileGuard, FilesGuard } from '../file/guards/file.guard';
 import {
   Body,
   Controller,
@@ -11,6 +9,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
@@ -23,13 +22,18 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags } from '@nestjs/swagger';
+import { Role } from '@shared/enum/role.enum';
+import { formatResponse } from '@shared/helpers/response.helper';
+import { UPLOAD_SERVICE_NAME } from 'config/microservice.config';
 import { Request, Response } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { unlink } from 'fs/promises';
 import { diskStorage } from 'multer';
 import { join } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { firstValueFrom } from 'rxjs';
 import { CompleteChunkDto } from '../../../../../packages/common/src/dto/file/complete-chunk.dto';
 import { CreateTempLinkDto } from '../../../../../packages/common/src/dto/file/create-link.dto';
 import { CreateTaskDto } from '../../../../../packages/common/src/dto/file/create-task.dto';
@@ -39,6 +43,7 @@ import {
   UpdateFilesAccessDto,
 } from '../../../../../packages/common/src/dto/file/update-file.dto';
 import { UploadChunkDto } from '../../../../../packages/common/src/dto/file/upload-chunk.dto';
+import { FileGuard, FilesGuard } from '../file/guards/file.guard';
 import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file-size.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';
@@ -47,7 +52,6 @@ import { FileManageService } from './services/file-manage.service';
 import { FileStorageService } from './services/file-storage.service';
 import { FileUploadService } from './services/file-upload.service';
 import { FileService } from './services/file.service';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('文件模块')
 @Controller('file')
@@ -59,6 +63,7 @@ export class FileController {
     private readonly uploadService: FileUploadService,
     private readonly manageService: FileManageService,
     private readonly storageService: FileStorageService,
+    @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
   ) {}
 
   // 获取空间使用信息
@@ -111,52 +116,28 @@ export class FileController {
   @Post('upload/single')
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: (req, file, cb) => {
-          let folder = 'uploads/other'; // 默认存储在 "other" 文件夹
-          const mimeType = file.mimetype;
-
-          // 按 MIME 类型分文件夹存储
-          if (mimeType.startsWith('image')) {
-            folder = 'uploads/images';
-          } else if (mimeType.startsWith('video')) {
-            folder = 'uploads/videos';
-          } else if (mimeType.startsWith('application')) {
-            folder = 'uploads/documents';
-          } else if (mimeType.startsWith('audio')) {
-            folder = 'uploads/audio';
-          }
-
-          if (!existsSync(folder)) {
-            mkdirSync(folder, { recursive: true });
-          }
-          cb(null, folder);
-        },
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + '-' + uuidv4();
-          // 修复中文乱码问题
-          file.originalname = Buffer.from(file.originalname, 'latin1').toString(
-            'utf-8',
-          );
-          cb(null, uniqueName);
-        },
-      }),
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file'))
   async uploadSingle(
     @Req() req: Request,
     @UploadedFile(new FileSizeValidationPipe('10MB')) file: Express.Multer.File,
   ) {
     try {
-      return this.uploadService.uploadSingle(req.user.userId, file);
+      const rpcResponse = await firstValueFrom(
+        this.uploadClient.send(
+          { cmd: 'upload.single' },
+          {
+            fileMeta: {
+              originalname: file.originalname,
+              mimetype: file.mimetype,
+              size: file.size,
+            },
+            fileData: file.buffer.toString('base64'),
+            userId: req.user.userId,
+          },
+        ),
+      );
+      return formatResponse(200, rpcResponse, '上传成功');
     } catch (error) {
-      // 清理上传失败的文件
-      const filePath = join('uploads', file.filename);
-      if (existsSync(filePath)) {
-        await unlink(filePath);
-      }
       throw error;
     }
   }

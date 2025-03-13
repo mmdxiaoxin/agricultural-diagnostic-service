@@ -7,6 +7,8 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { DataSource, Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+import { UploadSingleDto } from './dto/upload-single.dto';
 
 export interface UploadTask {
   taskId: string;
@@ -42,11 +44,6 @@ export class UploadService {
     }
   }
 
-  private handleFileType = (file: Express.Multer.File) =>
-    file.mimetype
-      ? file.mimetype
-      : getModelMimeType(path.extname(file.originalname));
-
   private handleFileMd5 = (filePath: string) =>
     new Promise<string>((resolve, reject) => {
       const hash = crypto.createHash('md5');
@@ -59,15 +56,18 @@ export class UploadService {
   //———————————————————————————————————————
   // 单文件上传：直接保存文件数据并更新数据库记录
   async saveFile(
-    fileMeta: Express.Multer.File,
+    fileMeta: UploadSingleDto['fileMeta'],
     fileData: Buffer,
     userId: number,
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    const filePath = path.join(this.uploadDir, fileMeta.filename);
-    const fileType = this.handleFileType(fileMeta);
+    const fileName = Date.now() + uuidv4();
+    const filePath = path.join(this.uploadDir, fileName);
+    const fileType = fileMeta.mimetype
+      ? fileMeta.mimetype
+      : getModelMimeType(path.extname(fileMeta.originalname));
     // 将文件数据写入目标目录
     await fs.promises.writeFile(filePath, fileData);
     const fileMd5 = await this.handleFileMd5(filePath);
@@ -82,6 +82,7 @@ export class UploadService {
           storageFileName: found.storageFileName,
           filePath: found.filePath,
           fileType: found.fileType,
+          fileSize: found.fileSize,
           fileMd5: found.fileMd5,
           createdBy: userId,
           updatedBy: userId,
@@ -90,9 +91,10 @@ export class UploadService {
       } else {
         file = this.fileRepository.create({
           originalFileName: fileMeta.originalname,
-          storageFileName: fileMeta.filename,
+          storageFileName: fileName,
           filePath,
           fileType,
+          fileSize: fileData.length,
           fileMd5,
           createdBy: userId,
           updatedBy: userId,

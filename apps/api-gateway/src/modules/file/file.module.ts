@@ -2,8 +2,13 @@ import { File, Task } from '@app/database/entities';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigEnum } from '@shared/enum/config.enum';
+import {
+  UPLOAD_SERVICE_NAME,
+  UPLOAD_SERVICE_PORT,
+} from 'config/microservice.config';
 import { FileController } from './file.controller';
 import { FileDownloadService } from './services/file-download.service';
 import { FileManageService } from './services/file-manage.service';
@@ -27,6 +32,13 @@ import { FileService } from './services/file.service';
       },
       inject: [ConfigService],
     }),
+    ClientsModule.register([
+      {
+        name: UPLOAD_SERVICE_NAME,
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: UPLOAD_SERVICE_PORT },
+      },
+    ]),
   ],
   providers: [
     FileService,

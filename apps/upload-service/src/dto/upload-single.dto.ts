@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UploadSingleDto {
   @ApiProperty()
-  fileMeta: Express.Multer.File;
+  fileMeta: Pick<Express.Multer.File, 'originalname' | 'mimetype' | 'size'>;
 
   @ApiProperty()
-  fileData: Buffer;
+  fileData: string;
 
   @ApiProperty()
   userId: number;
