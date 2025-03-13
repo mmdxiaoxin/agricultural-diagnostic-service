@@ -76,7 +76,10 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async filesGet(@Req() req: Request) {
-    return this.commonService.filesGet(req.user.userId);
+    const rpcResponse = await lastValueFrom(
+      this.fileClient.send({ cmd: 'files.get' }, { userId: req.user.userId }),
+    );
+    return formatResponse(200, rpcResponse?.result, '文件列表查询成功');
   }
 
   // 获取文件列表分页
@@ -94,19 +97,26 @@ export class FileController {
     @Query('updatedStart') updatedStart?: string,
     @Query('updatedEnd') updatedEnd?: string,
   ) {
-    return this.commonService.filesListGet(
-      page,
-      pageSize,
-      {
-        fileType,
-        originalFileName,
-        createdStart,
-        createdEnd,
-        updatedEnd,
-        updatedStart,
-      },
-      req.user.userId,
+    const filters = {
+      fileType,
+      originalFileName,
+      createdStart,
+      createdEnd,
+      updatedStart,
+      updatedEnd,
+    };
+    const rpcResponse = await lastValueFrom(
+      this.fileClient.send(
+        { cmd: 'files.get.list' },
+        {
+          page,
+          pageSize,
+          filters,
+          userId: req.user.userId,
+        },
+      ),
     );
+    return formatResponse(200, rpcResponse?.result, '文件列表查询成功');
   }
 
   // 单文件上传

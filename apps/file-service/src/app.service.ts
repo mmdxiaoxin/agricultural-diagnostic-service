@@ -6,14 +6,115 @@ import {
 } from '@common/dto/file/update-file.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { DataSource, In } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 @Injectable()
 export class FileService {
   constructor(
+    @InjectRepository(FileEntity)
+    private readonly fileRepository: Repository<FileEntity>,
     private readonly fileOperationService: FileOperationService,
     private readonly dataSource: DataSource,
   ) {}
+
+  /**
+   * 获取文件列表
+   * @param page
+   * @param pageSize
+   * @param filters
+   * @param userId
+   * @returns
+   */
+  async getFiles(userId: number) {
+    const files = await this.fileRepository.find({
+      where: { createdBy: userId },
+    });
+    return {
+      success: true,
+      result: files,
+    };
+  }
+
+  /**
+   * 获取文件列表分页
+   * @param page
+   * @param pageSize
+   * @param filters
+   * @param userId
+   * @returns
+   */
+  async getFilesList(
+    page: number,
+    pageSize: number,
+    filters: {
+      fileType?: string[];
+      originalFileName?: string;
+      createdStart?: string;
+      createdEnd?: string;
+      updatedStart?: string;
+      updatedEnd?: string;
+    },
+    userId: number, // 添加用户ID
+  ) {
+    const queryBuilder = this.fileRepository.createQueryBuilder('file');
+
+    // 过滤当前用户的文件
+    queryBuilder.andWhere('file.createdBy = :userId', { userId });
+
+    // 过滤文件类型
+    if (filters.fileType) {
+      queryBuilder.andWhere('file.fileType IN (:...fileType)', {
+        fileType: filters.fileType,
+      });
+    }
+
+    // 模糊匹配文件名
+    if (filters.originalFileName) {
+      queryBuilder.andWhere('file.originalFileName LIKE :originalFileName', {
+        originalFileName: `%${filters.originalFileName}%`,
+      });
+    }
+
+    // 创建时间范围
+    if (filters.createdStart && filters.createdEnd) {
+      queryBuilder.andWhere(
+        'file.createdAt BETWEEN :createdStart AND :createdEnd',
+        {
+          createdStart: new Date(filters.createdStart),
+          createdEnd: new Date(filters.createdEnd),
+        },
+      );
+    }
+
+    // 更新时间范围
+    if (filters.updatedStart && filters.updatedEnd) {
+      queryBuilder.andWhere(
+        'file.updatedAt BETWEEN :updatedStart AND :updatedEnd',
+        {
+          updatedStart: new Date(filters.updatedStart),
+          updatedEnd: new Date(filters.updatedEnd),
+        },
+      );
+    }
+
+    // 获取文件列表及总数
+    const [list, total] = await queryBuilder
+      .orderBy('file.id', 'DESC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return {
+      success: true,
+      result: {
+        list,
+        total,
+        page,
+        pageSize,
+      },
+    };
+  }
 
   /**
    * 更新文件信息

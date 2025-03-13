@@ -15,6 +15,36 @@ export class FileController {
     return this.fileService.updateFile(payload.userId, payload.dto);
   }
 
+  @MessagePattern({ cmd: 'files.get' })
+  async getFiles(@Payload() payload: { userId: number }) {
+    return this.fileService.getFiles(payload.userId);
+  }
+
+  @MessagePattern({ cmd: 'files.get.list' })
+  async getFilesList(
+    @Payload()
+    payload: {
+      page: number;
+      pageSize: number;
+      filters: {
+        fileType?: string[];
+        originalFileName?: string;
+        createdStart?: string;
+        createdEnd?: string;
+        updatedStart?: string;
+        updatedEnd?: string;
+      };
+      userId: number;
+    },
+  ) {
+    return this.fileService.getFilesList(
+      payload.page,
+      payload.pageSize,
+      payload.filters,
+      payload.userId,
+    );
+  }
+
   @MessagePattern({ cmd: 'files.update.access' })
   async updateFilesAccess(
     @Payload() payload: { userId: number; dto: UpdateFilesAccessDto },
