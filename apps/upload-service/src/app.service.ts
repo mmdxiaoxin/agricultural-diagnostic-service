@@ -110,6 +110,7 @@ export class UploadService {
       await queryRunner.release();
     }
   }
+
   //———————————————————————————————————————
   // 创建上传任务：基于 CreateTaskDto 的属性生成任务，并缓存至 Redis
   async createTask(taskMeta: TaskCreateDto): Promise<UploadTask> {
@@ -128,6 +129,7 @@ export class UploadService {
     this.logger.log(`创建上传任务: ${taskId}`);
     return task;
   }
+
   //———————————————————————————————————————
   // 分片上传：写入单个分片，并更新 Redis 中的任务状态
   async chunkFile(
@@ -139,26 +141,32 @@ export class UploadService {
     chunkData: Buffer,
   ): Promise<{ message: string; chunkIndex: number }> {
     const { taskId, chunkIndex } = taskMeta;
-    // 从 Redis 中获取上传任务信息
-    const task = await this.redisService.get<UploadTask>(
-      `upload:task:${taskId}`,
-    );
-    if (!task) {
-      throw new RpcException('上传任务不存在或已过期');
-    }
-    // 构造分片文件名并写入临时目录
-    const chunkFileName = `${taskId}_chunk_${chunkIndex}`;
-    const chunkFilePath = path.join(this.chunkDir, chunkFileName);
-    await fs.promises.writeFile(chunkFilePath, chunkData);
-    this.logger.log(`成功保存分片: ${chunkFileName}`);
-    // 更新任务记录，确保每个分片只记录一次
-    if (!task.uploadedChunks.includes(chunkIndex)) {
-      task.uploadedChunks.push(chunkIndex);
-    }
-    // 将更新后的任务重新存入 Redis
-    await this.redisService.set(`upload:task:${taskId}`, task);
-    return { message: '分片上传成功', chunkIndex };
+    // 使用 Redis 锁确保在并发情况下对任务状态的修改不会冲突
+    const lockKey = `upload:lock:${taskId}`;
+    // 此处设置锁的有效期为 5000 毫秒，可根据业务需要调整
+    return await this.redisService.executeWithLock(lockKey, 5000, async () => {
+      // 再次从 Redis 中获取上传任务信息，确保在锁保护下获得最新状态
+      const task = await this.redisService.get<UploadTask>(
+        `upload:task:${taskId}`,
+      );
+      if (!task) {
+        throw new RpcException('上传任务不存在或已过期');
+      }
+      // 构造分片文件名并写入临时目录
+      const chunkFileName = `${taskId}_chunk_${chunkIndex}`;
+      const chunkFilePath = path.join(this.chunkDir, chunkFileName);
+      await fs.promises.writeFile(chunkFilePath, chunkData);
+      this.logger.log(`成功保存分片: ${chunkFileName}`);
+      // 更新任务记录，确保每个分片只记录一次
+      if (!task.uploadedChunks.includes(chunkIndex)) {
+        task.uploadedChunks.push(chunkIndex);
+      }
+      // 将更新后的任务重新存入 Redis
+      await this.redisService.set(`upload:task:${taskId}`, task);
+      return { message: '分片上传成功', chunkIndex };
+    });
   }
+
   //———————————————————————————————————————
   // 合并文件：当所有分片上传完毕后，按顺序合并文件，并保存数据库记录
   async completeUpload(taskId: string) {
@@ -241,6 +249,7 @@ export class UploadService {
       await queryRunner.release();
     }
   }
+
   //———————————————————————————————————————
   // 获取上传任务信息：从 Redis 中检索任务详情
   async getTask(taskId: string) {
@@ -252,6 +261,7 @@ export class UploadService {
     }
     return { success: true, result: task };
   }
+
   //———————————————————————————————————————
   // 预载文件：如果文件存在则直接保存文件元数据
   async preloadFile(fileMd5: string, originalFileName: string, userId: number) {
