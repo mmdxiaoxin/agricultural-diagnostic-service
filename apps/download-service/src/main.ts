@@ -3,19 +3,16 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import {
   DOWNLOAD_SERVICE_HTTP_PORT,
-  DOWNLOAD_SERVICE_RPC_PORT,
+  DOWNLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
-import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const microservice = app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.GRPC,
+    transport: Transport.TCP,
     options: {
-      package: 'download',
-      protoPath: join(__dirname, '/proto/download.proto'),
-      url: `localhost:${DOWNLOAD_SERVICE_RPC_PORT}`,
+      port: DOWNLOAD_SERVICE_TCP_PORT,
     },
   });
   microservice.useGlobalFilters(new CustomRpcExceptionFilter());

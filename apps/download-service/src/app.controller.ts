@@ -1,44 +1,28 @@
-import { Controller, HttpStatus, Inject, Logger } from '@nestjs/common';
-import { ClientProxy, GrpcMethod, RpcException } from '@nestjs/microservices';
-import { FILE_SERVICE_NAME } from 'config/microservice.config';
+import { File as FileEntity } from '@app/database/entities';
+import { Controller, Logger } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { createReadStream, existsSync } from 'fs';
-import { lastValueFrom } from 'rxjs';
 
 @Controller()
 export class DownloadController {
   private readonly logger = new Logger(DownloadController.name);
 
-  constructor(
-    @Inject(FILE_SERVICE_NAME)
-    private readonly fileClient: ClientProxy,
-  ) {}
-
-  @GrpcMethod('DownloadService', 'DownloadFile')
-  async *downloadFile(data: { fileId: number }) {
-    this.logger.log(`开始下载文件：${data.fileId}`);
-    const rpcResponse = await lastValueFrom(
-      this.fileClient.send('file.get', { fileId: data.fileId }),
-    );
-    if (!rpcResponse.file || !rpcResponse.success) {
-      throw new RpcException({
-        code: HttpStatus.NOT_FOUND,
-        message: '无文件数据',
-      });
-    }
-    if (rpcResponse.file.filePath && existsSync(rpcResponse.file.filePath)) {
-      this.logger.log(`开始下载文件：${rpcResponse.file.filePath}`);
-      const fileStream = createReadStream(rpcResponse.file.filePath);
-      // 遍历文件流中的每个 chunk，如果 chunk 有效则 yield，否则跳过
-      for await (const chunk of fileStream) {
-        if (chunk !== undefined && chunk !== null) {
-          yield { data: chunk };
-        }
+  @MessagePattern({ cmd: 'file.download' })
+  async downloadFile(@Payload() payload: { fileMeta: FileEntity }) {
+    try {
+      const filePath = payload.fileMeta.filePath;
+      if (!filePath || !existsSync(filePath)) {
+        return { success: false, message: '文件不存在' };
       }
-    } else {
-      throw new RpcException({
-        code: HttpStatus.NOT_FOUND,
-        message: '文件不存在',
-      });
+      const fileStream = createReadStream(filePath);
+      let fileData = Buffer.alloc(0);
+      for await (const chunk of fileStream) {
+        fileData = Buffer.concat([fileData, chunk]);
+      }
+      return { success: true, data: fileData.toString('base64') };
+    } catch (err) {
+      this.logger.error(`下载失败: ${err.message}`);
+      return { success: false, message: '文件下载失败' };
     }
   }
 }

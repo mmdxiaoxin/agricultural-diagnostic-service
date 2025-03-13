@@ -7,13 +7,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigEnum } from '@shared/enum/config.enum';
 import {
   DOWNLOAD_SERVICE_NAME,
-  DOWNLOAD_SERVICE_RPC_PORT,
+  DOWNLOAD_SERVICE_TCP_PORT,
   FILE_SERVICE_NAME,
   FILE_SERVICE_TCP_PORT,
   UPLOAD_SERVICE_NAME,
   UPLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
-import { join } from 'path';
 import { FileController } from './file.controller';
 import { FileDownloadService } from './services/file-download.service';
 import { FileOperationService } from './services/file-operation.service';
@@ -48,12 +47,8 @@ import { FileService } from './services/file.service';
       },
       {
         name: DOWNLOAD_SERVICE_NAME,
-        transport: Transport.GRPC,
-        options: {
-          package: 'download',
-          protoPath: join(__dirname, 'modules/file/proto/download.proto'),
-          url: `localhost:${DOWNLOAD_SERVICE_RPC_PORT}`,
-        },
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: DOWNLOAD_SERVICE_TCP_PORT },
       },
     ]),
   ],

@@ -8,10 +8,11 @@ import {
   Delete,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
   Inject,
   InternalServerErrorException,
-  OnModuleInit,
+  Logger,
   Param,
   ParseIntPipe,
   Post,
@@ -24,7 +25,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
@@ -54,9 +55,7 @@ import { FileGuard, FilesGuard } from '../file/guards/file.guard';
 import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file-size.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';
-import { FileDownloadService } from './services/file-download.service';
 import { FileStorageService } from './services/file-storage.service';
-import { FileService } from './services/file.service';
 
 export interface DownloadService {
   // 定义一个接收 DownloadRequest，返回流式数据的接口
@@ -66,23 +65,15 @@ export interface DownloadService {
 @ApiTags('文件模块')
 @Controller('file')
 @UseFilters(TypeormFilter)
-export class FileController implements OnModuleInit {
-  private downloadService: DownloadService;
+export class FileController {
+  private readonly logger = new Logger(FileController.name);
 
   constructor(
-    private readonly commonService: FileService,
-
     private readonly storageService: FileStorageService,
     @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
     @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
-    @Inject(DOWNLOAD_SERVICE_NAME) private readonly downloadClient: ClientGrpc,
+    @Inject(DOWNLOAD_SERVICE_NAME) private readonly downloadClient: ClientProxy,
   ) {}
-
-  onModuleInit() {
-    // 从客户端获取 gRPC 服务接口
-    this.downloadService =
-      this.downloadClient.getService<DownloadService>('DownloadService');
-  }
 
   // 获取空间使用信息
   @Get('disk-usage')
@@ -262,40 +253,39 @@ export class FileController implements OnModuleInit {
       'fileId',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
-    fileId: number,
+    _: number,
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const fileMeta = req.fileMeta;
-    console.log(fileMeta);
-    // 通过 gRPC 服务获取流式数据
-    const stream$: Observable<{ data: Buffer }> =
-      this.downloadService.downloadFile({ fileId });
-    console.log(stream$);
+    try {
+      const fileMeta = req.fileMeta;
+      // 通过 TCP 请求 file.download
+      const response = await lastValueFrom(
+        this.downloadClient.send({ cmd: 'file.download' }, { fileMeta }),
+      );
 
-    // 设置 HTTP 头部信息（根据实际情况设置 Content-Type 等）
-    res.set({
-      'Content-Type': 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
-    });
+      if (!response.success || !response.data) {
+        throw new HttpException(
+          response.message || '文件获取失败',
+          HttpStatus.NOT_FOUND,
+        );
+      }
 
-    // 订阅流数据，将每个数据块写入 HTTP 响应
-    stream$.subscribe({
-      next: (chunk) => {
-        // 如果 chunk 或 chunk.data 无效，则跳过写入
-        if (chunk && chunk.data !== undefined) {
-          res.write(chunk.data);
-        } else {
-          console.warn('收到无效的数据块：', chunk);
-        }
-      },
-      complete: () => {
-        res.end();
-      },
-      error: (err) => {
-        res.status(500).send('下载失败：' + err.message);
-      },
-    });
+      // 将 Base64 转换为 Buffer
+      const fileBuffer = Buffer.from(response.data, 'base64');
+
+      // 设定 HTTP 头信息
+      res.set({
+        'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
+        'Content-Type': fileMeta.fileType || 'application/octet-stream',
+      });
+
+      // 直接写入流
+      res.end(fileBuffer);
+    } catch (err) {
+      this.logger.error(`下载失败: ${err}`);
+      throw new InternalServerErrorException('文件下载失败');
+    }
   }
 
   // 批量文件下载
