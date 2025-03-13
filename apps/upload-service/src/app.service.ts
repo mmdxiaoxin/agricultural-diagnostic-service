@@ -281,6 +281,7 @@ export class UploadService {
         filePath: found.filePath,
         fileType: found.fileType,
         fileMd5: found.fileMd5,
+        fileSize: found.fileSize,
         createdBy: userId,
         updatedBy: userId,
       });
