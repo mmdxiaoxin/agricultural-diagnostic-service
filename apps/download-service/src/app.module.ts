@@ -1,8 +1,8 @@
 import { DatabaseModule } from '@app/database';
 import { Dataset, File } from '@app/database/entities';
-import { MetricsModule } from '@app/metrics';
 import { RedisModule } from '@app/redis';
 import { Module } from '@nestjs/common';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { DownloadController } from './app.controller';
 import { DownloadService } from './app.service';
 
@@ -11,7 +11,7 @@ import { DownloadService } from './app.service';
     DatabaseModule.register(),
     DatabaseModule.forFeature([File, Dataset]),
     RedisModule,
-    MetricsModule,
+    PrometheusModule.register(),
   ],
   controllers: [DownloadController],
   providers: [DownloadService],

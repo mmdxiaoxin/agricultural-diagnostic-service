@@ -1,7 +1,7 @@
 import { DatabaseModule } from '@app/database';
-import { MetricsModule } from '@app/metrics';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { AuthModule } from './modules/auth/auth.module';
 import { MenuModule } from './modules/menu/menu.module';
 
@@ -17,7 +17,7 @@ import { MenuModule } from './modules/menu/menu.module';
     DatabaseModule.register(),
     AuthModule,
     MenuModule,
-    MetricsModule,
+    PrometheusModule.register(),
   ],
 })
 export class AppModule {}

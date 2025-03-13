@@ -4,7 +4,9 @@
   "sourceRoot": "apps/api-gateway/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": ["**/*.proto"],
+    "assets": [
+      "**/*.proto"
+    ],
     "watchAssets": true,
     "webpack": true,
     "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
@@ -64,6 +66,15 @@
       "sourceRoot": "libs/file-operation/src",
       "compilerOptions": {
         "tsConfigPath": "libs/file-operation/tsconfig.lib.json"
+      }
+    },
+    "file-service": {
+      "type": "application",
+      "root": "apps/file-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/file-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/file-service/tsconfig.app.json"
       }
     },
     "mail": {

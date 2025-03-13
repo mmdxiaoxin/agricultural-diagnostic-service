@@ -1,7 +1,7 @@
 import { DatabaseModule } from '@app/database';
-import { MetricsModule } from '@app/metrics';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { RoleModule } from './modules/role/role.module';
 import { UserModule } from './modules/user/user.module';
 
@@ -17,7 +17,7 @@ import { UserModule } from './modules/user/user.module';
     DatabaseModule.register(),
     UserModule,
     RoleModule,
-    MetricsModule,
+    PrometheusModule.register(),
   ],
 })
 export class AppModule {}

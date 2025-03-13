@@ -2,16 +2,16 @@ import { DatabaseModule } from '@app/database';
 import { Dataset, File } from '@app/database/entities';
 import { RedisModule } from '@app/redis';
 import { Module } from '@nestjs/common';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { UploadController } from './app.controller';
 import { UploadService } from './app.service';
-import { MetricsModule } from '@app/metrics';
 
 @Module({
   imports: [
     DatabaseModule.register(),
     DatabaseModule.forFeature([File, Dataset]),
     RedisModule,
-    MetricsModule,
+    PrometheusModule.register(),
   ],
   controllers: [UploadController],
   providers: [UploadService],
