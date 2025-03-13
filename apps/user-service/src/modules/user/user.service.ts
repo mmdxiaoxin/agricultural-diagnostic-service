@@ -281,13 +281,6 @@ export class UserService {
   }
 
   async updateAvatar(userId: number, fileData: Buffer, mimetype: string) {
-    if (!fileData) {
-      throw new RpcException({
-        code: 400,
-        message: '缺少文件参数或上传失败',
-      });
-    }
-    // 创建 queryRunner 进行事务管理
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -305,20 +298,22 @@ export class UserService {
         where: { user },
       });
       if (!profile) {
-        profile = this.profileRepository.create();
-        profile.user = user;
-      } else if (profile.avatar) {
+        profile = this.profileRepository.create({ user });
+      }
+      // 删除旧头像文件
+      if (profile.avatar) {
         fs.unlink(profile.avatar, (err) => {
           if (err) console.error('删除旧头像失败:', err);
         });
       }
-
       // 保存头像文件
       const fileExtension = mimetype === 'image/png' ? '.png' : '.jpg';
       const fileName = `${userId}${fileExtension}`;
       const filePath = path.join(this.avatarPath, fileName);
       fs.writeFileSync(filePath, fileData);
+      profile.avatar = filePath;
 
+      await queryRunner.manager.save(user);
       await queryRunner.manager.save(profile);
       await queryRunner.commitTransaction();
     } catch (error) {
