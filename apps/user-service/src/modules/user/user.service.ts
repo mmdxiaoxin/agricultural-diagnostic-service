@@ -2,14 +2,11 @@ import { Profile, Role, User } from '@app/database/entities';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { formatResponse } from '@shared/helpers/response.helper';
 import { hash } from 'bcryptjs';
-import { readFile } from 'fs/promises';
-import { extname, join } from 'path';
-import { DataSource, In, Repository } from 'typeorm';
-import { UpdateUserDto } from './dto/update-user.dto';
 import * as fs from 'fs';
 import * as path from 'path';
+import { DataSource, In, Repository } from 'typeorm';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 /**
  * 用户模块服务
@@ -118,6 +115,7 @@ export class UserService {
       await queryRunner.manager.remove(User, user);
 
       await queryRunner.commitTransaction();
+      return { success: true };
     } catch (error) {
       // 回滚事务
       await queryRunner.rollbackTransaction();
@@ -174,7 +172,7 @@ export class UserService {
       }
 
       await queryRunner.commitTransaction();
-      return true;
+      return { success: true };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -197,7 +195,7 @@ export class UserService {
 
     user.status = 1;
     await this.userRepository.save(user);
-    return true;
+    return { success: true };
   }
 
   async userReset(id: number, newPassword?: string) {
@@ -216,7 +214,7 @@ export class UserService {
     const hashedPassword = await hash(newPassword || '123456', 10);
     user.password = hashedPassword;
     await this.userRepository.save(user);
-    return formatResponse(200, null, '用户密码重置成功');
+    return { success: true };
   }
 
   async profileGet(id: number) {
@@ -278,6 +276,7 @@ export class UserService {
 
     Object.assign(userProfile, profile);
     await this.profileRepository.save(userProfile);
+    return { success: true };
   }
 
   async updateAvatar(userId: number, fileData: Buffer, mimetype: string) {
@@ -316,6 +315,7 @@ export class UserService {
       await queryRunner.manager.save(user);
       await queryRunner.manager.save(profile);
       await queryRunner.commitTransaction();
+      return { success: true };
     } catch (error) {
       // 发生错误时回滚
       await queryRunner.rollbackTransaction();
@@ -335,6 +335,7 @@ export class UserService {
     }
     user.password = await hash(password, 10);
     await this.userRepository.save(user);
+    return { success: true };
   }
 
   async userListGet(
