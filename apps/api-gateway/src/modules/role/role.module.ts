@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { RoleController } from './role.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import {
   USER_SERVICE_NAME,
-  USER_SERVICE_PORT,
+  USER_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
+import { RoleController } from './role.controller';
 
 @Module({
   imports: [
@@ -12,7 +12,7 @@ import {
       {
         name: USER_SERVICE_NAME,
         transport: Transport.TCP,
-        options: { host: 'localhost', port: USER_SERVICE_PORT },
+        options: { host: 'localhost', port: USER_SERVICE_TCP_PORT },
       },
     ]),
   ],

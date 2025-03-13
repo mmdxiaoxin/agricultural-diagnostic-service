@@ -4,7 +4,7 @@ import {
   UpdateFileDto,
   UpdateFilesAccessDto,
 } from '@common/dto/file/update-file.dto';
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
@@ -117,6 +117,27 @@ export class FileService {
   }
 
   /**
+   * 获取文件信息
+   * @param fileId
+   * @returns
+   */
+  async getFile(fileId: number) {
+    const file = await this.fileRepository.findOne({
+      where: { id: fileId },
+    });
+    if (!file) {
+      return {
+        success: false,
+      };
+    } else {
+      return {
+        success: true,
+        result: file,
+      };
+    }
+  }
+
+  /**
    * 更新文件信息
    * @param userId
    * @param dto
@@ -133,10 +154,16 @@ export class FileService {
         lock: { mode: 'pessimistic_write' },
       });
       if (!file) {
-        throw new RpcException('未找到文件');
+        throw new RpcException({
+          code: HttpStatus.NOT_FOUND,
+          message: '未找到文件',
+        });
       }
       if (file.createdBy !== userId) {
-        throw new RpcException('无权修改他人文件');
+        throw new RpcException({
+          code: HttpStatus.FORBIDDEN,
+          message: '无权修改他人文件',
+        });
       }
       Object.assign(file, fileMeta);
       file.updatedBy = userId;
@@ -168,11 +195,17 @@ export class FileService {
         where: { id: In(fileIds) },
       });
       if (files.length === 0) {
-        throw new RpcException('未找到文件');
+        throw new RpcException({
+          code: HttpStatus.NOT_FOUND,
+          message: '未找到文件',
+        });
       }
       for (const file of files) {
         if (file.createdBy !== userId) {
-          throw new RpcException('无权修改他人文件');
+          throw new RpcException({
+            code: HttpStatus.FORBIDDEN,
+            message: '无权修改他人文件',
+          });
         }
         file.access = access;
         file.updatedBy = userId;
@@ -205,10 +238,16 @@ export class FileService {
         lock: { mode: 'pessimistic_write' },
       });
       if (!file) {
-        throw new RpcException('未找到文件');
+        throw new RpcException({
+          code: HttpStatus.NOT_FOUND,
+          message: '未找到文件',
+        });
       }
       if (file.createdBy !== userId) {
-        throw new RpcException('无权删除他人文件');
+        throw new RpcException({
+          code: HttpStatus.FORBIDDEN,
+          message: '无权删除他人文件',
+        });
       }
       // 检查文件是否被引用
       const referenceCount = await queryRunner.manager.count(FileEntity, {
@@ -246,11 +285,17 @@ export class FileService {
         where: { id: In(fileIds) },
       });
       if (files.length === 0) {
-        throw new RpcException('未找到文件');
+        throw new RpcException({
+          code: HttpStatus.NOT_FOUND,
+          message: '未找到文件',
+        });
       }
       for (const file of files) {
         if (file.createdBy !== userId) {
-          throw new RpcException('无权删除他人文件');
+          throw new RpcException({
+            code: HttpStatus.FORBIDDEN,
+            message: '无权删除他人文件',
+          });
         }
       }
       // 检查是否有引用该文件

@@ -1,7 +1,10 @@
 import { CustomRpcExceptionFilter } from '@common/filters/rpc-exception.filter';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { AUTH_SERVICE_PORT } from 'config/microservice.config';
+import {
+  AUTH_SERVICE_HTTP_PORT,
+  AUTH_SERVICE_TCP_PORT,
+} from 'config/microservice.config';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -9,11 +12,11 @@ async function bootstrap() {
   const microservice = app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
-      port: AUTH_SERVICE_PORT,
+      port: AUTH_SERVICE_TCP_PORT,
     },
   });
   microservice.useGlobalFilters(new CustomRpcExceptionFilter());
   await app.startAllMicroservices();
-  await app.listen(AUTH_SERVICE_PORT);
+  await app.listen(AUTH_SERVICE_HTTP_PORT);
 }
 bootstrap();

@@ -10,6 +10,11 @@ import { FileService } from './app.service';
 export class FileController {
   constructor(private fileService: FileService) {}
 
+  @MessagePattern({ cmd: 'file.get' })
+  async getFile(@Payload() payload: { fileId: number }) {
+    return this.fileService.getFile(payload.fileId);
+  }
+
   @MessagePattern({ cmd: 'file.update' })
   async updateFile(@Payload() payload: { userId: number; dto: UpdateFileDto }) {
     return this.fileService.updateFile(payload.userId, payload.dto);

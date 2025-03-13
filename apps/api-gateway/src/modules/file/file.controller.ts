@@ -11,6 +11,7 @@ import {
   HttpStatus,
   Inject,
   InternalServerErrorException,
+  OnModuleInit,
   Param,
   ParseIntPipe,
   Post,
@@ -23,17 +24,23 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
 import {
+  DOWNLOAD_SERVICE_NAME,
   FILE_SERVICE_NAME,
   UPLOAD_SERVICE_NAME,
 } from 'config/microservice.config';
 import { Request, Response } from 'express';
-import { defaultIfEmpty, firstValueFrom, lastValueFrom } from 'rxjs';
+import {
+  defaultIfEmpty,
+  firstValueFrom,
+  lastValueFrom,
+  Observable,
+} from 'rxjs';
 import { CompleteChunkDto } from '../../../../../packages/common/src/dto/file/complete-chunk.dto';
 import { CreateTempLinkDto } from '../../../../../packages/common/src/dto/file/create-link.dto';
 import { CreateTaskDto } from '../../../../../packages/common/src/dto/file/create-task.dto';
@@ -51,17 +58,31 @@ import { FileDownloadService } from './services/file-download.service';
 import { FileStorageService } from './services/file-storage.service';
 import { FileService } from './services/file.service';
 
+export interface DownloadService {
+  // 定义一个接收 DownloadRequest，返回流式数据的接口
+  downloadFile(data: { fileId: number }): Observable<{ data: Buffer }>;
+}
+
 @ApiTags('文件模块')
 @Controller('file')
 @UseFilters(TypeormFilter)
-export class FileController {
+export class FileController implements OnModuleInit {
+  private downloadService: DownloadService;
+
   constructor(
     private readonly commonService: FileService,
-    private readonly downloadService: FileDownloadService,
+
     private readonly storageService: FileStorageService,
     @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
     @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
+    @Inject(DOWNLOAD_SERVICE_NAME) private readonly downloadClient: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    // 从客户端获取 gRPC 服务接口
+    this.downloadService =
+      this.downloadClient.getService<DownloadService>('DownloadService');
+  }
 
   // 获取空间使用信息
   @Get('disk-usage')
@@ -241,12 +262,40 @@ export class FileController {
       'fileId',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
-    _: number,
+    fileId: number,
     @Req() req: Request,
     @Res() res: Response,
   ) {
     const fileMeta = req.fileMeta;
-    return this.downloadService.downloadFile(fileMeta, req, res);
+    console.log(fileMeta);
+    // 通过 gRPC 服务获取流式数据
+    const stream$: Observable<{ data: Buffer }> =
+      this.downloadService.downloadFile({ fileId });
+    console.log(stream$);
+
+    // 设置 HTTP 头部信息（根据实际情况设置 Content-Type 等）
+    res.set({
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
+    });
+
+    // 订阅流数据，将每个数据块写入 HTTP 响应
+    stream$.subscribe({
+      next: (chunk) => {
+        // 如果 chunk 或 chunk.data 无效，则跳过写入
+        if (chunk && chunk.data !== undefined) {
+          res.write(chunk.data);
+        } else {
+          console.warn('收到无效的数据块：', chunk);
+        }
+      },
+      complete: () => {
+        res.end();
+      },
+      error: (err) => {
+        res.status(500).send('下载失败：' + err.message);
+      },
+    });
   }
 
   // 批量文件下载
@@ -258,8 +307,8 @@ export class FileController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const filesMeta = req.filesMeta;
-    return this.downloadService.downloadFilesAsZip(filesMeta, res);
+    // const filesMeta = req.filesMeta;
+    // return this.downloadService.downloadFilesAsZip(filesMeta, res);
   }
 
   // 文件修改
@@ -360,7 +409,7 @@ export class FileController {
     @Req() req: Request,
     @Body() dto: CreateTempLinkDto,
   ) {
-    return this.downloadService.generateAccessLink(fileId, req, dto);
+    // return this.downloadService.generateAccessLink(fileId, req, dto);
   }
 
   // 获取临时访问链接
@@ -370,8 +419,8 @@ export class FileController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const fileId = this.downloadService.verifyAccessLink(token);
-    const fileMeta = await this.commonService.findById(fileId);
-    return this.downloadService.downloadFile(fileMeta, req, res);
+    // const fileId = this.downloadService.verifyAccessLink(token);
+    // const fileMeta = await this.commonService.findById(fileId);
+    // return this.downloadService.downloadFile(fileMeta, req, res);
   }
 }

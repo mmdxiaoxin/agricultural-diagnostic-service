@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import {
   USER_SERVICE_NAME,
-  USER_SERVICE_PORT,
+  USER_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { UserController } from './user.controller';
 
@@ -15,7 +15,7 @@ import { UserController } from './user.controller';
       {
         name: USER_SERVICE_NAME,
         transport: Transport.TCP,
-        options: { host: 'localhost', port: USER_SERVICE_PORT },
+        options: { host: 'localhost', port: USER_SERVICE_TCP_PORT },
       },
     ]),
   ],
