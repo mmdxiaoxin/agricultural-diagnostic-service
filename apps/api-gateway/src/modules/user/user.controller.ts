@@ -107,16 +107,17 @@ export class UserController {
   // HTTP GET /user/avatar —— 获取个人头像
   @Get('avatar')
   async getAvatar(@Req() req: Request, @Res() res: Response) {
-    const payload = { userId: req.user.userId };
     const avatarPath = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.avatar.get' }, payload),
+      this.userClient.send(
+        { cmd: 'user.avatar.get' },
+        { userId: req.user.userId },
+      ),
     );
     if (avatarPath) {
-      const filePath = join(process.cwd(), avatarPath);
-      if (!existsSync(filePath)) {
+      if (!existsSync(avatarPath)) {
         throw new BadRequestException('头像文件不存在');
       }
-      return res.sendFile(filePath);
+      return res.sendFile(avatarPath);
     } else {
       return formatResponse(404, null, '头像不存在');
     }
