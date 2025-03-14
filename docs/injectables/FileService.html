@@ -115,7 +115,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/file/services/file.service.ts</code>
+            <code>apps/file-service/src/modules/file/file.service.ts</code>
         </p>
 
 
@@ -137,23 +137,43 @@
                         <ul class="index-list">
                             <li>
                                     <span class="modifier">Async</span>
-                                <a href="#filesGet" >filesGet</a>
+                                <a href="#deleteFile" >deleteFile</a>
                             </li>
                             <li>
                                     <span class="modifier">Async</span>
-                                <a href="#filesListGet" >filesListGet</a>
+                                <a href="#deleteFiles" >deleteFiles</a>
                             </li>
                             <li>
                                     <span class="modifier">Async</span>
-                                <a href="#findById" >findById</a>
+                                <a href="#getFile" >getFile</a>
                             </li>
                             <li>
                                     <span class="modifier">Async</span>
-                                <a href="#findByIds" >findByIds</a>
+                                <a href="#getFileById" >getFileById</a>
                             </li>
                             <li>
                                     <span class="modifier">Async</span>
-                                <a href="#findByMd5" >findByMd5</a>
+                                <a href="#getFiles" >getFiles</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getFilesById" >getFilesById</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getFilesList" >getFilesList</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getFilesStatisticUsage" >getFilesStatisticUsage</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateFile" >updateFile</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateFilesAccess" >updateFilesAccess</a>
                             </li>
                         </ul>
                     </td>
@@ -173,12 +193,12 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
-<code>constructor(fileRepository: <a href="../classes/File.html" target="_self">Repository&lt;FileEntity&gt;</a>)</code>
+<code>constructor(fileRepository: <a href="../classes/File.html" target="_self">Repository&lt;FileEntity&gt;</a>, fileOperationService: <a href="../injectables/FileOperationService.html" target="_self">FileOperationService</a>, dataSource: DataSource)</code>
                     </td>
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="8" class="link-to-prism">src/modules/file/services/file.service.ts:8</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="14" class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:14</a></div>
                             </td>
                         </tr>
 
@@ -207,6 +227,30 @@
                                                     </td>
                                                     
                                                 </tr>
+                                                <tr>
+                                                        <td>fileOperationService</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/FileOperationService.html" target="_self" >FileOperationService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>dataSource</td>
+                                                  
+                                                        <td>
+                                                                    <code>DataSource</code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
                                         </tbody>
                                     </table>
                             </div>
@@ -225,26 +269,334 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
-                    <a name="filesGet"></a>
+                    <a name="deleteFile"></a>
                     <span class="name">
                             <span class="modifier">Async</span>
-                        <span ><b>filesGet</b></span>
-                        <a href="#filesGet"><span class="icon ion-ios-link"></span></a>
+                        <span ><b>deleteFile</b></span>
+                        <a href="#deleteFile"><span class="icon ion-ios-link"></span></a>
                     </span>
                 </td>
             </tr>
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>filesGet(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                    <code>deleteFile(fileId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
                 </td>
             </tr>
 
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="52"
-                                    class="link-to-prism">src/modules/file/services/file.service.ts:52</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="253"
+                                    class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:253</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>删除文件</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>fileId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="deleteFiles"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>deleteFiles</b></span>
+                        <a href="#deleteFiles"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>deleteFiles(fileIds: number[], userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="301"
+                                    class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:301</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>批量删除文件</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>fileIds</td>
+                                            <td>
+                                                        <code>number[]</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getFile"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getFile</b></span>
+                        <a href="#getFile"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getFile(fileId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="140"
+                                    class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:140</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>获取文件信息</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>fileId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getFileById"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getFileById</b></span>
+                        <a href="#getFileById"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getFileById(fileId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="155"
+                                    class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:155</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>获取文件信息</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>fileId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getFiles"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getFiles</b></span>
+                        <a href="#getFiles"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getFiles(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="30"
+                                    class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:30</a></div>
                         </td>
                     </tr>
 
@@ -296,219 +648,34 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
-                    <a name="filesListGet"></a>
+                    <a name="getFilesById"></a>
                     <span class="name">
                             <span class="modifier">Async</span>
-                        <span ><b>filesListGet</b></span>
-                        <a href="#filesListGet"><span class="icon ion-ios-link"></span></a>
+                        <span ><b>getFilesById</b></span>
+                        <a href="#getFilesById"><span class="icon ion-ios-link"></span></a>
                     </span>
                 </td>
             </tr>
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>filesListGet(page: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, pageSize: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, filters: literal type, userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                    <code>getFilesById(fileIds: number[])</code>
                 </td>
             </tr>
 
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="67"
-                                    class="link-to-prism">src/modules/file/services/file.service.ts:67</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="45"
+                                    class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:45</a></div>
                         </td>
                     </tr>
 
 
             <tr>
                 <td class="col-md-4">
-                        <div class="io-description"><p>获取文件列表分页</p>
+                        <div class="io-description"><p>获取文件列表</p>
 </div>
-
-                            <div class="io-description">
-                                <b>Parameters :</b>
-                                
-                                <table class="params">
-                                    <thead>
-                                        <tr>
-                                            <td>Name</td>
-                                                <td>Type</td>
-                                            <td>Optional</td>
-                                                <td>Default value</td>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                                <td>page</td>
-                                            <td>
-                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
-                                            </td>
-
-                                            <td>
-                                                    No
-                                            </td>
-
-                                            <td>
-                                                    <code>1</code>
-                                            </td>
-
-                                        </tr>
-                                        <tr>
-                                                <td>pageSize</td>
-                                            <td>
-                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
-                                            </td>
-
-                                            <td>
-                                                    No
-                                            </td>
-
-                                            <td>
-                                                    <code>10</code>
-                                            </td>
-
-                                        </tr>
-                                        <tr>
-                                                <td>filters</td>
-                                            <td>
-                                                        <code>literal type</code>
-                                            </td>
-
-                                            <td>
-                                                    No
-                                            </td>
-
-                                            <td>
-                                            </td>
-
-                                        </tr>
-                                        <tr>
-                                                <td>userId</td>
-                                            <td>
-                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
-                                            </td>
-
-                                            <td>
-                                                    No
-                                            </td>
-
-                                            <td>
-                                            </td>
-
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <div class="io-description">
-                            <b>Returns : </b>    <code>unknown</code>
-
-                        </div>
-                            <div class="io-description">
-                                
-                            </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <table class="table table-sm table-bordered">
-        <tbody>
-            <tr>
-                <td class="col-md-4">
-                    <a name="findById"></a>
-                    <span class="name">
-                            <span class="modifier">Async</span>
-                        <span ><b>findById</b></span>
-                        <a href="#findById"><span class="icon ion-ios-link"></span></a>
-                    </span>
-                </td>
-            </tr>
-            <tr>
-                <td class="col-md-4">
-                        <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>findById(fileId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
-                </td>
-            </tr>
-
-
-                    <tr>
-                        <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="14"
-                                    class="link-to-prism">src/modules/file/services/file.service.ts:14</a></div>
-                        </td>
-                    </tr>
-
-
-            <tr>
-                <td class="col-md-4">
-
-                            <div class="io-description">
-                                <b>Parameters :</b>
-                                
-                                <table class="params">
-                                    <thead>
-                                        <tr>
-                                            <td>Name</td>
-                                                <td>Type</td>
-                                            <td>Optional</td>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                                <td>fileId</td>
-                                            <td>
-                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
-                                            </td>
-
-                                            <td>
-                                                    No
-                                            </td>
-
-
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <div class="io-description">
-                            <b>Returns : </b>    <code>unknown</code>
-
-                        </div>
-                            <div class="io-description">
-                                
-                            </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <table class="table table-sm table-bordered">
-        <tbody>
-            <tr>
-                <td class="col-md-4">
-                    <a name="findByIds"></a>
-                    <span class="name">
-                            <span class="modifier">Async</span>
-                        <span ><b>findByIds</b></span>
-                        <a href="#findByIds"><span class="icon ion-ios-link"></span></a>
-                    </span>
-                </td>
-            </tr>
-            <tr>
-                <td class="col-md-4">
-                        <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>findByIds(fileIds: number[])</code>
-                </td>
-            </tr>
-
-
-                    <tr>
-                        <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="34"
-                                    class="link-to-prism">src/modules/file/services/file.service.ts:34</a></div>
-                        </td>
-                    </tr>
-
-
-            <tr>
-                <td class="col-md-4">
 
                             <div class="io-description">
                                 <b>Parameters :</b>
@@ -552,32 +719,34 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
-                    <a name="findByMd5"></a>
+                    <a name="getFilesList"></a>
                     <span class="name">
                             <span class="modifier">Async</span>
-                        <span ><b>findByMd5</b></span>
-                        <a href="#findByMd5"><span class="icon ion-ios-link"></span></a>
+                        <span ><b>getFilesList</b></span>
+                        <a href="#getFilesList"><span class="icon ion-ios-link"></span></a>
                     </span>
                 </td>
             </tr>
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>findByMd5(fileMd5: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                    <code>getFilesList(page: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, pageSize: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, filters: literal type, userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
                 </td>
             </tr>
 
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="24"
-                                    class="link-to-prism">src/modules/file/services/file.service.ts:24</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="63"
+                                    class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:63</a></div>
                         </td>
                     </tr>
 
 
             <tr>
                 <td class="col-md-4">
+                        <div class="io-description"><p>获取文件列表分页</p>
+</div>
 
                             <div class="io-description">
                                 <b>Parameters :</b>
@@ -592,9 +761,282 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                                <td>fileMd5</td>
+                                                <td>page</td>
                                             <td>
-                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>pageSize</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>filters</td>
+                                            <td>
+                                                        <code>literal type</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getFilesStatisticUsage"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getFilesStatisticUsage</b></span>
+                        <a href="#getFilesStatisticUsage"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getFilesStatisticUsage(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="353"
+                                    class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:353</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>获取文件使用量统计</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateFile"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>updateFile</b></span>
+                        <a href="#updateFile"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateFile(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, dto: <a href="../classes/UpdateFileDto.html" target="_self">UpdateFileDto</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="168"
+                                    class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:168</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>更新文件信息</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>dto</td>
+                                            <td>
+                                                            <code><a href="../classes/UpdateFileDto.html" target="_self" >UpdateFileDto</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateFilesAccess"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>updateFilesAccess</b></span>
+                        <a href="#updateFilesAccess"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateFilesAccess(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, dto: <a href="../classes/UpdateFilesAccessDto.html" target="_self">UpdateFilesAccessDto</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="210"
+                                    class="link-to-prism">apps/file-service/src/modules/file/file.service.ts:210</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>批量更新文件权限</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>dto</td>
+                                            <td>
+                                                            <code><a href="../classes/UpdateFilesAccessDto.html" target="_self" >UpdateFilesAccessDto</a></code>
                                             </td>
 
                                             <td>
@@ -623,48 +1065,26 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable, NotFoundException } from &#x27;@nestjs/common&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { File as FileEntity } from &#x27;@app/database/entities&#x27;;
+import { FileOperationService } from &#x27;@app/file-operation/file-operation.service&#x27;;
+import {
+  UpdateFileDto,
+  UpdateFilesAccessDto,
+} from &#x27;@common/dto/file/update-file.dto&#x27;;
+import { HttpStatus, Injectable } from &#x27;@nestjs/common&#x27;;
+import { RpcException } from &#x27;@nestjs/microservices&#x27;;
 import { InjectRepository } from &#x27;@nestjs/typeorm&#x27;;
-import { In, Repository } from &#x27;typeorm&#x27;;
-import { File as FileEntity } from &#x27;../models/file.entity&#x27;;
-import { formatResponse } from &#x27;@/common/helpers/response.helper&#x27;;
+import { getFileType } from &#x27;@shared/utils&#x27;;
+import { DataSource, In, Repository } from &#x27;typeorm&#x27;;
 
 @Injectable()
 export class FileService {
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository&lt;FileEntity&gt;,
+    private readonly fileOperationService: FileOperationService,
+    private readonly dataSource: DataSource,
   ) {}
-
-  async findById(fileId: number) {
-    const file &#x3D; await this.fileRepository.findOne({
-      where: { id: fileId },
-    });
-    if (!file) {
-      throw new NotFoundException(&#x27;没有找到文件.&#x27;);
-    }
-    return file;
-  }
-
-  async findByMd5(fileMd5: string) {
-    const file &#x3D; await this.fileRepository.findOne({
-      where: { fileMd5 },
-    });
-    if (!file) {
-      throw new NotFoundException(&#x27;没有找到文件.&#x27;);
-    }
-    return file;
-  }
-
-  async findByIds(fileIds: number[]) {
-    const files &#x3D; await this.fileRepository.find({
-      where: { id: In(fileIds) },
-    });
-    if (!files.length) {
-      throw new NotFoundException(&#x27;没有找到文件.&#x27;);
-    }
-    return files;
-  }
 
   /**
    * 获取文件列表
@@ -674,11 +1094,29 @@ export class FileService {
    * @param userId
    * @returns
    */
-  async filesGet(userId: number) {
+  async getFiles(userId: number) {
     const files &#x3D; await this.fileRepository.find({
       where: { createdBy: userId },
     });
-    return formatResponse(200, files, &#x27;文件获取成功&#x27;);
+    return {
+      success: true,
+      result: files,
+    };
+  }
+
+  /**
+   * 获取文件列表
+   * @param fileIds
+   * @returns
+   */
+  async getFilesById(fileIds: number[]) {
+    const files &#x3D; await this.fileRepository.find({
+      where: { id: In(fileIds) },
+    });
+    return {
+      success: true,
+      result: files,
+    };
   }
 
   /**
@@ -689,9 +1127,9 @@ export class FileService {
    * @param userId
    * @returns
    */
-  async filesListGet(
-    page: number &#x3D; 1,
-    pageSize: number &#x3D; 10,
+  async getFilesList(
+    page: number,
+    pageSize: number,
     filters: {
       fileType?: string[];
       originalFileName?: string;
@@ -750,16 +1188,289 @@ export class FileService {
       .take(pageSize)
       .getManyAndCount();
 
-    return formatResponse(
-      200,
-      {
+    return {
+      success: true,
+      result: {
         list,
         total,
         page,
         pageSize,
       },
-      &#x27;文件列表获取成功&#x27;,
-    );
+    };
+  }
+
+  /**
+   * 获取文件信息
+   * @param fileId
+   * @returns
+   */
+  async getFile(fileId: number) {
+    const file &#x3D; await this.fileRepository.findOne({
+      where: { id: fileId },
+    });
+    return {
+      success: true,
+      result: file,
+    };
+  }
+
+  /**
+   * 获取文件信息
+   * @param fileId
+   * @returns
+   */
+  async getFileById(fileId: number) {
+    const file &#x3D; await this.fileRepository.findOne({
+      where: { id: fileId },
+    });
+    return { success: true, result: file };
+  }
+
+  /**
+   * 更新文件信息
+   * @param userId
+   * @param dto
+   * @returns
+   */
+  async updateFile(userId: number, dto: UpdateFileDto) {
+    const { fileId, ...fileMeta } &#x3D; dto;
+    const queryRunner &#x3D; this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const file &#x3D; await queryRunner.manager.findOne(FileEntity, {
+        where: { id: fileId },
+        lock: { mode: &#x27;pessimistic_write&#x27; },
+      });
+      if (!file) {
+        throw new RpcException({
+          code: HttpStatus.NOT_FOUND,
+          message: &#x27;未找到文件&#x27;,
+        });
+      }
+      if (file.createdBy !&#x3D;&#x3D; userId) {
+        throw new RpcException({
+          code: HttpStatus.FORBIDDEN,
+          message: &#x27;无权修改他人文件&#x27;,
+        });
+      }
+      Object.assign(file, fileMeta);
+      file.updatedBy &#x3D; userId;
+      file.version +&#x3D; 1;
+      await queryRunner.manager.save(file);
+      await queryRunner.commitTransaction();
+      return { success: true };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * 批量更新文件权限
+   * @param userId
+   * @param dto
+   * @returns
+   */
+  async updateFilesAccess(userId: number, dto: UpdateFilesAccessDto) {
+    const { fileIds, access } &#x3D; dto;
+    const queryRunner &#x3D; this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const files &#x3D; await queryRunner.manager.find(FileEntity, {
+        where: { id: In(fileIds) },
+      });
+      if (files.length &#x3D;&#x3D;&#x3D; 0) {
+        throw new RpcException({
+          code: HttpStatus.NOT_FOUND,
+          message: &#x27;未找到文件&#x27;,
+        });
+      }
+      for (const file of files) {
+        if (file.createdBy !&#x3D;&#x3D; userId) {
+          throw new RpcException({
+            code: HttpStatus.FORBIDDEN,
+            message: &#x27;无权修改他人文件&#x27;,
+          });
+        }
+        file.access &#x3D; access;
+        file.updatedBy &#x3D; userId;
+        file.version +&#x3D; 1;
+      }
+      await queryRunner.manager.save(files);
+      await queryRunner.commitTransaction();
+      return { success: true };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * 删除文件
+   * @param fileId
+   * @param userId
+   * @returns
+   */
+  async deleteFile(fileId: number, userId: number) {
+    const queryRunner &#x3D; this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const file &#x3D; await queryRunner.manager.findOne(FileEntity, {
+        where: { id: fileId },
+        lock: { mode: &#x27;pessimistic_write&#x27; },
+      });
+      if (!file) {
+        throw new RpcException({
+          code: HttpStatus.NOT_FOUND,
+          message: &#x27;未找到文件&#x27;,
+        });
+      }
+      if (file.createdBy !&#x3D;&#x3D; userId) {
+        throw new RpcException({
+          code: HttpStatus.FORBIDDEN,
+          message: &#x27;无权删除他人文件&#x27;,
+        });
+      }
+      // 检查文件是否被引用
+      const referenceCount &#x3D; await queryRunner.manager.count(FileEntity, {
+        where: { fileMd5: file.fileMd5 },
+      });
+      // 如果文件没有被引用，删除文件元数据及文件
+      if (referenceCount &#x3D;&#x3D;&#x3D; 0) {
+        await queryRunner.manager.delete(FileEntity, fileId);
+        await queryRunner.commitTransaction();
+        await this.fileOperationService.deleteFile(file.filePath);
+      } else {
+        // 如果文件被引用，直接删除文件元数据，不删除实际文件
+        await queryRunner.manager.delete(FileEntity, fileId);
+        await queryRunner.commitTransaction();
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * 批量删除文件
+   * @param fileIds
+   * @returns
+   */
+  async deleteFiles(fileIds: number[], userId: number) {
+    const queryRunner &#x3D; this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const files &#x3D; await queryRunner.manager.find(FileEntity, {
+        where: { id: In(fileIds) },
+      });
+      if (files.length &#x3D;&#x3D;&#x3D; 0) {
+        throw new RpcException({
+          code: HttpStatus.NOT_FOUND,
+          message: &#x27;未找到文件&#x27;,
+        });
+      }
+      for (const file of files) {
+        if (file.createdBy !&#x3D;&#x3D; userId) {
+          throw new RpcException({
+            code: HttpStatus.FORBIDDEN,
+            message: &#x27;无权删除他人文件&#x27;,
+          });
+        }
+      }
+      // 检查是否有引用该文件
+      const fileMd5s &#x3D; files.map((file) &#x3D;&gt; file.fileMd5);
+      const referenceCount &#x3D; await queryRunner.manager.count(FileEntity, {
+        where: { fileMd5: In(fileMd5s) },
+      });
+      const filesToDelete &#x3D; files.filter((file) &#x3D;&gt; {
+        const count &#x3D; referenceCount[file.fileMd5];
+        return count &#x3D;&#x3D;&#x3D; 0;
+      });
+      // 删除文件
+      const deletionPromises &#x3D; filesToDelete.map((file) &#x3D;&gt;
+        this.fileOperationService.deleteFile(file.filePath),
+      );
+      await Promise.all(deletionPromises);
+      // 删除文件元数据
+      await queryRunner.manager.delete(FileEntity, fileIds);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * 获取文件使用量统计
+   * @param userId
+   * @returns
+   */
+  async getFilesStatisticUsage(userId: number) {
+    const computeFileSizeByType &#x3D; async (
+      createdBy: number,
+      fileTypes: string[],
+    ) &#x3D;&gt; {
+      const queryBuilder &#x3D; this.fileRepository
+        .createQueryBuilder(&#x27;file&#x27;)
+        .select([
+          &#x27;SUM(file.fileSize) AS used&#x27;,
+          &#x27;MAX(file.updatedAt) AS last_updated&#x27;,
+        ])
+        .where(&#x27;file.createdBy &#x3D; :createdBy&#x27;, { createdBy });
+
+      if (fileTypes.length &gt; 0) {
+        queryBuilder.andWhere(&#x27;file.fileType IN (:...fileTypes)&#x27;, {
+          fileTypes,
+        });
+      }
+      return queryBuilder.getRawOne();
+    };
+
+    const imageTypes &#x3D; getFileType(&#x27;image&#x27;);
+    const videoTypes &#x3D; getFileType(&#x27;video&#x27;);
+    const appTypes &#x3D; getFileType(&#x27;app&#x27;);
+    const audioTypes &#x3D; getFileType(&#x27;audio&#x27;);
+    const docTypes &#x3D; getFileType(&#x27;application&#x27;);
+    const otherTypes &#x3D; getFileType(&#x27;other&#x27;);
+
+    try {
+      const [total, image, video, app, audio, docs, other] &#x3D; await Promise.all([
+        computeFileSizeByType(userId, []),
+        computeFileSizeByType(userId, imageTypes),
+        computeFileSizeByType(userId, videoTypes),
+        computeFileSizeByType(userId, appTypes),
+        computeFileSizeByType(userId, audioTypes),
+        computeFileSizeByType(userId, docTypes),
+        computeFileSizeByType(userId, otherTypes),
+      ]);
+
+      return {
+        success: true,
+        result: {
+          total: total || { used: 0, last_updated: null },
+          image: image || { used: 0, last_updated: null },
+          video: video || { used: 0, last_updated: null },
+          app: app || { used: 0, last_updated: null },
+          audio: audio || { used: 0, last_updated: null },
+          docs: docs || { used: 0, last_updated: null },
+          other: other || { used: 0, last_updated: null },
+        },
+      };
+    } catch (error) {
+      throw new RpcException(&#x27;获取文件空间信息失败: &#x27; + error);
+    }
   }
 }
 </code></pre>

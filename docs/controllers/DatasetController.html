@@ -112,7 +112,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/dataset/dataset.controller.ts</code>
+            <code>apps/api-gateway/src/modules/dataset/dataset.controller.ts</code>
         </p>
 
             <p class="comment">
@@ -141,6 +141,7 @@
                     <td class="col-md-4">
                         <ul class="index-list">
                             <li>
+                                    <span class="modifier"></span>
                                     <span class="modifier"></span>
                                     <span class="modifier">Async</span>
                                 <a href="#createDataset" >createDataset</a>
@@ -190,6 +191,7 @@
                     <a name="createDataset"></a>
                     <span class="name">
                             <span class="modifier"></span>
+                            <span class="modifier"></span>
                             <span class="modifier">Async</span>
                         <span ><b>createDataset</b></span>
                         <a href="#createDataset"><span class="icon ion-ios-link"></span></a>
@@ -207,14 +209,14 @@
                 <td class="col-md-4">
                     <b>Decorators : </b>
                     <br />
-                    <code>@Post(&#x27;create&#x27;)<br /></code>
+                    <code>@Post(&#x27;create&#x27;)<br />@HttpCode(HttpStatus.CREATED)<br /></code>
                 </td>
             </tr>
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="58"
-                                    class="link-to-prism">src/modules/dataset/dataset.controller.ts:58</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="76"
+                                    class="link-to-prism">apps/api-gateway/src/modules/dataset/dataset.controller.ts:76</a></div>
                         </td>
                     </tr>
 
@@ -302,8 +304,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="37"
-                                    class="link-to-prism">src/modules/dataset/dataset.controller.ts:37</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="45"
+                                    class="link-to-prism">apps/api-gateway/src/modules/dataset/dataset.controller.ts:45</a></div>
                         </td>
                     </tr>
 
@@ -483,8 +485,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="91"
-                                    class="link-to-prism">src/modules/dataset/dataset.controller.ts:91</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="142"
+                                    class="link-to-prism">apps/api-gateway/src/modules/dataset/dataset.controller.ts:142</a></div>
                         </td>
                     </tr>
 
@@ -572,8 +574,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="64"
-                                    class="link-to-prism">src/modules/dataset/dataset.controller.ts:64</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="93"
+                                    class="link-to-prism">apps/api-gateway/src/modules/dataset/dataset.controller.ts:93</a></div>
                         </td>
                     </tr>
 
@@ -649,8 +651,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="76"
-                                    class="link-to-prism">src/modules/dataset/dataset.controller.ts:76</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="115"
+                                    class="link-to-prism">apps/api-gateway/src/modules/dataset/dataset.controller.ts:115</a></div>
                         </td>
                     </tr>
 
@@ -724,12 +726,13 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Roles } from &#x27;@/common/decorator/roles.decorator&#x27;;
-import { Role } from &#x27;@/common/enum/role.enum&#x27;;
-import { TypeormFilter } from &#x27;@/common/filters/typeorm.filter&#x27;;
-import { AuthGuard } from &#x27;@/common/guards/auth.guard&#x27;;
-import { RolesGuard } from &#x27;@/common/guards/roles.guard&#x27;;
-import { ParseStringDatePipe } from &#x27;@/common/pipe/string-date.pipe&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Roles } from &#x27;@common/decorator/roles.decorator&#x27;;
+import { CreateDatasetDto } from &#x27;@common/dto/dataset/create-dataset.dto&#x27;;
+import { UpdateDatasetDto } from &#x27;@common/dto/dataset/update-dataset.dto&#x27;;
+import { TypeormFilter } from &#x27;@common/filters/typeorm.filter&#x27;;
+import { AuthGuard } from &#x27;@common/guards/auth.guard&#x27;;
+import { RolesGuard } from &#x27;@common/guards/roles.guard&#x27;;
+import { ParseStringDatePipe } from &#x27;@common/pipe/string-date.pipe&#x27;;
 import {
   Body,
   Controller,
@@ -737,6 +740,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
@@ -746,17 +750,23 @@ import {
   UseFilters,
   UseGuards,
 } from &#x27;@nestjs/common&#x27;;
+import { ClientProxy } from &#x27;@nestjs/microservices&#x27;;
+import { ApiTags } from &#x27;@nestjs/swagger&#x27;;
+import { Role } from &#x27;@shared/enum/role.enum&#x27;;
+import { formatResponse } from &#x27;@shared/helpers/response.helper&#x27;;
+import { FILE_SERVICE_NAME } from &#x27;config/microservice.config&#x27;;
 import { Request } from &#x27;express&#x27;;
-import { CreateDatasetDto } from &#x27;./dto/create-dataset.dto&#x27;;
-import { UpdateDatasetDto } from &#x27;./dto/update-dataset.dto&#x27;;
-import { DatasetManageService } from &#x27;./service/dataset-manage.service&#x27;;
+import { firstValueFrom, lastValueFrom } from &#x27;rxjs&#x27;;
 
+@ApiTags(&#x27;数据集管理模块&#x27;)
 @Controller(&#x27;dataset&#x27;)
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
 @UseFilters(TypeormFilter)
 export class DatasetController {
-  constructor(private readonly manageService: DatasetManageService) {}
+  constructor(
+    @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
+  ) {}
 
   // 获取数据集列表
   @Get(&#x27;list&#x27;)
@@ -770,19 +780,40 @@ export class DatasetController {
     @Query(&#x27;updatedStart&#x27;, ParseStringDatePipe) updatedStart?: string,
     @Query(&#x27;updatedEnd&#x27;, ParseStringDatePipe) updatedEnd?: string,
   ) {
-    return this.manageService.datasetsListGet(page, pageSize, req.user.userId, {
-      name,
-      createdStart,
-      createdEnd,
-      updatedStart,
-      updatedEnd,
-    });
+    const response &#x3D; await lastValueFrom(
+      this.fileClient.send(
+        { cmd: &#x27;dataset.get.list&#x27; },
+        {
+          page,
+          pageSize,
+          name,
+          createdStart,
+          createdEnd,
+          updatedStart,
+          updatedEnd,
+          userId: req.user.userId,
+        },
+      ),
+    );
+    return formatResponse(200, response?.result, &#x27;获取数据集列表成功&#x27;);
   }
 
   // 创建数据集
   @Post(&#x27;create&#x27;)
+  @HttpCode(HttpStatus.CREATED)
   async createDataset(@Req() req: Request, @Body() dto: CreateDatasetDto) {
-    return this.manageService.createDataset(req.user.userId, dto);
+    const response &#x3D; await lastValueFrom(
+      this.fileClient.send(
+        {
+          cmd: &#x27;dataset.create&#x27;,
+        },
+        {
+          userId: req.user.userId,
+          dto,
+        },
+      ),
+    );
+    return formatResponse(201, response?.result, &#x27;创建数据集成功&#x27;);
   }
 
   // 获取数据集详情
@@ -794,7 +825,17 @@ export class DatasetController {
     )
     datasetId: number,
   ) {
-    return this.manageService.getDatasetDetail(datasetId);
+    const response &#x3D; await lastValueFrom(
+      this.fileClient.send(
+        {
+          cmd: &#x27;dataset.detail&#x27;,
+        },
+        {
+          datasetId,
+        },
+      ),
+    );
+    return formatResponse(200, response?.result, &#x27;获取数据集详情成功&#x27;);
   }
 
   // 更新数据集
@@ -808,7 +849,19 @@ export class DatasetController {
     @Req() req: Request,
     @Body() dto: UpdateDatasetDto,
   ) {
-    return this.manageService.updateDataset(datasetId, req.user.userId, dto);
+    const response &#x3D; await lastValueFrom(
+      this.fileClient.send(
+        {
+          cmd: &#x27;dataset.update&#x27;,
+        },
+        {
+          datasetId,
+          userId: req.user.userId,
+          dto,
+        },
+      ),
+    );
+    return formatResponse(200, response?.result, &#x27;更新数据集成功&#x27;);
   }
 
   // 删除数据集
@@ -822,7 +875,18 @@ export class DatasetController {
     datasetId: number,
     @Req() req: Request,
   ) {
-    return this.manageService.deleteDataset(datasetId, req.user.userId);
+    await firstValueFrom(
+      this.fileClient.send(
+        {
+          cmd: &#x27;dataset.delete&#x27;,
+        },
+        {
+          datasetId,
+          userId: req.user.userId,
+        },
+      ),
+    );
+    return formatResponse(204, null, &#x27;删除数据集成功&#x27;);
   }
 }
 </code></pre>

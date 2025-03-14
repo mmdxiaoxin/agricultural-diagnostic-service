@@ -115,7 +115,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/diagnosis/diagnosis.service.ts</code>
+            <code>apps/api-gateway/src/modules/diagnosis/diagnosis.service.ts</code>
         </p>
 
 
@@ -126,6 +126,21 @@
     <h3 id="index">Index</h3>
     <table class="table table-sm table-bordered index-table">
         <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Properties</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#handleFileMd5" >handleFileMd5</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
 
                 <tr>
                     <td class="col-md-4">
@@ -142,6 +157,10 @@
                             <li>
                                     <span class="modifier">Async</span>
                                 <a href="#diagnosisHistoryListGet" >diagnosisHistoryListGet</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#diagnosisSupportGet" >diagnosisSupportGet</a>
                             </li>
                             <li>
                                     <span class="modifier">Async</span>
@@ -173,12 +192,12 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
-<code>constructor(diagnosisRepository: <a href="../classes/DiagnosisHistory.html" target="_self">Repository&lt;DiagnosisHistory&gt;</a>, fileManageService: <a href="../injectables/FileManageService.html" target="_self">FileManageService</a>, fileOperationService: <a href="../injectables/FileOperationService.html" target="_self">FileOperationService</a>, dataSource: DataSource)</code>
+<code>constructor(diagnosisRepository: Repository<DiagnosisHistory>, fileOperationService: <a href="../injectables/FileOperationService.html" target="_self">FileOperationService</a>, dataSource: DataSource)</code>
                     </td>
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="11" class="link-to-prism">src/modules/diagnosis/diagnosis.service.ts:11</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="18" class="link-to-prism">apps/api-gateway/src/modules/diagnosis/diagnosis.service.ts:18</a></div>
                             </td>
                         </tr>
 
@@ -199,19 +218,7 @@
                                                         <td>diagnosisRepository</td>
                                                   
                                                         <td>
-                                                                        <code><a href="../classes/DiagnosisHistory.html" target="_self" >Repository&lt;DiagnosisHistory&gt;</a></code>
-                                                        </td>
-                                                  
-                                                    <td>
-                                                            No
-                                                    </td>
-                                                    
-                                                </tr>
-                                                <tr>
-                                                        <td>fileManageService</td>
-                                                  
-                                                        <td>
-                                                                        <code><a href="../injectables/FileManageService.html" target="_self" >FileManageService</a></code>
+                                                                    <code>Repository&lt;DiagnosisHistory&gt;</code>
                                                         </td>
                                                   
                                                     <td>
@@ -279,8 +286,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="93"
-                                    class="link-to-prism">src/modules/diagnosis/diagnosis.service.ts:93</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="131"
+                                    class="link-to-prism">apps/api-gateway/src/modules/diagnosis/diagnosis.service.ts:131</a></div>
                         </td>
                     </tr>
 
@@ -348,8 +355,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="102"
-                                    class="link-to-prism">src/modules/diagnosis/diagnosis.service.ts:102</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="152"
+                                    class="link-to-prism">apps/api-gateway/src/modules/diagnosis/diagnosis.service.ts:152</a></div>
                         </td>
                     </tr>
 
@@ -432,6 +439,45 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
+                    <a name="diagnosisSupportGet"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>diagnosisSupportGet</b></span>
+                        <a href="#diagnosisSupportGet"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>diagnosisSupportGet()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="140"
+                                    class="link-to-prism">apps/api-gateway/src/modules/diagnosis/diagnosis.service.ts:140</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
                     <a name="getDiagnosisStatus"></a>
                     <span class="name">
                             <span class="modifier">Async</span>
@@ -450,8 +496,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="83"
-                                    class="link-to-prism">src/modules/diagnosis/diagnosis.service.ts:83</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="121"
+                                    class="link-to-prism">apps/api-gateway/src/modules/diagnosis/diagnosis.service.ts:121</a></div>
                         </td>
                     </tr>
 
@@ -512,15 +558,15 @@
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>startDiagnosis(id: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                    <code>startDiagnosis(id: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
                 </td>
             </tr>
 
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="59"
-                                    class="link-to-prism">src/modules/diagnosis/diagnosis.service.ts:59</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="70"
+                                    class="link-to-prism">apps/api-gateway/src/modules/diagnosis/diagnosis.service.ts:70</a></div>
                         </td>
                     </tr>
 
@@ -542,6 +588,18 @@
                                     <tbody>
                                         <tr>
                                                 <td>id</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>userId</td>
                                             <td>
                                                             <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
                                             </td>
@@ -588,8 +646,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="21"
-                                    class="link-to-prism">src/modules/diagnosis/diagnosis.service.ts:21</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="36"
+                                    class="link-to-prism">apps/api-gateway/src/modules/diagnosis/diagnosis.service.ts:36</a></div>
                         </td>
                     </tr>
 
@@ -648,29 +706,76 @@
         </tbody>
     </table>
 </section>
+            <section data-compodoc="block-properties">
+    
+    <h3 id="inputs">
+        Properties
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="handleFileMd5"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>handleFileMd5</b></span>
+                        <a href="#handleFileMd5"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>() &#x3D;&gt; {...}</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="26" class="link-to-prism">apps/api-gateway/src/modules/diagnosis/diagnosis.service.ts:26</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+</section>
 
     </div>
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Status } from &#x27;@/common/enum/status.enum&#x27;;
-import { formatResponse } from &#x27;@/common/helpers/response.helper&#x27;;
-import { FileManageService } from &#x27;@/modules/file/services/file-manage.service&#x27;;
-import { FileOperationService } from &#x27;@/modules/file/services/file-operation.service&#x27;;
-import { Injectable, NotFoundException } from &#x27;@nestjs/common&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { DiagnosisHistory, File as FileEntity } from &#x27;@app/database/entities&#x27;;
+import {
+  BadGatewayException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from &#x27;@nestjs/common&#x27;;
 import { InjectRepository } from &#x27;@nestjs/typeorm&#x27;;
+import { Status } from &#x27;@shared/enum/status.enum&#x27;;
+import { formatResponse } from &#x27;@shared/helpers/response.helper&#x27;;
+import axios from &#x27;axios&#x27;;
+import * as crypto from &#x27;crypto&#x27;;
+import * as fs from &#x27;fs&#x27;;
 import { DataSource, Repository } from &#x27;typeorm&#x27;;
-import { DiagnosisHistory } from &#x27;./models/diagnosis-history.entity&#x27;;
+import { FileOperationService } from &#x27;../file/services/file-operation.service&#x27;;
 
 @Injectable()
 export class DiagnosisService {
   constructor(
     @InjectRepository(DiagnosisHistory)
     private readonly diagnosisRepository: Repository&lt;DiagnosisHistory&gt;,
-    private readonly fileManageService: FileManageService,
     private readonly fileOperationService: FileOperationService,
     private readonly dataSource: DataSource,
   ) {}
+
+  private handleFileMd5 &#x3D; (filePath: string) &#x3D;&gt;
+    new Promise&lt;string&gt;((resolve, reject) &#x3D;&gt; {
+      const hash &#x3D; crypto.createHash(&#x27;md5&#x27;);
+      const stream &#x3D; fs.createReadStream(filePath);
+      stream.on(&#x27;data&#x27;, (data) &#x3D;&gt; hash.update(data));
+      stream.on(&#x27;end&#x27;, () &#x3D;&gt; resolve(hash.digest(&#x27;hex&#x27;)));
+      stream.on(&#x27;error&#x27;, (error) &#x3D;&gt; reject(error));
+    });
 
   // 上传待诊断数据
   async uploadData(userId: number, file: Express.Multer.File) {
@@ -683,21 +788,17 @@ export class DiagnosisService {
         updatedBy: userId,
         status: Status.PENDING,
       });
-      const fileMd5 &#x3D; await this.fileOperationService.calculateFileMd5(
-        file.path,
-      );
-      const fileEntity &#x3D; await this.fileManageService.createFileInTransaction(
-        userId,
-        {
-          originalFileName: file.originalname,
-          storageFileName: file.filename,
-          fileSize: file.size,
-          fileType: file.mimetype,
-          filePath: file.path,
-          fileMd5,
-        },
-        queryRunner,
-      );
+      const fileMd5 &#x3D; await this.handleFileMd5(file.path);
+      const fileEntity &#x3D; queryRunner.manager.create(FileEntity, {
+        originalFileName: file.originalname,
+        storageFileName: file.filename,
+        fileSize: file.size,
+        fileType: file.mimetype,
+        filePath: file.path,
+        createdBy: userId,
+        updatedBy: userId,
+        fileMd5,
+      });
       diagnosisHistory.file &#x3D; fileEntity;
       await queryRunner.manager.save(diagnosisHistory);
       await queryRunner.commitTransaction();
@@ -711,7 +812,7 @@ export class DiagnosisService {
   }
 
   // 开始诊断数据
-  async startDiagnosis(id: number) {
+  async startDiagnosis(id: number, userId: number) {
     const queryRunner &#x3D; this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -719,16 +820,43 @@ export class DiagnosisService {
       const diagnosis &#x3D; await queryRunner.manager.findOne(DiagnosisHistory, {
         where: { id },
         lock: { mode: &#x27;pessimistic_write&#x27; },
+        relations: [&#x27;file&#x27;],
       });
       if (!diagnosis) {
         throw new NotFoundException(&#x27;未找到诊断记录&#x27;);
       }
+      if (diagnosis.createdBy !&#x3D;&#x3D; userId) {
+        throw new UnauthorizedException(&#x27;无权操作&#x27;);
+      }
       diagnosis.status &#x3D; Status.IN_PROGRESS;
-      await this.diagnosisRepository.save(diagnosis);
-      return formatResponse(200, null, &#x27;开始诊断成功&#x27;);
+      await queryRunner.manager.save(diagnosis);
+      const file &#x3D; diagnosis.file;
+      if (!file) {
+        throw new NotFoundException(&#x27;未找到文件&#x27;);
+      }
+      const fileStream &#x3D; await this.fileOperationService.readFile(
+        file.filePath,
+      );
+      const fileBlob &#x3D; new Blob([fileStream]);
+      const formData &#x3D; new FormData();
+      formData.append(&#x27;image&#x27;, fileBlob, file.originalFileName);
+      const response &#x3D; await axios.post(
+        &#x27;http://localhost:5001/yolo11/plant/classify&#x27;,
+        formData,
+        {
+          headers: {
+            &#x27;Content-Type&#x27;: &#x27;multipart/form-data&#x27;,
+          },
+        },
+      );
+      diagnosis.status &#x3D; Status.COMPLETED;
+      diagnosis.diagnosisResult &#x3D; response.data;
+      await queryRunner.manager.save(diagnosis);
+      await queryRunner.commitTransaction();
+      return formatResponse(200, response.data, &#x27;诊断成功&#x27;);
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new error();
+      throw new BadGatewayException(&#x27;诊断失败&#x27;);
     } finally {
       await queryRunner.release();
     }
@@ -749,8 +877,20 @@ export class DiagnosisService {
     const diagnosisHistory &#x3D; await this.diagnosisRepository.find({
       where: { createdBy: userId },
       order: { createdAt: &#x27;DESC&#x27; },
+      relations: [&#x27;file&#x27;],
     });
     return formatResponse(200, diagnosisHistory, &#x27;获取诊断历史记录成功&#x27;);
+  }
+
+  async diagnosisSupportGet() {
+    return formatResponse(
+      200,
+      {
+        plantId: 1,
+        modelId: 1,
+      },
+      &#x27;获取诊断支持成功&#x27;,
+    );
   }
 
   // 获取诊断历史记录
@@ -762,6 +902,7 @@ export class DiagnosisService {
     const [list, total] &#x3D; await this.diagnosisRepository.findAndCount({
       where: { createdBy: userId },
       order: { createdAt: &#x27;DESC&#x27; },
+      relations: [&#x27;file&#x27;],
       take: pageSize,
       skip: (page - 1) * pageSize,
     });

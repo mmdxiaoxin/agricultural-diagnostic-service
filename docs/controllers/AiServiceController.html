@@ -112,7 +112,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/ai-service/ai-service.controller.ts</code>
+            <code>apps/api-gateway/src/modules/ai-service/ai-service.controller.ts</code>
         </p>
 
             <p class="comment">
@@ -142,6 +142,19 @@
                         <ul class="index-list">
                             <li>
                                     <span class="modifier"></span>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#addConfig" >addConfig</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#addConfigs" >addConfigs</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier"></span>
                                     <span class="modifier">Async</span>
                                 <a href="#create" >create</a>
                             </li>
@@ -163,12 +176,29 @@
                             <li>
                                     <span class="modifier"></span>
                                     <span class="modifier">Async</span>
+                                <a href="#findServiceConfigs" >findServiceConfigs</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
                                 <a href="#remove" >remove</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#removeConfig" >removeConfig</a>
                             </li>
                             <li>
                                     <span class="modifier"></span>
                                     <span class="modifier">Async</span>
                                 <a href="#update" >update</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateConfig" >updateConfig</a>
                             </li>
                         </ul>
                     </td>
@@ -191,8 +221,189 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
+                    <a name="addConfig"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>addConfig</b></span>
+                        <a href="#addConfig"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>addConfig(serviceId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, dto: <a href="../classes/CreateAiConfigDto.html" target="_self">CreateAiConfigDto</a>)</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Post(&#x27;:serviceId/config&#x27;)<br />@HttpCode(HttpStatus.CREATED)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="112"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:112</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>serviceId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>dto</td>
+                                            <td>
+                                                            <code><a href="../classes/CreateAiConfigDto.html" target="_self" >CreateAiConfigDto</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="addConfigs"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>addConfigs</b></span>
+                        <a href="#addConfigs"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>addConfigs(serviceId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, dto: <a href="../classes/CreateAiConfigsDto.html" target="_self">CreateAiConfigsDto</a>)</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Post(&#x27;:serviceId/configs&#x27;)<br />@HttpCode(HttpStatus.CREATED)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="127"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:127</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>serviceId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>dto</td>
+                                            <td>
+                                                            <code><a href="../classes/CreateAiConfigsDto.html" target="_self" >CreateAiConfigsDto</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
                     <a name="create"></a>
                     <span class="name">
+                            <span class="modifier"></span>
                             <span class="modifier"></span>
                             <span class="modifier">Async</span>
                         <span ><b>create</b></span>
@@ -211,14 +422,14 @@
                 <td class="col-md-4">
                     <b>Decorators : </b>
                     <br />
-                    <code>@Post()<br /></code>
+                    <code>@Post()<br />@HttpCode(HttpStatus.CREATED)<br /></code>
                 </td>
             </tr>
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="29"
-                                    class="link-to-prism">src/modules/ai-service/ai-service.controller.ts:29</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="44"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:44</a></div>
                         </td>
                     </tr>
 
@@ -254,7 +465,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>        <code><a href="../classes/AiService.html" target="_self" >Promise&lt;AiService&gt;</a></code>
+                            <b>Returns : </b>    <code>unknown</code>
 
                         </div>
                             <div class="io-description">
@@ -294,8 +505,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="35"
-                                    class="link-to-prism">src/modules/ai-service/ai-service.controller.ts:35</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="51"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:51</a></div>
                         </td>
                     </tr>
 
@@ -304,7 +515,7 @@
                 <td class="col-md-4">
 
                         <div class="io-description">
-                            <b>Returns : </b>        <code><a href="../classes/AiService.html" target="_self" >Promise&lt;AiService[]&gt;</a></code>
+                            <b>Returns : </b>    <code>unknown</code>
 
                         </div>
                 </td>
@@ -341,8 +552,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="50"
-                                    class="link-to-prism">src/modules/ai-service/ai-service.controller.ts:50</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="71"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:71</a></div>
                         </td>
                     </tr>
 
@@ -418,8 +629,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="41"
-                                    class="link-to-prism">src/modules/ai-service/ai-service.controller.ts:41</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="58"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:58</a></div>
                         </td>
                     </tr>
 
@@ -467,7 +678,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>        <code><a href="../classes/AiService.html" target="_self" >Promise&lt;AiService[]&gt;</a></code>
+                            <b>Returns : </b>    <code>unknown</code>
 
                         </div>
                             <div class="io-description">
@@ -481,19 +692,19 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
-                    <a name="remove"></a>
+                    <a name="findServiceConfigs"></a>
                     <span class="name">
                             <span class="modifier"></span>
                             <span class="modifier">Async</span>
-                        <span ><b>remove</b></span>
-                        <a href="#remove"><span class="icon ion-ios-link"></span></a>
+                        <span ><b>findServiceConfigs</b></span>
+                        <a href="#findServiceConfigs"><span class="icon ion-ios-link"></span></a>
                     </span>
                 </td>
             </tr>
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>remove(serviceId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                    <code>findServiceConfigs(serviceId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
                 </td>
             </tr>
 
@@ -501,14 +712,14 @@
                 <td class="col-md-4">
                     <b>Decorators : </b>
                     <br />
-                    <code>@Delete(&#x27;:serviceId&#x27;)<br /></code>
+                    <code>@Get(&#x27;:serviceId/config&#x27;)<br /></code>
                 </td>
             </tr>
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="65"
-                                    class="link-to-prism">src/modules/ai-service/ai-service.controller.ts:65</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="141"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:141</a></div>
                         </td>
                     </tr>
 
@@ -544,7 +755,175 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="remove"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>remove</b></span>
+                        <a href="#remove"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>remove(serviceId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Delete(&#x27;:serviceId&#x27;)<br />@HttpCode(HttpStatus.NO_CONTENT)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="99"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:99</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>serviceId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="removeConfig"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>removeConfig</b></span>
+                        <a href="#removeConfig"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>removeConfig(_: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, configId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Delete(&#x27;:serviceId/config/:configId&#x27;)<br />@HttpCode(HttpStatus.NO_CONTENT)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="174"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:174</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>_</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>configId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
 
                         </div>
                             <div class="io-description">
@@ -584,8 +963,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="56"
-                                    class="link-to-prism">src/modules/ai-service/ai-service.controller.ts:56</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="84"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:84</a></div>
                         </td>
                     </tr>
 
@@ -633,7 +1012,108 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>        <code><a href="../classes/AiService.html" target="_self" >Promise&lt;AiService&gt;</a></code>
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateConfig"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>updateConfig</b></span>
+                        <a href="#updateConfig"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateConfig(_: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, configId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, dto: <a href="../classes/CreateAiConfigDto.html" target="_self">CreateAiConfigDto</a>)</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Put(&#x27;:serviceId/config/:configId&#x27;)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="154"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/ai-service.controller.ts:154</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>_</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>configId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>dto</td>
+                                            <td>
+                                                            <code><a href="../classes/CreateAiConfigDto.html" target="_self" >CreateAiConfigDto</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
 
                         </div>
                             <div class="io-description">
@@ -647,42 +1127,59 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Roles } from &#x27;@/common/decorator/roles.decorator&#x27;;
-import { Role } from &#x27;@/common/enum/role.enum&#x27;;
-import { AuthGuard } from &#x27;@/common/guards/auth.guard&#x27;;
-import { RolesGuard } from &#x27;@/common/guards/roles.guard&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Roles } from &#x27;@common/decorator/roles.decorator&#x27;;
+import { Role } from &#x27;@shared/enum/role.enum&#x27;;
+import { TypeormFilter } from &#x27;@common/filters/typeorm.filter&#x27;;
+import { AuthGuard } from &#x27;@common/guards/auth.guard&#x27;;
+import { RolesGuard } from &#x27;@common/guards/roles.guard&#x27;;
+import { formatResponse } from &#x27;@shared/helpers/response.helper&#x27;;
 import {
   Body,
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
+  UseFilters,
   UseGuards,
 } from &#x27;@nestjs/common&#x27;;
+import { CreateAiConfigDto } from &#x27;./dto/create-ai-config.dto&#x27;;
+import { CreateAiConfigsDto } from &#x27;./dto/create-ai-configs.dto&#x27;;
 import { CreateAiServiceDto } from &#x27;./dto/create-ai-service.dto&#x27;;
 import { UpdateAiServiceDto } from &#x27;./dto/update-ai-service.dto&#x27;;
-import { AiService } from &#x27;./models/ai-service.entity&#x27;;
+import { AiConfigsService } from &#x27;./services/ai-service-config.service&#x27;;
 import { AiServiceService } from &#x27;./services/ai-service.service&#x27;;
+import { ApiTags } from &#x27;@nestjs/swagger&#x27;;
 
+@ApiTags(&#x27;诊断服务管理模块&#x27;)
 @Controller(&#x27;ai-service&#x27;)
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
+@UseFilters(TypeormFilter)
 export class AiServiceController {
-  constructor(private readonly aiServiceService: AiServiceService) {}
+  constructor(
+    private readonly aiServiceService: AiServiceService,
+    private readonly aiConfigsService: AiConfigsService,
+  ) {}
 
   // 创建AI服务
   @Post()
-  async create(@Body() dto: CreateAiServiceDto): Promise&lt;AiService&gt; {
-    return this.aiServiceService.create(dto);
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() dto: CreateAiServiceDto) {
+    await this.aiServiceService.create(dto);
+    return formatResponse(201, null, &#x27;创建成功&#x27;);
   }
 
   // 获取全部AI服务
   @Get()
-  async findAll(): Promise&lt;AiService[]&gt; {
-    return this.aiServiceService.findAll();
+  async findAll() {
+    const services &#x3D; await this.aiServiceService.findAll();
+    return formatResponse(200, services, &#x27;获取成功&#x27;);
   }
 
   // 分页查询AI服务
@@ -690,29 +1187,132 @@ export class AiServiceController {
   async findPaginated(
     @Query(&#x27;page&#x27;) page: number,
     @Query(&#x27;pageSize&#x27;) pageSize: number,
-  ): Promise&lt;AiService[]&gt; {
-    return this.aiServiceService.findPaginated(page, pageSize);
+  ) {
+    const [list, total] &#x3D; await this.aiServiceService.findPaginated(
+      page,
+      pageSize,
+    );
+    return formatResponse(200, { list, total, page, pageSize }, &#x27;获取成功&#x27;);
   }
 
   // 获取单个AI服务
   @Get(&#x27;:serviceId&#x27;)
-  async findOne(@Param(&#x27;serviceId&#x27;) serviceId: number) {
-    return this.aiServiceService.findOne(serviceId);
+  async findOne(
+    @Param(
+      &#x27;serviceId&#x27;,
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
+  ) {
+    const service &#x3D; await this.aiServiceService.findOne(serviceId);
+    return formatResponse(200, service, &#x27;获取成功&#x27;);
   }
 
   // 更新AI服务
   @Put(&#x27;:serviceId&#x27;)
   async update(
-    @Param(&#x27;serviceId&#x27;) serviceId: number,
+    @Param(
+      &#x27;serviceId&#x27;,
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
     @Body() updateAiServiceDto: UpdateAiServiceDto,
-  ): Promise&lt;AiService&gt; {
-    return this.aiServiceService.update(serviceId, updateAiServiceDto);
+  ) {
+    await this.aiServiceService.update(serviceId, updateAiServiceDto);
+    return formatResponse(200, null, &#x27;更新成功&#x27;);
   }
 
   // 删除AI服务
   @Delete(&#x27;:serviceId&#x27;)
-  async remove(@Param(&#x27;serviceId&#x27;) serviceId: number): Promise&lt;void&gt; {
-    return this.aiServiceService.remove(serviceId);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @Param(
+      &#x27;serviceId&#x27;,
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
+  ) {
+    await this.aiServiceService.remove(serviceId);
+  }
+
+  // 增加AI服务配置
+  @Post(&#x27;:serviceId/config&#x27;)
+  @HttpCode(HttpStatus.CREATED)
+  async addConfig(
+    @Param(
+      &#x27;serviceId&#x27;,
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
+    @Body() dto: CreateAiConfigDto,
+  ) {
+    await this.aiConfigsService.addConfig(serviceId, dto);
+    return formatResponse(201, null, &#x27;创建成功&#x27;);
+  }
+
+  // 批量增加AI服务配置
+  @Post(&#x27;:serviceId/configs&#x27;)
+  @HttpCode(HttpStatus.CREATED)
+  async addConfigs(
+    @Param(
+      &#x27;serviceId&#x27;,
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
+    @Body() dto: CreateAiConfigsDto,
+  ) {
+    await this.aiConfigsService.addConfigs(serviceId, dto);
+    return formatResponse(201, null, &#x27;创建成功&#x27;);
+  }
+
+  // 获取服务配置
+  @Get(&#x27;:serviceId/config&#x27;)
+  async findServiceConfigs(
+    @Param(
+      &#x27;serviceId&#x27;,
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
+  ) {
+    const configs &#x3D; await this.aiConfigsService.findServiceConfigs(serviceId);
+    return formatResponse(200, configs, &#x27;获取成功&#x27;);
+  }
+
+  // 更新AI服务配置
+  @Put(&#x27;:serviceId/config/:configId&#x27;)
+  async updateConfig(
+    @Param(
+      &#x27;serviceId&#x27;,
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    _: number,
+    @Param(
+      &#x27;configId&#x27;,
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    configId: number,
+    @Body() dto: CreateAiConfigDto,
+  ) {
+    await this.aiConfigsService.updateConfig(configId, dto);
+    return formatResponse(200, null, &#x27;更新成功&#x27;);
+  }
+
+  // 删除AI服务配置
+  @Delete(&#x27;:serviceId/config/:configId&#x27;)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeConfig(
+    @Param(
+      &#x27;serviceId&#x27;,
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    _: number,
+    @Param(
+      &#x27;configId&#x27;,
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    configId: number,
+  ) {
+    await this.aiConfigsService.removeConfig(configId);
   }
 }
 </code></pre>

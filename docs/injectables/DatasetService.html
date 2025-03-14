@@ -115,7 +115,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/dataset/service/dataset.service.ts</code>
+            <code>apps/file-service/src/modules/dataset/dataset.service.ts</code>
         </p>
 
 
@@ -137,7 +137,23 @@
                         <ul class="index-list">
                             <li>
                                     <span class="modifier">Async</span>
-                                <a href="#findById" >findById</a>
+                                <a href="#createDataset" >createDataset</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#datasetsListGet" >datasetsListGet</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#deleteDataset" >deleteDataset</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getDatasetDetail" >getDatasetDetail</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateDataset" >updateDataset</a>
                             </li>
                         </ul>
                     </td>
@@ -157,12 +173,12 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
-<code>constructor(datasetRepository: <a href="../classes/Dataset.html" target="_self">Repository&lt;Dataset&gt;</a>)</code>
+<code>constructor(datasetRepository: <a href="../classes/Dataset.html" target="_self">Repository&lt;Dataset&gt;</a>, fileRepository: <a href="../classes/File.html" target="_self">Repository&lt;File&gt;</a>)</code>
                     </td>
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="7" class="link-to-prism">src/modules/dataset/service/dataset.service.ts:7</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="11" class="link-to-prism">apps/file-service/src/modules/dataset/dataset.service.ts:11</a></div>
                             </td>
                         </tr>
 
@@ -191,6 +207,18 @@
                                                     </td>
                                                     
                                                 </tr>
+                                                <tr>
+                                                        <td>fileRepository</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../classes/File.html" target="_self" >Repository&lt;File&gt;</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
                                         </tbody>
                                     </table>
                             </div>
@@ -209,26 +237,26 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
-                    <a name="findById"></a>
+                    <a name="createDataset"></a>
                     <span class="name">
                             <span class="modifier">Async</span>
-                        <span ><b>findById</b></span>
-                        <a href="#findById"><span class="icon ion-ios-link"></span></a>
+                        <span ><b>createDataset</b></span>
+                        <a href="#createDataset"><span class="icon ion-ios-link"></span></a>
                     </span>
                 </td>
             </tr>
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>findById(id: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                    <code>createDataset(userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, dto: <a href="../classes/CreateDatasetDto.html" target="_self">CreateDatasetDto</a>)</code>
                 </td>
             </tr>
 
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="13"
-                                    class="link-to-prism">src/modules/dataset/service/dataset.service.ts:13</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="100"
+                                    class="link-to-prism">apps/file-service/src/modules/dataset/dataset.service.ts:100</a></div>
                         </td>
                     </tr>
 
@@ -249,9 +277,369 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                                <td>id</td>
+                                                <td>userId</td>
                                             <td>
                                                             <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>dto</td>
+                                            <td>
+                                                            <code><a href="../classes/CreateDatasetDto.html" target="_self" >CreateDatasetDto</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="datasetsListGet"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>datasetsListGet</b></span>
+                        <a href="#datasetsListGet"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>datasetsListGet(page: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, pageSize: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, filters?: literal type)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="20"
+                                    class="link-to-prism">apps/file-service/src/modules/dataset/dataset.service.ts:20</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>page</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>pageSize</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>filters</td>
+                                            <td>
+                                                        <code>literal type</code>
+                                            </td>
+
+                                            <td>
+                                                    Yes
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="deleteDataset"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>deleteDataset</b></span>
+                        <a href="#deleteDataset"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>deleteDataset(datasetId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="166"
+                                    class="link-to-prism">apps/file-service/src/modules/dataset/dataset.service.ts:166</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>datasetId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getDatasetDetail"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getDatasetDetail</b></span>
+                        <a href="#getDatasetDetail"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getDatasetDetail(datasetId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="119"
+                                    class="link-to-prism">apps/file-service/src/modules/dataset/dataset.service.ts:119</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>datasetId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateDataset"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>updateDataset</b></span>
+                        <a href="#updateDataset"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateDataset(datasetId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, userId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, dto: <a href="../classes/UpdateDatasetDto.html" target="_self">UpdateDatasetDto</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="138"
+                                    class="link-to-prism">apps/file-service/src/modules/dataset/dataset.service.ts:138</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>datasetId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>userId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>dto</td>
+                                            <td>
+                                                            <code><a href="../classes/UpdateDatasetDto.html" target="_self" >UpdateDatasetDto</a></code>
                                             </td>
 
                                             <td>
@@ -280,27 +668,187 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable, NotFoundException } from &#x27;@nestjs/common&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Dataset, File } from &#x27;@app/database/entities&#x27;;
+import { Injectable } from &#x27;@nestjs/common&#x27;;
+import { RpcException } from &#x27;@nestjs/microservices&#x27;;
 import { InjectRepository } from &#x27;@nestjs/typeorm&#x27;;
-import { Repository } from &#x27;typeorm&#x27;;
-import { Dataset } from &#x27;../dataset.entity&#x27;;
+import { formatResponse } from &#x27;@shared/helpers/response.helper&#x27;;
+import { In, Repository } from &#x27;typeorm&#x27;;
+import { CreateDatasetDto } from &#x27;../../../../../packages/common/src/dto/dataset/create-dataset.dto&#x27;;
+import { UpdateDatasetDto } from &#x27;../../../../../packages/common/src/dto/dataset/update-dataset.dto&#x27;;
 
 @Injectable()
 export class DatasetService {
   constructor(
     @InjectRepository(Dataset)
     private datasetRepository: Repository&lt;Dataset&gt;,
+
+    @InjectRepository(File)
+    private fileRepository: Repository&lt;File&gt;,
   ) {}
 
-  async findById(id: number) {
+  async datasetsListGet(
+    page: number,
+    pageSize: number,
+    userId: number,
+    filters?: {
+      name?: string;
+      createdStart?: string;
+      createdEnd?: string;
+      updatedStart?: string;
+      updatedEnd?: string;
+    },
+  ) {
+    const queryBuilder &#x3D; this.datasetRepository.createQueryBuilder(&#x27;dataset&#x27;);
+
+    queryBuilder.where(&#x27;dataset.createdBy &#x3D; :userId&#x27;, { userId });
+
+    // 添加过滤条件
+    if (filters?.name) {
+      queryBuilder.andWhere(&#x27;dataset.name LIKE :name&#x27;, {
+        name: &#x60;%${filters.name}%&#x60;,
+      });
+    }
+    if (filters?.createdStart) {
+      queryBuilder.andWhere(&#x27;dataset.createdAt &gt;&#x3D; :createdStart&#x27;, {
+        createdStart: filters.createdStart,
+      });
+    }
+    if (filters?.createdEnd) {
+      queryBuilder.andWhere(&#x27;dataset.createdAt &lt;&#x3D; :createdEnd&#x27;, {
+        createdEnd: filters.createdEnd,
+      });
+    }
+    if (filters?.updatedStart) {
+      queryBuilder.andWhere(&#x27;dataset.updatedAt &gt;&#x3D; :updatedStart&#x27;, {
+        updatedStart: filters.updatedStart,
+      });
+    }
+    if (filters?.updatedEnd) {
+      queryBuilder.andWhere(&#x27;dataset.updatedAt &lt;&#x3D; :updatedEnd&#x27;, {
+        updatedEnd: filters.updatedEnd,
+      });
+    }
+
+    // 使用 LEFT JOIN 加载 File 实体
+    queryBuilder.leftJoinAndSelect(&#x27;dataset.files&#x27;, &#x27;file&#x27;);
+
+    // 设置分页
+    queryBuilder.skip((page - 1) * pageSize).take(pageSize);
+
+    // 执行查询，获取数据和总数
+    const [datasets, total] &#x3D; await queryBuilder.getManyAndCount();
+
+    // 计算 datasetSize 和 fileCount
+    const list &#x3D; datasets.map((dataset) &#x3D;&gt; {
+      const fileCount &#x3D; dataset.files?.length; // 文件的数量
+      // 计算 datasetSize
+      const datasetSize &#x3D; dataset.files?.reduce((totalSize, file) &#x3D;&gt; {
+        const size &#x3D; file.fileSize ? Number(file.fileSize) : 0;
+        return totalSize + size;
+      }, 0);
+
+      return {
+        ...dataset,
+        fileCount,
+        datasetSize,
+        files: undefined, // 不返回 files 字段
+      };
+    });
+
+    return {
+      success: true,
+      result: {
+        list,
+        total,
+        page,
+        pageSize,
+      },
+    };
+  }
+
+  async createDataset(userId: number, dto: CreateDatasetDto) {
+    const { fileIds, ...datasetData } &#x3D; dto;
+    const dataset &#x3D; this.datasetRepository.create({
+      ...datasetData,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+    if (fileIds &amp;&amp; fileIds?.length &gt; 0) {
+      dataset.files &#x3D; await this.fileRepository.find({
+        where: { id: In(fileIds) },
+      });
+    }
+    await this.datasetRepository.save(dataset);
+    return {
+      success: true,
+      result: dataset,
+    };
+  }
+
+  async getDatasetDetail(datasetId: number) {
     const dataset &#x3D; await this.datasetRepository.findOne({
-      where: { id },
+      where: { id: datasetId },
       relations: [&#x27;files&#x27;],
     });
     if (!dataset) {
-      throw new NotFoundException(&#x27;未发现该数据集&#x27;);
+      throw new RpcException(&#x27;未发现该数据集&#x27;);
     }
-    return dataset;
+    const result &#x3D; {
+      ...dataset,
+      fileIds: dataset.files?.map((file) &#x3D;&gt; file.id),
+      files: undefined, // 不返回 files 字段
+    };
+    return {
+      success: true,
+      result,
+    };
+  }
+
+  async updateDataset(
+    datasetId: number,
+    userId: number,
+    dto: UpdateDatasetDto,
+  ) {
+    const dataset &#x3D; await this.datasetRepository.findOne({
+      where: { id: datasetId },
+      relations: [&#x27;files&#x27;],
+    });
+    if (!dataset) {
+      return formatResponse(404, null, &#x27;未发现该数据集&#x27;);
+    }
+    const { fileIds, ...datasetData } &#x3D; dto;
+    dataset.name &#x3D; datasetData.name || dataset.name;
+    dataset.description &#x3D; datasetData.description || dataset.description;
+    dataset.updatedBy &#x3D; userId;
+    if (fileIds &amp;&amp; fileIds?.length &gt; 0) {
+      dataset.files &#x3D; await this.fileRepository.find({
+        where: { id: In(fileIds) },
+      });
+    }
+    await this.datasetRepository.save(dataset);
+    return {
+      success: true,
+      result: dataset,
+    };
+  }
+
+  async deleteDataset(datasetId: number, userId: number) {
+    const dataset &#x3D; await this.datasetRepository.findOne({
+      where: { id: datasetId },
+      relations: [&#x27;files&#x27;],
+    });
+    if (!dataset) {
+      throw new RpcException(&#x27;未发现该数据集&#x27;);
+    }
+    if (dataset.createdBy !&#x3D;&#x3D; userId) {
+      throw new RpcException(&#x27;无权限删除该数据集&#x27;);
+    }
+    await this.datasetRepository.remove(dataset);
+    return {
+      success: true,
+      result: null,
+    };
   }
 }
 </code></pre>

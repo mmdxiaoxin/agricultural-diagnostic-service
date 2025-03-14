@@ -115,7 +115,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/ai-service/services/ai-service.service.ts</code>
+            <code>apps/api-gateway/src/modules/ai-service/services/ai-service.service.ts</code>
         </p>
 
 
@@ -182,7 +182,7 @@
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="12" class="link-to-prism">src/modules/ai-service/services/ai-service.service.ts:12</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="12" class="link-to-prism">apps/api-gateway/src/modules/ai-service/services/ai-service.service.ts:12</a></div>
                             </td>
                         </tr>
 
@@ -284,7 +284,7 @@
                     <tr>
                         <td class="col-md-4">
                             <div class="io-line">Defined in <a href="" data-line="28"
-                                    class="link-to-prism">src/modules/ai-service/services/ai-service.service.ts:28</a></div>
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/services/ai-service.service.ts:28</a></div>
                         </td>
                     </tr>
 
@@ -353,7 +353,7 @@
                     <tr>
                         <td class="col-md-4">
                             <div class="io-line">Defined in <a href="" data-line="34"
-                                    class="link-to-prism">src/modules/ai-service/services/ai-service.service.ts:34</a></div>
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/services/ai-service.service.ts:34</a></div>
                         </td>
                     </tr>
 
@@ -391,8 +391,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="51"
-                                    class="link-to-prism">src/modules/ai-service/services/ai-service.service.ts:51</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="48"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/services/ai-service.service.ts:48</a></div>
                         </td>
                     </tr>
 
@@ -460,8 +460,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="41"
-                                    class="link-to-prism">src/modules/ai-service/services/ai-service.service.ts:41</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="39"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/services/ai-service.service.ts:39</a></div>
                         </td>
                     </tr>
 
@@ -509,7 +509,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>        <code><a href="../classes/AiService.html" target="_self" >Promise&lt;AiService[]&gt;</a></code>
+                            <b>Returns : </b>    <code>unknown</code>
 
                         </div>
                             <div class="io-description">
@@ -541,8 +541,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="72"
-                                    class="link-to-prism">src/modules/ai-service/services/ai-service.service.ts:72</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="69"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/services/ai-service.service.ts:69</a></div>
                         </td>
                     </tr>
 
@@ -610,8 +610,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="59"
-                                    class="link-to-prism">src/modules/ai-service/services/ai-service.service.ts:59</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="56"
+                                    class="link-to-prism">apps/api-gateway/src/modules/ai-service/services/ai-service.service.ts:56</a></div>
                         </td>
                     </tr>
 
@@ -680,10 +680,10 @@ import { InjectRepository } from &#x27;@nestjs/typeorm&#x27;;
 import { Repository } from &#x27;typeorm&#x27;;
 import { CreateAiServiceDto } from &#x27;../dto/create-ai-service.dto&#x27;;
 import { UpdateAiServiceDto } from &#x27;../dto/update-ai-service.dto&#x27;;
-import { AiServiceAccessLog } from &#x27;../models/ai-service-access-log&#x27;;
-import { AiServiceConfig } from &#x27;../models/ai-service-config&#x27;;
-import { AiServiceLog } from &#x27;../models/ai-service-log&#x27;;
-import { AiService } from &#x27;../models/ai-service.entity&#x27;;
+import { AiServiceAccessLog } from &#x27;../../../../../../libs/database/src/entities/ai-service-access-log.entity&#x27;;
+import { AiServiceConfig } from &#x27;../../../../../../libs/database/src/entities/ai-service-config.entity&#x27;;
+import { AiServiceLog } from &#x27;../../../../../../libs/database/src/entities/ai-service-log.entity&#x27;;
+import { AiService } from &#x27;../../../../../../libs/database/src/entities/ai-service.entity&#x27;;
 
 @Injectable()
 export class AiServiceService {
@@ -709,16 +709,13 @@ export class AiServiceService {
 
   // 获取全部AI服务
   async findAll(): Promise&lt;AiService[]&gt; {
-    return this.aiServiceRepository.find({
-      relations: [&#x27;aiServiceLogs&#x27;, &#x27;aiServiceConfigs&#x27;, &#x27;aiServiceAccessLogs&#x27;], // 加载关联的表
-    });
+    return this.aiServiceRepository.find();
   }
 
   // 分页查询AI服务
-  async findPaginated(page: number, pageSize: number): Promise&lt;AiService[]&gt; {
+  async findPaginated(page: number, pageSize: number) {
     const skip &#x3D; (page - 1) * pageSize;
-    return this.aiServiceRepository.find({
-      relations: [&#x27;aiServiceLogs&#x27;, &#x27;aiServiceConfigs&#x27;, &#x27;aiServiceAccessLogs&#x27;],
+    return await this.aiServiceRepository.findAndCount({
       skip,
       take: pageSize,
     });

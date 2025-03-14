@@ -112,7 +112,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/role/role.controller.ts</code>
+            <code>apps/api-gateway/src/modules/role/role.controller.ts</code>
         </p>
 
             <p class="comment">
@@ -232,8 +232,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="63"
-                                    class="link-to-prism">src/modules/role/role.controller.ts:63</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="76"
+                                    class="link-to-prism">apps/api-gateway/src/modules/role/role.controller.ts:76</a></div>
                         </td>
                     </tr>
 
@@ -309,8 +309,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="32"
-                                    class="link-to-prism">src/modules/role/role.controller.ts:32</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="39"
+                                    class="link-to-prism">apps/api-gateway/src/modules/role/role.controller.ts:39</a></div>
                         </td>
                     </tr>
 
@@ -358,8 +358,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="40"
-                                    class="link-to-prism">src/modules/role/role.controller.ts:40</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="49"
+                                    class="link-to-prism">apps/api-gateway/src/modules/role/role.controller.ts:49</a></div>
                         </td>
                     </tr>
 
@@ -407,8 +407,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="48"
-                                    class="link-to-prism">src/modules/role/role.controller.ts:48</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="59"
+                                    class="link-to-prism">apps/api-gateway/src/modules/role/role.controller.ts:59</a></div>
                         </td>
                     </tr>
 
@@ -487,8 +487,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="87"
-                                    class="link-to-prism">src/modules/role/role.controller.ts:87</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="106"
+                                    class="link-to-prism">apps/api-gateway/src/modules/role/role.controller.ts:106</a></div>
                         </td>
                     </tr>
 
@@ -566,8 +566,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="71"
-                                    class="link-to-prism">src/modules/role/role.controller.ts:71</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="88"
+                                    class="link-to-prism">apps/api-gateway/src/modules/role/role.controller.ts:88</a></div>
                         </td>
                     </tr>
 
@@ -629,12 +629,10 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Roles } from &#x27;@/common/decorator/roles.decorator&#x27;;
-import { Role } from &#x27;@/common/enum/role.enum&#x27;;
-import { TypeormFilter } from &#x27;@/common/filters/typeorm.filter&#x27;;
-import { AuthGuard } from &#x27;@/common/guards/auth.guard&#x27;;
-import { RolesGuard } from &#x27;@/common/guards/roles.guard&#x27;;
-import { formatResponse } from &#x27;@/common/helpers/response.helper&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Roles } from &#x27;@common/decorator/roles.decorator&#x27;;
+import { TypeormFilter } from &#x27;@common/filters/typeorm.filter&#x27;;
+import { AuthGuard } from &#x27;@common/guards/auth.guard&#x27;;
+import { RolesGuard } from &#x27;@common/guards/roles.guard&#x27;;
 import {
   Body,
   Controller,
@@ -642,6 +640,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
@@ -649,19 +648,29 @@ import {
   UseFilters,
   UseGuards,
 } from &#x27;@nestjs/common&#x27;;
+import { ClientProxy } from &#x27;@nestjs/microservices&#x27;;
+import { ApiTags } from &#x27;@nestjs/swagger&#x27;;
+import { Role } from &#x27;@shared/enum/role.enum&#x27;;
+import { formatResponse } from &#x27;@shared/helpers/response.helper&#x27;;
+import { USER_SERVICE_NAME } from &#x27;config/microservice.config&#x27;;
+import { defaultIfEmpty, lastValueFrom } from &#x27;rxjs&#x27;;
 import { CreateRoleDto } from &#x27;./dto/create-role.dto&#x27;;
 import { UpdateRoleDto } from &#x27;./dto/update-role.dto&#x27;;
-import { RoleService } from &#x27;./role.service&#x27;;
 
+@ApiTags(&#x27;角色模块&#x27;)
 @Controller(&#x27;role&#x27;)
 @UseGuards(AuthGuard)
 @UseFilters(TypeormFilter)
 export class RoleController {
-  constructor(private readonly roleService: RoleService) {}
+  constructor(
+    @Inject(USER_SERVICE_NAME) private readonly userClient: ClientProxy,
+  ) {}
 
   @Get(&#x27;dict&#x27;)
   async dict() {
-    const dict &#x3D; await this.roleService.findDict();
+    const dict &#x3D; await lastValueFrom(
+      this.userClient.send({ cmd: &#x27;role.dict&#x27; }, {}),
+    );
     return formatResponse(200, dict, &#x27;角色字典获取成功&#x27;);
   }
 
@@ -669,7 +678,9 @@ export class RoleController {
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async findAll() {
-    const roles &#x3D; await this.roleService.findAll();
+    const roles &#x3D; await lastValueFrom(
+      this.userClient.send({ cmd: &#x27;role.findAll&#x27; }, {}),
+    );
     return formatResponse(200, roles, &#x27;获取角色列表成功&#x27;);
   }
 
@@ -683,7 +694,9 @@ export class RoleController {
     )
     id: number,
   ) {
-    const role &#x3D; await this.roleService.findOne(id);
+    const role &#x3D; await lastValueFrom(
+      this.userClient.send({ cmd: &#x27;role.findOne&#x27; }, { id }),
+    );
     return formatResponse(200, role, &#x27;获取角色成功&#x27;);
   }
 
@@ -692,7 +705,11 @@ export class RoleController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(RolesGuard)
   async create(@Body() dto: CreateRoleDto) {
-    await this.roleService.create(dto);
+    await lastValueFrom(
+      this.userClient
+        .send({ cmd: &#x27;role.create&#x27; }, { dto })
+        .pipe(defaultIfEmpty(null)),
+    );
     return formatResponse(201, null, &#x27;角色创建成功&#x27;);
   }
 
@@ -707,7 +724,9 @@ export class RoleController {
     id: number,
     @Body() dto: UpdateRoleDto,
   ) {
-    const updatedRole &#x3D; await this.roleService.update(id, dto);
+    const updatedRole &#x3D; await lastValueFrom(
+      this.userClient.send({ cmd: &#x27;role.update&#x27; }, { id, dto }),
+    );
     return formatResponse(200, updatedRole, &#x27;角色更新成功&#x27;);
   }
 
@@ -722,7 +741,11 @@ export class RoleController {
     )
     id: number,
   ) {
-    return await this.roleService.remove(id);
+    return await lastValueFrom(
+      this.userClient
+        .send({ cmd: &#x27;role.remove&#x27; }, { id })
+        .pipe(defaultIfEmpty(null)),
+    );
   }
 }
 </code></pre>

@@ -112,7 +112,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/file/file.controller.ts</code>
+            <code>apps/api-gateway/src/modules/file/file.controller.ts</code>
         </p>
 
             <p class="comment">
@@ -290,7 +290,7 @@
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>completeUpload(req: <a href="../interfaces/Request.html" target="_self">Request</a>, dto: <a href="../classes/CompleteChunkDto.html" target="_self">CompleteChunkDto</a>)</code>
+                    <code>completeUpload(dto: <a href="../classes/CompleteChunkDto.html" target="_self">CompleteChunkDto</a>)</code>
                 </td>
             </tr>
 
@@ -304,8 +304,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="186"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:186</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="221"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:221</a></div>
                         </td>
                     </tr>
 
@@ -325,18 +325,6 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                                <td>req</td>
-                                            <td>
-                                                            <code><a href="../interfaces/Request.html" target="_self" >Request</a></code>
-                                            </td>
-
-                                            <td>
-                                                    No
-                                            </td>
-
-
-                                        </tr>
                                         <tr>
                                                 <td>dto</td>
                                             <td>
@@ -396,8 +384,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="164"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:164</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="174"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:174</a></div>
                         </td>
                     </tr>
 
@@ -488,8 +476,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="291"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:291</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="366"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:366</a></div>
                         </td>
                     </tr>
 
@@ -566,7 +554,7 @@
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>deleteFiles(fileIds: number[])</code>
+                    <code>deleteFiles(fileIds: number[], req: <a href="../interfaces/Request.html" target="_self">Request</a>)</code>
                 </td>
             </tr>
 
@@ -580,8 +568,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="307"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:307</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="392"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:392</a></div>
                         </td>
                     </tr>
 
@@ -613,11 +601,23 @@
 
 
                                         </tr>
+                                        <tr>
+                                                <td>req</td>
+                                            <td>
+                                                            <code><a href="../interfaces/Request.html" target="_self" >Request</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                            <b>Returns : </b>    <code>unknown</code>
 
                         </div>
                             <div class="io-description">
@@ -659,8 +659,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="63"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:63</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="81"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:81</a></div>
                         </td>
                     </tr>
 
@@ -732,14 +732,14 @@
                 <td class="col-md-4">
                     <b>Decorators : </b>
                     <br />
-                    <code>@Get(&#x27;download/:fileId&#x27;)<br />@Roles(Role.Admin, Role.Expert)<br />@UseGuards(AuthGuard, RolesGuard, FileGuard)<br /></code>
+                    <code>@Get(&#x27;download/:fileId&#x27;)<br />@Roles(Role.Admin, Role.Expert, Role.User)<br />@UseGuards(AuthGuard, RolesGuard, FileGuard)<br /></code>
                 </td>
             </tr>
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="241"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:241</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="256"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:256</a></div>
                         </td>
                     </tr>
 
@@ -799,7 +799,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>    <code>unknown</code>
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
 
                         </div>
                             <div class="io-description">
@@ -835,14 +835,14 @@
                 <td class="col-md-4">
                     <b>Decorators : </b>
                     <br />
-                    <code>@Post(&#x27;download&#x27;)<br />@Roles(Role.Admin, Role.Expert)<br />@UseGuards(AuthGuard, RolesGuard, FileGuard)<br /></code>
+                    <code>@Post(&#x27;download&#x27;)<br />@Roles(Role.Admin, Role.Expert)<br />@UseGuards(AuthGuard, RolesGuard, FilesGuard)<br /></code>
                 </td>
             </tr>
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="258"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:258</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="300"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:300</a></div>
                         </td>
                     </tr>
 
@@ -902,7 +902,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>    <code>unknown</code>
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
 
                         </div>
                             <div class="io-description">
@@ -944,8 +944,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="79"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:79</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="106"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:106</a></div>
                         </td>
                     </tr>
 
@@ -1119,8 +1119,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="71"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:71</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="95"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:95</a></div>
                         </td>
                     </tr>
 
@@ -1198,8 +1198,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="315"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:315</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="413"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:413</a></div>
                         </td>
                     </tr>
 
@@ -1259,7 +1259,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>    <code>unknown</code>
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
 
                         </div>
                             <div class="io-description">
@@ -1299,8 +1299,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="329"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:329</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="427"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:427</a></div>
                         </td>
                     </tr>
 
@@ -1360,7 +1360,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>    <code>unknown</code>
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
 
                         </div>
                             <div class="io-description">
@@ -1388,7 +1388,7 @@
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>getUploadTaskStatus(taskId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                    <code>getUploadTaskStatus(taskId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
                 </td>
             </tr>
 
@@ -1402,8 +1402,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="172"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:172</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="207"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:207</a></div>
                         </td>
                     </tr>
 
@@ -1426,7 +1426,7 @@
                                         <tr>
                                                 <td>taskId</td>
                                             <td>
-                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
                                             </td>
 
                                             <td>
@@ -1481,8 +1481,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="271"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:271</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="328"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:328</a></div>
                         </td>
                     </tr>
 
@@ -1572,8 +1572,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="279"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:279</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="345"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:345</a></div>
                         </td>
                     </tr>
 
@@ -1664,8 +1664,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="218"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:218</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="236"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:236</a></div>
                         </td>
                     </tr>
 
@@ -1756,8 +1756,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="143"
-                                    class="link-to-prism">src/modules/file/file.controller.ts:143</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="144"
+                                    class="link-to-prism">apps/api-gateway/src/modules/file/file.controller.ts:144</a></div>
                         </td>
                     </tr>
 
@@ -1819,19 +1819,21 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Roles } from &#x27;@/common/decorator/roles.decorator&#x27;;
-import { Role } from &#x27;@/common/enum/role.enum&#x27;;
-import { TypeormFilter } from &#x27;@/common/filters/typeorm.filter&#x27;;
-import { AuthGuard } from &#x27;@/common/guards/auth.guard&#x27;;
-import { FileGuard } from &#x27;@/modules/file/guards/file.guard&#x27;;
-import { RolesGuard } from &#x27;@/common/guards/roles.guard&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Roles } from &#x27;@common/decorator/roles.decorator&#x27;;
+import { TypeormFilter } from &#x27;@common/filters/typeorm.filter&#x27;;
+import { AuthGuard } from &#x27;@common/guards/auth.guard&#x27;;
+import { RolesGuard } from &#x27;@common/guards/roles.guard&#x27;;
 import {
   Body,
   Controller,
   Delete,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
+  Inject,
+  InternalServerErrorException,
+  Logger,
   Param,
   ParseIntPipe,
   Post,
@@ -1844,37 +1846,53 @@ import {
   UseGuards,
   UseInterceptors,
 } from &#x27;@nestjs/common&#x27;;
+import { ClientProxy } from &#x27;@nestjs/microservices&#x27;;
 import { FileInterceptor } from &#x27;@nestjs/platform-express&#x27;;
+import { ApiTags } from &#x27;@nestjs/swagger&#x27;;
+import { Role } from &#x27;@shared/enum/role.enum&#x27;;
+import { formatResponse } from &#x27;@shared/helpers/response.helper&#x27;;
+import {
+  DOWNLOAD_SERVICE_NAME,
+  FILE_SERVICE_NAME,
+  UPLOAD_SERVICE_NAME,
+} from &#x27;config/microservice.config&#x27;;
 import { Request, Response } from &#x27;express&#x27;;
-import { existsSync, mkdirSync } from &#x27;fs&#x27;;
-import { unlink } from &#x27;fs/promises&#x27;;
-import { diskStorage } from &#x27;multer&#x27;;
-import { join } from &#x27;path&#x27;;
-import { v4 as uuidv4 } from &#x27;uuid&#x27;;
-import { CompleteChunkDto } from &#x27;./dto/complete-chunk.dto&#x27;;
-import { CreateTempLinkDto } from &#x27;./dto/create-link.dto&#x27;;
-import { CreateTaskDto } from &#x27;./dto/create-task.dto&#x27;;
-import { DownloadFilesDto } from &#x27;./dto/download-file.dto&#x27;;
-import { UpdateFileDto, UpdateFilesAccessDto } from &#x27;./dto/update-file.dto&#x27;;
-import { UploadChunkDto } from &#x27;./dto/upload-chunk.dto&#x27;;
+import {
+  defaultIfEmpty,
+  firstValueFrom,
+  lastValueFrom,
+  Observable,
+} from &#x27;rxjs&#x27;;
+import { CompleteChunkDto } from &#x27;../../../../../packages/common/src/dto/file/complete-chunk.dto&#x27;;
+import { CreateTempLinkDto } from &#x27;../../../../../packages/common/src/dto/file/create-link.dto&#x27;;
+import { CreateTaskDto } from &#x27;../../../../../packages/common/src/dto/file/create-task.dto&#x27;;
+import { DownloadFilesDto } from &#x27;../../../../../packages/common/src/dto/file/download-file.dto&#x27;;
+import {
+  UpdateFileDto,
+  UpdateFilesAccessDto,
+} from &#x27;../../../../../packages/common/src/dto/file/update-file.dto&#x27;;
+import { UploadChunkDto } from &#x27;../../../../../packages/common/src/dto/file/upload-chunk.dto&#x27;;
+import { FileGuard } from &#x27;../file/guards/file.guard&#x27;;
+import { FilesGuard } from &#x27;./guards/files.guard&#x27;;
 import { ParseFileIdsPipe } from &#x27;./pipe/delete.pipe&#x27;;
 import { FileSizeValidationPipe } from &#x27;./pipe/file-size.pipe&#x27;;
 import { ParseFileTypePipe } from &#x27;./pipe/type.pipe&#x27;;
-import { FileDownloadService } from &#x27;./services/file-download.service&#x27;;
-import { FileManageService } from &#x27;./services/file-manage.service&#x27;;
-import { FileStorageService } from &#x27;./services/file-storage.service&#x27;;
-import { FileUploadService } from &#x27;./services/file-upload.service&#x27;;
-import { FileService } from &#x27;./services/file.service&#x27;;
 
+export interface DownloadService {
+  // 定义一个接收 DownloadRequest，返回流式数据的接口
+  downloadFile(data: { fileId: number }): Observable&lt;{ data: Buffer }&gt;;
+}
+
+@ApiTags(&#x27;文件模块&#x27;)
 @Controller(&#x27;file&#x27;)
 @UseFilters(TypeormFilter)
 export class FileController {
+  private readonly logger &#x3D; new Logger(FileController.name);
+
   constructor(
-    private readonly commonService: FileService,
-    private readonly downloadService: FileDownloadService,
-    private readonly uploadService: FileUploadService,
-    private readonly manageService: FileManageService,
-    private readonly storageService: FileStorageService,
+    @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
+    @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
+    @Inject(DOWNLOAD_SERVICE_NAME) private readonly downloadClient: ClientProxy,
   ) {}
 
   // 获取空间使用信息
@@ -1882,7 +1900,13 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async diskUsageGet(@Req() req: Request) {
-    return this.storageService.diskUsageGet(req.user.userId);
+    const response &#x3D; await lastValueFrom(
+      this.fileClient.send(
+        { cmd: &#x27;files.statistic.usage&#x27; },
+        { userId: req.user.userId },
+      ),
+    );
+    return formatResponse(200, response?.result, &#x27;获取空间使用信息成功&#x27;);
   }
 
   // 获取文件列表
@@ -1890,7 +1914,10 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async filesGet(@Req() req: Request) {
-    return this.commonService.filesGet(req.user.userId);
+    const rpcResponse &#x3D; await lastValueFrom(
+      this.fileClient.send({ cmd: &#x27;files.get&#x27; }, { userId: req.user.userId }),
+    );
+    return formatResponse(200, rpcResponse?.result, &#x27;文件列表查询成功&#x27;);
   }
 
   // 获取文件列表分页
@@ -1908,71 +1935,54 @@ export class FileController {
     @Query(&#x27;updatedStart&#x27;) updatedStart?: string,
     @Query(&#x27;updatedEnd&#x27;) updatedEnd?: string,
   ) {
-    return this.commonService.filesListGet(
-      page,
-      pageSize,
-      {
-        fileType,
-        originalFileName,
-        createdStart,
-        createdEnd,
-        updatedEnd,
-        updatedStart,
-      },
-      req.user.userId,
+    const filters &#x3D; {
+      fileType,
+      originalFileName,
+      createdStart,
+      createdEnd,
+      updatedStart,
+      updatedEnd,
+    };
+    const rpcResponse &#x3D; await lastValueFrom(
+      this.fileClient.send(
+        { cmd: &#x27;files.get.list&#x27; },
+        {
+          page,
+          pageSize,
+          filters,
+          userId: req.user.userId,
+        },
+      ),
     );
+    return formatResponse(200, rpcResponse?.result, &#x27;文件列表查询成功&#x27;);
   }
 
   // 单文件上传
   @Post(&#x27;upload/single&#x27;)
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
-  @UseInterceptors(
-    FileInterceptor(&#x27;file&#x27;, {
-      storage: diskStorage({
-        destination: (req, file, cb) &#x3D;&gt; {
-          let folder &#x3D; &#x27;uploads/other&#x27;; // 默认存储在 &quot;other&quot; 文件夹
-          const mimeType &#x3D; file.mimetype;
-
-          // 按 MIME 类型分文件夹存储
-          if (mimeType.startsWith(&#x27;image&#x27;)) {
-            folder &#x3D; &#x27;uploads/images&#x27;;
-          } else if (mimeType.startsWith(&#x27;video&#x27;)) {
-            folder &#x3D; &#x27;uploads/videos&#x27;;
-          } else if (mimeType.startsWith(&#x27;application&#x27;)) {
-            folder &#x3D; &#x27;uploads/documents&#x27;;
-          } else if (mimeType.startsWith(&#x27;audio&#x27;)) {
-            folder &#x3D; &#x27;uploads/audio&#x27;;
-          }
-
-          if (!existsSync(folder)) {
-            mkdirSync(folder, { recursive: true });
-          }
-          cb(null, folder);
-        },
-        filename: (req, file, cb) &#x3D;&gt; {
-          const uniqueName &#x3D; Date.now() + &#x27;-&#x27; + uuidv4();
-          // 修复中文乱码问题
-          file.originalname &#x3D; Buffer.from(file.originalname, &#x27;latin1&#x27;).toString(
-            &#x27;utf-8&#x27;,
-          );
-          cb(null, uniqueName);
-        },
-      }),
-    }),
-  )
+  @UseInterceptors(FileInterceptor(&#x27;file&#x27;))
   async uploadSingle(
     @Req() req: Request,
     @UploadedFile(new FileSizeValidationPipe(&#x27;10MB&#x27;)) file: Express.Multer.File,
   ) {
     try {
-      return this.uploadService.uploadSingle(req.user.userId, file);
+      const rpcResponse &#x3D; await firstValueFrom(
+        this.uploadClient.send(
+          { cmd: &#x27;upload.single&#x27; },
+          {
+            fileMeta: {
+              originalname: file.originalname,
+              mimetype: file.mimetype,
+              size: file.size,
+            },
+            fileData: file.buffer.toString(&#x27;base64&#x27;),
+            userId: req.user.userId,
+          },
+        ),
+      );
+      return formatResponse(200, rpcResponse, &#x27;上传成功&#x27;);
     } catch (error) {
-      // 清理上传失败的文件
-      const filePath &#x3D; join(&#x27;uploads&#x27;, file.filename);
-      if (existsSync(filePath)) {
-        await unlink(filePath);
-      }
       throw error;
     }
   }
@@ -1983,7 +1993,32 @@ export class FileController {
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async createUploadTask(@Req() req: Request, @Body() dto: CreateTaskDto) {
-    return this.uploadService.createUploadTask(req.user.userId, dto);
+    const preloadResponse &#x3D; await lastValueFrom(
+      this.uploadClient.send(
+        { cmd: &#x27;upload.preload&#x27; },
+        {
+          fileMd5: dto.fileMd5,
+          originalFileName: dto.fileName,
+          userId: req.user.userId,
+        },
+      ),
+    );
+    if (!preloadResponse) {
+      throw new InternalServerErrorException(&#x27;文件预加载失败&#x27;);
+    }
+    if (preloadResponse.success) {
+      return formatResponse(200, preloadResponse, &#x27;文件已快速上传&#x27;);
+    }
+    const createResponse &#x3D; await firstValueFrom(
+      this.uploadClient.send(
+        { cmd: &#x27;task.create&#x27; },
+        {
+          ...dto,
+          userId: req.user.userId,
+        },
+      ),
+    );
+    return formatResponse(201, createResponse, &#x27;任务创建成功&#x27;);
   }
 
   // 查询上传任务状态
@@ -1991,73 +2026,53 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async getUploadTaskStatus(
-    @Param(
-      &#x27;taskId&#x27;,
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    taskId: number,
+    @Param(&#x27;taskId&#x27;)
+    taskId: string,
   ) {
-    return this.uploadService.getUploadTaskStatus(taskId);
+    const rpcResponse &#x3D; await lastValueFrom(
+      this.uploadClient.send({ cmd: &#x27;task.get&#x27; }, { taskId }),
+    );
+    return formatResponse(200, rpcResponse?.result, &#x27;任务查询成功&#x27;);
   }
 
   // 合并分片
   @Post(&#x27;upload/complete&#x27;)
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
-  async completeUpload(@Req() req: Request, @Body() dto: CompleteChunkDto) {
-    return this.uploadService.completeUpload(req.user.userId, dto.taskId);
+  async completeUpload(@Body() dto: CompleteChunkDto) {
+    const rpcResponse &#x3D; await lastValueFrom(
+      this.uploadClient.send(
+        { cmd: &#x27;upload.complete&#x27; },
+        { taskId: dto.taskId },
+      ),
+    );
+    return formatResponse(200, rpcResponse?.result, &#x27;上传成功&#x27;);
   }
 
   // 文件分片上传
   @Post(&#x27;upload/chunk&#x27;)
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
-  @UseInterceptors(
-    FileInterceptor(&#x27;chunk&#x27;, {
-      storage: diskStorage({
-        destination: (req, file, cb) &#x3D;&gt; {
-          const folder &#x3D; &#x27;uploads/chunks&#x27;;
-          if (!existsSync(folder)) {
-            mkdirSync(folder, { recursive: true });
-          }
-          cb(null, folder);
-        },
-        filename: (req, file, cb) &#x3D;&gt; {
-          const { fileMd5, chunkIndex } &#x3D; req.body;
-
-          if (!fileMd5 || !chunkIndex) {
-            return cb(
-              new Error(&#x27;Missing fileMd5 or chunkIndex&#x27;),
-              file.filename,
-            );
-          }
-          cb(null, &#x60;${fileMd5}-${chunkIndex}&#x60;);
-        },
-      }),
-    }),
-  )
+  @UseInterceptors(FileInterceptor(&#x27;chunk&#x27;))
   async uploadChunk(
-    @UploadedFile(new FileSizeValidationPipe(&#x27;20MB&#x27;)) file: Express.Multer.File,
+    @UploadedFile(new FileSizeValidationPipe(&#x27;10MB&#x27;)) file: Express.Multer.File,
     @Body() dto: UploadChunkDto,
   ) {
-    try {
-      return this.uploadService.uploadChunk(dto.taskId, dto.chunkIndex);
-    } catch (error) {
-      // 清理上传失败的文件
-      const chunkPath &#x3D; join(
-        &#x27;uploads/chunks&#x27;,
-        &#x60;${dto.fileMd5}-${dto.chunkIndex}&#x60;,
-      );
-      if (existsSync(chunkPath)) {
-        await unlink(chunkPath);
-      }
-      throw error;
-    }
+    const rpcResponse &#x3D; await lastValueFrom(
+      this.uploadClient.send(
+        { cmd: &#x27;upload.chunk&#x27; },
+        {
+          taskMeta: dto,
+          chunkData: file.buffer.toString(&#x27;base64&#x27;),
+        },
+      ),
+    );
+    return formatResponse(200, rpcResponse?.result, &#x27;上传成功&#x27;);
   }
 
   // 文件下载
   @Get(&#x27;download/:fileId&#x27;)
-  @Roles(Role.Admin, Role.Expert)
+  @Roles(Role.Admin, Role.Expert, Role.User)
   @UseGuards(AuthGuard, RolesGuard, FileGuard)
   async downloadFile(
     @Param(
@@ -2068,21 +2083,63 @@ export class FileController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const fileMeta &#x3D; req.fileMeta;
-    return this.downloadService.downloadFile(fileMeta, req, res);
+    try {
+      const fileMeta &#x3D; req.fileMeta;
+      // 通过 TCP 请求 file.download
+      const response &#x3D; await lastValueFrom(
+        this.downloadClient.send({ cmd: &#x27;file.download&#x27; }, { fileMeta }),
+      );
+
+      if (!response.success || !response.data) {
+        throw new HttpException(
+          response.message || &#x27;文件获取失败&#x27;,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      // 将 Base64 转换为 Buffer
+      const fileBuffer &#x3D; Buffer.from(response.data, &#x27;base64&#x27;);
+
+      // 设定 HTTP 头信息
+      res.set({
+        &#x27;Content-Disposition&#x27;: &#x60;attachment; filename&#x3D;&quot;${fileMeta.originalFileName}&quot;&#x60;,
+        &#x27;Content-Type&#x27;: fileMeta.fileType || &#x27;application/octet-stream&#x27;,
+      });
+
+      // 直接写入流
+      res.end(fileBuffer);
+    } catch (err) {
+      this.logger.error(&#x60;下载失败: ${err}&#x60;);
+      throw new InternalServerErrorException(&#x27;文件下载失败&#x27;);
+    }
   }
 
   // 批量文件下载
   @Post(&#x27;download&#x27;)
   @Roles(Role.Admin, Role.Expert)
-  @UseGuards(AuthGuard, RolesGuard, FileGuard)
+  @UseGuards(AuthGuard, RolesGuard, FilesGuard)
   async downloadFiles(
     @Body() _: DownloadFilesDto,
     @Req() req: Request,
     @Res() res: Response,
   ) {
     const filesMeta &#x3D; req.filesMeta;
-    return this.downloadService.downloadFilesAsZip(filesMeta, res);
+    const response &#x3D; await lastValueFrom(
+      this.downloadClient.send({ cmd: &#x27;files.download&#x27; }, { filesMeta }),
+    );
+    if (!response.success || !response.data) {
+      throw new HttpException(
+        response.message || &#x27;文件获取失败&#x27;,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const fileBuffer &#x3D; Buffer.from(response.data, &#x27;base64&#x27;);
+    // 设定 HTTP 头信息
+    res.set({
+      &#x27;Content-Type&#x27;: &#x27;application/zip&#x27;,
+    });
+    // 直接写入流
+    res.end(fileBuffer);
   }
 
   // 文件修改
@@ -2090,7 +2147,16 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async updateFile(@Req() req: Request, @Body() dto: UpdateFileDto) {
-    return this.manageService.updateFile(req.user.userId, dto);
+    await firstValueFrom(
+      this.fileClient.send(
+        { cmd: &#x27;file.update&#x27; },
+        {
+          userId: req.user.userId,
+          dto,
+        },
+      ),
+    );
+    return formatResponse(200, null, &#x27;文件修改成功&#x27;);
   }
 
   // 批量文件权限修改
@@ -2101,7 +2167,16 @@ export class FileController {
     @Req() req: Request,
     @Body() dto: UpdateFilesAccessDto,
   ) {
-    return this.manageService.updateFilesAccess(req.user.userId, dto);
+    await firstValueFrom(
+      this.fileClient.send(
+        { cmd: &#x27;files.update.access&#x27; },
+        {
+          userId: req.user.userId,
+          dto,
+        },
+      ),
+    );
+    return formatResponse(200, null, &#x27;权限修改成功&#x27;);
   }
 
   // 文件删除
@@ -2117,7 +2192,17 @@ export class FileController {
     fileId: number,
     @Req() req: Request,
   ) {
-    return this.manageService.deleteFile(fileId, req.user.userId);
+    return this.fileClient
+      .send(
+        {
+          cmd: &#x27;file.delete&#x27;,
+        },
+        {
+          fileId,
+          userId: req.user.userId,
+        },
+      )
+      .pipe(defaultIfEmpty(null));
   }
 
   // 批量文件删除接口
@@ -2125,8 +2210,21 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteFiles(@Query(&#x27;fileIds&#x27;, ParseFileIdsPipe) fileIds: number[]) {
-    await this.manageService.deleteFiles(fileIds);
+  async deleteFiles(
+    @Query(&#x27;fileIds&#x27;, ParseFileIdsPipe) fileIds: number[],
+    @Req() req: Request,
+  ) {
+    return this.fileClient
+      .send(
+        {
+          cmd: &#x27;files.delete&#x27;,
+        },
+        {
+          fileIds,
+          userId: req.user.userId,
+        },
+      )
+      .pipe(defaultIfEmpty(null));
   }
 
   // 生成临时访问链接
@@ -2142,7 +2240,7 @@ export class FileController {
     @Req() req: Request,
     @Body() dto: CreateTempLinkDto,
   ) {
-    return this.downloadService.generateAccessLink(fileId, req, dto);
+    // return this.downloadService.generateAccessLink(fileId, req, dto);
   }
 
   // 获取临时访问链接
@@ -2152,9 +2250,9 @@ export class FileController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const fileId &#x3D; this.downloadService.verifyAccessLink(token);
-    const fileMeta &#x3D; await this.commonService.findById(fileId);
-    return this.downloadService.downloadFile(fileMeta, req, res);
+    // const fileId &#x3D; this.downloadService.verifyAccessLink(token);
+    // const fileMeta &#x3D; await this.commonService.findById(fileId);
+    // return this.downloadService.downloadFile(fileMeta, req, res);
   }
 }
 </code></pre>

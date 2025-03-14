@@ -115,7 +115,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/auth/auth.service.ts</code>
+            <code>apps/auth-service/src/modules/auth/auth.service.ts</code>
         </p>
 
 
@@ -145,7 +145,15 @@
                             </li>
                             <li>
                                     <span class="modifier">Async</span>
+                                <a href="#notifyAccount" >notifyAccount</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
                                 <a href="#register" >register</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#verifyAccount" >verifyAccount</a>
                             </li>
                         </ul>
                     </td>
@@ -165,12 +173,12 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
-<code>constructor(usersService: <a href="../injectables/UserService.html" target="_self">UserService</a>, jwt: JwtService)</code>
+<code>constructor(jwt: JwtService, mail: <a href="../injectables/MailService.html" target="_self">MailService</a>, userClient: ClientProxy)</code>
                     </td>
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="8" class="link-to-prism">src/modules/auth/auth.service.ts:8</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="10" class="link-to-prism">apps/auth-service/src/modules/auth/auth.service.ts:10</a></div>
                             </td>
                         </tr>
 
@@ -188,10 +196,10 @@
                                         </thead>
                                         <tbody>
                                                 <tr>
-                                                        <td>usersService</td>
+                                                        <td>jwt</td>
                                                   
                                                         <td>
-                                                                        <code><a href="../injectables/UserService.html" target="_self" >UserService</a></code>
+                                                                    <code>JwtService</code>
                                                         </td>
                                                   
                                                     <td>
@@ -200,10 +208,22 @@
                                                     
                                                 </tr>
                                                 <tr>
-                                                        <td>jwt</td>
+                                                        <td>mail</td>
                                                   
                                                         <td>
-                                                                    <code>JwtService</code>
+                                                                        <code><a href="../injectables/MailService.html" target="_self" >MailService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>userClient</td>
+                                                  
+                                                        <td>
+                                                                    <code>ClientProxy</code>
                                                         </td>
                                                   
                                                     <td>
@@ -247,8 +267,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="49"
-                                    class="link-to-prism">src/modules/auth/auth.service.ts:49</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="121"
+                                    class="link-to-prism">apps/auth-service/src/modules/auth/auth.service.ts:121</a></div>
                         </td>
                     </tr>
 
@@ -286,8 +306,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="23"
-                                    class="link-to-prism">src/modules/auth/auth.service.ts:23</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="38"
+                                    class="link-to-prism">apps/auth-service/src/modules/auth/auth.service.ts:38</a></div>
                         </td>
                     </tr>
 
@@ -349,6 +369,87 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
+                    <a name="notifyAccount"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>notifyAccount</b></span>
+                        <a href="#notifyAccount"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>notifyAccount(email: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, link: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="71"
+                                    class="link-to-prism">apps/auth-service/src/modules/auth/auth.service.ts:71</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>email</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>link</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
                     <a name="register"></a>
                     <span class="name">
                             <span class="modifier">Async</span>
@@ -367,8 +468,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="14"
-                                    class="link-to-prism">src/modules/auth/auth.service.ts:14</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="17"
+                                    class="link-to-prism">apps/auth-service/src/modules/auth/auth.service.ts:17</a></div>
                         </td>
                     </tr>
 
@@ -426,66 +527,203 @@
             </tr>
         </tbody>
     </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="verifyAccount"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>verifyAccount</b></span>
+                        <a href="#verifyAccount"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>verifyAccount(token: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="107"
+                                    class="link-to-prism">apps/auth-service/src/modules/auth/auth.service.ts:107</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>token</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </section>
 
     </div>
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { formatResponse } from &#x27;@/common/helpers/response.helper&#x27;;
-import { ForbiddenException, Injectable } from &#x27;@nestjs/common&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { MailService } from &#x27;@app/mail&#x27;;
+import { Inject, Injectable } from &#x27;@nestjs/common&#x27;;
 import { JwtService } from &#x27;@nestjs/jwt&#x27;;
+import { ClientProxy, RpcException } from &#x27;@nestjs/microservices&#x27;;
 import { compare } from &#x27;bcryptjs&#x27;;
-import { UserService } from &#x27;../user/user.service&#x27;;
+import { USER_SERVICE_NAME } from &#x27;config/microservice.config&#x27;;
+import { firstValueFrom, lastValueFrom } from &#x27;rxjs&#x27;;
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UserService,
     private jwt: JwtService,
+    private mail: MailService,
+    @Inject(USER_SERVICE_NAME) private readonly userClient: ClientProxy,
   ) {}
 
   async register(email: string, password: string) {
-    const user &#x3D; await this.usersService.findByEmail(email);
-    if (user) {
-      throw new ForbiddenException(&#x27;用户已存在&#x27;);
+    const result &#x3D; await firstValueFrom(
+      this.userClient.send({ cmd: &#x27;user.find.byEmail&#x27; }, { email }),
+    );
+    if (result) {
+      throw new RpcException({
+        code: 400,
+        message: &#x27;邮箱已被注册&#x27;,
+      });
     }
-    await this.usersService.userCreate({ email, password });
-    return formatResponse(201, null, &#x27;注册成功&#x27;);
+    const newUser &#x3D; await lastValueFrom(
+      this.userClient.send({ cmd: &#x27;user.create&#x27; }, { email, password }),
+    );
+    return this.jwt.sign(
+      { userId: newUser.id },
+      {
+        expiresIn: &#x27;30m&#x27;,
+      },
+    );
   }
 
   async login(login: string, password: string) {
-    const user &#x3D; await this.usersService.findByLogin(login);
+    const user &#x3D; await firstValueFrom(
+      this.userClient.send({ cmd: &#x27;user.find.byLogin&#x27; }, { login }),
+    );
     if (!user) {
-      throw new ForbiddenException(&#x27;账号或密码错误&#x27;);
+      throw new RpcException({
+        code: 400,
+        message: &#x27;账号或密码错误&#x27;,
+      });
     }
     if (user.status &#x3D;&#x3D;&#x3D; 0) {
-      throw new ForbiddenException(&#x27;账号未激活或已经被禁用&#x27;);
+      throw new RpcException({
+        code: 400,
+        message: &#x27;账号未激活或已经被禁用&#x27;,
+      });
     }
     const isValid &#x3D; await compare(password, user.password);
     if (!isValid) {
-      throw new ForbiddenException(&#x27;账号或密码错误&#x27;);
+      throw new RpcException({
+        code: 400,
+        message: &#x27;账号或密码错误&#x27;,
+      });
     }
 
-    return formatResponse(
-      200,
-      {
-        access_token: this.jwt.sign({
-          userId: user.id,
-          username: user.username,
-          roles: user.roles.map((role) &#x3D;&gt; role.name),
-        }),
-      },
-      &#x27;登录成功&#x27;,
+    return {
+      access_token: this.jwt.sign({
+        userId: user.id,
+        username: user.username,
+        roles: user.roles.map((role) &#x3D;&gt; role.name),
+      }),
+    };
+  }
+
+  async notifyAccount(email: string, link: string) {
+    return await this.mail.sendMail(
+      email,
+      &#x27;邮箱验证 - 病害智能诊断系统&#x27;,
+      &#x60;请点击链接激活账号：${link}&#x60;,
+      &#x60;
+        &lt;html&gt;
+            &lt;body style&#x3D;&quot;font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;&quot;&gt;
+                &lt;table role&#x3D;&quot;presentation&quot; style&#x3D;&quot;max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px;&quot;&gt;
+                    &lt;tr&gt;
+                        &lt;td style&#x3D;&quot;text-align: center; padding-bottom: 20px;&quot;&gt;
+                            &lt;h2 style&#x3D;&quot;color: #333333;&quot;&gt;病害智能诊断系统&lt;/h2&gt;
+                            &lt;p style&#x3D;&quot;color: #777777; font-size: 16px;&quot;&gt;感谢您使用我们的系统！&lt;/p&gt;
+                        &lt;/td&gt;
+                    &lt;/tr&gt;
+                    &lt;tr&gt;
+                        &lt;td style&#x3D;&quot;padding-bottom: 20px; color: #555555; font-size: 16px;&quot;&gt;
+                            &lt;p&gt;为了确保您的账户安全，请点击下面的链接完成邮箱验证：&lt;/p&gt;
+                            &lt;p style&#x3D;&quot;text-align: center;&quot;&gt;
+                                &lt;a href&#x3D;&quot;${link}&quot; style&#x3D;&quot;background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;&quot;&gt;点击验证邮箱&lt;/a&gt;
+                            &lt;/p&gt;
+                        &lt;/td&gt;
+                    &lt;/tr&gt;
+                    &lt;tr&gt;
+                        &lt;td style&#x3D;&quot;color: #777777; font-size: 14px; text-align: center;&quot;&gt;
+                            &lt;p&gt;此链接将在 30 分钟后过期，请尽快验证。&lt;/p&gt;
+                            &lt;p&gt;如果您没有请求此验证，请忽略此邮件。&lt;/p&gt;
+                        &lt;/td&gt;
+                    &lt;/tr&gt;
+                &lt;/table&gt;
+            &lt;/body&gt;
+        &lt;/html&gt;
+    &#x60;,
     );
   }
 
+  async verifyAccount(token: string) {
+    try {
+      const { userId } &#x3D; this.jwt.decode(token);
+      return await firstValueFrom(
+        this.userClient.send({ cmd: &#x27;user.activate&#x27; }, { id: userId }),
+      );
+    } catch (error) {
+      throw new RpcException({
+        code: 400,
+        message: &#x27;验证失败&#x27;,
+      });
+    }
+  }
+
   async buttonsGet() {
-    return formatResponse(
-      200,
-      { useHooks: { add: true, delete: true } },
-      &#x27;获取按钮成功&#x27;,
-    );
+    return { useHooks: { add: true, delete: true } };
   }
 }
 </code></pre>

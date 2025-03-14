@@ -115,7 +115,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/file/services/file-operation.service.ts</code>
+            <code>libs/file-operation/src/file-operation.service.ts</code>
         </p>
 
 
@@ -140,15 +140,36 @@
                                 <a href="#calculateFileMd5" >calculateFileMd5</a>
                             </li>
                             <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#checkFileExists" >checkFileExists</a>
+                            </li>
+                            <li>
                                     <span class="modifier">Async</span>
                                 <a href="#deleteFile" >deleteFile</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#ensureDirectoryExists" >ensureDirectoryExists</a>
                             </li>
                             <li>
                                 <a href="#mergeFile" >mergeFile</a>
                             </li>
                             <li>
                                     <span class="modifier">Async</span>
+                                <a href="#mergeFiles" >mergeFiles</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#moveFile" >moveFile</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
                                 <a href="#readFile" >readFile</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#validatePath" >validatePath</a>
                             </li>
                         </ul>
                     </td>
@@ -190,15 +211,15 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="61"
-                                    class="link-to-prism">src/modules/file/services/file-operation.service.ts:61</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="65"
+                                    class="link-to-prism">libs/file-operation/src/file-operation.service.ts:65</a></div>
                         </td>
                     </tr>
 
 
             <tr>
                 <td class="col-md-4">
-                        <div class="io-description"><p>计算文件 MD5</p>
+                        <div class="io-description"><p>计算文件 MD5 值（流式计算，提高大文件效率）</p>
 </div>
 
                             <div class="io-description">
@@ -210,6 +231,7 @@
                                             <td>Name</td>
                                                 <td>Type</td>
                                             <td>Optional</td>
+                                                <td>Description</td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -224,6 +246,10 @@
                                             </td>
 
 
+                                            <td>
+                                                    <p>目标文件路径</p>
+
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -233,8 +259,85 @@
 
                         </div>
                             <div class="io-description">
-                                <p>MD5 值</p>
+                                <p>文件的 MD5 值</p>
 
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="checkFileExists"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>checkFileExists</b></span>
+                        <a href="#checkFileExists"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>checkFileExists(filePath: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="161"
+                                    class="link-to-prism">libs/file-operation/src/file-operation.service.ts:161</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>检查文件是否存在（防止文件不存在时的操作）</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>filePath</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <p>目标文件路径</p>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
                             </div>
                 </td>
             </tr>
@@ -262,15 +365,15 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="26"
-                                    class="link-to-prism">src/modules/file/services/file-operation.service.ts:26</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="48"
+                                    class="link-to-prism">libs/file-operation/src/file-operation.service.ts:48</a></div>
                         </td>
                     </tr>
 
 
             <tr>
                 <td class="col-md-4">
-                        <div class="io-description"><p>删除文件</p>
+                        <div class="io-description"><p>删除文件（确保路径安全）</p>
 </div>
 
                             <div class="io-description">
@@ -282,6 +385,7 @@
                                             <td>Name</td>
                                                 <td>Type</td>
                                             <td>Optional</td>
+                                                <td>Description</td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -296,12 +400,92 @@
                                             </td>
 
 
+                                            <td>
+                                                    <p>目标文件路径</p>
+
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>    <code>unknown</code>
+                            <b>Returns : </b>    <code>Promise&lt;boolean&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="ensureDirectoryExists"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>ensureDirectoryExists</b></span>
+                        <a href="#ensureDirectoryExists"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>ensureDirectoryExists(dirPath: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="21"
+                                    class="link-to-prism">libs/file-operation/src/file-operation.service.ts:21</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>确保目录存在</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>dirPath</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <p>目标目录</p>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
 
                         </div>
                             <div class="io-description">
@@ -331,15 +515,15 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="44"
-                                    class="link-to-prism">src/modules/file/services/file-operation.service.ts:44</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="90"
+                                    class="link-to-prism">libs/file-operation/src/file-operation.service.ts:90</a></div>
                         </td>
                     </tr>
 
 
             <tr>
                 <td class="col-md-4">
-                        <div class="io-description"><p>合并文件</p>
+                        <div class="io-description"><p>合并单个文件</p>
 </div>
 
                             <div class="io-description">
@@ -396,6 +580,190 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
+                    <a name="mergeFiles"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>mergeFiles</b></span>
+                        <a href="#mergeFiles"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>mergeFiles(chunkPaths: string[], finalPath: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="107"
+                                    class="link-to-prism">libs/file-operation/src/file-operation.service.ts:107</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>合并多个文件（支持大文件合并）</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>chunkPaths</td>
+                                            <td>
+                                                        <code>string[]</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <p>需要合并的文件路径数组</p>
+
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                                <td>finalPath</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <p>合并后的文件路径</p>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="moveFile"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>moveFile</b></span>
+                        <a href="#moveFile"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>moveFile(oldPath: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, newPath: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="135"
+                                    class="link-to-prism">libs/file-operation/src/file-operation.service.ts:135</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>移动文件（带路径检查）</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>oldPath</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <p>旧路径</p>
+
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                                <td>newPath</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <p>新路径</p>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
                     <a name="readFile"></a>
                     <span class="name">
                             <span class="modifier">Async</span>
@@ -414,15 +782,15 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="13"
-                                    class="link-to-prism">src/modules/file/services/file-operation.service.ts:13</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="34"
+                                    class="link-to-prism">libs/file-operation/src/file-operation.service.ts:34</a></div>
                         </td>
                     </tr>
 
 
             <tr>
                 <td class="col-md-4">
-                        <div class="io-description"><p>读取文件</p>
+                        <div class="io-description"><p>读取文件（确保路径安全）</p>
 </div>
 
                             <div class="io-description">
@@ -434,6 +802,7 @@
                                             <td>Name</td>
                                                 <td>Type</td>
                                             <td>Optional</td>
+                                                <td>Description</td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -448,12 +817,93 @@
                                             </td>
 
 
+                                            <td>
+                                                    <p>目标文件路径</p>
+
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         <div class="io-description">
                             <b>Returns : </b>    <code>Promise&lt;Buffer&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                <p>文件内容（Buffer）</p>
+
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="validatePath"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>validatePath</b></span>
+                        <a href="#validatePath"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>validatePath(filePath: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="150"
+                                    class="link-to-prism">libs/file-operation/src/file-operation.service.ts:150</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>校验路径是否合法（防止路径遍历攻击）</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>filePath</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <p>目标路径</p>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
 
                         </div>
                             <div class="io-description">
@@ -469,45 +919,91 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable, InternalServerErrorException } from &#x27;@nestjs/common&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable, NotFoundException } from &#x27;@nestjs/common&#x27;;
+import { RpcException } from &#x27;@nestjs/microservices&#x27;;
 import * as crypto from &#x27;crypto&#x27;;
-import { createReadStream, createWriteStream, existsSync } from &#x27;fs&#x27;;
-import { readFile, unlink } from &#x27;fs/promises&#x27;;
+import { createReadStream, createWriteStream } from &#x27;fs&#x27;;
+import {
+  access,
+  constants,
+  mkdir,
+  readFile,
+  rename,
+  unlink,
+} from &#x27;fs/promises&#x27;;
+import * as path from &#x27;path&#x27;;
 
 @Injectable()
 export class FileOperationService {
   /**
-   * 读取文件
-   * @param filePath
-   * @returns
+   * 确保目录存在
+   * @param dirPath 目标目录
+   */
+  async ensureDirectoryExists(dirPath: string): Promise&lt;void&gt; {
+    try {
+      await mkdir(dirPath, { recursive: true });
+    } catch (error) {
+      throw new RpcException({ message: &#x60;无法创建目录: ${dirPath}&#x60;, error });
+    }
+  }
+
+  /**
+   * 读取文件（确保路径安全）
+   * @param filePath 目标文件路径
+   * @returns 文件内容（Buffer）
    */
   async readFile(filePath: string): Promise&lt;Buffer&gt; {
     try {
+      this.validatePath(filePath);
+      await this.checkFileExists(filePath);
       return await readFile(filePath);
     } catch (error) {
-      throw new InternalServerErrorException(&#x27;读取文件失败&#x27;, error);
+      throw new RpcException({ message: &#x27;读取文件失败&#x27;, error });
     }
   }
 
   /**
-   * 删除文件
-   * @param filePath
-   * @returns
+   * 删除文件（确保路径安全）
+   * @param filePath 目标文件路径
    */
-  async deleteFile(filePath: string) {
+  async deleteFile(filePath: string): Promise&lt;boolean&gt; {
     try {
-      if (existsSync(filePath)) {
-        await unlink(filePath);
-        return true;
-      }
-      return false;
+      this.validatePath(filePath);
+      await this.checkFileExists(filePath);
+      await unlink(filePath);
+      return true;
     } catch (error) {
-      throw new InternalServerErrorException(&#x27;删除文件失败&#x27;, error);
+      if (error instanceof NotFoundException) return false;
+      throw new RpcException({ message: &#x27;删除文件失败&#x27;, error });
     }
   }
 
   /**
-   * 合并文件
+   * 计算文件 MD5 值（流式计算，提高大文件效率）
+   * @param filePath 目标文件路径
+   * @returns 文件的 MD5 值
+   */
+  async calculateFileMd5(filePath: string): Promise&lt;string&gt; {
+    try {
+      this.validatePath(filePath);
+      await this.checkFileExists(filePath);
+      const hash &#x3D; crypto.createHash(&#x27;md5&#x27;);
+      const stream &#x3D; createReadStream(filePath);
+
+      return await new Promise&lt;string&gt;((resolve, reject) &#x3D;&gt; {
+        stream.on(&#x27;data&#x27;, (data) &#x3D;&gt; hash.update(data));
+        stream.on(&#x27;end&#x27;, () &#x3D;&gt; resolve(hash.digest(&#x27;hex&#x27;)));
+        stream.on(&#x27;error&#x27;, (error) &#x3D;&gt;
+          reject(new RpcException({ message: &#x27;读取文件时出错&#x27;, error })),
+        );
+      });
+    } catch (error) {
+      throw new RpcException({ message: &#x27;无法计算文件 MD5&#x27;, error });
+    }
+  }
+
+  /**
+   * 合并单个文件
    * @param chunkPath
    * @param finalPath
    * @returns
@@ -525,23 +1021,71 @@ export class FileOperationService {
   }
 
   /**
-   * 计算文件 MD5
-   * @param filePath
-   * @returns MD5 值
+   * 合并多个文件（支持大文件合并）
+   * @param chunkPaths 需要合并的文件路径数组
+   * @param finalPath 合并后的文件路径
    */
-  async calculateFileMd5(filePath: string): Promise&lt;string&gt; {
+  async mergeFiles(chunkPaths: string[], finalPath: string): Promise&lt;void&gt; {
     try {
-      const hash &#x3D; crypto.createHash(&#x27;md5&#x27;);
-      const stream &#x3D; createReadStream(filePath);
-      return await new Promise&lt;string&gt;((resolve, reject) &#x3D;&gt; {
-        stream.on(&#x27;data&#x27;, (data) &#x3D;&gt; hash.update(data));
-        stream.on(&#x27;end&#x27;, () &#x3D;&gt; resolve(hash.digest(&#x27;hex&#x27;)));
-        stream.on(&#x27;error&#x27;, (error) &#x3D;&gt;
-          reject(new InternalServerErrorException(&#x27;读取文件时出错&#x27;, error)),
-        );
-      });
+      this.validatePath(finalPath);
+      const writeStream &#x3D; createWriteStream(finalPath, { flags: &#x27;w&#x27; });
+
+      for (const chunkPath of chunkPaths) {
+        this.validatePath(chunkPath);
+        await this.checkFileExists(chunkPath);
+        const readStream &#x3D; createReadStream(chunkPath);
+
+        await new Promise&lt;void&gt;((resolve, reject) &#x3D;&gt; {
+          readStream.pipe(writeStream, { end: false });
+          readStream.on(&#x27;end&#x27;, resolve);
+          readStream.on(&#x27;error&#x27;, reject);
+        });
+      }
+
+      writeStream.end();
     } catch (error) {
-      throw new InternalServerErrorException(&#x27;无法读取文件&#x27;, error);
+      throw new RpcException({ message: &#x27;合并文件失败&#x27;, error });
+    }
+  }
+
+  /**
+   * 移动文件（带路径检查）
+   * @param oldPath 旧路径
+   * @param newPath 新路径
+   */
+  async moveFile(oldPath: string, newPath: string): Promise&lt;void&gt; {
+    try {
+      this.validatePath(oldPath);
+      this.validatePath(newPath);
+      await this.checkFileExists(oldPath);
+      await rename(oldPath, newPath);
+    } catch (error) {
+      throw new RpcException({ message: &#x27;移动文件失败&#x27;, error });
+    }
+  }
+
+  /**
+   * 校验路径是否合法（防止路径遍历攻击）
+   * @param filePath 目标路径
+   */
+  private validatePath(filePath: string): void {
+    const resolvedPath &#x3D; path.resolve(filePath);
+    if (!resolvedPath.startsWith(path.resolve(&#x27;./&#x27;))) {
+      throw new RpcException({ message: &#x27;非法路径访问&#x27; });
+    }
+  }
+
+  /**
+   * 检查文件是否存在（防止文件不存在时的操作）
+   * @param filePath 目标文件路径
+   */
+  private async checkFileExists(filePath: string): Promise&lt;void&gt; {
+    try {
+      await access(filePath, constants.F_OK | constants.R_OK);
+    } catch {
+      throw new NotFoundException({
+        message: &#x60;文件不存在或无法访问: ${filePath}&#x60;,
+      });
     }
   }
 }

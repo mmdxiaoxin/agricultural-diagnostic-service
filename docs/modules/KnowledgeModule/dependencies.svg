@@ -22,41 +22,29 @@
 <text text-anchor="start" x="429.73" y="-15.4" font-family="Times-12" font-size="14.00"> &#160;Exports</text>
 <g id="clust1" class="cluster">
 <title>cluster_KnowledgeModule</title>
-<polygon fill="none" stroke="black" stroke-dasharray="1,5" points="22.5,-70 22.5,-195 473.5,-195 473.5,-70 22.5,-70"/>
+<polygon fill="none" stroke="black" stroke-dasharray="1,5" points="147,-70 147,-195 349,-195 349,-70 147,-70"/>
 </g>
 <g id="clust6" class="cluster">
 <title>cluster_KnowledgeModule_providers</title>
-<polygon fill="none" stroke="black" points="30.5,-78 30.5,-130 465.5,-130 465.5,-78 30.5,-78"/>
-</g>
-<!-- KnowledgeManageService -->
-<g id="node1" class="node">
-<title>KnowledgeManageService</title>
-<ellipse fill="#fdb462" stroke="black" cx="341.5" cy="-104" rx="115.71" ry="18"/>
-<text text-anchor="middle" x="341.5" y="-99.8" font-family="Times,serif" font-size="14.00">KnowledgeManageService</text>
-</g>
-<!-- KnowledgeModule -->
-<g id="node3" class="node">
-<title>KnowledgeModule</title>
-<polygon fill="#8dd3c7" stroke="black" points="294.58,-187 291.58,-191 270.58,-191 267.58,-187 170.42,-187 170.42,-151 294.58,-151 294.58,-187"/>
-<text text-anchor="middle" x="232.5" y="-164.8" font-family="Times,serif" font-size="14.00">KnowledgeModule</text>
-</g>
-<!-- KnowledgeManageService&#45;&gt;KnowledgeModule -->
-<g id="edge1" class="edge">
-<title>KnowledgeManageService&#45;&gt;KnowledgeModule</title>
-<path fill="none" stroke="black" d="M260.22,-116.84C260.22,-116.84 260.22,-140.52 260.22,-140.52"/>
-<polygon fill="black" stroke="black" points="256.72,-140.52 260.22,-150.52 263.72,-140.52 256.72,-140.52"/>
+<polygon fill="none" stroke="black" points="155,-78 155,-130 341,-130 341,-78 155,-78"/>
 </g>
 <!-- KnowledgeService -->
-<g id="node2" class="node">
+<g id="node1" class="node">
 <title>KnowledgeService</title>
-<ellipse fill="#fdb462" stroke="black" cx="123.5" cy="-104" rx="84.51" ry="18"/>
-<text text-anchor="middle" x="123.5" y="-99.8" font-family="Times,serif" font-size="14.00">KnowledgeService</text>
+<ellipse fill="#fdb462" stroke="black" cx="248" cy="-104" rx="84.51" ry="18"/>
+<text text-anchor="middle" x="248" y="-99.8" font-family="Times,serif" font-size="14.00">KnowledgeService</text>
+</g>
+<!-- KnowledgeModule -->
+<g id="node2" class="node">
+<title>KnowledgeModule</title>
+<polygon fill="#8dd3c7" stroke="black" points="310.08,-187 307.08,-191 286.08,-191 283.08,-187 185.92,-187 185.92,-151 310.08,-151 310.08,-187"/>
+<text text-anchor="middle" x="248" y="-164.8" font-family="Times,serif" font-size="14.00">KnowledgeModule</text>
 </g>
 <!-- KnowledgeService&#45;&gt;KnowledgeModule -->
-<g id="edge2" class="edge">
+<g id="edge1" class="edge">
 <title>KnowledgeService&#45;&gt;KnowledgeModule</title>
-<path fill="none" stroke="black" d="M189.23,-115.32C189.23,-115.32 189.23,-140.94 189.23,-140.94"/>
-<polygon fill="black" stroke="black" points="185.73,-140.94 189.23,-150.94 192.73,-140.94 185.73,-140.94"/>
+<path fill="none" stroke="black" d="M248,-122.11C248,-122.11 248,-140.99 248,-140.99"/>
+<polygon fill="black" stroke="black" points="244.5,-140.99 248,-150.99 251.5,-140.99 244.5,-140.99"/>
 </g>
 </g>
 </svg>

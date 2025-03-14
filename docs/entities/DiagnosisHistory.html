@@ -113,7 +113,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/diagnosis/models/diagnosis-history.entity.ts</code>
+            <code>libs/database/src/entities/diagnosis-history.entity.ts</code>
         </p>
 
 
@@ -133,15 +133,7 @@
                         <ul class="index-list">
                             <li>
                                     <span class="modifier"></span>
-                                <a href="#createdAt" >createdAt</a>
-                            </li>
-                            <li>
-                                    <span class="modifier"></span>
                                 <a href="#createdBy" >createdBy</a>
-                            </li>
-                            <li>
-                                    <span class="modifier"></span>
-                                <a href="#diagnosisConfidence" >diagnosisConfidence</a>
                             </li>
                             <li>
                                     <span class="modifier"></span>
@@ -154,15 +146,7 @@
                             </li>
                             <li>
                                     <span class="modifier"></span>
-                                <a href="#id" >id</a>
-                            </li>
-                            <li>
-                                    <span class="modifier"></span>
                                 <a href="#status" >status</a>
-                            </li>
-                            <li>
-                                    <span class="modifier"></span>
-                                <a href="#updatedAt" >updatedAt</a>
                             </li>
                             <li>
                                     <span class="modifier"></span>
@@ -186,42 +170,6 @@
     <h3 id="inputs">
         Properties
     </h3>
-    <table class="table table-sm table-bordered">
-        <tbody>
-            <tr>
-                <td class="col-md-4">
-                    <a name="createdAt"></a>
-                    <span class="name">
-                            <span class="modifier"></span>
-                        <span ><b>createdAt</b></span>
-                        <a href="#createdAt"><span class="icon ion-ios-link"></span></a>
-                    </span>
-                </td>
-            </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date" target="_blank" >Date</a></code>
-
-                    </td>
-                </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <b>Decorators : </b>
-                        <br />
-                        <code>
-                            @Column({type: &#x27;datetime&#x27;, nullable: true, default: () &#x3D;&gt; CURRENT_TIMESTAMP})<br />
-                        </code>
-                    </td>
-                </tr>
-                    <tr>
-                        <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="45" class="link-to-prism">src/modules/diagnosis/models/diagnosis-history.entity.ts:45</a></div>
-                        </td>
-                    </tr>
-
-
-        </tbody>
-    </table>
     <table class="table table-sm table-bordered">
         <tbody>
             <tr>
@@ -251,43 +199,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="35" class="link-to-prism">src/modules/diagnosis/models/diagnosis-history.entity.ts:35</a></div>
-                        </td>
-                    </tr>
-
-
-        </tbody>
-    </table>
-    <table class="table table-sm table-bordered">
-        <tbody>
-            <tr>
-                <td class="col-md-4">
-                    <a name="diagnosisConfidence"></a>
-                    <span class="name">
-                            <span class="modifier"></span>
-                        <span ><b>diagnosisConfidence</b></span>
-                        <a href="#diagnosisConfidence"><span class="icon ion-ios-link"></span></a>
-                    </span>
-                </td>
-            </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <i>Type : </i>    <code>number | null</code>
-
-                    </td>
-                </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <b>Decorators : </b>
-                        <br />
-                        <code>
-                            @Column({type: &#x27;float&#x27;, nullable: true})<br />
-                        </code>
-                    </td>
-                </tr>
-                    <tr>
-                        <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="25" class="link-to-prism">src/modules/diagnosis/models/diagnosis-history.entity.ts:25</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="23" class="link-to-prism">libs/database/src/entities/diagnosis-history.entity.ts:23</a></div>
                         </td>
                     </tr>
 
@@ -308,7 +220,7 @@
             </tr>
                 <tr>
                     <td class="col-md-4">
-                        <i>Type : </i>    <code>string | null</code>
+                        <i>Type : </i>    <code>object | null</code>
 
                     </td>
                 </tr>
@@ -317,13 +229,13 @@
                         <b>Decorators : </b>
                         <br />
                         <code>
-                            @Column({type: &#x27;varchar&#x27;, length: 255, nullable: true})<br />
+                            @Column({type: &#x27;json&#x27;, nullable: true})<br />
                         </code>
                     </td>
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="22" class="link-to-prism">src/modules/diagnosis/models/diagnosis-history.entity.ts:22</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="13" class="link-to-prism">libs/database/src/entities/diagnosis-history.entity.ts:13</a></div>
                         </td>
                     </tr>
 
@@ -360,43 +272,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="19" class="link-to-prism">src/modules/diagnosis/models/diagnosis-history.entity.ts:19</a></div>
-                        </td>
-                    </tr>
-
-
-        </tbody>
-    </table>
-    <table class="table table-sm table-bordered">
-        <tbody>
-            <tr>
-                <td class="col-md-4">
-                    <a name="id"></a>
-                    <span class="name">
-                            <span class="modifier"></span>
-                        <span ><b>id</b></span>
-                        <a href="#id"><span class="icon ion-ios-link"></span></a>
-                    </span>
-                </td>
-            </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
-
-                    </td>
-                </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <b>Decorators : </b>
-                        <br />
-                        <code>
-                            @PrimaryGeneratedColumn(&#x27;increment&#x27;)<br />
-                        </code>
-                    </td>
-                </tr>
-                    <tr>
-                        <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="15" class="link-to-prism">src/modules/diagnosis/models/diagnosis-history.entity.ts:15</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="10" class="link-to-prism">libs/database/src/entities/diagnosis-history.entity.ts:10</a></div>
                         </td>
                     </tr>
 
@@ -432,43 +308,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="32" class="link-to-prism">src/modules/diagnosis/models/diagnosis-history.entity.ts:32</a></div>
-                        </td>
-                    </tr>
-
-
-        </tbody>
-    </table>
-    <table class="table table-sm table-bordered">
-        <tbody>
-            <tr>
-                <td class="col-md-4">
-                    <a name="updatedAt"></a>
-                    <span class="name">
-                            <span class="modifier"></span>
-                        <span ><b>updatedAt</b></span>
-                        <a href="#updatedAt"><span class="icon ion-ios-link"></span></a>
-                    </span>
-                </td>
-            </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date" target="_blank" >Date</a></code>
-
-                    </td>
-                </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <b>Decorators : </b>
-                        <br />
-                        <code>
-                            @Column({type: &#x27;datetime&#x27;, nullable: true, default: () &#x3D;&gt; CURRENT_TIMESTAMP, onUpdate: &#x27;CURRENT_TIMESTAMP&#x27;})<br />
-                        </code>
-                    </td>
-                </tr>
-                    <tr>
-                        <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="53" class="link-to-prism">src/modules/diagnosis/models/diagnosis-history.entity.ts:53</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="20" class="link-to-prism">libs/database/src/entities/diagnosis-history.entity.ts:20</a></div>
                         </td>
                     </tr>
 
@@ -504,7 +344,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="38" class="link-to-prism">src/modules/diagnosis/models/diagnosis-history.entity.ts:38</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="26" class="link-to-prism">libs/database/src/entities/diagnosis-history.entity.ts:26</a></div>
                         </td>
                     </tr>
 
@@ -516,31 +356,19 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { File as FileEntity } from &#x27;@/modules/file/models/file.entity&#x27;;
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from &#x27;typeorm&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { File as FileEntity } from &#x27;@app/database/entities&#x27;;
+import { Column, Entity, Index, JoinColumn, ManyToOne } from &#x27;typeorm&#x27;;
+import { BaseEntity } from &#x27;./base.entity&#x27;;
 
 @Entity(&#x27;diagnosis_history&#x27;)
 @Index(&#x27;diagnosis_history_created_by_idx&#x27;, [&#x27;createdBy&#x27;]) // 为 createdBy 字段添加索引
-export class DiagnosisHistory {
-  @PrimaryGeneratedColumn(&#x27;increment&#x27;)
-  id: number; // 主键ID
-
+export class DiagnosisHistory extends BaseEntity {
   @ManyToOne(() &#x3D;&gt; FileEntity, { nullable: true, onDelete: &#x27;SET NULL&#x27; })
   @JoinColumn({ name: &#x27;fileId&#x27; }) // 关联的文件外键名
   file: FileEntity | null; // 上传的数据文件，允许为空（0..0关系）
 
-  @Column({ type: &#x27;varchar&#x27;, length: 255, nullable: true })
-  diagnosisResult: string | null; // 诊断结果
-
-  @Column({ type: &#x27;float&#x27;, nullable: true })
-  diagnosisConfidence: number | null; // 诊断置信度
+  @Column({ type: &#x27;json&#x27;, nullable: true })
+  diagnosisResult: object | null;
 
   @Column({
     type: &#x27;varchar&#x27;,
@@ -554,21 +382,6 @@ export class DiagnosisHistory {
 
   @Column({ type: &#x27;int&#x27; })
   updatedBy: number; // 更新者
-
-  @Column({
-    type: &#x27;datetime&#x27;,
-    nullable: true,
-    default: () &#x3D;&gt; &#x27;CURRENT_TIMESTAMP&#x27;,
-  })
-  createdAt: Date; // 创建时间
-
-  @Column({
-    type: &#x27;datetime&#x27;,
-    nullable: true,
-    default: () &#x3D;&gt; &#x27;CURRENT_TIMESTAMP&#x27;,
-    onUpdate: &#x27;CURRENT_TIMESTAMP&#x27;,
-  })
-  updatedAt: Date; // 更新时间
 }
 </code></pre>
     </div>

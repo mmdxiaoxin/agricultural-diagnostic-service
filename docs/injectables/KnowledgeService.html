@@ -115,7 +115,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/knowledge/services/knowledge.service.ts</code>
+            <code>apps/api-gateway/src/modules/knowledge/knowledge.service.ts</code>
         </p>
 
 
@@ -136,6 +136,7 @@
                     <td class="col-md-4">
                         <ul class="index-list">
                             <li>
+                                    <span class="modifier">Async</span>
                                 <a href="#create" >create</a>
                             </li>
                             <li>
@@ -144,6 +145,14 @@
                             <li>
                                     <span class="modifier">Async</span>
                                 <a href="#findById" >findById</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#knowledgeGet" >knowledgeGet</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#knowledgeListGet" >knowledgeListGet</a>
                             </li>
                             <li>
                                 <a href="#remove" >remove</a>
@@ -175,7 +184,7 @@
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="9" class="link-to-prism">src/modules/knowledge/services/knowledge.service.ts:9</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="10" class="link-to-prism">apps/api-gateway/src/modules/knowledge/knowledge.service.ts:10</a></div>
                             </td>
                         </tr>
 
@@ -224,6 +233,7 @@
                 <td class="col-md-4">
                     <a name="create"></a>
                     <span class="name">
+                            <span class="modifier">Async</span>
                         <span ><b>create</b></span>
                         <a href="#create"><span class="icon ion-ios-link"></span></a>
                     </span>
@@ -231,15 +241,16 @@
             </tr>
             <tr>
                 <td class="col-md-4">
-<code>create(dto: <a href="../classes/CreatePlantDiseaseKnowledgeDto.html" target="_self">CreatePlantDiseaseKnowledgeDto</a>)</code>
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>create(dto: <a href="../classes/CreatePlantDiseaseKnowledgeDto.html" target="_self">CreatePlantDiseaseKnowledgeDto</a>)</code>
                 </td>
             </tr>
 
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="16"
-                                    class="link-to-prism">src/modules/knowledge/services/knowledge.service.ts:16</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="17"
+                                    class="link-to-prism">apps/api-gateway/src/modules/knowledge/knowledge.service.ts:17</a></div>
                         </td>
                     </tr>
 
@@ -275,7 +286,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                            <b>Returns : </b>    <code>unknown</code>
 
                         </div>
                             <div class="io-description">
@@ -305,8 +316,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="22"
-                                    class="link-to-prism">src/modules/knowledge/services/knowledge.service.ts:22</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="23"
+                                    class="link-to-prism">apps/api-gateway/src/modules/knowledge/knowledge.service.ts:23</a></div>
                         </td>
                     </tr>
 
@@ -344,8 +355,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="27"
-                                    class="link-to-prism">src/modules/knowledge/services/knowledge.service.ts:27</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="54"
+                                    class="link-to-prism">apps/api-gateway/src/modules/knowledge/knowledge.service.ts:54</a></div>
                         </td>
                     </tr>
 
@@ -395,6 +406,147 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
+                    <a name="knowledgeGet"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>knowledgeGet</b></span>
+                        <a href="#knowledgeGet"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>knowledgeGet()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="49"
+                                    class="link-to-prism">apps/api-gateway/src/modules/knowledge/knowledge.service.ts:49</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="knowledgeListGet"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>knowledgeListGet</b></span>
+                        <a href="#knowledgeListGet"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>knowledgeListGet(page: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, pageSize: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, filters: literal type)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="28"
+                                    class="link-to-prism">apps/api-gateway/src/modules/knowledge/knowledge.service.ts:28</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Default value</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>page</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                                    <code>1</code>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                                <td>pageSize</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                                    <code>10</code>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                                <td>filters</td>
+                                            <td>
+                                                        <code>literal type</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                            </td>
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
                     <a name="remove"></a>
                     <span class="name">
                         <span ><b>remove</b></span>
@@ -411,8 +563,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="46"
-                                    class="link-to-prism">src/modules/knowledge/services/knowledge.service.ts:46</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="73"
+                                    class="link-to-prism">apps/api-gateway/src/modules/knowledge/knowledge.service.ts:73</a></div>
                         </td>
                     </tr>
 
@@ -480,8 +632,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="36"
-                                    class="link-to-prism">src/modules/knowledge/services/knowledge.service.ts:36</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="63"
+                                    class="link-to-prism">apps/api-gateway/src/modules/knowledge/knowledge.service.ts:63</a></div>
                         </td>
                     </tr>
 
@@ -548,9 +700,10 @@
         <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable, NotFoundException } from &#x27;@nestjs/common&#x27;;
 import { InjectRepository } from &#x27;@nestjs/typeorm&#x27;;
 import { Repository } from &#x27;typeorm&#x27;;
-import { CreatePlantDiseaseKnowledgeDto } from &#x27;../dto/create-knowledge.dto&#x27;;
-import { UpdatePlantDiseaseKnowledgeDto } from &#x27;../dto/update-knowledge.dto&#x27;;
-import { PlantDiseaseKnowledge } from &#x27;../knowledge.entity&#x27;;
+import { CreatePlantDiseaseKnowledgeDto } from &#x27;./dto/create-knowledge.dto&#x27;;
+import { UpdatePlantDiseaseKnowledgeDto } from &#x27;./dto/update-knowledge.dto&#x27;;
+import { PlantDiseaseKnowledge } from &#x27;./knowledge.entity&#x27;;
+import { formatResponse } from &#x27;@shared/helpers/response.helper&#x27;;
 
 @Injectable()
 export class KnowledgeService {
@@ -560,7 +713,7 @@ export class KnowledgeService {
   ) {}
 
   // 创建病害知识记录
-  create(dto: CreatePlantDiseaseKnowledgeDto) {
+  async create(dto: CreatePlantDiseaseKnowledgeDto) {
     const knowledge &#x3D; this.knowledgeRepository.create(dto);
     return this.knowledgeRepository.save(knowledge);
   }
@@ -568,6 +721,32 @@ export class KnowledgeService {
   // 获取所有病害知识记录
   findAll() {
     return this.knowledgeRepository.find();
+  }
+
+  // 获取所有病害知识记录
+  async knowledgeListGet(
+    page: number &#x3D; 1,
+    pageSize: number &#x3D; 10,
+    filters: {
+      category?: string;
+    },
+  ) {
+    const queryBuilder &#x3D; this.knowledgeRepository.createQueryBuilder(
+      &#x27;plant_disease_knowledge&#x27;,
+    );
+    if (filters.category) {
+      queryBuilder.where(&#x27;knowledge.category &#x3D; :category&#x27;, {
+        category: filters.category,
+      });
+    }
+    return await queryBuilder
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+  }
+
+  async knowledgeGet() {
+    return await this.knowledgeRepository.find();
   }
 
   // 获取单个病害知识记录

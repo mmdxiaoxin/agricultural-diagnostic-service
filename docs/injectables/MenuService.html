@@ -115,7 +115,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/menu/menu.service.ts</code>
+            <code>apps/auth-service/src/modules/menu/menu.service.ts</code>
         </p>
 
 
@@ -182,7 +182,7 @@
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="7" class="link-to-prism">src/modules/menu/menu.service.ts:7</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="7" class="link-to-prism">apps/auth-service/src/modules/menu/menu.service.ts:7</a></div>
                             </td>
                         </tr>
 
@@ -247,8 +247,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="59"
-                                    class="link-to-prism">src/modules/menu/menu.service.ts:59</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="60"
+                                    class="link-to-prism">apps/auth-service/src/modules/menu/menu.service.ts:60</a></div>
                         </td>
                     </tr>
 
@@ -316,8 +316,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="44"
-                                    class="link-to-prism">src/modules/menu/menu.service.ts:44</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="45"
+                                    class="link-to-prism">apps/auth-service/src/modules/menu/menu.service.ts:45</a></div>
                         </td>
                     </tr>
 
@@ -355,8 +355,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="14"
-                                    class="link-to-prism">src/modules/menu/menu.service.ts:14</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="13"
+                                    class="link-to-prism">apps/auth-service/src/modules/menu/menu.service.ts:13</a></div>
                         </td>
                     </tr>
 
@@ -424,8 +424,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="51"
-                                    class="link-to-prism">src/modules/menu/menu.service.ts:51</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="52"
+                                    class="link-to-prism">apps/auth-service/src/modules/menu/menu.service.ts:52</a></div>
                         </td>
                     </tr>
 
@@ -493,8 +493,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="71"
-                                    class="link-to-prism">src/modules/menu/menu.service.ts:71</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="72"
+                                    class="link-to-prism">apps/auth-service/src/modules/menu/menu.service.ts:72</a></div>
                         </td>
                     </tr>
 
@@ -562,8 +562,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="65"
-                                    class="link-to-prism">src/modules/menu/menu.service.ts:65</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="66"
+                                    class="link-to-prism">apps/auth-service/src/modules/menu/menu.service.ts:66</a></div>
                         </td>
                     </tr>
 
@@ -639,23 +639,24 @@ export class MenuService {
     private readonly menuRepository: Repository&lt;Menu&gt;,
   ) {}
 
-  // 获取个人路由权限
   async findAuthRoutes(roleId: number) {
     const menus &#x3D; await this.menuRepository.find({
       relations: [&#x27;parent&#x27;, &#x27;children&#x27;],
+      // TODO: 这里可以根据实际情况加入角色ID过滤
       // where: {
-      //   // TODO: 根据角色ID过滤菜单
-      //   // 假设角色与菜单的关系表存在，这里根据 roleId 过滤相关菜单
-      //   // 请根据实际表结构和关系来修改查询条件
-      //   // roleId: roleId, // 角色ID
+      //   roleId: roleId,
       // },
       order: { id: &#x27;ASC&#x27; }, // 按照ID升序排列
     });
+
+    // 按照 sort 属性对菜单进行排序
+    menus.sort((a, b) &#x3D;&gt; a.sort - b.sort); // 升序排序，如果是降序则改为 b.sort - a.sort
 
     // 构建菜单树
     const buildMenuTree &#x3D; (parentId: number | null): any[] &#x3D;&gt; {
       return menus
         .filter((menu) &#x3D;&gt; menu.parentId &#x3D;&#x3D;&#x3D; parentId)
+        .sort((a, b) &#x3D;&gt; a.sort - b.sort) // 对每一层级的菜单进行排序
         .map((menu) &#x3D;&gt; ({
           icon: menu.icon,
           title: menu.title,

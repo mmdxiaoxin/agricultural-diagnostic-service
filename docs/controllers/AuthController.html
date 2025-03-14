@@ -112,7 +112,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/auth/auth.controller.ts</code>
+            <code>apps/api-gateway/src/modules/auth/auth.controller.ts</code>
         </p>
 
             <p class="comment">
@@ -158,6 +158,12 @@
                                     <span class="modifier"></span>
                                     <span class="modifier">Async</span>
                                 <a href="#register" >register</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#verify" >verify</a>
                             </li>
                         </ul>
                     </td>
@@ -208,8 +214,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="38"
-                                    class="link-to-prism">src/modules/auth/auth.controller.ts:38</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="69"
+                                    class="link-to-prism">apps/api-gateway/src/modules/auth/auth.controller.ts:69</a></div>
                         </td>
                     </tr>
 
@@ -256,8 +262,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="30"
-                                    class="link-to-prism">src/modules/auth/auth.controller.ts:30</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="46"
+                                    class="link-to-prism">apps/api-gateway/src/modules/auth/auth.controller.ts:46</a></div>
                         </td>
                     </tr>
 
@@ -320,7 +326,7 @@
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>register(dto: <a href="../classes/RegisterDto.html" target="_self">RegisterDto</a>)</code>
+                    <code>register(req: <a href="../interfaces/Request.html" target="_self">Request</a>, dto: <a href="../classes/RegisterDto.html" target="_self">RegisterDto</a>)</code>
                 </td>
             </tr>
 
@@ -334,8 +340,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="23"
-                                    class="link-to-prism">src/modules/auth/auth.controller.ts:23</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="33"
+                                    class="link-to-prism">apps/api-gateway/src/modules/auth/auth.controller.ts:33</a></div>
                         </td>
                     </tr>
 
@@ -355,6 +361,18 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        <tr>
+                                                <td>req</td>
+                                            <td>
+                                                            <code><a href="../interfaces/Request.html" target="_self" >Request</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
                                         <tr>
                                                 <td>dto</td>
                                             <td>
@@ -381,49 +399,162 @@
             </tr>
         </tbody>
     </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="verify"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>verify</b></span>
+                        <a href="#verify"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>verify(token: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Post(&#x27;verify/:token&#x27;)<br />@HttpCode(HttpStatus.OK)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="59"
+                                    class="link-to-prism">apps/api-gateway/src/modules/auth/auth.controller.ts:59</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>token</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </section>    </div>
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { TypeormFilter } from &#x27;@/common/filters/typeorm.filter&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { AuthGuard } from &#x27;@common/guards/auth.guard&#x27;;
 import {
   Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
+  Param,
   Post,
-  UseFilters,
+  Req,
   UseGuards,
 } from &#x27;@nestjs/common&#x27;;
-import { AuthService } from &#x27;./auth.service&#x27;;
+import { ClientProxy } from &#x27;@nestjs/microservices&#x27;;
+import { ApiTags } from &#x27;@nestjs/swagger&#x27;;
+import { formatResponse } from &#x27;@shared/helpers/response.helper&#x27;;
+import { AUTH_SERVICE_NAME } from &#x27;config/microservice.config&#x27;;
+import { Request } from &#x27;express&#x27;;
+import { firstValueFrom, lastValueFrom } from &#x27;rxjs&#x27;;
 import { LoginDto } from &#x27;./dto/login.dto&#x27;;
 import { RegisterDto } from &#x27;./dto/register.dto&#x27;;
-import { AuthGuard } from &#x27;@/common/guards/auth.guard&#x27;;
+import { verifyHtml } from &#x27;@shared/constants/html&#x27;;
+
+@ApiTags(&#x27;权限认证模块&#x27;)
 @Controller(&#x27;auth&#x27;)
-@UseFilters(TypeormFilter)
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientProxy,
+  ) {}
 
   @Post(&#x27;register&#x27;)
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() dto: RegisterDto) {
-    const { email, password } &#x3D; dto;
-    return this.authService.register(email, password);
+  async register(@Req() req: Request, @Body() dto: RegisterDto) {
+    const token &#x3D; await firstValueFrom(
+      this.authClient.send({ cmd: &#x27;auth.register&#x27; }, { dto }),
+    );
+    const link &#x3D; &#x60;${req.protocol}://${req.get(&#x27;host&#x27;)}/auth/verify/${token}&#x60;;
+    await firstValueFrom(
+      this.authClient.send({ cmd: &#x27;auth.notify&#x27; }, { email: dto.email, link }),
+    );
+    return formatResponse(201, null, &#x27;注册成功，请查看邮箱验证&#x27;);
   }
 
   @Post(&#x27;login&#x27;)
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
-    const { login, password } &#x3D; dto;
-    return this.authService.login(login, password);
+    const result &#x3D; await lastValueFrom(
+      this.authClient.send({ cmd: &#x27;auth.login&#x27; }, { dto }),
+    );
+    return formatResponse(
+      200,
+      { access_token: result.access_token },
+      &#x27;登录成功&#x27;,
+    );
+  }
+
+  @Post(&#x27;verify/:token&#x27;)
+  @HttpCode(HttpStatus.OK)
+  async verify(@Param(&#x27;token&#x27;) token: string) {
+    await lastValueFrom(
+      this.authClient.send({ cmd: &#x27;auth.verify&#x27; }, { token }),
+    );
+    return verifyHtml;
   }
 
   @Get(&#x27;buttons&#x27;)
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   async buttonsGet() {
-    return this.authService.buttonsGet();
+    return formatResponse(
+      200,
+      { useHooks: { add: true, delete: true } },
+      &#x27;获取按钮成功&#x27;,
+    );
   }
 }
 </code></pre>

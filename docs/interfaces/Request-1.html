@@ -122,7 +122,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/modules/file/guards/file.guard.ts</code>
+            <code>apps/api-gateway/src/modules/file/guards/file.guard.ts</code>
         </p>
 
 
@@ -144,12 +144,6 @@
                                         <a href="#fileMeta" 
 >
                                             fileMeta
-                                        </a>
-                                </li>
-                                <li>
-                                        <a href="#filesMeta" 
->
-                                            filesMeta
                                         </a>
                                 </li>
                             </ul>
@@ -196,128 +190,71 @@
 
                         </tbody>
                     </table>
-                    <table class="table table-sm table-bordered">
-                        <tbody>
-                                <tr>
-                                    <td class="col-md-4">
-                                        <a name="filesMeta"></a>
-                                        <span class="name "><b>filesMeta</b>
-                                            <a href="#filesMeta">
-                                                <span class="icon ion-ios-link"></span>
-                                            </a>
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="col-md-4">
-                                        <code>filesMeta:         <code><a href="../classes/File.html" target="_self" >FileEntity[]</a></code>
-</code>
-                                    </td>
-                                </tr>
-
-
-                                    <tr>
-                                        <td class="col-md-4">
-                                            <i>Type : </i>        <code><a href="../classes/File.html" target="_self" >FileEntity[]</a></code>
-
-                                        </td>
-                                    </tr>
-
-
-
-
-
-                        </tbody>
-                    </table>
             </section>
     </div>
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { FileService } from &#x27;@/modules/file/services/file.service&#x27;;
-import { File as FileEntity } from &#x27;@/modules/file/models/file.entity&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { File as FileEntity } from &#x27;@app/database/entities&#x27;;
 import {
   BadRequestException,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Inject,
   Injectable,
-  NotFoundException,
 } from &#x27;@nestjs/common&#x27;;
+import { ClientProxy } from &#x27;@nestjs/microservices&#x27;;
+import { FILE_SERVICE_NAME } from &#x27;config/microservice.config&#x27;;
 import { Request } from &#x27;express&#x27;;
+import { firstValueFrom } from &#x27;rxjs&#x27;;
 
-export type DownloadRequest &#x3D; Request&lt;
-  { fileId: number },
-  any,
-  { fileIds: number[] },
-  any
-&gt;;
+export type DownloadRequest &#x3D; Request&lt;{ fileId: number }&gt;;
 
 declare global {
   namespace Express {
     interface Request {
       fileMeta: FileEntity;
-      filesMeta: FileEntity[];
     }
   }
 }
 
 @Injectable()
 export class FileGuard implements CanActivate {
-  constructor(private readonly fileService: FileService) {}
+  constructor(
+    @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise&lt;boolean&gt; {
     const request &#x3D; context.switchToHttp().getRequest&lt;DownloadRequest&gt;();
     const fileId &#x3D; request.params.fileId;
     const userId &#x3D; request.user?.userId;
 
-    // 查询文件信息并将其存储到 request.file 中
-    const file &#x3D; await this.fileService.findById(fileId);
+    if (!fileId) {
+      throw new BadRequestException(&#x27;文件 ID 不能为空&#x27;);
+    }
 
-    // 处理权限验证
+    // 远程调用 file-service 获取文件信息
+    const { result: file } &#x3D; await firstValueFrom(
+      this.fileClient.send&lt;
+        { success: boolean; result: FileEntity | null },
+        number
+      &gt;(&#x27;file.get.byId&#x27;, fileId),
+    );
+
+    if (!file) {
+      throw new BadRequestException(&#x27;文件不存在&#x27;);
+    }
+
     if (
       file.access &#x3D;&#x3D;&#x3D; &#x27;public&#x27; ||
       (file.access &#x3D;&#x3D;&#x3D; &#x27;private&#x27; &amp;&amp; userId &#x3D;&#x3D;&#x3D; file.createdBy)
     ) {
-      request.fileMeta &#x3D; file; // 将文件信息存储到请求中
+      request.fileMeta &#x3D; file;
       return true;
     }
 
     throw new ForbiddenException(&#x27;当前文件无权限访问.&#x27;);
-  }
-}
-
-@Injectable()
-export class FilesGuard implements CanActivate {
-  constructor(private readonly fileService: FileService) {}
-
-  async canActivate(context: ExecutionContext): Promise&lt;boolean&gt; {
-    const request &#x3D; context.switchToHttp().getRequest&lt;DownloadRequest&gt;();
-    const fileIds &#x3D; request.body.fileIds;
-    const userId &#x3D; request.user?.userId;
-
-    if (!fileIds || !Array.isArray(fileIds) || fileIds.length &#x3D;&#x3D;&#x3D; 0) {
-      throw new BadRequestException(&#x27;非法参数&#x27;);
-    }
-
-    // 查询多个文件信息并将其存储到请求中
-    const files &#x3D; await this.fileService.findByIds(fileIds);
-
-    const filesWithAccess: FileEntity[] &#x3D; [];
-
-    for (const file of files) {
-      if (
-        file.access &#x3D;&#x3D;&#x3D; &#x27;public&#x27; ||
-        (file.access &#x3D;&#x3D;&#x3D; &#x27;private&#x27; &amp;&amp; userId &#x3D;&#x3D;&#x3D; file.createdBy)
-      ) {
-        filesWithAccess.push(file); // 只有有权限的文件才会被加入
-      } else {
-        throw new ForbiddenException(&#x27;您无权操作.&#x27;);
-      }
-    }
-
-    request.filesMeta &#x3D; filesWithAccess; // 将文件信息存储到请求中
-    return true;
   }
 }
 </code></pre>
