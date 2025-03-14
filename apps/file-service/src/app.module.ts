@@ -1,19 +1,23 @@
 import { DatabaseModule } from '@app/database';
-import { Dataset, File } from '@app/database/entities';
-import { FileOperationModule } from '@app/file-operation';
-import { MetricsModule } from '@app/metrics';
 import { Module } from '@nestjs/common';
-import { FileController } from './app.controller';
-import { FileService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { DatasetModule } from './modules/dataset/dataset.module';
+import { FileModule } from './modules/file/file.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [
+        '.env',
+        `.env.${process.env.NODE_ENV || 'development'}.local`,
+      ],
+    }),
     DatabaseModule.register(),
-    DatabaseModule.forFeature([File, Dataset]),
-    MetricsModule,
-    FileOperationModule,
+    FileModule,
+    DatasetModule,
+    PrometheusModule.register(),
   ],
-  controllers: [FileController],
-  providers: [FileService],
 })
 export class AppModule {}

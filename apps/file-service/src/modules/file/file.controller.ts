@@ -4,7 +4,7 @@ import {
 } from '@common/dto/file/update-file.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { FileService } from './app.service';
+import { FileService } from './file.service';
 
 @Controller()
 export class FileController {
