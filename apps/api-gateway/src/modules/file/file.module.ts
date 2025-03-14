@@ -1,9 +1,7 @@
-import { File, Task } from '@app/database/entities';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigEnum } from '@shared/enum/config.enum';
 import {
   DOWNLOAD_SERVICE_NAME,
@@ -18,7 +16,6 @@ import { FileOperationService } from './services/file-operation.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([File, Task]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {

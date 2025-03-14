@@ -1,5 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
-import { Role } from '@shared/enum/role.enum';
+import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
+import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
 import { TypeormFilter } from '@common/filters/typeorm.filter';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -11,6 +12,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
@@ -20,11 +22,13 @@ import {
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
-import { CreateDatasetDto } from './dto/create-dataset.dto';
-import { UpdateDatasetDto } from './dto/update-dataset.dto';
-import { DatasetManageService } from './service/dataset-manage.service';
+import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags } from '@nestjs/swagger';
+import { Role } from '@shared/enum/role.enum';
+import { formatResponse } from '@shared/helpers/response.helper';
+import { FILE_SERVICE_NAME } from 'config/microservice.config';
+import { Request } from 'express';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 
 @ApiTags('数据集管理模块')
 @Controller('dataset')
@@ -32,7 +36,9 @@ import { ApiTags } from '@nestjs/swagger';
 @UseGuards(AuthGuard, RolesGuard)
 @UseFilters(TypeormFilter)
 export class DatasetController {
-  constructor(private readonly manageService: DatasetManageService) {}
+  constructor(
+    @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
+  ) {}
 
   // 获取数据集列表
   @Get('list')
@@ -46,19 +52,40 @@ export class DatasetController {
     @Query('updatedStart', ParseStringDatePipe) updatedStart?: string,
     @Query('updatedEnd', ParseStringDatePipe) updatedEnd?: string,
   ) {
-    return this.manageService.datasetsListGet(page, pageSize, req.user.userId, {
-      name,
-      createdStart,
-      createdEnd,
-      updatedStart,
-      updatedEnd,
-    });
+    const response = await lastValueFrom(
+      this.fileClient.send(
+        { cmd: 'dataset.get.list' },
+        {
+          page,
+          pageSize,
+          name,
+          createdStart,
+          createdEnd,
+          updatedStart,
+          updatedEnd,
+          userId: req.user.userId,
+        },
+      ),
+    );
+    return formatResponse(200, response?.result, '获取数据集列表成功');
   }
 
   // 创建数据集
   @Post('create')
+  @HttpCode(HttpStatus.CREATED)
   async createDataset(@Req() req: Request, @Body() dto: CreateDatasetDto) {
-    return this.manageService.createDataset(req.user.userId, dto);
+    const response = await lastValueFrom(
+      this.fileClient.send(
+        {
+          cmd: 'dataset.create',
+        },
+        {
+          userId: req.user.userId,
+          dto,
+        },
+      ),
+    );
+    return formatResponse(201, response?.result, '创建数据集成功');
   }
 
   // 获取数据集详情
@@ -70,7 +97,17 @@ export class DatasetController {
     )
     datasetId: number,
   ) {
-    return this.manageService.getDatasetDetail(datasetId);
+    const response = await lastValueFrom(
+      this.fileClient.send(
+        {
+          cmd: 'dataset.detail',
+        },
+        {
+          datasetId,
+        },
+      ),
+    );
+    return formatResponse(200, response?.result, '获取数据集详情成功');
   }
 
   // 更新数据集
@@ -84,7 +121,19 @@ export class DatasetController {
     @Req() req: Request,
     @Body() dto: UpdateDatasetDto,
   ) {
-    return this.manageService.updateDataset(datasetId, req.user.userId, dto);
+    const response = await lastValueFrom(
+      this.fileClient.send(
+        {
+          cmd: 'dataset.update',
+        },
+        {
+          datasetId,
+          userId: req.user.userId,
+          dto,
+        },
+      ),
+    );
+    return formatResponse(200, response?.result, '更新数据集成功');
   }
 
   // 删除数据集
@@ -98,6 +147,17 @@ export class DatasetController {
     datasetId: number,
     @Req() req: Request,
   ) {
-    return this.manageService.deleteDataset(datasetId, req.user.userId);
+    await firstValueFrom(
+      this.fileClient.send(
+        {
+          cmd: 'dataset.delete',
+        },
+        {
+          datasetId,
+          userId: req.user.userId,
+        },
+      ),
+    );
+    return formatResponse(204, null, '删除数据集成功');
   }
 }

@@ -1,18 +1,20 @@
-import { formatResponse } from '@shared/helpers/response.helper';
+import { Dataset, File } from '@app/database/entities';
 import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Dataset } from '../../../../../../libs/database/src/entities/dataset.entity';
-import { CreateDatasetDto } from '../dto/create-dataset.dto';
-import { UpdateDatasetDto } from '../dto/update-dataset.dto';
-import { DatasetService } from './dataset.service';
+import { formatResponse } from '@shared/helpers/response.helper';
+import { In, Repository } from 'typeorm';
+import { CreateDatasetDto } from '../../../../../packages/common/src/dto/dataset/create-dataset.dto';
+import { UpdateDatasetDto } from '../../../../../packages/common/src/dto/dataset/update-dataset.dto';
 
 @Injectable()
-export class DatasetManageService {
+export class DatasetService {
   constructor(
     @InjectRepository(Dataset)
     private datasetRepository: Repository<Dataset>,
-    private datasetService: DatasetService,
+
+    @InjectRepository(File)
+    private fileRepository: Repository<File>,
   ) {}
 
   async datasetsListGet(
@@ -68,7 +70,7 @@ export class DatasetManageService {
     const [datasets, total] = await queryBuilder.getManyAndCount();
 
     // 计算 datasetSize 和 fileCount
-    const result = datasets.map((dataset) => {
+    const list = datasets.map((dataset) => {
       const fileCount = dataset.files?.length; // 文件的数量
       // 计算 datasetSize
       const datasetSize = dataset.files?.reduce((totalSize, file) => {
@@ -84,16 +86,15 @@ export class DatasetManageService {
       };
     });
 
-    return formatResponse(
-      200,
-      {
-        list: result,
+    return {
+      success: true,
+      result: {
+        list,
         total,
         page,
         pageSize,
       },
-      '获取数据集列表成功',
-    );
+    };
   }
 
   async createDataset(userId: number, dto: CreateDatasetDto) {
@@ -104,20 +105,34 @@ export class DatasetManageService {
       updatedBy: userId,
     });
     if (fileIds && fileIds?.length > 0) {
-      dataset.files = await this.fileService.findByIds(fileIds);
+      dataset.files = await this.fileRepository.find({
+        where: { id: In(fileIds) },
+      });
     }
     await this.datasetRepository.save(dataset);
-    return formatResponse(200, dataset, '创建数据集成功');
+    return {
+      success: true,
+      result: dataset,
+    };
   }
 
   async getDatasetDetail(datasetId: number) {
-    const dataset = await this.datasetService.findById(datasetId);
+    const dataset = await this.datasetRepository.findOne({
+      where: { id: datasetId },
+      relations: ['files'],
+    });
+    if (!dataset) {
+      throw new RpcException('未发现该数据集');
+    }
     const result = {
       ...dataset,
       fileIds: dataset.files?.map((file) => file.id),
       files: undefined, // 不返回 files 字段
     };
-    return formatResponse(200, result, '获取数据集详情成功');
+    return {
+      success: true,
+      result,
+    };
   }
 
   async updateDataset(
@@ -125,23 +140,44 @@ export class DatasetManageService {
     userId: number,
     dto: UpdateDatasetDto,
   ) {
-    const dataset = await this.datasetService.findById(datasetId);
+    const dataset = await this.datasetRepository.findOne({
+      where: { id: datasetId },
+      relations: ['files'],
+    });
+    if (!dataset) {
+      return formatResponse(404, null, '未发现该数据集');
+    }
     const { fileIds, ...datasetData } = dto;
     dataset.name = datasetData.name || dataset.name;
     dataset.description = datasetData.description || dataset.description;
     dataset.updatedBy = userId;
     if (fileIds && fileIds?.length > 0) {
-      dataset.files = await this.fileService.findByIds(fileIds);
+      dataset.files = await this.fileRepository.find({
+        where: { id: In(fileIds) },
+      });
     }
     await this.datasetRepository.save(dataset);
-    return formatResponse(200, dataset, '更新数据集成功');
+    return {
+      success: true,
+      result: dataset,
+    };
   }
 
-  async deleteDataset(datasetId: number, userId: number): Promise<void> {
-    const dataset = await this.datasetService.findById(datasetId);
+  async deleteDataset(datasetId: number, userId: number) {
+    const dataset = await this.datasetRepository.findOne({
+      where: { id: datasetId },
+      relations: ['files'],
+    });
+    if (!dataset) {
+      throw new RpcException('未发现该数据集');
+    }
     if (dataset.createdBy !== userId) {
-      throw new Error('无权限删除该数据集');
+      throw new RpcException('无权限删除该数据集');
     }
     await this.datasetRepository.remove(dataset);
+    return {
+      success: true,
+      result: null,
+    };
   }
 }

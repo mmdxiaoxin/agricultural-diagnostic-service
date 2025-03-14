@@ -1,14 +1,12 @@
-import { Dataset } from '@app/database/entities';
+import { Dataset, File } from '@app/database/entities';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { FileModule } from '../file/file.module';
 import { DatasetController } from './dataset.controller';
-import { DatasetManageService } from './service/dataset-manage.service';
-import { DatasetService } from './service/dataset.service';
+import { DatasetService } from './dataset.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Dataset]), FileModule],
-  providers: [DatasetService, DatasetManageService],
+  imports: [TypeOrmModule.forFeature([Dataset, File])],
+  providers: [DatasetService],
   controllers: [DatasetController],
 })
 export class DatasetModule {}
