@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
@@ -12,18 +13,18 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 
-import { MIME_TYPE } from '@shared/enum/mime.enum';
 import { AuthGuard } from '@common/guards/auth.guard';
+import { ClientProxy } from '@nestjs/microservices';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags } from '@nestjs/swagger';
+import { MIME_TYPE } from '@shared/enum/mime.enum';
+import { formatResponse } from '@shared/helpers/response.helper';
+import { UPLOAD_SERVICE_NAME } from 'config/microservice.config';
 import { Request } from 'express';
-import { existsSync, mkdirSync } from 'fs';
-import { diskStorage } from 'multer';
-import { v4 as uuidv4 } from 'uuid';
+import { firstValueFrom } from 'rxjs';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
-import { FileOperationService } from '../file/services/file-operation.service';
 import { DiagnosisService } from './diagnosis.service';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('病害诊断模块')
 @Controller('diagnosis')
@@ -31,56 +32,36 @@ import { ApiTags } from '@nestjs/swagger';
 export class DiagnosisController {
   constructor(
     private readonly diagnosisService: DiagnosisService,
-    private readonly fileOperationService: FileOperationService,
+    @Inject(UPLOAD_SERVICE_NAME)
+    private readonly uploadClient: ClientProxy,
   ) {}
 
   // 上传待诊断数据接口
   @Post('upload')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: (req, file, cb) => {
-          let folder = 'uploads/other';
-          const mimeType = file.mimetype;
-          // 按 MIME 类型分文件夹存储
-          if (mimeType.startsWith('image')) {
-            folder = 'uploads/images';
-          } else if (mimeType.startsWith('video')) {
-            folder = 'uploads/videos';
-          } else if (mimeType.startsWith('application')) {
-            folder = 'uploads/documents';
-          } else if (mimeType.startsWith('audio')) {
-            folder = 'uploads/audio';
-          }
-          if (!existsSync(folder)) {
-            mkdirSync(folder, { recursive: true });
-          }
-          cb(null, folder);
-        },
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + '-' + uuidv4();
-          file.originalname = Buffer.from(file.originalname, 'latin1').toString(
-            'utf-8',
-          );
-          cb(null, uniqueName);
-        },
-      }),
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file'))
   async uploadData(
     @Req() req: Request,
     @UploadedFile(
       new FileTypeValidationPipe([MIME_TYPE.PNG, MIME_TYPE.JPEG]),
-      new FileSizeValidationPipe('10MB'),
+      new FileSizeValidationPipe('5MB'),
     )
     file: Express.Multer.File,
   ) {
-    try {
-      return this.diagnosisService.uploadData(req.user.userId, file);
-    } catch (error) {
-      await this.fileOperationService.deleteFile(file.path);
-      throw error;
-    }
+    const upload = await firstValueFrom(
+      this.uploadClient.send(
+        { cmd: 'upload.single' },
+        {
+          fileMeta: {
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size,
+          },
+          fileData: file.buffer.toString('base64'),
+          userId: req.user.userId,
+        },
+      ),
+    );
+    return formatResponse(200, upload, '上传成功');
   }
 
   // TODO: 开始诊断数据接口

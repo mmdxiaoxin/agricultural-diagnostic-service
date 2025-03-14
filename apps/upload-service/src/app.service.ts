@@ -99,7 +99,7 @@ export class UploadService {
       }
       await queryRunner.manager.save(file);
       await queryRunner.commitTransaction();
-      return { success: true, file };
+      return { success: true, result: file };
     } catch (error) {
       this.logger.error(`保存文件失败: ${error.message}`);
       await queryRunner.rollbackTransaction();

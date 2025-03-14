@@ -1,25 +1,14 @@
-import { FileOperationService } from '@app/file-operation';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DiagnosisService } from './diagnosis.service';
 
 @Controller()
 export class DiagnosisController {
-  constructor(
-    private readonly diagnosisService: DiagnosisService,
-    private readonly fileOperationService: FileOperationService,
-  ) {}
+  constructor(private readonly diagnosisService: DiagnosisService) {}
 
-  @MessagePattern({ cmd: 'diagnosis.upload' })
-  async uploadData(
-    @Payload() data: { userId: number; file: Express.Multer.File },
-  ) {
-    try {
-      return this.diagnosisService.uploadData(data.userId, data.file);
-    } catch (error) {
-      await this.fileOperationService.deleteFile(data.file.path);
-      throw error;
-    }
+  @MessagePattern({ cmd: 'diagnosis.create' })
+  async uploadData(@Payload() data: { userId: number; fileId: number }) {
+    return this.diagnosisService.createDiagnosis(data.userId, data.fileId);
   }
 
   @MessagePattern({ cmd: 'diagnosis.start' })

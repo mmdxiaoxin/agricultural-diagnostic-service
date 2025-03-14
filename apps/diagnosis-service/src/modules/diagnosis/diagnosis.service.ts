@@ -1,21 +1,12 @@
-import {
-  BadGatewayException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { DiagnosisHistory, File as FileEntity } from '@app/database/entities';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Status } from '@shared/enum/status.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
+import { FileOperationService } from 'apps/api-gateway/src/modules/file/services/file-operation.service';
 import axios from 'axios';
 import { DataSource, Repository } from 'typeorm';
-import {
-  DiagnosisHistory,
-  File as FileEntity,
-} from '../../../../../libs/database/src/entities';
-import * as crypto from 'crypto';
-import * as fs from 'fs';
-import { FileOperationService } from 'apps/api-gateway/src/modules/file/services/file-operation.service';
 
 @Injectable()
 export class DiagnosisService {
@@ -26,17 +17,8 @@ export class DiagnosisService {
     private readonly dataSource: DataSource,
   ) {}
 
-  private handleFileMd5 = (filePath: string) =>
-    new Promise<string>((resolve, reject) => {
-      const hash = crypto.createHash('md5');
-      const stream = fs.createReadStream(filePath);
-      stream.on('data', (data) => hash.update(data));
-      stream.on('end', () => resolve(hash.digest('hex')));
-      stream.on('error', (error) => reject(error));
-    });
-
-  // 上传待诊断数据
-  async uploadData(userId: number, file: Express.Multer.File) {
+  // 初始化诊断数据
+  async createDiagnosis(userId: number, fileId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -46,21 +28,13 @@ export class DiagnosisService {
         updatedBy: userId,
         status: Status.PENDING,
       });
-      const fileMd5 = await this.handleFileMd5(file.path);
-      const fileEntity = queryRunner.manager.create(FileEntity, {
-        originalFileName: file.originalname,
-        storageFileName: file.filename,
-        fileSize: file.size,
-        fileType: file.mimetype,
-        filePath: file.path,
-        createdBy: userId,
-        updatedBy: userId,
-        fileMd5,
+      const file = await queryRunner.manager.findOne(FileEntity, {
+        where: { id: fileId },
       });
-      diagnosisHistory.file = fileEntity;
+      diagnosisHistory.file = file;
       await queryRunner.manager.save(diagnosisHistory);
       await queryRunner.commitTransaction();
-      return formatResponse(200, null, '上传成功');
+      return { success: true, result: diagnosisHistory };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new error();
@@ -81,16 +55,16 @@ export class DiagnosisService {
         relations: ['file'],
       });
       if (!diagnosis) {
-        throw new NotFoundException('未找到诊断记录');
+        throw new RpcException('未找到诊断记录');
       }
       if (diagnosis.createdBy !== userId) {
-        throw new UnauthorizedException('无权操作');
+        throw new RpcException('无权操作');
       }
       diagnosis.status = Status.IN_PROGRESS;
       await queryRunner.manager.save(diagnosis);
       const file = diagnosis.file;
       if (!file) {
-        throw new NotFoundException('未找到文件');
+        throw new RpcException('未找到文件');
       }
       const fileStream = await this.fileOperationService.readFile(
         file.filePath,
@@ -111,10 +85,13 @@ export class DiagnosisService {
       diagnosis.diagnosisResult = response.data;
       await queryRunner.manager.save(diagnosis);
       await queryRunner.commitTransaction();
-      return formatResponse(200, response.data, '诊断成功');
+      return { success: true, result: response.data };
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new BadGatewayException('诊断失败');
+      throw new RpcException({
+        code: 500,
+        message: '开始诊断失败',
+      });
     } finally {
       await queryRunner.release();
     }
@@ -126,7 +103,7 @@ export class DiagnosisService {
       where: { id },
     });
     if (!diagnosis) {
-      throw new NotFoundException('未找到诊断记录');
+      throw new RpcException('未找到诊断记录');
     }
     return formatResponse(200, diagnosis, '开始诊断成功');
   }
