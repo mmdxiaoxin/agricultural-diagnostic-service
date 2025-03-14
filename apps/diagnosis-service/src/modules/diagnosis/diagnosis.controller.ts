@@ -13,13 +13,18 @@ export class DiagnosisController {
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.START })
-  async startDiagnosis(@Payload() data: { id: number; userId: number }) {
-    return await this.diagnosisService.startDiagnosis(data.id, data.userId);
+  async startDiagnosis(
+    @Payload() data: { diagnosisId: number; userId: number },
+  ) {
+    return await this.diagnosisService.startDiagnosis(
+      data.diagnosisId,
+      data.userId,
+    );
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATUS })
-  async getDiagnosisStatus(@Payload() data: { id: number }) {
-    return await this.diagnosisService.getDiagnosisStatus(data.id);
+  async getDiagnosisStatus(@Payload() data: { diagnosisId: number }) {
+    return await this.diagnosisService.getDiagnosisStatus(data.diagnosisId);
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY })

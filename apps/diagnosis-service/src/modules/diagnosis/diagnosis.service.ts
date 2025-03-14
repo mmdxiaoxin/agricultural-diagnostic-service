@@ -1,11 +1,16 @@
 import { DiagnosisHistory, File as FileEntity } from '@app/database/entities';
-import { Injectable } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
+import { FileOperationService } from '@app/file-operation';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Status } from '@shared/enum/status.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
-import { FileOperationService } from 'apps/api-gateway/src/modules/file/services/file-operation.service';
 import axios from 'axios';
+import {
+  DOWNLOAD_SERVICE_NAME,
+  FILE_SERVICE_NAME,
+} from 'config/microservice.config';
+import { lastValueFrom } from 'rxjs';
 import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
@@ -13,8 +18,16 @@ export class DiagnosisService {
   constructor(
     @InjectRepository(DiagnosisHistory)
     private readonly diagnosisRepository: Repository<DiagnosisHistory>,
+
     private readonly fileOperationService: FileOperationService,
+
     private readonly dataSource: DataSource,
+
+    @Inject(FILE_SERVICE_NAME)
+    private readonly fileClient: ClientProxy,
+
+    @Inject(DOWNLOAD_SERVICE_NAME)
+    private readonly downloadClient: ClientProxy,
   ) {}
 
   // 初始化诊断数据
@@ -28,10 +41,7 @@ export class DiagnosisService {
         updatedBy: userId,
         status: Status.PENDING,
       });
-      const file = await queryRunner.manager.findOne(FileEntity, {
-        where: { id: fileId },
-      });
-      diagnosisHistory.file = file;
+      diagnosisHistory.fileId = fileId;
       await queryRunner.manager.save(diagnosisHistory);
       await queryRunner.commitTransaction();
       return { success: true, result: diagnosisHistory };
@@ -44,15 +54,14 @@ export class DiagnosisService {
   }
 
   // 开始诊断数据
-  async startDiagnosis(id: number, userId: number) {
+  async startDiagnosis(diagnosisId: number, userId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       const diagnosis = await queryRunner.manager.findOne(DiagnosisHistory, {
-        where: { id },
+        where: { id: diagnosisId },
         lock: { mode: 'pessimistic_write' },
-        relations: ['file'],
       });
       if (!diagnosis) {
         throw new RpcException('未找到诊断记录');
@@ -62,13 +71,44 @@ export class DiagnosisService {
       }
       diagnosis.status = Status.IN_PROGRESS;
       await queryRunner.manager.save(diagnosis);
-      const file = diagnosis.file;
-      if (!file) {
-        throw new RpcException('未找到文件');
-      }
-      const fileStream = await this.fileOperationService.readFile(
-        file.filePath,
+      const { success: fileGet, result: file } = await lastValueFrom(
+        this.fileClient.send<{
+          success: boolean;
+          result: FileEntity;
+        }>(
+          {
+            cmd: 'file.get.byId',
+          },
+          {
+            fileId: diagnosis.fileId,
+          },
+        ),
       );
+      if (!fileGet || !file) {
+        throw new RpcException({
+          code: 500,
+          message: '获取文件失败',
+        });
+      }
+      const { data, success } = await lastValueFrom(
+        this.downloadClient.send<{
+          success: boolean;
+          data: string;
+        }>(
+          {
+            cmd: 'download.file',
+          },
+          {
+            fileMeta: file,
+          },
+        ),
+      );
+      if (!success)
+        throw new RpcException({
+          code: 500,
+          message: '获取文件失败',
+        });
+      const fileStream = Buffer.from(data, 'base64');
       const fileBlob = new Blob([fileStream]);
       const formData = new FormData();
       formData.append('image', fileBlob, file.originalFileName);

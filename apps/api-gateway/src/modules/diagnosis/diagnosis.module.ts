@@ -1,25 +1,15 @@
-import {
-  AIModel,
-  Dataset,
-  DiagnosisHistory,
-  File,
-  Plant,
-} from '@app/database/entities';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import {
+  DIAGNOSIS_SERVICE_NAME,
+  DIAGNOSIS_SERVICE_TCP_PORT,
   UPLOAD_SERVICE_NAME,
   UPLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
-import { FileModule } from '../file/file.module';
 import { DiagnosisController } from './diagnosis.controller';
-import { DiagnosisService } from './diagnosis.service';
 
 @Module({
   imports: [
-    FileModule,
-    TypeOrmModule.forFeature([DiagnosisHistory, AIModel, Plant, File, Dataset]),
     ClientsModule.register([
       {
         name: UPLOAD_SERVICE_NAME,
@@ -28,9 +18,15 @@ import { DiagnosisService } from './diagnosis.service';
           port: UPLOAD_SERVICE_TCP_PORT,
         },
       },
+      {
+        name: DIAGNOSIS_SERVICE_NAME,
+        transport: Transport.TCP,
+        options: {
+          port: DIAGNOSIS_SERVICE_TCP_PORT,
+        },
+      },
     ]),
   ],
-  providers: [DiagnosisService],
   controllers: [DiagnosisController],
 })
 export class DiagnosisModule {}

@@ -8,8 +8,6 @@ import {
   FILE_SERVICE_NAME,
   FILE_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
-import { AiModelModule } from './ai-model/ai-model.module';
-import { AiServiceModule } from './ai-service/ai-service.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -65,8 +63,6 @@ import { UserModule } from './user/user.module';
     MenuModule,
     KnowledgeModule,
     DiagnosisModule,
-    AiServiceModule,
-    AiModelModule,
     PlantModule,
     PrometheusModule.register(),
   ],
