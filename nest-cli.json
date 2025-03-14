@@ -4,9 +4,7 @@
   "sourceRoot": "apps/api-gateway/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": [
-      "**/*.proto"
-    ],
+    "assets": ["**/*.proto"],
     "watchAssets": true,
     "webpack": true,
     "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
@@ -84,15 +82,6 @@
       "sourceRoot": "libs/mail/src",
       "compilerOptions": {
         "tsConfigPath": "libs/mail/tsconfig.lib.json"
-      }
-    },
-    "metrics": {
-      "type": "library",
-      "root": "libs/metrics",
-      "entryFile": "index",
-      "sourceRoot": "libs/metrics/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/metrics/tsconfig.lib.json"
       }
     },
     "redis": {
