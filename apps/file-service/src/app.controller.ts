@@ -15,6 +15,11 @@ export class FileController {
     return this.fileService.getFile(payload.fileId);
   }
 
+  @MessagePattern({ cmd: 'file.get.byId' })
+  async getFileById(@Payload() payload: { fileId: number }) {
+    return this.fileService.getFileById(payload.fileId);
+  }
+
   @MessagePattern({ cmd: 'file.update' })
   async updateFile(@Payload() payload: { userId: number; dto: UpdateFileDto }) {
     return this.fileService.updateFile(payload.userId, payload.dto);
@@ -23,6 +28,11 @@ export class FileController {
   @MessagePattern({ cmd: 'files.get' })
   async getFiles(@Payload() payload: { userId: number }) {
     return this.fileService.getFiles(payload.userId);
+  }
+
+  @MessagePattern({ cmd: 'files.get.byId' })
+  async getFilesById(@Payload() payload: { fileIds: number[] }) {
+    return this.fileService.getFilesById(payload.fileIds);
   }
 
   @MessagePattern({ cmd: 'files.get.list' })

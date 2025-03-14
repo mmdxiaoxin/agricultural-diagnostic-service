@@ -51,7 +51,8 @@ import {
   UpdateFilesAccessDto,
 } from '../../../../../packages/common/src/dto/file/update-file.dto';
 import { UploadChunkDto } from '../../../../../packages/common/src/dto/file/upload-chunk.dto';
-import { FileGuard, FilesGuard } from '../file/guards/file.guard';
+import { FileGuard } from '../file/guards/file.guard';
+import { FilesGuard } from './guards/files.guard';
 import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file-size.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';

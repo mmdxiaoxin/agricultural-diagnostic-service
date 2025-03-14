@@ -1,5 +1,4 @@
 import { formatResponse } from '@shared/helpers/response.helper';
-import { FileService } from '../../file/services/file.service';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,7 +12,6 @@ export class DatasetManageService {
   constructor(
     @InjectRepository(Dataset)
     private datasetRepository: Repository<Dataset>,
-    private fileService: FileService,
     private datasetService: DatasetService,
   ) {}
 

@@ -1,8 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigEnum } from '@shared/enum/config.enum';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import {
+  FILE_SERVICE_NAME,
+  FILE_SERVICE_TCP_PORT,
+} from 'config/microservice.config';
 import { AiModelModule } from './ai-model/ai-model.module';
 import { AiServiceModule } from './ai-service/ai-service.module';
 import { AppController } from './app.controller';
@@ -45,6 +50,13 @@ import { UserModule } from './user/user.module';
           logging: process.env.NODE_ENV === 'development',
         }) as TypeOrmModuleOptions,
     }),
+    ClientsModule.register([
+      {
+        name: FILE_SERVICE_NAME,
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: FILE_SERVICE_TCP_PORT },
+      },
+    ]),
     AuthModule,
     UserModule,
     RoleModule,

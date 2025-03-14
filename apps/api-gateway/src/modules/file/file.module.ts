@@ -14,10 +14,8 @@ import {
   UPLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { FileController } from './file.controller';
-import { FileDownloadService } from './services/file-download.service';
 import { FileOperationService } from './services/file-operation.service';
 import { FileStorageService } from './services/file-storage.service';
-import { FileService } from './services/file.service';
 
 @Module({
   imports: [
@@ -52,13 +50,8 @@ import { FileService } from './services/file.service';
       },
     ]),
   ],
-  providers: [
-    FileService,
-    FileOperationService,
-    FileDownloadService,
-    FileStorageService,
-  ],
+  providers: [FileOperationService, FileStorageService],
   controllers: [FileController],
-  exports: [FileService, FileOperationService],
+  exports: [FileOperationService, ClientsModule],
 })
 export class FileModule {}

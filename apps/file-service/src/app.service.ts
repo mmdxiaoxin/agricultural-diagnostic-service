@@ -37,6 +37,21 @@ export class FileService {
   }
 
   /**
+   * 获取文件列表
+   * @param fileIds
+   * @returns
+   */
+  async getFilesById(fileIds: number[]) {
+    const files = await this.fileRepository.find({
+      where: { id: In(fileIds) },
+    });
+    return {
+      success: true,
+      result: files,
+    };
+  }
+
+  /**
    * 获取文件列表分页
    * @param page
    * @param pageSize
@@ -125,16 +140,22 @@ export class FileService {
     const file = await this.fileRepository.findOne({
       where: { id: fileId },
     });
-    if (!file) {
-      return {
-        success: false,
-      };
-    } else {
-      return {
-        success: true,
-        result: file,
-      };
-    }
+    return {
+      success: true,
+      result: file,
+    };
+  }
+
+  /**
+   * 获取文件信息
+   * @param fileId
+   * @returns
+   */
+  async getFileById(fileId: number) {
+    const file = await this.fileRepository.findOne({
+      where: { id: fileId },
+    });
+    return { success: true, result: file };
   }
 
   /**
