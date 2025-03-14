@@ -1,4 +1,5 @@
 import { Profile, Role, User } from '@app/database/entities';
+import { RedisService } from '@app/redis';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,6 +23,8 @@ export class UserService {
 
     @InjectRepository(Profile)
     private readonly profileRepository: Repository<Profile>,
+
+    private readonly redisService: RedisService,
 
     private dataSource: DataSource,
   ) {
@@ -350,46 +353,57 @@ export class UserService {
   ) {
     try {
       const offset = (page - 1) * pageSize;
+      // 构造缓存键，利用页码和过滤条件
+      const cacheKey = `userList:${page}:${pageSize}:${JSON.stringify(filters)}`;
 
-      // 使用 QueryBuilder 进行多表查询
+      // 尝试从缓存中获取数据
+      const cachedResult = await this.redisService.get(cacheKey);
+      if (cachedResult) {
+        return cachedResult;
+      }
+
+      // 使用 QueryBuilder 进行查询
       const queryBuilder = this.userRepository
         .createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
         .leftJoinAndSelect('user.roles', 'role');
 
-      // 添加查询条件
-      if (filters.username)
+      if (filters.username) {
         queryBuilder.andWhere('user.username LIKE :username', {
           username: `%${filters.username}%`,
         });
-      if (filters.name)
+      }
+      if (filters.name) {
         queryBuilder.andWhere('profile.name LIKE :name', {
           name: `%${filters.name}%`,
         });
-      if (filters.phone)
+      }
+      if (filters.phone) {
         queryBuilder.andWhere('profile.phone LIKE :phone', {
           phone: `%${filters.phone}%`,
         });
-      if (filters.address)
+      }
+      if (filters.address) {
         queryBuilder.andWhere('profile.address LIKE :address', {
           address: `%${filters.address}%`,
         });
+      }
 
-      // 查询总数
+      // 获取总数和分页数据
       const total = await queryBuilder.getCount();
-
-      // 分页
       const users = await queryBuilder.skip(offset).take(pageSize).getMany();
-
-      // 过滤敏感信息
+      // 过滤敏感信息，例如 password
       const list = users.map(({ password, ...user }) => user);
-
-      return {
+      const result = {
         list,
         total,
         page,
         pageSize,
       };
+
+      // 将查询结果缓存 60 秒（根据需要调整 TTL）
+      await this.redisService.set(cacheKey, result, 60);
+      return result;
     } catch (error) {
       throw new RpcException('Failed to fetch user list.');
     }
