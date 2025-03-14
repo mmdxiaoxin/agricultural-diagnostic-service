@@ -25,6 +25,11 @@ export class FileController {
     return this.fileService.updateFile(payload.userId, payload.dto);
   }
 
+  @MessagePattern({ cmd: 'file.delete' })
+  async deleteFile(@Payload() payload: { fileId: number; userId: number }) {
+    return this.fileService.deleteFile(payload.fileId, payload.userId);
+  }
+
   @MessagePattern({ cmd: 'files.get' })
   async getFiles(@Payload() payload: { userId: number }) {
     return this.fileService.getFiles(payload.userId);
@@ -67,13 +72,13 @@ export class FileController {
     return this.fileService.updateFilesAccess(payload.userId, payload.dto);
   }
 
-  @MessagePattern({ cmd: 'file.delete' })
-  async deleteFile(@Payload() payload: { fileId: number; userId: number }) {
-    return this.fileService.deleteFile(payload.fileId, payload.userId);
-  }
-
   @MessagePattern({ cmd: 'files.delete' })
   async deleteFiles(@Payload() payload: { fileIds: number[]; userId: number }) {
     return this.fileService.deleteFiles(payload.fileIds, payload.userId);
+  }
+
+  @MessagePattern({ cmd: 'files.statistic.usage' })
+  async getFilesStatisticUsage(@Payload() payload: { userId: number }) {
+    return this.fileService.getFilesStatisticUsage(payload.userId);
   }
 }

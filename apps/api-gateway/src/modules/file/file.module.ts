@@ -15,7 +15,6 @@ import {
 } from 'config/microservice.config';
 import { FileController } from './file.controller';
 import { FileOperationService } from './services/file-operation.service';
-import { FileStorageService } from './services/file-storage.service';
 
 @Module({
   imports: [
@@ -50,7 +49,7 @@ import { FileStorageService } from './services/file-storage.service';
       },
     ]),
   ],
-  providers: [FileOperationService, FileStorageService],
+  providers: [FileOperationService],
   controllers: [FileController],
   exports: [FileOperationService, ClientsModule],
 })

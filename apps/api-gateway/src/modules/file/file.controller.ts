@@ -56,7 +56,6 @@ import { FilesGuard } from './guards/files.guard';
 import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file-size.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';
-import { FileStorageService } from './services/file-storage.service';
 
 export interface DownloadService {
   // 定义一个接收 DownloadRequest，返回流式数据的接口
@@ -70,7 +69,6 @@ export class FileController {
   private readonly logger = new Logger(FileController.name);
 
   constructor(
-    private readonly storageService: FileStorageService,
     @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
     @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
     @Inject(DOWNLOAD_SERVICE_NAME) private readonly downloadClient: ClientProxy,
@@ -81,7 +79,13 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async diskUsageGet(@Req() req: Request) {
-    return this.storageService.diskUsageGet(req.user.userId);
+    const response = await lastValueFrom(
+      this.fileClient.send(
+        { cmd: 'files.statistic.usage' },
+        { userId: req.user.userId },
+      ),
+    );
+    return formatResponse(200, response?.result, '获取空间使用信息成功');
   }
 
   // 获取文件列表

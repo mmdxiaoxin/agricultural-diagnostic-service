@@ -7,6 +7,7 @@ import {
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
+import { getFileType } from '@shared/utils';
 import { DataSource, In, Repository } from 'typeorm';
 
 @Injectable()
@@ -341,6 +342,67 @@ export class FileService {
       throw error;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  /**
+   * 获取文件使用量统计
+   * @param userId
+   * @returns
+   */
+  async getFilesStatisticUsage(userId: number) {
+    const computeFileSizeByType = async (
+      createdBy: number,
+      fileTypes: string[],
+    ) => {
+      const queryBuilder = this.fileRepository
+        .createQueryBuilder('file')
+        .select([
+          'SUM(file.fileSize) AS used',
+          'MAX(file.updatedAt) AS last_updated',
+        ])
+        .where('file.createdBy = :createdBy', { createdBy });
+
+      if (fileTypes.length > 0) {
+        queryBuilder.andWhere('file.fileType IN (:...fileTypes)', {
+          fileTypes,
+        });
+      }
+      return queryBuilder.getRawOne();
+    };
+
+    const imageTypes = getFileType('image');
+    const videoTypes = getFileType('video');
+    const appTypes = getFileType('app');
+    const audioTypes = getFileType('audio');
+    const docTypes = getFileType('application');
+    const otherTypes = getFileType('other');
+
+    try {
+      const [total, image, video, app, audio, docs, other] = await Promise.all([
+        computeFileSizeByType(userId, []),
+        computeFileSizeByType(userId, imageTypes),
+        computeFileSizeByType(userId, videoTypes),
+        computeFileSizeByType(userId, appTypes),
+        computeFileSizeByType(userId, audioTypes),
+        computeFileSizeByType(userId, docTypes),
+        computeFileSizeByType(userId, otherTypes),
+      ]);
+
+      return {
+        success: true,
+        result: {
+          total: total || { used: 0, last_updated: null },
+          image: image || { used: 0, last_updated: null },
+          video: video || { used: 0, last_updated: null },
+          app: app || { used: 0, last_updated: null },
+          audio: audio || { used: 0, last_updated: null },
+          docs: docs || { used: 0, last_updated: null },
+          other: other || { used: 0, last_updated: null },
+        },
+      };
+    } catch (error) {
+      throw new RpcException('获取文件空间信息失败: ' + error);
     }
   }
 }
