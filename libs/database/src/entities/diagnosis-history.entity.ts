@@ -1,13 +1,12 @@
-import { File as FileEntity } from '@app/database/entities';
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
 @Entity('diagnosis_history')
-@Index('diagnosis_history_created_by_idx', ['createdBy']) // 为 createdBy 字段添加索引
+@Index('diagnosis_history_file_id_idx', ['fileId'])
+@Index('diagnosis_history_created_by_idx', ['createdBy'])
 export class DiagnosisHistory extends BaseEntity {
-  @ManyToOne(() => FileEntity, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'fileId' }) // 关联的文件外键名
-  file: FileEntity | null; // 上传的数据文件，允许为空（0..0关系）
+  @Column({ type: 'int', nullable: true })
+  fileId: number | null;
 
   @Column({ type: 'json', nullable: true })
   diagnosisResult: object | null;
