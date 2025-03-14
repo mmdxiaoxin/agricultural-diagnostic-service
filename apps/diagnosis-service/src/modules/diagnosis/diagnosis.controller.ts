@@ -1,37 +1,38 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
+import { DIAGNOSIS_MESSAGE_PATTERNS } from '@shared/constants/diagnosis-message-patterns';
 import { DiagnosisService } from './diagnosis.service';
 
 @Controller()
 export class DiagnosisController {
   constructor(private readonly diagnosisService: DiagnosisService) {}
 
-  @MessagePattern({ cmd: 'diagnosis.create' })
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.CREATE })
   async uploadData(@Payload() data: { userId: number; fileId: number }) {
     return this.diagnosisService.createDiagnosis(data.userId, data.fileId);
   }
 
-  @MessagePattern({ cmd: 'diagnosis.start' })
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.START })
   async startDiagnosis(@Payload() data: { id: number; userId: number }) {
     return await this.diagnosisService.startDiagnosis(data.id, data.userId);
   }
 
-  @MessagePattern({ cmd: 'diagnosis.status' })
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATUS })
   async getDiagnosisStatus(@Payload() data: { id: number }) {
     return await this.diagnosisService.getDiagnosisStatus(data.id);
   }
 
-  @MessagePattern({ cmd: 'diagnosis.history' })
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY })
   async diagnosisHistoryGet(@Payload() data: { userId: number }) {
     return await this.diagnosisService.diagnosisHistoryGet(data.userId);
   }
 
-  @MessagePattern({ cmd: 'diagnosis.support' })
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT })
   async diagnosisSupportGet() {
     return await this.diagnosisService.diagnosisSupportGet();
   }
 
-  @MessagePattern({ cmd: 'diagnosis.history.list' })
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_LIST })
   async diagnosisHistoryListGet(
     @Payload() data: { page?: number; pageSize?: number; userId: number },
   ) {
