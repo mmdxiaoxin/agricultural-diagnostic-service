@@ -7,7 +7,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigEnum } from '@shared/enum/config.enum';
 import {
   USER_SERVICE_NAME,
-  USER_SERVICE_HTTP_PORT,
+  USER_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -32,7 +32,7 @@ import { AuthService } from './auth.service';
       {
         name: USER_SERVICE_NAME,
         transport: Transport.TCP,
-        options: { host: 'localhost', port: USER_SERVICE_HTTP_PORT },
+        options: { host: 'localhost', port: USER_SERVICE_TCP_PORT },
       },
     ]),
   ],
