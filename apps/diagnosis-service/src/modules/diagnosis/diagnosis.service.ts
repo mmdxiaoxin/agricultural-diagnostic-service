@@ -154,7 +154,10 @@ export class DiagnosisService {
     if (!diagnosis) {
       throw new RpcException('未找到诊断记录');
     }
-    return formatResponse(200, diagnosis, '开始诊断成功');
+    return {
+      success: true,
+      result: diagnosis,
+    };
   }
 
   async diagnosisHistoryGet(userId: number) {
@@ -163,7 +166,10 @@ export class DiagnosisService {
       order: { createdAt: 'DESC' },
       relations: ['file'],
     });
-    return formatResponse(200, diagnosisHistory, '获取诊断历史记录成功');
+    return {
+      success: true,
+      result: diagnosisHistory,
+    };
   }
 
   async diagnosisSupportGet() {
@@ -186,14 +192,12 @@ export class DiagnosisService {
     const [list, total] = await this.diagnosisRepository.findAndCount({
       where: { createdBy: userId },
       order: { createdAt: 'DESC' },
-      relations: ['file'],
       take: pageSize,
       skip: (page - 1) * pageSize,
     });
-    return formatResponse(
-      200,
-      { list, total, page, pageSize },
-      '获取诊断历史记录成功',
-    );
+    return {
+      success: true,
+      result: { list, total, page, pageSize },
+    };
   }
 }
