@@ -72,6 +72,37 @@ export class RedisService implements OnModuleDestroy {
   }
 
   /**
+   * 存储用户会话信息
+   * @param userId 用户ID
+   * @param sessionId 会话ID
+   * @param ttl 会话有效期，单位秒
+   */
+  async storeSession(
+    userId: string,
+    sessionId: string,
+    ttl: number,
+  ): Promise<void> {
+    await this.client.set(`session:${sessionId}`, userId, 'EX', ttl);
+  }
+
+  /**
+   * 获取用户会话信息
+   * @param sessionId 会话ID
+   * @returns 返回用户ID或null
+   */
+  async getSession(sessionId: string): Promise<string | null> {
+    return await this.client.get(`session:${sessionId}`);
+  }
+
+  /**
+   * 删除用户会话
+   * @param sessionId 会话ID
+   */
+  async deleteSession(sessionId: string): Promise<void> {
+    await this.client.del(`session:${sessionId}`);
+  }
+
+  /**
    * 尝试获取分布式锁
    * 采用 SET key value NX PX ttl 方式实现，内置重试机制确保尽可能获取锁
    * @param lockKey 锁的键

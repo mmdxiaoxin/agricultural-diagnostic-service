@@ -1,19 +1,27 @@
 import { MailService } from '@app/mail';
+import { RedisService } from '@app/redis';
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { compare } from 'bcryptjs';
 import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private jwt: JwtService,
-    private mail: MailService,
+    private readonly jwt: JwtService,
+    private readonly mail: MailService,
+    private readonly redis: RedisService,
     @Inject(USER_SERVICE_NAME) private readonly userClient: ClientProxy,
   ) {}
 
+  /**
+   * 用户注册
+   * @param email 用户邮箱
+   * @param password 用户密码
+   */
   async register(email: string, password: string) {
     const result = await firstValueFrom(
       this.userClient.send({ cmd: 'user.find.byEmail' }, { email }),
@@ -35,7 +43,15 @@ export class AuthService {
     );
   }
 
+  /**
+   * 用户登录
+   * @param login 用户登录名（邮箱/用户名）
+   * @param password 用户密码
+   */
   async login(login: string, password: string) {
+    // 限制频繁登录
+    await this.checkLoginAttempts(login);
+
     const user = await firstValueFrom(
       this.userClient.send({ cmd: 'user.find.byLogin' }, { login }),
     );
@@ -51,13 +67,23 @@ export class AuthService {
         message: '账号未激活或已经被禁用',
       });
     }
+
     const isValid = await compare(password, user.password);
     if (!isValid) {
+      // 密码错误，增加登录尝试次数
+      await this.incrementLoginAttempts(login);
       throw new RpcException({
         code: 400,
         message: '账号或密码错误',
       });
     }
+
+    // 登录成功，清除登录尝试次数
+    await this.clearLoginAttempts(login);
+
+    // 生成会话 ID
+    const sessionId = uuidv4(); // 生成一个唯一的 sessionId
+    await this.redis.storeSession(user.id.toString(), sessionId, 3600); // 存储会话到 Redis 中
 
     return {
       access_token: this.jwt.sign({
@@ -65,9 +91,45 @@ export class AuthService {
         username: user.username,
         roles: user.roles.map((role) => role.name),
       }),
+      sessionId, // 返回 sessionId
     };
   }
 
+  /**
+   * 限制登录尝试次数
+   * @param login 用户名或邮箱
+   */
+  private async checkLoginAttempts(login: string) {
+    const attempts = await this.redis.getSession(`login_attempts:${login}`);
+    if (attempts && parseInt(attempts) >= 5) {
+      throw new RpcException({
+        code: 400,
+        message: '登录失败次数过多，请稍后再试',
+      });
+    }
+  }
+
+  /**
+   * 增加登录尝试次数
+   * @param login 用户名或邮箱
+   */
+  private async incrementLoginAttempts(login: string) {
+    await this.redis.increment(`login_attempts:${login}`);
+  }
+
+  /**
+   * 清除登录尝试次数
+   * @param login 用户名或邮箱
+   */
+  private async clearLoginAttempts(login: string) {
+    await this.redis.del(`login_attempts:${login}`);
+  }
+
+  /**
+   * 发送账号激活通知邮件
+   * @param email 用户邮箱
+   * @param link 激活链接
+   */
   async notifyAccount(email: string, link: string) {
     return await this.mail.sendMail(
       email,
@@ -104,6 +166,10 @@ export class AuthService {
     );
   }
 
+  /**
+   * 验证账号激活
+   * @param token 激活Token
+   */
   async verifyAccount(token: string) {
     try {
       const { userId } = this.jwt.decode(token);
@@ -118,6 +184,9 @@ export class AuthService {
     }
   }
 
+  /**
+   * 获取按钮配置
+   */
   async buttonsGet() {
     return { useHooks: { add: true, delete: true } };
   }
