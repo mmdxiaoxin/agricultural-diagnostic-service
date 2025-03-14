@@ -102,7 +102,7 @@ export class DiagnosisController {
     if (!success) {
       return formatResponse(500, null, result);
     }
-    return formatResponse(200, null, '开始诊断成功');
+    return formatResponse(200, result, '开始诊断成功');
   }
 
   // 获取诊断服务状态接口

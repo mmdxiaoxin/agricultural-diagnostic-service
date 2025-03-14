@@ -3,6 +3,8 @@ import { FileOperationService } from '@app/file-operation';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
+import { DOWNLOAD_MESSAGE_PATTERNS } from '@shared/constants/download-message-patterns';
+import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
 import { Status } from '@shared/enum/status.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
 import axios from 'axios';
@@ -64,10 +66,16 @@ export class DiagnosisService {
         lock: { mode: 'pessimistic_write' },
       });
       if (!diagnosis) {
-        throw new RpcException('未找到诊断记录');
+        throw new RpcException({
+          code: 500,
+          message: '未找到诊断记录',
+        });
       }
       if (diagnosis.createdBy !== userId) {
-        throw new RpcException('无权操作');
+        throw new RpcException({
+          code: 500,
+          message: '无权限操作此记录',
+        });
       }
       diagnosis.status = Status.IN_PROGRESS;
       await queryRunner.manager.save(diagnosis);
@@ -77,7 +85,7 @@ export class DiagnosisService {
           result: FileEntity;
         }>(
           {
-            cmd: 'file.get.byId',
+            cmd: FILE_MESSAGE_PATTERNS.GET_FILE_BY_ID,
           },
           {
             fileId: diagnosis.fileId,
@@ -96,7 +104,7 @@ export class DiagnosisService {
           data: string;
         }>(
           {
-            cmd: 'download.file',
+            cmd: DOWNLOAD_MESSAGE_PATTERNS.FILE_DOWNLOAD,
           },
           {
             fileMeta: file,
@@ -131,6 +139,7 @@ export class DiagnosisService {
       throw new RpcException({
         code: 500,
         message: '开始诊断失败',
+        data: error,
       });
     } finally {
       await queryRunner.release();
