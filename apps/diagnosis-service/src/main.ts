@@ -9,6 +9,7 @@ import {
 } from 'config/microservice.config';
 
 import { AppModule } from './app.module';
+import { OtherExceptionsFilter } from '@common/filters/other-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
@@ -20,7 +21,10 @@ async function bootstrap() {
       },
     },
   );
-  app.useGlobalFilters(new CustomRpcExceptionFilter());
+  app.useGlobalFilters(
+    new OtherExceptionsFilter(),
+    new CustomRpcExceptionFilter(),
+  );
   await app.listen();
 }
 bootstrap();

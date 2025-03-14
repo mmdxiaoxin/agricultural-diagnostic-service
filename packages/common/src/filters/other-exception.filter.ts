@@ -5,13 +5,17 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { Response } from 'express';
 
-@Catch() // 捕获所有异常
+@Catch()
 export class OtherExceptionsFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
-    // 如果异常是 HttpException，则直接抛出，交由内置机制处理
     if (exception instanceof HttpException) {
+      throw exception;
+    }
+
+    if (exception instanceof RpcException) {
       throw exception;
     }
 

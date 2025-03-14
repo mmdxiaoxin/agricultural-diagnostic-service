@@ -6,6 +6,7 @@ import {
   AUTH_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { AppModule } from './app.module';
+import { OtherExceptionsFilter } from '@common/filters/other-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,7 +16,10 @@ async function bootstrap() {
       port: AUTH_SERVICE_TCP_PORT,
     },
   });
-  microservice.useGlobalFilters(new CustomRpcExceptionFilter());
+  microservice.useGlobalFilters(
+    new OtherExceptionsFilter(),
+    new CustomRpcExceptionFilter(),
+  );
   await app.startAllMicroservices();
   await app.listen(AUTH_SERVICE_HTTP_PORT);
 }

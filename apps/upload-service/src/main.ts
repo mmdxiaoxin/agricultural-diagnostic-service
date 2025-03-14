@@ -1,3 +1,4 @@
+import { OtherExceptionsFilter } from '@common/filters/other-exception.filter';
 import { CustomRpcExceptionFilter } from '@common/filters/rpc-exception.filter';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
@@ -15,7 +16,10 @@ async function bootstrap() {
       port: UPLOAD_SERVICE_TCP_PORT,
     },
   });
-  microservice.useGlobalFilters(new CustomRpcExceptionFilter());
+  microservice.useGlobalFilters(
+    new OtherExceptionsFilter(),
+    new CustomRpcExceptionFilter(),
+  );
   await app.startAllMicroservices();
   await app.listen(UPLOAD_SERVICE_HTTP_PORT);
 }
