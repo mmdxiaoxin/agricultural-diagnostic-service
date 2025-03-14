@@ -4,7 +4,9 @@
   "sourceRoot": "apps/api-gateway/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": ["**/*.proto"],
+    "assets": [
+      "**/*.proto"
+    ],
     "watchAssets": true,
     "webpack": true,
     "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
@@ -73,6 +75,15 @@
       "sourceRoot": "apps/file-service/src",
       "compilerOptions": {
         "tsConfigPath": "apps/file-service/tsconfig.app.json"
+      }
+    },
+    "knowledge-service": {
+      "type": "application",
+      "root": "apps/knowledge-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/knowledge-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/knowledge-service/tsconfig.app.json"
       }
     },
     "mail": {

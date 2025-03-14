@@ -18,16 +18,36 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@app/database": ["libs/database/src"],
-      "@app/database/*": ["libs/database/src/*"],
-      "@app/file-operation": ["libs/file-operation/src"],
-      "@app/file-operation/*": ["libs/file-operation/src/*"],
-      "@app/mail": ["libs/mail/src"],
-      "@app/mail/*": ["libs/mail/src/*"],
-      "@app/redis": ["libs/redis/src"],
-      "@app/redis/*": ["libs/redis/src/*"],
-      "@common/*": ["packages/common/src/*"],
-      "@shared/*": ["packages/shared/src/*"]
+      "@app/database": [
+        "libs/database/src"
+      ],
+      "@app/database/*": [
+        "libs/database/src/*"
+      ],
+      "@app/file-operation": [
+        "libs/file-operation/src"
+      ],
+      "@app/file-operation/*": [
+        "libs/file-operation/src/*"
+      ],
+      "@app/mail": [
+        "libs/mail/src"
+      ],
+      "@app/mail/*": [
+        "libs/mail/src/*"
+      ],
+      "@app/redis": [
+        "libs/redis/src"
+      ],
+      "@app/redis/*": [
+        "libs/redis/src/*"
+      ],
+      "@common/*": [
+        "packages/common/src/*"
+      ],
+      "@shared/*": [
+        "packages/shared/src/*"
+      ]
     }
   }
 }
