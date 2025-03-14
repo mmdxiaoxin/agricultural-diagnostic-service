@@ -297,8 +297,23 @@ export class FileController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    // const filesMeta = req.filesMeta;
-    // return this.downloadService.downloadFilesAsZip(filesMeta, res);
+    const filesMeta = req.filesMeta;
+    const response = await lastValueFrom(
+      this.downloadClient.send({ cmd: 'files.download' }, { filesMeta }),
+    );
+    if (!response.success || !response.data) {
+      throw new HttpException(
+        response.message || '文件获取失败',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const fileBuffer = Buffer.from(response.data, 'base64');
+    // 设定 HTTP 头信息
+    res.set({
+      'Content-Type': 'application/zip',
+    });
+    // 直接写入流
+    res.end(fileBuffer);
   }
 
   // 文件修改

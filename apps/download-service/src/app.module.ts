@@ -3,6 +3,7 @@ import { Dataset, File } from '@app/database/entities';
 import { Module } from '@nestjs/common';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { DownloadController } from './app.controller';
+import { DownloadService } from './app.service';
 
 @Module({
   imports: [
@@ -11,5 +12,6 @@ import { DownloadController } from './app.controller';
     PrometheusModule.register(),
   ],
   controllers: [DownloadController],
+  providers: [DownloadService],
 })
 export class AppModule {}
