@@ -164,7 +164,6 @@ export class DiagnosisService {
     const diagnosisHistory = await this.diagnosisRepository.find({
       where: { createdBy: userId },
       order: { createdAt: 'DESC' },
-      relations: ['file'],
     });
     return {
       success: true,
