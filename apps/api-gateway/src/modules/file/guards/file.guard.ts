@@ -41,8 +41,8 @@ export class FileGuard implements CanActivate {
     const { result: file } = await firstValueFrom(
       this.fileClient.send<
         { success: boolean; result: FileEntity | null },
-        number
-      >('file.get.byId', fileId),
+        { fileId: number }
+      >({ cmd: 'file.get.byId' }, { fileId }),
     );
 
     if (!file) {

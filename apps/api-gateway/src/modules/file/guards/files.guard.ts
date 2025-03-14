@@ -44,8 +44,8 @@ export class FilesGuard implements CanActivate {
           success: boolean;
           result: FileEntity[];
         },
-        number[]
-      >('file.findByIds', fileIds),
+        { fileIds: number[] }
+      >({ cmd: 'files.get.byId' }, { fileIds }),
     );
 
     if (!files || files.length === 0) {
