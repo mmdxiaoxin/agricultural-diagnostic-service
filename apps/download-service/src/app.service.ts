@@ -2,7 +2,6 @@ import { File as FileEntity } from '@app/database/entities';
 import { Injectable, Logger } from '@nestjs/common';
 import * as archiver from 'archiver';
 import { createReadStream, existsSync } from 'fs';
-import { join } from 'path';
 
 @Injectable()
 export class DownloadService {
