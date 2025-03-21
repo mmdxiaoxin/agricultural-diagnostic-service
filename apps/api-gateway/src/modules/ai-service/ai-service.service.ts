@@ -32,8 +32,11 @@ export class AiServiceService {
     return this.diagnosisClient.send({ cmd: 'ai-service.get.byId' }, id);
   }
 
-  async updateAi(id: number, dto: UpdateAiServiceDto) {
-    return this.diagnosisClient.send({ cmd: 'ai-service.update' }, { id, dto });
+  async updateAi(serviceId: number, dto: UpdateAiServiceDto) {
+    return this.diagnosisClient.send(
+      { cmd: 'ai-service.update' },
+      { serviceId, dto },
+    );
   }
 
   async removeAi(id: number) {
