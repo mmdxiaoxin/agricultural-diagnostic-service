@@ -19,6 +19,7 @@ import { MenuModule } from './menu/menu.module';
 import { PlantModule } from './plant/plant.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
+import { AiServiceModule } from './ai-service/ai-service.module';
 
 /**
  * 根模块
@@ -65,6 +66,7 @@ import { UserModule } from './user/user.module';
     DiagnosisModule,
     PlantModule,
     PrometheusModule.register(),
+    AiServiceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
