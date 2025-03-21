@@ -2,9 +2,9 @@ import { AiService, AiServiceConfig } from '@app/database/entities';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateAiConfigDto } from '../dto/create-ai-config.dto';
-import { CreateAiConfigsDto } from '../dto/create-ai-configs.dto';
-import { UpdateAiConfigDto } from '../dto/update-ai-config.dto';
+import { CreateAiConfigDto } from '../../../../../../packages/common/src/dto/ai-service/create-ai-config.dto';
+import { CreateAiConfigsDto } from '../../../../../../packages/common/src/dto/ai-service/create-ai-configs.dto';
+import { UpdateAiConfigDto } from '../../../../../../packages/common/src/dto/ai-service/update-ai-config.dto';
 
 @Injectable()
 export class AiConfigsService {

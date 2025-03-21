@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateAiServiceDto } from '../dto/create-ai-service.dto';
-import { UpdateAiServiceDto } from '../dto/update-ai-service.dto';
+import { CreateAiServiceDto } from '../../../../../../packages/common/src/dto/ai-service/create-ai-service.dto';
+import { UpdateAiServiceDto } from '../../../../../../packages/common/src/dto/ai-service/update-ai-service.dto';
 import { AiServiceAccessLog } from '../../../../../../libs/database/src/entities/ai-service-access-log.entity';
 import { AiServiceConfig } from '../../../../../../libs/database/src/entities/ai-service-config.entity';
 import { AiServiceLog } from '../../../../../../libs/database/src/entities/ai-service-log.entity';
