@@ -8,7 +8,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getFileType } from '@shared/utils';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, Not, Repository } from 'typeorm';
 
 @Injectable()
 export class FileService {
@@ -259,32 +259,37 @@ export class FileService {
         where: { id: fileId },
         lock: { mode: 'pessimistic_write' },
       });
+
       if (!file) {
         throw new RpcException({
           code: HttpStatus.NOT_FOUND,
           message: '未找到文件',
         });
       }
+
       if (file.createdBy !== userId) {
         throw new RpcException({
           code: HttpStatus.FORBIDDEN,
           message: '无权删除他人文件',
         });
       }
-      // 检查文件是否被引用
-      const referenceCount = await queryRunner.manager.count(FileEntity, {
-        where: { fileMd5: file.fileMd5 },
+
+      // 获取该文件的所有引用（排除当前文件）
+      const references = await queryRunner.manager.find(FileEntity, {
+        where: {
+          fileMd5: file.fileMd5,
+          id: Not(fileId), // 排除当前文件
+        },
       });
-      // 如果文件没有被引用，删除文件元数据及文件
-      if (referenceCount === 0) {
-        await queryRunner.manager.delete(FileEntity, fileId);
-        await queryRunner.commitTransaction();
+
+      // 如果没有其他引用，则删除实际文件
+      if (references.length === 0) {
         await this.fileOperationService.deleteFile(file.filePath);
-      } else {
-        // 如果文件被引用，直接删除文件元数据，不删除实际文件
-        await queryRunner.manager.delete(FileEntity, fileId);
-        await queryRunner.commitTransaction();
       }
+
+      // 删除文件元数据
+      await queryRunner.manager.delete(FileEntity, fileId);
+      await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -306,12 +311,15 @@ export class FileService {
       const files = await queryRunner.manager.find(FileEntity, {
         where: { id: In(fileIds) },
       });
+
       if (files.length === 0) {
         throw new RpcException({
           code: HttpStatus.NOT_FOUND,
           message: '未找到文件',
         });
       }
+
+      // 检查权限
       for (const file of files) {
         if (file.createdBy !== userId) {
           throw new RpcException({
@@ -320,20 +328,28 @@ export class FileService {
           });
         }
       }
-      // 检查是否有引用该文件
-      const fileMd5s = files.map((file) => file.fileMd5);
-      const referenceCount = await queryRunner.manager.count(FileEntity, {
-        where: { fileMd5: In(fileMd5s) },
-      });
-      const filesToDelete = files.filter((file) => {
-        const count = referenceCount[file.fileMd5];
-        return count === 0;
-      });
-      // 删除文件
+
+      // 检查每个文件的引用（排除当前文件）
+      const filesToDelete: FileEntity[] = [];
+      for (const file of files) {
+        const referenceCount = await queryRunner.manager.count(FileEntity, {
+          where: {
+            fileMd5: file.fileMd5,
+            id: Not(file.id), // 排除当前文件
+          },
+        });
+
+        if (referenceCount === 0) {
+          filesToDelete.push(file);
+        }
+      }
+
+      // 删除实际文件
       const deletionPromises = filesToDelete.map((file) =>
         this.fileOperationService.deleteFile(file.filePath),
       );
       await Promise.all(deletionPromises);
+
       // 删除文件元数据
       await queryRunner.manager.delete(FileEntity, fileIds);
       await queryRunner.commitTransaction();

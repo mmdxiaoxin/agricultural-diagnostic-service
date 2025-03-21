@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import * as crypto from 'crypto';
 import { createReadStream, createWriteStream } from 'fs';
@@ -14,6 +19,8 @@ import * as path from 'path';
 
 @Injectable()
 export class FileOperationService {
+  private readonly logger = new Logger(FileOperationService.name);
+
   /**
    * 确保目录存在
    * @param dirPath 目标目录
@@ -45,15 +52,44 @@ export class FileOperationService {
    * 删除文件（确保路径安全）
    * @param filePath 目标文件路径
    */
-  async deleteFile(filePath: string): Promise<boolean> {
+  async deleteFile(filePath: string): Promise<void> {
     try {
+      // 验证路径安全性
       this.validatePath(filePath);
+      // 检查文件是否存在
       await this.checkFileExists(filePath);
+      // 检查文件权限
+      await this.checkFilePermissions(filePath);
+      // 尝试删除文件
       await unlink(filePath);
-      return true;
     } catch (error) {
-      if (error instanceof NotFoundException) return false;
-      throw new RpcException({ message: '删除文件失败', error });
+      this.logger.error(`文件删除失败: ${filePath}`, error);
+
+      if (error instanceof NotFoundException) {
+        throw new RpcException({
+          code: HttpStatus.NOT_FOUND,
+          message: `文件不存在: ${filePath}`,
+        });
+      }
+
+      if (error.code === 'EACCES') {
+        throw new RpcException({
+          code: HttpStatus.FORBIDDEN,
+          message: `没有权限删除文件: ${filePath}`,
+        });
+      }
+
+      if (error.code === 'EBUSY') {
+        throw new RpcException({
+          code: HttpStatus.CONFLICT,
+          message: `文件正在被使用: ${filePath}`,
+        });
+      }
+
+      throw new RpcException({
+        code: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: `删除文件失败: ${error.message}`,
+      });
     }
   }
 
@@ -151,6 +187,21 @@ export class FileOperationService {
     const resolvedPath = path.resolve(filePath);
     if (!resolvedPath.startsWith(path.resolve('./'))) {
       throw new RpcException({ message: '非法路径访问' });
+    }
+  }
+
+  /**
+   * 检查文件权限
+   * @param filePath 目标文件路径
+   */
+  private async checkFilePermissions(filePath: string): Promise<void> {
+    try {
+      await access(filePath, constants.W_OK);
+    } catch {
+      throw new RpcException({
+        code: HttpStatus.FORBIDDEN,
+        message: `没有文件写入权限: ${filePath}`,
+      });
     }
   }
 
