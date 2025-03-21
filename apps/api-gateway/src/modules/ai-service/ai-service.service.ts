@@ -5,7 +5,6 @@ import { UpdateAiServiceDto } from '@common/dto/ai-service/update-ai-service.dto
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { DIAGNOSIS_SERVICE_NAME } from 'config/microservice.config';
-import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class AiServiceService {
