@@ -31,12 +31,12 @@ export class AiServiceService {
   }
 
   // 获取全部AI服务
-  async findAll(): Promise<AiService[]> {
+  async getAi(): Promise<AiService[]> {
     return this.aiServiceRepository.find();
   }
 
   // 分页查询AI服务
-  async findPaginated(page: number, pageSize: number) {
+  async getAiList(page: number, pageSize: number) {
     const skip = (page - 1) * pageSize;
     return await this.aiServiceRepository.findAndCount({
       skip,
@@ -45,7 +45,7 @@ export class AiServiceService {
   }
 
   // 获取单个AI服务
-  async findOne(serviceId: number) {
+  async getAIById(serviceId: number) {
     return this.aiServiceRepository.findOne({
       where: { serviceId },
       relations: ['aiServiceLogs', 'aiServiceConfigs', 'aiServiceAccessLogs'],

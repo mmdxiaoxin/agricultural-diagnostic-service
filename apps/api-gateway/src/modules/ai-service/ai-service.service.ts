@@ -1,28 +1,77 @@
+import { CreateAiConfigDto } from '@common/dto/ai-service/create-ai-config.dto';
+import { CreateAiConfigsDto } from '@common/dto/ai-service/create-ai-configs.dto';
 import { CreateAiServiceDto } from '@common/dto/ai-service/create-ai-service.dto';
 import { UpdateAiServiceDto } from '@common/dto/ai-service/update-ai-service.dto';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { DIAGNOSIS_SERVICE_NAME } from 'config/microservice.config';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class AiServiceService {
-  create(createAiServiceDto: CreateAiServiceDto) {
-    return 'This action adds a new aiService';
+  constructor(
+    @Inject(DIAGNOSIS_SERVICE_NAME)
+    private readonly diagnosisClient: ClientProxy,
+  ) {}
+  async createAi(dto: CreateAiServiceDto) {
+    return this.diagnosisClient.send({ cmd: 'ai-service.create' }, dto);
   }
 
-  findAll() {
-    return `This action returns all aiService`;
+  async getAi() {
+    return this.diagnosisClient.send({ cmd: 'ai-service.get' }, {});
   }
 
-  findList(page: number, pageSize: number) {}
-
-  findOne(id: number) {
-    return `This action returns a #${id} aiService`;
+  async getAiList(page: number, pageSize: number) {
+    return this.diagnosisClient.send(
+      { cmd: 'ai-service.get.list' },
+      { page, pageSize },
+    );
   }
 
-  update(id: number, updateAiServiceDto: UpdateAiServiceDto) {
-    return `This action updates a #${id} aiService`;
+  async getAiById(id: number) {
+    return this.diagnosisClient.send({ cmd: 'ai-service.get.byId' }, id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} aiService`;
+  async updateAi(id: number, dto: UpdateAiServiceDto) {
+    return this.diagnosisClient.send({ cmd: 'ai-service.update' }, { id, dto });
+  }
+
+  async removeAi(id: number) {
+    return this.diagnosisClient.send({ cmd: 'ai-service.remove' }, id);
+  }
+
+  async addAiConfig(configId: number, dto: CreateAiConfigDto) {
+    return this.diagnosisClient.send(
+      { cmd: 'ai-service.config.create' },
+      { configId, dto },
+    );
+  }
+
+  async addAiConfigs(configId: number, dto: CreateAiConfigsDto) {
+    return this.diagnosisClient.send(
+      { cmd: 'ai-service.configs.create' },
+      { configId, dto },
+    );
+  }
+
+  async getAiConfigs(configId: number) {
+    return this.diagnosisClient.send(
+      { cmd: 'ai-service.configs.get' },
+      configId,
+    );
+  }
+
+  async updateAiConfig(configId: number, dto: CreateAiConfigDto) {
+    return this.diagnosisClient.send(
+      { cmd: 'ai-service.config.update' },
+      { configId, dto },
+    );
+  }
+
+  async removeAiConfig(configId: number) {
+    return this.diagnosisClient.send(
+      { cmd: 'ai-service.config.remove' },
+      configId,
+    );
   }
 }

@@ -1,4 +1,8 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CreateAiConfigDto } from '@common/dto/ai-service/create-ai-config.dto';
+import { CreateAiConfigsDto } from '@common/dto/ai-service/create-ai-configs.dto';
+import { CreateAiServiceDto } from '@common/dto/ai-service/create-ai-service.dto';
+import { UpdateAiServiceDto } from '@common/dto/ai-service/update-ai-service.dto';
 import { TypeormFilter } from '@common/filters/typeorm.filter';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -17,31 +21,29 @@ import {
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { AiServiceService } from './ai-service.service';
-import { CreateAiServiceDto } from '@common/dto/ai-service/create-ai-service.dto';
-import { formatResponse } from '@shared/helpers/response.helper';
 
+@ApiTags('AI服务模块')
 @Controller('ai-service')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
 @UseFilters(TypeormFilter)
 export class AiServiceController {
-  constructor(private readonly aiServiceService: AiServiceService) {}
+  constructor(private readonly aiService: AiServiceService) {}
 
   // 创建AI服务
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateAiServiceDto) {
-    await this.aiServiceService.create(dto);
-    return formatResponse(201, null, '创建成功');
+    return this.aiService.createAi(dto);
   }
 
   // 获取全部AI服务
   @Get()
   async findAll() {
-    const services = await this.aiServiceService.findAll();
-    return formatResponse(200, services, '获取成功');
+    return this.aiService.getAi();
   }
 
   // 分页查询AI服务
@@ -50,11 +52,7 @@ export class AiServiceController {
     @Query('page') page: number,
     @Query('pageSize') pageSize: number,
   ) {
-    const [list, total] = await this.aiServiceService.findPaginated(
-      page,
-      pageSize,
-    );
-    return formatResponse(200, { list, total, page, pageSize }, '获取成功');
+    return this.aiService.getAiList(page, pageSize);
   }
 
   // 获取单个AI服务
@@ -66,8 +64,7 @@ export class AiServiceController {
     )
     serviceId: number,
   ) {
-    const service = await this.aiServiceService.findOne(serviceId);
-    return formatResponse(200, service, '获取成功');
+    return this.aiService.getAiById(serviceId);
   }
 
   // 更新AI服务
@@ -80,8 +77,7 @@ export class AiServiceController {
     serviceId: number,
     @Body() updateAiServiceDto: UpdateAiServiceDto,
   ) {
-    await this.aiServiceService.update(serviceId, updateAiServiceDto);
-    return formatResponse(200, null, '更新成功');
+    return this.aiService.updateAi(serviceId, updateAiServiceDto);
   }
 
   // 删除AI服务
@@ -94,7 +90,7 @@ export class AiServiceController {
     )
     serviceId: number,
   ) {
-    await this.aiServiceService.remove(serviceId);
+    return this.aiService.removeAi(serviceId);
   }
 
   // 增加AI服务配置
@@ -108,8 +104,7 @@ export class AiServiceController {
     serviceId: number,
     @Body() dto: CreateAiConfigDto,
   ) {
-    await this.aiConfigsService.addConfig(serviceId, dto);
-    return formatResponse(201, null, '创建成功');
+    return this.aiService.addAiConfig(serviceId, dto);
   }
 
   // 批量增加AI服务配置
@@ -123,8 +118,7 @@ export class AiServiceController {
     serviceId: number,
     @Body() dto: CreateAiConfigsDto,
   ) {
-    await this.aiConfigsService.addConfigs(serviceId, dto);
-    return formatResponse(201, null, '创建成功');
+    return this.aiService.addAiConfigs(serviceId, dto);
   }
 
   // 获取服务配置
@@ -136,8 +130,7 @@ export class AiServiceController {
     )
     serviceId: number,
   ) {
-    const configs = await this.aiServiceService.findServiceConfigs(serviceId);
-    return formatResponse(200, configs, '获取成功');
+    return this.aiService.getAiConfigs(serviceId);
   }
 
   // 更新AI服务配置
@@ -155,8 +148,7 @@ export class AiServiceController {
     configId: number,
     @Body() dto: CreateAiConfigDto,
   ) {
-    await this.aiServiceService.updateConfig(configId, dto);
-    return formatResponse(200, null, '更新成功');
+    return this.aiService.updateAiConfig(configId, dto);
   }
 
   // 删除AI服务配置
@@ -174,6 +166,6 @@ export class AiServiceController {
     )
     configId: number,
   ) {
-    await this.aiServiceService.removeConfig(configId);
+    await this.aiService.removeAiConfig(configId);
   }
 }
