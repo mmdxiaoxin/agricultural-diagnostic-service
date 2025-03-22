@@ -4,7 +4,7 @@ module.exports = {
       name: 'api-gateway',
       script: 'dist/apps/api-gateway/main.js',
       instances: 1,
-      exec_mode: 'fork',
+      exec_mode: 'cluster',
       watch: false,
       env: {
         NODE_ENV: 'production',
@@ -14,7 +14,7 @@ module.exports = {
       name: 'auth-service',
       script: 'dist/apps/auth-service/main.js',
       instances: 1,
-      exec_mode: 'fork',
+      exec_mode: 'cluster',
       watch: false,
       env: {
         NODE_ENV: 'production',
@@ -24,7 +24,7 @@ module.exports = {
       name: 'download-service',
       script: 'dist/apps/download-service/main.js',
       instances: 1,
-      exec_mode: 'fork',
+      exec_mode: 'cluster',
       watch: false,
       env: {
         NODE_ENV: 'production',
@@ -34,7 +34,7 @@ module.exports = {
       name: 'file-service',
       script: 'dist/apps/file-service/main.js',
       instances: 1,
-      exec_mode: 'fork',
+      exec_mode: 'cluster',
       watch: false,
       env: {
         NODE_ENV: 'production',
@@ -44,7 +44,7 @@ module.exports = {
       name: 'upload-service',
       script: 'dist/apps/upload-service/main.js',
       instances: 1,
-      exec_mode: 'fork',
+      exec_mode: 'cluster',
       watch: false,
       env: {
         NODE_ENV: 'production',
@@ -54,7 +54,7 @@ module.exports = {
       name: 'user-service',
       script: 'dist/apps/user-service/main.js',
       instances: 1,
-      exec_mode: 'fork',
+      exec_mode: 'cluster',
       watch: false,
       env: {
         NODE_ENV: 'production',
@@ -64,7 +64,7 @@ module.exports = {
       name: 'knowledge-service',
       script: 'dist/apps/knowledge-service/main.js',
       instances: 1,
-      exec_mode: 'fork',
+      exec_mode: 'cluster',
       watch: false,
       env: {
         NODE_ENV: 'production',
@@ -74,7 +74,7 @@ module.exports = {
       name: 'diagnosis-service',
       script: 'dist/apps/diagnosis-service/main.js',
       instances: 1,
-      exec_mode: 'fork',
+      exec_mode: 'cluster',
       watch: false,
       env: {
         NODE_ENV: 'production',
