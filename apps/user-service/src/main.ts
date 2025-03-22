@@ -3,6 +3,7 @@ import { CustomRpcExceptionFilter } from '@common/filters/rpc-exception.filter';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import {
+  USER_SERVICE_HOST,
   USER_SERVICE_HTTP_PORT,
   USER_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
@@ -13,6 +14,7 @@ async function bootstrap() {
   const microservice = app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
+      host: USER_SERVICE_HOST,
       port: USER_SERVICE_TCP_PORT,
     },
   });
