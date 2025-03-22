@@ -60,5 +60,25 @@ module.exports = {
         NODE_ENV: 'production',
       },
     },
+    {
+      name: 'knowledge-service',
+      script: 'dist/apps/knowledge-service/main.js',
+      instances: 1,
+      exec_mode: 'fork',
+      watch: false,
+      env: {
+        NODE_ENV: 'production',
+      },
+    },
+    {
+      name: 'diagnosis-service',
+      script: 'dist/apps/diagnosis-service/main.js',
+      instances: 1,
+      exec_mode: 'fork',
+      watch: false,
+      env: {
+        NODE_ENV: 'production',
+      },
+    },
   ],
 };
