@@ -16,7 +16,6 @@ import { DiagnosisModule } from './diagnosis/diagnosis.module';
 import { FileModule } from './file/file.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { MenuModule } from './menu/menu.module';
-import { PlantModule } from './plant/plant.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
 import { AiServiceModule } from './ai-service/ai-service.module';
@@ -64,7 +63,6 @@ import { AiServiceModule } from './ai-service/ai-service.module';
     MenuModule,
     KnowledgeModule,
     DiagnosisModule,
-    PlantModule,
     PrometheusModule.register(),
     AiServiceModule,
   ],
