@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateAiServiceDto } from '../../../../../../packages/common/src/dto/ai-service/create-ai-service.dto';
-import { UpdateAiServiceDto } from '../../../../../../packages/common/src/dto/ai-service/update-ai-service.dto';
 import { AiServiceAccessLog } from '../../../../../../libs/database/src/entities/ai-service-access-log.entity';
 import { AiServiceConfig } from '../../../../../../libs/database/src/entities/ai-service-config.entity';
 import { AiServiceLog } from '../../../../../../libs/database/src/entities/ai-service-log.entity';
 import { AiService } from '../../../../../../libs/database/src/entities/ai-service.entity';
+import { CreateAiServiceDto } from '../../../../../../packages/common/src/dto/ai-service/create-ai-service.dto';
+import { UpdateAiServiceDto } from '../../../../../../packages/common/src/dto/ai-service/update-ai-service.dto';
 
 @Injectable()
 export class AiServiceService {
@@ -58,7 +59,7 @@ export class AiServiceService {
       where: { serviceId },
     });
     if (!aiService) {
-      throw new Error('AI Service not found');
+      throw new RpcException('AI Service not found');
     }
 
     Object.assign(aiService, dto);
@@ -71,7 +72,7 @@ export class AiServiceService {
       where: { serviceId },
     });
     if (!aiService) {
-      throw new Error('AI Service not found');
+      throw new RpcException('AI Service not found');
     }
 
     await this.aiServiceRepository.remove(aiService);

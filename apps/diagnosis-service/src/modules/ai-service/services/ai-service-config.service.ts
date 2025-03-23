@@ -1,5 +1,6 @@
 import { AiService, AiServiceConfig } from '@app/database/entities';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateAiConfigDto } from '../../../../../../packages/common/src/dto/ai-service/create-ai-config.dto';
@@ -23,7 +24,7 @@ export class AiConfigsService {
       relations: ['aiServiceConfigs'],
     });
     if (!service) {
-      throw new NotFoundException('AI服务不存在');
+      throw new RpcException('AI服务不存在');
     }
     return service.aiServiceConfigs;
   }
@@ -35,7 +36,7 @@ export class AiConfigsService {
       relations: ['aiServiceConfigs'],
     });
     if (!service) {
-      throw new NotFoundException('AI服务不存在');
+      throw new RpcException('AI服务不存在');
     }
     const newConfig = this.aiServiceConfigRepository.create({
       ...dto,
@@ -51,7 +52,7 @@ export class AiConfigsService {
       relations: ['aiServiceConfigs'],
     });
     if (!service) {
-      throw new NotFoundException('AI服务不存在');
+      throw new RpcException('AI服务不存在');
     }
     const newConfigs = dto.configs.map((config) =>
       this.aiServiceConfigRepository.create({
@@ -69,7 +70,7 @@ export class AiConfigsService {
       where: { configId },
     });
     if (!config) {
-      throw new NotFoundException('AI服务配置不存在');
+      throw new RpcException('AI服务配置不存在');
     }
     if (configKey) {
       config.configKey = configKey;
@@ -86,7 +87,7 @@ export class AiConfigsService {
       where: { configId },
     });
     if (!config) {
-      throw new NotFoundException('AI服务配置不存在');
+      throw new RpcException('AI服务配置不存在');
     }
     await this.aiServiceConfigRepository.remove(config);
   }

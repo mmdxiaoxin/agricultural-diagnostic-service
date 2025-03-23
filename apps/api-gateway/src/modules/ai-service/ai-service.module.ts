@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import {
+  DIAGNOSIS_SERVICE_HOST,
   DIAGNOSIS_SERVICE_NAME,
   DIAGNOSIS_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
@@ -14,7 +15,7 @@ import { AiServiceService } from './ai-service.service';
         name: DIAGNOSIS_SERVICE_NAME,
         transport: Transport.TCP,
         options: {
-          host: 'localhost',
+          host: DIAGNOSIS_SERVICE_HOST,
           port: DIAGNOSIS_SERVICE_TCP_PORT,
         },
       },

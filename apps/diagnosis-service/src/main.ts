@@ -23,6 +23,7 @@ async function bootstrap() {
     new OtherExceptionsFilter(),
     new CustomRpcExceptionFilter(),
   );
+  await app.startAllMicroservices();
   await app.listen(DIAGNOSIS_SERVICE_HTTP_PORT);
 }
 bootstrap();
