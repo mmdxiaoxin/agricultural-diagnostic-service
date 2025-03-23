@@ -1,8 +1,28 @@
+import { OtherExceptionsFilter } from '@common/filters/other-exception.filter';
+import { CustomRpcExceptionFilter } from '@common/filters/rpc-exception.filter';
 import { NestFactory } from '@nestjs/core';
-import { KnowledgeServiceModule } from './knowledge-service.module';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import {
+  KNOWLEDGE_SERVICE_HOST,
+  KNOWLEDGE_SERVICE_HTTP_PORT,
+  KNOWLEDGE_SERVICE_TCP_PORT,
+} from 'config/microservice.config';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(KnowledgeServiceModule);
-  await app.listen(process.env.port ?? 3000);
+  const app = await NestFactory.create(AppModule);
+  const microservice = app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.TCP,
+    options: {
+      host: KNOWLEDGE_SERVICE_HOST,
+      port: KNOWLEDGE_SERVICE_TCP_PORT,
+    },
+  });
+  microservice.useGlobalFilters(
+    new OtherExceptionsFilter(),
+    new CustomRpcExceptionFilter(),
+  );
+  await app.startAllMicroservices();
+  await app.listen(KNOWLEDGE_SERVICE_HTTP_PORT);
 }
 bootstrap();
