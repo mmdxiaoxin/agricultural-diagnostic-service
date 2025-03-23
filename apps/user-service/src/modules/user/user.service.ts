@@ -18,14 +18,10 @@ export class UserService {
 
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
-
     @InjectRepository(Profile)
     private readonly profileRepository: Repository<Profile>,
-
     private readonly redisService: RedisService,
-
     private dataSource: DataSource,
   ) {
     // 检查头像文件夹是否存在
@@ -47,6 +43,17 @@ export class UserService {
     user.password = await hash(user.password, 10);
   }
 
+  private async getUserCache(id: number) {
+    const cacheKey = `user:${id}`;
+    return this.redisService.get(cacheKey);
+  }
+
+  private async updateUserCache(user: User) {
+    const { password, ...userData } = user;
+    const cacheKey = `user:${user.id}`;
+    await this.redisService.set(cacheKey, userData, 300);
+  }
+
   async setRoles(user: Partial<User>) {
     if (!user.roles) {
       const role = await this.roleRepository.findOne({
@@ -66,33 +73,38 @@ export class UserService {
   }
 
   async userCreate(user: Partial<User>, profile?: Partial<Profile>) {
-    await this.validateUserParams(user); // 验证参数
-    await this.setRoles(user); // 设置角色
-    await this.setDefaultPassword(user); // 设置默认密码
+    await this.validateUserParams(user);
+    await this.setRoles(user);
+    await this.setDefaultPassword(user);
     const newUser = this.userRepository.create(user);
     if (profile) {
       const newProfile = this.profileRepository.create(profile);
       newUser.profile = newProfile;
     }
-    return this.userRepository.save(newUser);
+    const savedUser = await this.userRepository.save(newUser);
+    await this.updateUserCache(savedUser);
+    return savedUser;
   }
 
   async userGet(id: number) {
+    // 尝试从缓存中获取用户信息
+    const cachedUser = await this.getUserCache(id);
+    if (cachedUser) {
+      return cachedUser;
+    }
+    // 从数据库中获取用户信息
     const user = await this.userRepository.findOne({
       where: { id: Number(id) },
       relations: ['profile', 'roles'],
     });
-
     if (!user) {
       throw new RpcException({
         code: 404,
         message: '用户未找到',
       });
     }
-
     // 避免返回敏感数据
     const { password, ...userData } = user;
-
     return userData;
   }
 
@@ -175,6 +187,7 @@ export class UserService {
       }
 
       await queryRunner.commitTransaction();
+      await this.updateUserCache(user);
       return { success: true };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -221,6 +234,13 @@ export class UserService {
   }
 
   async profileGet(id: number) {
+    // 尝试从缓存中获取用户信息
+    const cachedUser = await this.getUserCache(id);
+    if (cachedUser) {
+      return cachedUser;
+    }
+
+    // 从数据库中获取用户信息
     const user = await this.userRepository.findOne({
       where: { id },
       relations: ['profile', 'roles'],
@@ -279,6 +299,7 @@ export class UserService {
 
     Object.assign(userProfile, profile);
     await this.profileRepository.save(userProfile);
+    await this.updateUserCache(user);
     return { success: true };
   }
 
@@ -353,14 +374,6 @@ export class UserService {
   ) {
     try {
       const offset = (page - 1) * pageSize;
-      // 构造缓存键，利用页码和过滤条件
-      const cacheKey = `userList:${page}:${pageSize}:${JSON.stringify(filters)}`;
-
-      // 尝试从缓存中获取数据
-      const cachedResult = await this.redisService.get(cacheKey);
-      if (cachedResult) {
-        return cachedResult;
-      }
 
       // 使用 QueryBuilder 进行查询
       const queryBuilder = this.userRepository
@@ -401,8 +414,6 @@ export class UserService {
         pageSize,
       };
 
-      // 将查询结果缓存 60 秒（根据需要调整 TTL）
-      await this.redisService.set(cacheKey, result, 60);
       return result;
     } catch (error) {
       throw new RpcException('Failed to fetch user list.');
