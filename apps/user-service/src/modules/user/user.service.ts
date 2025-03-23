@@ -3,8 +3,10 @@ import { RedisService } from '@app/redis';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
+import { formatResponse } from '@shared/helpers/response.helper';
 import { hash } from 'bcryptjs';
 import * as fs from 'fs';
+import * as mime from 'mime-types';
 import * as path from 'path';
 import { DataSource, In, Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -257,26 +259,60 @@ export class UserService {
       await this.profileRepository.save(profile);
     }
 
-    return {
-      ...user,
-      profile: { ...user.profile, avatar: undefined },
-      password: undefined,
-    };
+    return formatResponse(
+      200,
+      {
+        ...user,
+        profile: { ...user.profile, avatar: undefined },
+        password: undefined,
+      },
+      '获取用户信息成功',
+    );
   }
 
   async getAvatar(userId: number) {
-    const user = await this.findById(userId);
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['profile'],
+    });
+
     if (!user) {
       throw new RpcException({
         code: 404,
         message: '用户未找到',
       });
     }
-    const profile = await this.profileRepository.findOne({ where: { user } });
+
+    const profile = user.profile;
     if (!profile || !profile.avatar) {
-      return null;
+      throw new RpcException({
+        code: 404,
+        message: '头像文件不存在',
+      });
     }
-    return profile.avatar;
+
+    const avatarPath = profile.avatar;
+    if (!fs.existsSync(avatarPath)) {
+      throw new RpcException({
+        code: 404,
+        message: '头像文件不存在',
+      });
+    }
+
+    // 读取文件
+    const avatarBuffer = await fs.promises.readFile(avatarPath);
+    const fileName = path.basename(avatarPath); // 获取文件名
+    const mimeType = mime.lookup(avatarPath) || 'application/octet-stream'; // 获取 MIME 类型
+
+    return {
+      code: 200,
+      message: '头像获取成功',
+      data: {
+        avatar: avatarBuffer.toString('base64'),
+        fileName,
+        mimeType,
+      },
+    };
   }
 
   async profileUpdate(userId: number, profile: Partial<Profile>) {
@@ -300,7 +336,7 @@ export class UserService {
     Object.assign(userProfile, profile);
     await this.profileRepository.save(userProfile);
     await this.updateUserCache(user);
-    return { success: true };
+    return formatResponse(200, null, '更新个人信息成功');
   }
 
   async updateAvatar(userId: number, fileData: Buffer, mimetype: string) {
@@ -339,7 +375,7 @@ export class UserService {
       await queryRunner.manager.save(user);
       await queryRunner.manager.save(profile);
       await queryRunner.commitTransaction();
-      return { success: true };
+      return formatResponse(200, null, '上传头像成功');
     } catch (error) {
       // 发生错误时回滚
       await queryRunner.rollbackTransaction();

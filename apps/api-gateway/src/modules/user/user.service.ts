@@ -3,12 +3,11 @@ import { CreateUserDto } from '@common/dto/user/create-user.dto';
 import { ResetPasswordDto } from '@common/dto/user/reset-pass.dto';
 import { UpdateProfileDto } from '@common/dto/user/update-profile.dto';
 import { UpdateUserDto } from '@common/dto/user/update-user.dto';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { Response } from 'express';
-import { existsSync } from 'fs';
 import { lastValueFrom } from 'rxjs';
 import { defaultIfEmpty } from 'rxjs/operators';
 
@@ -18,49 +17,46 @@ export class UserService {
     @Inject(USER_SERVICE_NAME) private readonly userClient: ClientProxy,
   ) {}
 
-  async getProfile(userId: number) {
-    const payload = { userId };
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.profile.get' }, payload),
-    );
-    return formatResponse(200, result, '获取个人信息成功');
+  getProfile(userId: number) {
+    return this.userClient.send({ cmd: 'user.profile.get' }, { userId });
   }
 
-  async updateProfile(userId: number, updateProfileDto: UpdateProfileDto) {
-    const payload = { userId, dto: updateProfileDto };
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.profile.update' }, payload),
+  updateProfile(userId: number, updateProfileDto: UpdateProfileDto) {
+    return this.userClient.send(
+      { cmd: 'user.profile.update' },
+      { userId, dto: updateProfileDto },
     );
-    return formatResponse(200, result, '更新个人信息成功');
   }
 
-  async uploadAvatar(userId: number, file: Express.Multer.File) {
-    await lastValueFrom(
-      this.userClient
-        .send(
-          { cmd: 'user.avatar.upload' },
-          {
-            userId,
-            fileData: file.buffer.toString('base64'),
-            mimetype: file.mimetype,
-          },
-        )
-        .pipe(defaultIfEmpty(null)),
+  uploadAvatar(userId: number, file: Express.Multer.File) {
+    return this.userClient.send(
+      { cmd: 'user.avatar.upload' },
+      {
+        userId,
+        fileData: file.buffer.toString('base64'),
+        mimetype: file.mimetype,
+      },
     );
-    return formatResponse(200, null, '上传头像成功');
   }
 
   async getAvatar(userId: number, res: Response) {
-    const avatarPath = await lastValueFrom(
+    const result = await lastValueFrom(
       this.userClient.send({ cmd: 'user.avatar.get' }, { userId }),
     );
-    if (avatarPath) {
-      if (!existsSync(avatarPath)) {
-        throw new BadRequestException('头像文件不存在');
-      }
-      return res.sendFile(avatarPath);
+
+    if (result.data) {
+      const { avatar, fileName, mimeType } = result.data;
+      const avatarBuffer = Buffer.from(avatar, 'base64');
+
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${fileName}"`,
+      );
+      res.setHeader('Content-Type', mimeType);
+
+      res.send(avatarBuffer);
     } else {
-      return formatResponse(404, null, '头像不存在');
+      res.status(404).send('Avatar not found.');
     }
   }
 
