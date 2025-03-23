@@ -81,7 +81,7 @@ export class UserController {
   @MessagePattern({ cmd: 'user.create' })
   async userCreate(@Payload() dto: CreateUserDto) {
     const { profile, ...user } = dto;
-    await this.userService.userCreate(user as any, profile);
+    return this.userService.userCreate(user as any, profile);
   }
 
   // 获取单个用户信息

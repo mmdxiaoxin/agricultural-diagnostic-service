@@ -1,3 +1,4 @@
+import { User } from '@app/database/entities';
 import { MailService } from '@app/mail';
 import { RedisService } from '@app/redis';
 import { Inject, Injectable } from '@nestjs/common';
@@ -23,20 +24,23 @@ export class AuthService {
    * @param password 用户密码
    */
   async register(email: string, password: string) {
-    const result = await firstValueFrom(
+    const userByEmail = await firstValueFrom(
       this.userClient.send({ cmd: 'user.find.byEmail' }, { email }),
     );
-    if (result) {
+    if (userByEmail) {
       throw new RpcException({
         code: 400,
         message: '邮箱已被注册',
       });
     }
-    const newUser = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.create' }, { email, password }),
+    const userCreationResult = await lastValueFrom(
+      this.userClient.send<{ code: number; data: User; message: string }>(
+        { cmd: 'user.create' },
+        { email, password },
+      ),
     );
     return this.jwt.sign(
-      { userId: newUser.id },
+      { userId: userCreationResult.data.id },
       {
         expiresIn: '30m',
       },

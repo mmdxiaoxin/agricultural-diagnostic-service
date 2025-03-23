@@ -90,7 +90,7 @@ export class UserService {
     }
     const savedUser = await this.userRepository.save(newUser);
     await this.updateUserCache(savedUser);
-    return formatResponse(201, null, '创建用户成功');
+    return formatResponse(201, savedUser, '创建用户成功');
   }
 
   async userGet(id: number) {
