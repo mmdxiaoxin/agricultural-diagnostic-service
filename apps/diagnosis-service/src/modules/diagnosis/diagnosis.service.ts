@@ -1,5 +1,8 @@
-import { DiagnosisHistory, File as FileEntity } from '@app/database/entities';
-import { FileOperationService } from '@app/file-operation';
+import {
+  AiService,
+  DiagnosisHistory,
+  File as FileEntity,
+} from '@app/database/entities';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,16 +23,13 @@ export class DiagnosisService {
   constructor(
     @InjectRepository(DiagnosisHistory)
     private readonly diagnosisRepository: Repository<DiagnosisHistory>,
-
-    private readonly fileOperationService: FileOperationService,
-
-    private readonly dataSource: DataSource,
-
     @Inject(FILE_SERVICE_NAME)
     private readonly fileClient: ClientProxy,
-
     @Inject(DOWNLOAD_SERVICE_NAME)
     private readonly downloadClient: ClientProxy,
+    private readonly dataSource: DataSource,
+    @InjectRepository(AiService)
+    private readonly aiServiceRepository: Repository<AiService>,
   ) {}
 
   // 初始化诊断数据
@@ -79,6 +79,26 @@ export class DiagnosisService {
       }
       diagnosis.status = Status.IN_PROGRESS;
       await queryRunner.manager.save(diagnosis);
+      // 获取服务配置
+      const aiService = await this.aiServiceRepository.findOne({
+        where: { serviceId: 2 }, // TODO: 从配置中获取
+        relations: ['aiServiceConfigs'],
+      });
+      if (!aiService) {
+        throw new RpcException({
+          code: 500,
+          message: '未找到AI服务配置',
+        });
+      }
+      const baseUrl = aiService.endpointUrl;
+      const urlPrefix = aiService.aiServiceConfigs.find(
+        (config) => config.configKey === 'prefix',
+      ) || { configValue: '' };
+      const urlPath = aiService.aiServiceConfigs.find(
+        (config) => config.configKey === 'path',
+      ) || { configValue: '' };
+      const url = `${baseUrl}${urlPrefix.configValue}${urlPath.configValue}`;
+      // 获取文件元数据
       const { success: fileGet, result: file } = await lastValueFrom(
         this.fileClient.send<{
           success: boolean;
@@ -98,6 +118,7 @@ export class DiagnosisService {
           message: '获取文件失败',
         });
       }
+      // 根据文件元数据下载文件
       const { data, success } = await lastValueFrom(
         this.downloadClient.send<{
           success: boolean;
@@ -111,24 +132,22 @@ export class DiagnosisService {
           },
         ),
       );
-      if (!success)
+      if (!success) {
         throw new RpcException({
           code: 500,
           message: '获取文件失败',
         });
+      }
+      // 调用服务诊断文件
       const fileStream = Buffer.from(data, 'base64');
       const fileBlob = new Blob([fileStream]);
       const formData = new FormData();
       formData.append('image', fileBlob, file.originalFileName);
-      const response = await axios.post(
-        'http://localhost:5001/yolo11/plant/classify',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+      const response = await axios.post(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
         },
-      );
+      });
       diagnosis.status = Status.COMPLETED;
       diagnosis.diagnosisResult = response.data;
       await queryRunner.manager.save(diagnosis);

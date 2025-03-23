@@ -1,3 +1,4 @@
+import { DatabaseModule } from '@app/database';
 import {
   AiService,
   AiServiceAccessLog,
@@ -5,14 +6,13 @@ import {
   AiServiceLog,
 } from '@app/database/entities';
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AiServiceController } from './ai-service.controller';
 import { AiConfigsService } from './services/ai-service-config.service';
 import { AiServiceService } from './services/ai-service.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
+    DatabaseModule.forFeature([
       AiService,
       AiServiceAccessLog,
       AiServiceConfig,
