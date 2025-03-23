@@ -421,33 +421,87 @@ export class UserService {
   }
 
   async findByLogin(login: string): Promise<User | null> {
-    return this.userRepository
+    const cacheKey = `user:login:${login}`;
+    const cachedUser = await this.redisService.get(cacheKey);
+    if (cachedUser) {
+      return cachedUser as User;
+    }
+
+    const user = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'role')
       .where('user.email = :login', { login })
       .orWhere('user.username = :login', { login })
       .getOne();
+
+    if (user) {
+      await this.redisService.set(cacheKey, user, 60); // 缓存 60 秒
+    }
+
+    return user;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({
-      where: { email },
-    });
+    const cacheKey = `user:email:${email}`;
+    const cachedUser = await this.redisService.get(cacheKey);
+    if (cachedUser) {
+      return cachedUser as User;
+    }
+
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (user) {
+      await this.redisService.set(cacheKey, user, 60);
+    }
+
+    return user;
   }
 
   async findByUsername(username: string): Promise<User | null> {
-    return this.userRepository.findOne({
-      where: { username },
-    });
+    const cacheKey = `user:username:${username}`;
+    const cachedUser = await this.redisService.get(cacheKey);
+    if (cachedUser) {
+      return cachedUser as User;
+    }
+
+    const user = await this.userRepository.findOne({ where: { username } });
+
+    if (user) {
+      await this.redisService.set(cacheKey, user, 60);
+    }
+
+    return user;
   }
 
   async findById(id: number): Promise<User | null> {
-    return this.userRepository.findOne({
-      where: { id },
-    });
+    const cacheKey = `user:id:${id}`;
+    const cachedUser = await this.redisService.get(cacheKey);
+    if (cachedUser) {
+      return cachedUser as User;
+    }
+
+    const user = await this.userRepository.findOne({ where: { id } });
+
+    if (user) {
+      await this.redisService.set(cacheKey, user, 60);
+    }
+
+    return user;
   }
 
   async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+    const cacheKey = `user:all`;
+    const cachedUsers = await this.redisService.get(cacheKey);
+    if (cachedUsers) {
+      return cachedUsers as User[];
+    }
+
+    const users = await this.userRepository.find();
+
+    if (users.length > 0) {
+      await this.redisService.set(cacheKey, users, 300); // 5 分钟缓存
+    }
+
+    return users;
   }
 }
