@@ -21,8 +21,8 @@ export class AuthController {
   }
 
   @MessagePattern({ cmd: 'auth.notify' })
-  async notify(@Payload() payload: { email: string; token: string }) {
-    return this.authService.notifyAccount(payload.email, payload.token);
+  async notify(@Payload() payload: { email: string; link: string }) {
+    return this.authService.notifyAccount(payload.email, payload.link);
   }
 
   @MessagePattern({ cmd: 'auth.verify' })

@@ -163,6 +163,7 @@ export class AuthService {
                         </td>
                     </tr>
                 </table>
+                <p style="text-align: center; color: #777777; font-size: 14px; margin-top: 20px;">© 2025 病害智能诊断系统</p>
             </body>
         </html>
     `,
