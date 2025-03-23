@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
-import { AuthService } from 'apps/auth-service/src/modules/auth/auth.service';
 import {
   AUTH_SERVICE_HOST,
   AUTH_SERVICE_NAME,
   AUTH_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 import { JwtStrategy } from './auth.strategy';
 
 @Module({
