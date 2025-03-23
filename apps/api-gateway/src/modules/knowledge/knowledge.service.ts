@@ -1,10 +1,10 @@
+import { PlantDiseaseKnowledge } from '@app/database/entities';
+import { CreatePlantDiseaseKnowledgeDto } from '@common/dto/knowledge/create-knowledge.dto';
+import { UpdatePlantDiseaseKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreatePlantDiseaseKnowledgeDto } from './dto/create-knowledge.dto';
-import { UpdatePlantDiseaseKnowledgeDto } from './dto/update-knowledge.dto';
-import { PlantDiseaseKnowledge } from './knowledge.entity';
 import { formatResponse } from '@shared/helpers/response.helper';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class KnowledgeService {
@@ -16,12 +16,8 @@ export class KnowledgeService {
   // 创建病害知识记录
   async create(dto: CreatePlantDiseaseKnowledgeDto) {
     const knowledge = this.knowledgeRepository.create(dto);
-    return this.knowledgeRepository.save(knowledge);
-  }
-
-  // 获取所有病害知识记录
-  findAll() {
-    return this.knowledgeRepository.find();
+    await this.knowledgeRepository.save(knowledge);
+    return formatResponse(201, null, '病害知识记录创建成功');
   }
 
   // 获取所有病害知识记录
@@ -40,37 +36,49 @@ export class KnowledgeService {
         category: filters.category,
       });
     }
-    return await queryBuilder
+    const [list, total] = await queryBuilder
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .getManyAndCount();
+    return formatResponse(
+      200,
+      {
+        list,
+        page,
+        pageSize,
+        total,
+      },
+      '病害知识列表获取成功',
+    );
   }
 
   async knowledgeGet() {
-    return await this.knowledgeRepository.find();
+    const knowledge = await this.knowledgeRepository.find();
+    return formatResponse(200, knowledge, '病害知识记录获取成功');
   }
 
   // 获取单个病害知识记录
-  async findById(id: number) {
+  async knowledgeGetById(id: number) {
     const knowledge = await this.knowledgeRepository.findOne({ where: { id } });
     if (!knowledge) {
       throw new NotFoundException('病害知识记录不存在');
     }
-    return knowledge;
+    return formatResponse(200, knowledge, '病害知识记录获取成功');
   }
 
   // 更新病害知识记录
-  async update(id: number, dto: UpdatePlantDiseaseKnowledgeDto) {
+  async knowledgeUpdate(id: number, dto: UpdatePlantDiseaseKnowledgeDto) {
     const knowledge = await this.knowledgeRepository.findOne({ where: { id } });
     if (!knowledge) {
       return null;
     }
     const updatedKnowledge = this.knowledgeRepository.merge(knowledge, dto);
-    return this.knowledgeRepository.save(updatedKnowledge);
+    await this.knowledgeRepository.save(updatedKnowledge);
+    return formatResponse(200, null, '病害知识记录更新成功');
   }
 
   // 删除病害知识记录
-  remove(id: number) {
+  async knowledgeRemove(id: number) {
     return this.knowledgeRepository.delete(id);
   }
 }

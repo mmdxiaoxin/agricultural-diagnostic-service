@@ -11,3 +11,4 @@ export * from './profile.entity';
 export * from './role.entity';
 export * from './task.entity';
 export * from './user.entity';
+export * from './knowledge.entity';
