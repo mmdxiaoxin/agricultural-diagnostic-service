@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { ConfigEnum } from '@shared/enum/config.enum';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import {
   FILE_SERVICE_NAME,
   FILE_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
+import { AiServiceModule } from './ai-service/ai-service.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -18,7 +17,6 @@ import { KnowledgeModule } from './knowledge/knowledge.module';
 import { MenuModule } from './menu/menu.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
-import { AiServiceModule } from './ai-service/ai-service.module';
 
 /**
  * 根模块
@@ -32,22 +30,6 @@ import { AiServiceModule } from './ai-service/ai-service.module';
         `.env.${process.env.NODE_ENV || 'development'}.local`,
       ],
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) =>
-        ({
-          type: configService.get(ConfigEnum.DB_TYPE),
-          host: configService.get(ConfigEnum.DB_HOST),
-          port: configService.get(ConfigEnum.DB_PORT),
-          username: configService.get(ConfigEnum.DB_USERNAME),
-          password: configService.get(ConfigEnum.DB_PASSWORD),
-          database: configService.get(ConfigEnum.DB_DATABASE),
-          autoLoadEntities: true, // 自动加载实体
-          synchronize: configService.get(ConfigEnum.DB_SYNC),
-          logging: process.env.NODE_ENV === 'development',
-        }) as TypeOrmModuleOptions,
-    }),
     ClientsModule.register([
       {
         name: FILE_SERVICE_NAME,
@@ -55,6 +37,7 @@ import { AiServiceModule } from './ai-service/ai-service.module';
         options: { host: 'localhost', port: FILE_SERVICE_TCP_PORT },
       },
     ]),
+    PrometheusModule.register(),
     AuthModule,
     UserModule,
     RoleModule,
@@ -63,7 +46,6 @@ import { AiServiceModule } from './ai-service/ai-service.module';
     MenuModule,
     KnowledgeModule,
     DiagnosisModule,
-    PrometheusModule.register(),
     AiServiceModule,
   ],
   controllers: [AppController],

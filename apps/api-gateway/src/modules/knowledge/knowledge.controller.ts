@@ -32,7 +32,7 @@ export class KnowledgeController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async knowledgeCreate(@Body() dto: CreatePlantDiseaseKnowledgeDto) {
-    return this.KnowledgeService.create(dto);
+    return this.KnowledgeService.knowledgeCreate(dto);
   }
 
   // 获取所有病害知识记录
