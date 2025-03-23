@@ -5,6 +5,7 @@ import {
   USER_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { UserController } from './user.controller';
+import { UserService } from './user.service';
 
 /**
  * 用户模块
@@ -20,5 +21,6 @@ import { UserController } from './user.controller';
     ]),
   ],
   controllers: [UserController],
+  providers: [UserService],
 })
 export class UserModule {}
