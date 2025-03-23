@@ -56,6 +56,11 @@ export class UserService {
     await this.redisService.set(cacheKey, userData, 300);
   }
 
+  private async deleteUserCache(id: number) {
+    const cacheKey = `user:${id}`;
+    await this.redisService.del(cacheKey);
+  }
+
   async setRoles(user: Partial<User>) {
     if (!user.roles) {
       const role = await this.roleRepository.findOne({
@@ -130,7 +135,7 @@ export class UserService {
       // 删除用户
       await queryRunner.manager.delete(Profile, { user });
       await queryRunner.manager.remove(User, user);
-      await this.redisService.del(`user:${id}`);
+      await this.deleteUserCache(id);
 
       await queryRunner.commitTransaction();
       return formatResponse(204, null, '删除用户成功');
