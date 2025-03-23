@@ -81,8 +81,7 @@ export class AuthService {
     // 登录成功，清除登录尝试次数
     await this.clearLoginAttempts(login);
 
-    // 生成会话 ID
-    const sessionId = uuidv4(); // 生成一个唯一的 sessionId
+    const sessionId = uuidv4();
     await this.redis.storeSession(user.id.toString(), sessionId, 3600); // 存储会话到 Redis 中
 
     return {
@@ -91,7 +90,7 @@ export class AuthService {
         username: user.username,
         roles: user.roles.map((role) => role.name),
       }),
-      sessionId, // 返回 sessionId
+      sessionId,
     };
   }
 
