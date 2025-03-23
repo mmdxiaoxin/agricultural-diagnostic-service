@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
+import { AuthService } from 'apps/auth-service/src/modules/auth/auth.service';
 import {
+  AUTH_SERVICE_HOST,
   AUTH_SERVICE_NAME,
   AUTH_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
@@ -15,11 +17,11 @@ import { JwtStrategy } from './auth.strategy';
       {
         name: AUTH_SERVICE_NAME,
         transport: Transport.TCP,
-        options: { host: 'localhost', port: AUTH_SERVICE_TCP_PORT },
+        options: { host: AUTH_SERVICE_HOST, port: AUTH_SERVICE_TCP_PORT },
       },
     ]),
   ],
   controllers: [AuthController],
-  providers: [JwtStrategy],
+  providers: [JwtStrategy, AuthService],
 })
 export class AuthModule {}
