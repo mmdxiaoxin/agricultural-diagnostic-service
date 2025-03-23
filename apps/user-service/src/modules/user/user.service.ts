@@ -85,14 +85,14 @@ export class UserService {
     }
     const savedUser = await this.userRepository.save(newUser);
     await this.updateUserCache(savedUser);
-    return savedUser;
+    return formatResponse(201, null, '创建用户成功');
   }
 
   async userGet(id: number) {
     // 尝试从缓存中获取用户信息
     const cachedUser = await this.getUserCache(id);
     if (cachedUser) {
-      return cachedUser;
+      return formatResponse(200, cachedUser, '更新用户信息成功');
     }
     // 从数据库中获取用户信息
     const user = await this.userRepository.findOne({
@@ -107,7 +107,7 @@ export class UserService {
     }
     // 避免返回敏感数据
     const { password, ...userData } = user;
-    return userData;
+    return formatResponse(200, userData, '获取用户信息成功');
   }
 
   async userDelete(id: number) {
@@ -130,9 +130,10 @@ export class UserService {
       // 删除用户
       await queryRunner.manager.delete(Profile, { user });
       await queryRunner.manager.remove(User, user);
+      await this.redisService.del(`user:${id}`);
 
       await queryRunner.commitTransaction();
-      return { success: true };
+      return formatResponse(204, null, '删除用户成功');
     } catch (error) {
       // 回滚事务
       await queryRunner.rollbackTransaction();
@@ -190,7 +191,7 @@ export class UserService {
 
       await queryRunner.commitTransaction();
       await this.updateUserCache(user);
-      return { success: true };
+      return formatResponse(200, null, '更新用户信息成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -232,7 +233,7 @@ export class UserService {
     const hashedPassword = await hash(newPassword || '123456', 10);
     user.password = hashedPassword;
     await this.userRepository.save(user);
-    return { success: true };
+    return formatResponse(200, null, '重置用户密码成功');
   }
 
   async profileGet(id: number) {
@@ -395,7 +396,7 @@ export class UserService {
     }
     user.password = await hash(password, 10);
     await this.userRepository.save(user);
-    return { success: true };
+    return formatResponse(200, null, '修改密码成功');
   }
 
   async userListGet(
@@ -410,7 +411,6 @@ export class UserService {
   ) {
     try {
       const offset = (page - 1) * pageSize;
-
       // 使用 QueryBuilder 进行查询
       const queryBuilder = this.userRepository
         .createQueryBuilder('user')
@@ -450,9 +450,12 @@ export class UserService {
         pageSize,
       };
 
-      return result;
+      return formatResponse(200, result, '退出登录成功');
     } catch (error) {
-      throw new RpcException('Failed to fetch user list.');
+      throw new RpcException({
+        code: 500,
+        message: '获取用户列表失败',
+      });
     }
   }
 

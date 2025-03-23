@@ -60,14 +60,11 @@ export class UserService {
     }
   }
 
-  async updatePassword(userId: number, updatePasswordDto: UpdatePasswordDto) {
-    const payload = { userId, dto: updatePasswordDto };
-    await lastValueFrom(
-      this.userClient
-        .send({ cmd: 'user.password.update' }, payload)
-        .pipe(defaultIfEmpty(null)),
+  updatePassword(userId: number, dto: UpdatePasswordDto) {
+    return this.userClient.send(
+      { cmd: 'user.password.update' },
+      { userId, dto },
     );
-    return formatResponse(200, null, '修改密码成功');
   }
 
   async logout() {
@@ -79,52 +76,27 @@ export class UserService {
     return formatResponse(200, null, '退出登录成功');
   }
 
-  async getUserList(query: any) {
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.list.get' }, query),
-    );
-    return formatResponse(200, result, '获取用户列表成功');
+  getUserList(query: any) {
+    return this.userClient.send({ cmd: 'user.list.get' }, query);
   }
 
-  async createUser(createUserDto: CreateUserDto) {
-    await lastValueFrom(
-      this.userClient
-        .send({ cmd: 'user.create' }, createUserDto)
-        .pipe(defaultIfEmpty(null)),
-    );
-    return formatResponse(201, null, '创建用户成功');
+  createUser(dto: CreateUserDto) {
+    return this.userClient.send({ cmd: 'user.create' }, dto);
   }
 
-  async getUser(id: number) {
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.get' }, { id }),
-    );
-    return formatResponse(200, result, '获取用户信息成功');
+  getUser(id: number) {
+    return this.userClient.send({ cmd: 'user.get' }, { id });
   }
 
-  async deleteUser(id: number) {
-    return this.userClient
-      .send({ cmd: 'user.delete' }, { id })
-      .pipe(defaultIfEmpty(null));
+  deleteUser(id: number) {
+    return this.userClient.send({ cmd: 'user.delete' }, { id });
   }
 
-  async updateUser(id: number, updateUserDto: UpdateUserDto) {
-    const payload = { id, dto: updateUserDto };
-    await lastValueFrom(
-      this.userClient
-        .send({ cmd: 'user.update' }, payload)
-        .pipe(defaultIfEmpty(null)),
-    );
-    return formatResponse(200, null, '更新用户信息成功');
+  updateUser(id: number, dto: UpdateUserDto) {
+    return this.userClient.send({ cmd: 'user.update' }, { id, dto });
   }
 
-  async resetUserPassword(id: number, resetPasswordDto: ResetPasswordDto) {
-    const payload = { id, dto: resetPasswordDto };
-    await lastValueFrom(
-      this.userClient
-        .send({ cmd: 'user.password.reset' }, payload)
-        .pipe(defaultIfEmpty(null)),
-    );
-    return formatResponse(200, null, '重置用户密码成功');
+  resetUserPassword(id: number, dto: ResetPasswordDto) {
+    return this.userClient.send({ cmd: 'user.password.reset' }, { id, dto });
   }
 }

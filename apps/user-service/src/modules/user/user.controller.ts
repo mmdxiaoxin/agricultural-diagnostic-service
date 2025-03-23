@@ -87,9 +87,7 @@ export class UserController {
   @MessagePattern({ cmd: 'user.create' })
   async userCreate(@Payload() dto: CreateUserDto) {
     const { profile, ...user } = dto;
-    await this.userService.setRoles(user as any);
     await this.userService.userCreate(user as any, profile);
-    return { status: 201, message: '用户创建成功' };
   }
 
   // 获取单个用户信息
