@@ -13,13 +13,13 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags } from '@nestjs/swagger';
+import { verifyHtml } from '@shared/constants/html';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { AUTH_SERVICE_NAME } from 'config/microservice.config';
 import { Request } from 'express';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { verifyHtml } from '@shared/constants/html';
 
 @ApiTags('权限认证模块')
 @Controller('auth')
@@ -52,6 +52,12 @@ export class AuthController {
       { access_token: result.access_token },
       '登录成功',
     );
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout() {
+    return formatResponse(200, null, '成功退出');
   }
 
   @Post('verify/:token')

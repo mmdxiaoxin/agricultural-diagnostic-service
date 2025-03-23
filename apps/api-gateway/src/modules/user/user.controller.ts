@@ -73,11 +73,6 @@ export class UserController {
     return this.userService.updatePassword(req.user.userId, dto);
   }
 
-  @Post('logout')
-  async logout() {
-    return this.userService.logout();
-  }
-
   @Get('list')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)

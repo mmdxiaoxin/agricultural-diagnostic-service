@@ -57,12 +57,6 @@ export class UserController {
     );
   }
 
-  // 退出登录
-  @MessagePattern({ cmd: 'user.logout' })
-  async logout() {
-    return { status: 200, message: '退出登录成功' };
-  }
-
   // 获取用户列表
   @MessagePattern({ cmd: 'user.list.get' })
   async userListGet(

@@ -67,15 +67,6 @@ export class UserService {
     );
   }
 
-  async logout() {
-    await lastValueFrom(
-      this.userClient
-        .send({ cmd: 'user.logout' }, {})
-        .pipe(defaultIfEmpty(null)),
-    );
-    return formatResponse(200, null, '退出登录成功');
-  }
-
   getUserList(query: any) {
     return this.userClient.send({ cmd: 'user.list.get' }, query);
   }
