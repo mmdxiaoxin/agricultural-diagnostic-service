@@ -37,6 +37,7 @@ export const verifyHtml = `
                     <div class="container">
                         <h1>账号激活成功！</h1>
                         <p>恭喜！您的账号已经成功激活。现在您可以登录并开始使用系统。</p>
+                        <a href="http://www.binghai-zhenduan.com/login" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">立即登录</a>
                     </div>
                 </body>
             </html>

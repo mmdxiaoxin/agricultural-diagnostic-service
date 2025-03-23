@@ -39,7 +39,7 @@ export class AuthController {
     return this.authService.logout();
   }
 
-  @Post('verify/:token')
+  @Get('verify/:token')
   @HttpCode(HttpStatus.OK)
   async verify(@Param('token') token: string) {
     return this.authService.verify(token);

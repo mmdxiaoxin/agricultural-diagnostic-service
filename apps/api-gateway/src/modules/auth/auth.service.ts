@@ -18,7 +18,7 @@ export class AuthService {
     const token = await lastValueFrom(
       this.authClient.send({ cmd: 'auth.register' }, { dto }),
     );
-    const link = `${req.protocol}://${req.get('host')}/auth/verify/${token}`;
+    const link = `${req.protocol}://${req.get('host')}/api/auth/verify/${token}`;
     await firstValueFrom(
       this.authClient.send({ cmd: 'auth.notify' }, { email: dto.email, link }),
     );

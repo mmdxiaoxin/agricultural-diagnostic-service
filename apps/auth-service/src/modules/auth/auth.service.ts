@@ -178,12 +178,12 @@ export class AuthService {
     try {
       const { userId } = this.jwt.decode(token);
       return await firstValueFrom(
-        this.userClient.send({ cmd: 'user.activate' }, { id: userId }),
+        this.userClient.send({ cmd: 'user.update.activate' }, { id: userId }),
       );
     } catch (error) {
       throw new RpcException({
         code: 400,
-        message: '验证失败',
+        message: typeof error === 'string' ? error : '验证失败',
       });
     }
   }
