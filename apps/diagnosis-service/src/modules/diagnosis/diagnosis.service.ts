@@ -246,7 +246,6 @@ export class DiagnosisService {
   ) {
     const [list, total] = await this.diagnosisRepository.findAndCount({
       where: { createdBy: userId },
-      order: { createdAt: 'DESC' },
       take: pageSize,
       skip: (page - 1) * pageSize,
     });
