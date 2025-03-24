@@ -48,7 +48,7 @@ export class DiagnosisController {
     )
     id: number,
   ) {
-    return this.diagnosisService.startDiagnosis(req, id);
+    return this.diagnosisService.startDiagnosis(req.user.userId, id);
   }
 
   @Get(':id/status')

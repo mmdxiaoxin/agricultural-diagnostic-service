@@ -46,7 +46,7 @@ export class DiagnosisService {
       diagnosisHistory.fileId = fileId;
       await queryRunner.manager.save(diagnosisHistory);
       await queryRunner.commitTransaction();
-      return { success: true, result: diagnosisHistory };
+      return formatResponse(200, diagnosisHistory, '上传成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new error();

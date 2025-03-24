@@ -7,6 +7,7 @@ import {
   UPLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { DiagnosisController } from './diagnosis.controller';
+import { DiagnosisService } from './diagnosis.service';
 
 @Module({
   imports: [
@@ -28,5 +29,6 @@ import { DiagnosisController } from './diagnosis.controller';
     ]),
   ],
   controllers: [DiagnosisController],
+  providers: [DiagnosisService],
 })
 export class DiagnosisModule {}
