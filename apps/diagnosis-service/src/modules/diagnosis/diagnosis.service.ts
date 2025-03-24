@@ -17,7 +17,7 @@ import {
   FILE_SERVICE_NAME,
 } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 @Injectable()
 export class DiagnosisService {
@@ -217,6 +217,46 @@ export class DiagnosisService {
         this.logger.error(error);
       }
       await queryRunner.manager.remove(DiagnosisHistory, diagnosis);
+      await queryRunner.commitTransaction();
+      return formatResponse(204, null, '删除诊断记录成功');
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new RpcException({
+        code: 500,
+        message: '删除诊断记录失败',
+        data: error,
+      });
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async diagnosisHistoriesDelete(userId: number, diagnosisIds: number[]) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const diagnosisList = await queryRunner.manager.find(DiagnosisHistory, {
+        where: { id: In(diagnosisIds), createdBy: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (diagnosisList.length !== diagnosisIds.length) {
+        throw new RpcException('未找到诊断记录');
+      }
+      try {
+        await firstValueFrom(
+          this.fileClient.send<{ success: boolean }>(
+            { cmd: FILE_MESSAGE_PATTERNS.DELETE_FILES },
+            {
+              fileIds: diagnosisList.map((diagnosis) => diagnosis.fileId),
+              userId,
+            },
+          ),
+        );
+      } catch (error) {
+        this.logger.error(error);
+      }
+      await queryRunner.manager.remove(DiagnosisHistory, diagnosisList);
       await queryRunner.commitTransaction();
       return formatResponse(204, null, '删除诊断记录成功');
     } catch (error) {

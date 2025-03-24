@@ -23,6 +23,7 @@ import { Request } from 'express';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { DiagnosisService } from './diagnosis.service';
+import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
 
 @ApiTags('病害诊断模块')
 @Controller('diagnosis')
@@ -79,6 +80,18 @@ export class DiagnosisController {
   @Get('history')
   async diagnosisHistoryGet(@Req() req: Request) {
     return this.diagnosisService.diagnosisHistoryGet(req.user.userId);
+  }
+
+  @Delete('history')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async diagnosisHistoriesDelete(
+    @Req() req: Request,
+    @Query('diagnosisIds', ParseNumberArrayPipe) diagnosisIds: number[],
+  ) {
+    return this.diagnosisService.diagnosisHistoriesDelete(
+      req.user.userId,
+      diagnosisIds,
+    );
   }
 
   @Delete('history/:id')

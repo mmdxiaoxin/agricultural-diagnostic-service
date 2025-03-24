@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 
 @Injectable()
-export class ParseFileIdsPipe implements PipeTransform {
+export class ParseNumberArrayPipe implements PipeTransform {
   transform(value: any, metadata: ArgumentMetadata) {
     // 如果没有传递参数，抛出异常
     if (!value) {

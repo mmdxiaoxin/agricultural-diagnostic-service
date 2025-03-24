@@ -1,6 +1,7 @@
 import { Roles } from '@common/decorator/roles.decorator';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
+import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
 import {
   Body,
   Controller,
@@ -51,7 +52,6 @@ import {
 import { UploadChunkDto } from '../../../../../packages/common/src/dto/file/upload-chunk.dto';
 import { FileGuard } from '../file/guards/file.guard';
 import { FilesGuard } from './guards/files.guard';
-import { ParseFileIdsPipe } from './pipe/delete.pipe';
 import { FileSizeValidationPipe } from './pipe/file-size.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';
 
@@ -387,7 +387,7 @@ export class FileController {
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteFiles(
-    @Query('fileIds', ParseFileIdsPipe) fileIds: number[],
+    @Query('fileIds', ParseNumberArrayPipe) fileIds: number[],
     @Req() req: Request,
   ) {
     return this.fileClient
