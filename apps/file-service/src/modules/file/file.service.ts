@@ -7,6 +7,7 @@ import {
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
+import { formatResponse } from '@shared/helpers/response.helper';
 import { getFileType } from '@shared/utils';
 import { DataSource, In, Not, Repository } from 'typeorm';
 
@@ -290,6 +291,7 @@ export class FileService {
       // 删除文件元数据
       await queryRunner.manager.delete(FileEntity, fileId);
       await queryRunner.commitTransaction();
+      return formatResponse(204, null, '成功删除文件');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
