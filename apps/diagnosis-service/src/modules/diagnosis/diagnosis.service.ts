@@ -4,7 +4,7 @@ import {
   File as FileEntity,
 } from '@app/database/entities';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DOWNLOAD_MESSAGE_PATTERNS } from '@shared/constants/download-message-patterns';
@@ -21,6 +21,8 @@ import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class DiagnosisService {
+  private readonly logger = new Logger(DiagnosisService.name);
+
   constructor(
     @InjectRepository(DiagnosisHistory)
     private readonly diagnosisRepository: Repository<DiagnosisHistory>,
@@ -201,15 +203,19 @@ export class DiagnosisService {
       if (!diagnosis) {
         throw new RpcException('未找到诊断记录');
       }
-      await firstValueFrom(
-        this.fileClient.send<{ success: boolean }>(
-          { cmd: FILE_MESSAGE_PATTERNS.DELETE_FILE },
-          {
-            fileId: diagnosis.fileId,
-            userId,
-          },
-        ),
-      );
+      try {
+        await firstValueFrom(
+          this.fileClient.send<{ success: boolean }>(
+            { cmd: FILE_MESSAGE_PATTERNS.DELETE_FILE },
+            {
+              fileId: diagnosis.fileId,
+              userId,
+            },
+          ),
+        );
+      } catch (error) {
+        this.logger.error(error);
+      }
       await queryRunner.manager.remove(DiagnosisHistory, diagnosis);
       await queryRunner.commitTransaction();
       return formatResponse(204, null, '删除诊断记录成功');
@@ -226,14 +232,10 @@ export class DiagnosisService {
   }
 
   async diagnosisSupportGet() {
-    return formatResponse(
-      200,
-      {
-        plantId: 1,
-        modelId: 1,
-      },
-      '获取诊断支持成功',
-    );
+    const aiServiceList = await this.aiServiceRepository.find({
+      where: { status: 'active' },
+    });
+    return formatResponse(200, aiServiceList, '获取诊断支持成功');
   }
 
   // 获取诊断历史记录
