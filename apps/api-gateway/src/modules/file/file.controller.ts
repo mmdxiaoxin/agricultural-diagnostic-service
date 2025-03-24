@@ -1,5 +1,4 @@
 import { Roles } from '@common/decorator/roles.decorator';
-import { TypeormFilter } from '@common/filters/typeorm.filter';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -21,7 +20,6 @@ import {
   Req,
   Res,
   UploadedFile,
-  UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -64,7 +62,6 @@ export interface DownloadService {
 
 @ApiTags('文件模块')
 @Controller('file')
-@UseFilters(TypeormFilter)
 export class FileController {
   private readonly logger = new Logger(FileController.name);
 

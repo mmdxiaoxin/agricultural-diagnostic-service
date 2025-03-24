@@ -4,7 +4,6 @@ import { CreateAiConfigsDto } from '@common/dto/ai-service/create-ai-configs.dto
 import { CreateAiServiceDto } from '@common/dto/ai-service/create-ai-service.dto';
 import { UpdateAiConfigsDto } from '@common/dto/ai-service/update-ai-configs.dto';
 import { UpdateAiServiceDto } from '@common/dto/ai-service/update-ai-service.dto';
-import { TypeormFilter } from '@common/filters/typeorm.filter';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -19,7 +18,6 @@ import {
   Post,
   Put,
   Query,
-  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -30,7 +28,6 @@ import { AiServiceService } from './ai-service.service';
 @Controller('ai-service')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
-@UseFilters(TypeormFilter)
 export class AiServiceController {
   constructor(private readonly aiService: AiServiceService) {}
 

@@ -1,11 +1,9 @@
-import { TypeormFilter } from '@common/filters/typeorm.filter';
-import { Controller, UseFilters } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { Menu } from './menu.entity';
 import { MenuService } from './menu.service';
 
 @Controller('menu')
-@UseFilters(TypeormFilter)
 export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 

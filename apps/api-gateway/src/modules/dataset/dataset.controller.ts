@@ -1,7 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
 import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
-import { TypeormFilter } from '@common/filters/typeorm.filter';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { ParseStringDatePipe } from '@common/pipe/string-date.pipe';
@@ -19,7 +18,6 @@ import {
   Put,
   Query,
   Req,
-  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -34,7 +32,6 @@ import { firstValueFrom, lastValueFrom } from 'rxjs';
 @Controller('dataset')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
-@UseFilters(TypeormFilter)
 export class DatasetController {
   constructor(
     @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,

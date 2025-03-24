@@ -1,5 +1,4 @@
 import { Roles } from '@common/decorator/roles.decorator';
-import { TypeormFilter } from '@common/filters/typeorm.filter';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -14,7 +13,6 @@ import {
   ParseIntPipe,
   Post,
   Put,
-  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -29,7 +27,6 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 @ApiTags('角色模块')
 @Controller('role')
 @UseGuards(AuthGuard)
-@UseFilters(TypeormFilter)
 export class RoleController {
   constructor(
     @Inject(USER_SERVICE_NAME) private readonly userClient: ClientProxy,
