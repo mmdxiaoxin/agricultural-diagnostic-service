@@ -77,4 +77,24 @@ export class AiServiceService {
 
     await this.aiServiceRepository.remove(aiService);
   }
+
+  // 复制AI服务
+  async copy(serviceId: number): Promise<AiService> {
+    const aiService = await this.aiServiceRepository.findOne({
+      where: { serviceId },
+      relations: ['aiServiceConfigs'],
+    });
+    if (!aiService) {
+      throw new RpcException({
+        code: 404,
+        message: 'AI Service not found',
+      });
+    }
+    aiService.serviceName = `${aiService.serviceName} - 复制`;
+    const newAiService = this.aiServiceRepository.create({
+      ...aiService,
+      serviceId: undefined,
+    });
+    return this.aiServiceRepository.save(newAiService);
+  }
 }

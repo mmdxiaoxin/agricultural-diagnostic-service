@@ -61,6 +61,12 @@ export class AiServiceController {
     return formatResponse(204, null, '删除成功');
   }
 
+  @MessagePattern({ cmd: 'ai-service.copy' })
+  async copy(@Payload() payload: number) {
+    await this.aiService.copy(payload);
+    return formatResponse(201, null, '复制成功');
+  }
+
   @MessagePattern({ cmd: 'ai-service.config.create' })
   async addConfig(
     @Payload() payload: { serviceId: number; dto: CreateAiConfigDto },

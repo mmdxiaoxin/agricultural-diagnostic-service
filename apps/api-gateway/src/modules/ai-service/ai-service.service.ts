@@ -44,6 +44,10 @@ export class AiServiceService {
     return this.diagnosisClient.send({ cmd: 'ai-service.remove' }, id);
   }
 
+  copyAi(id: number) {
+    return this.diagnosisClient.send({ cmd: 'ai-service.copy' }, id);
+  }
+
   addAiConfig(configId: number, dto: CreateAiConfigDto) {
     return this.diagnosisClient.send(
       { cmd: 'ai-service.config.create' },

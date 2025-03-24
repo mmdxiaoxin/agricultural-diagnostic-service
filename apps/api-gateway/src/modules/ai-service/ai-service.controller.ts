@@ -94,6 +94,19 @@ export class AiServiceController {
     return this.aiService.removeAi(serviceId);
   }
 
+  // 复制AI服务
+  @Post(':serviceId/copy')
+  @HttpCode(HttpStatus.CREATED)
+  async copy(
+    @Param(
+      'serviceId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
+  ) {
+    return this.aiService.copyAi(serviceId);
+  }
+
   // 增加AI服务配置
   @Post(':serviceId/config')
   @HttpCode(HttpStatus.CREATED)
