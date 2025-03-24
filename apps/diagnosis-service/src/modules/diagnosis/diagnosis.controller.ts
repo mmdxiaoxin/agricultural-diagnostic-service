@@ -34,14 +34,19 @@ export class DiagnosisController {
     return this.diagnosisService.getDiagnosisStatus(data.diagnosisId);
   }
 
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT })
+  async diagnosisSupportGet() {
+    return this.diagnosisService.diagnosisSupportGet();
+  }
+
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY })
   async diagnosisHistoryGet(@Payload() data: { userId: number }) {
     return this.diagnosisService.diagnosisHistoryGet(data.userId);
   }
 
-  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT })
-  async diagnosisSupportGet() {
-    return this.diagnosisService.diagnosisSupportGet();
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_DELETE })
+  async diagnosisHistoryDelete(@Payload() data: { id: number }) {
+    return this.diagnosisService.diagnosisHistoryDelete(data.id);
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_LIST })

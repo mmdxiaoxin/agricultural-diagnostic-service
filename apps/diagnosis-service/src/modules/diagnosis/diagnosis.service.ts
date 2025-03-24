@@ -189,6 +189,17 @@ export class DiagnosisService {
     return formatResponse(200, diagnosisHistory, '获取诊断历史记录成功');
   }
 
+  async diagnosisHistoryDelete(id: number) {
+    const diagnosis = await this.diagnosisRepository.findOne({
+      where: { id },
+    });
+    if (!diagnosis) {
+      throw new RpcException('未找到诊断记录');
+    }
+    await this.diagnosisRepository.remove(diagnosis);
+    return formatResponse(204, null, '删除诊断记录成功');
+  }
+
   async diagnosisSupportGet() {
     return formatResponse(
       200,

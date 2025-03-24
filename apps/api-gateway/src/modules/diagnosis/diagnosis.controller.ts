@@ -3,7 +3,9 @@ import { AuthGuard } from '@common/guards/auth.guard';
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -69,14 +71,26 @@ export class DiagnosisController {
     return this.diagnosisService.getDiagnosisStatus(id);
   }
 
+  @Get('support')
+  async diagnosisSupportGet() {
+    return this.diagnosisService.diagnosisSupportGet();
+  }
+
   @Get('history')
   async diagnosisHistoryGet(@Req() req: Request) {
     return this.diagnosisService.diagnosisHistoryGet(req.user.userId);
   }
 
-  @Get('support')
-  async diagnosisSupportGet() {
-    return this.diagnosisService.diagnosisSupportGet();
+  @Delete('history/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async diagnosisHistoryDelete(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.diagnosisService.diagnosisHistoryDelete(id);
   }
 
   @Get('history/list')

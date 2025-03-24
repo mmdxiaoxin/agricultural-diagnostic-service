@@ -2,9 +2,10 @@ export const DIAGNOSIS_MESSAGE_PATTERNS = {
   CREATE: 'diagnosis.create',
   START: 'diagnosis.start',
   STATUS: 'diagnosis.status',
-  HISTORY: 'diagnosis.history',
   SUPPORT: 'diagnosis.support',
+  HISTORY: 'diagnosis.history',
   HISTORY_LIST: 'diagnosis.history.list',
+  HISTORY_DELETE: 'diagnosis.history.delete',
 } as const;
 
 export type DiagnosisMessagePattern =

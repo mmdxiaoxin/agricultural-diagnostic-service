@@ -75,6 +75,13 @@ export class DiagnosisService {
     );
   }
 
+  diagnosisHistoryDelete(id: number) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_DELETE },
+      { id },
+    );
+  }
+
   diagnosisHistoryListGet(userId: number, page?: number, pageSize?: number) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_LIST },
