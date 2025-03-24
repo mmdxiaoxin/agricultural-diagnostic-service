@@ -2,6 +2,7 @@ import { Roles } from '@common/decorator/roles.decorator';
 import { CreateAiConfigDto } from '@common/dto/ai-service/create-ai-config.dto';
 import { CreateAiConfigsDto } from '@common/dto/ai-service/create-ai-configs.dto';
 import { CreateAiServiceDto } from '@common/dto/ai-service/create-ai-service.dto';
+import { UpdateAiConfigsDto } from '@common/dto/ai-service/update-ai-configs.dto';
 import { UpdateAiServiceDto } from '@common/dto/ai-service/update-ai-service.dto';
 import { TypeormFilter } from '@common/filters/typeorm.filter';
 import { AuthGuard } from '@common/guards/auth.guard';
@@ -149,6 +150,19 @@ export class AiServiceController {
     @Body() dto: CreateAiConfigDto,
   ) {
     return this.aiService.updateAiConfig(configId, dto);
+  }
+
+  // 批量更新AI服务配置
+  @Put(':serviceId/configs')
+  async updateConfigs(
+    @Param(
+      'serviceId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
+    @Body() dto: UpdateAiConfigsDto,
+  ) {
+    return this.aiService.updateAiConfigs(serviceId, dto);
   }
 
   // 删除AI服务配置

@@ -7,6 +7,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { AiConfigsService } from './services/ai-service-config.service';
 import { AiServiceService } from './services/ai-service.service';
+import { UpdateAiConfigsDto } from '@common/dto/ai-service/update-ai-configs.dto';
 
 @Controller()
 export class AiServiceController {
@@ -87,6 +88,14 @@ export class AiServiceController {
     @Payload() payload: { configId: number; dto: CreateAiConfigDto },
   ) {
     await this.aiConfigs.updateConfig(payload.configId, payload.dto);
+    return formatResponse(200, null, '更新成功');
+  }
+
+  @MessagePattern({ cmd: 'ai-service.configs.update' })
+  async updateConfigs(
+    @Payload() payload: { serviceId: number; dto: UpdateAiConfigsDto },
+  ) {
+    await this.aiConfigs.updateConfigs(payload.serviceId, payload.dto);
     return formatResponse(200, null, '更新成功');
   }
 
