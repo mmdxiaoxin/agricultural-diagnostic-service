@@ -75,10 +75,10 @@ export class DiagnosisService {
     );
   }
 
-  diagnosisHistoryDelete(id: number) {
+  diagnosisHistoryDelete(id: number, userId: number) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_DELETE },
-      { id },
+      { id, userId },
     );
   }
 

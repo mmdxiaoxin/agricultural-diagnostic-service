@@ -84,13 +84,14 @@ export class DiagnosisController {
   @Delete('history/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async diagnosisHistoryDelete(
+    @Req() req: Request,
     @Param(
       'id',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     id: number,
   ) {
-    return this.diagnosisService.diagnosisHistoryDelete(id);
+    return this.diagnosisService.diagnosisHistoryDelete(id, req.user.userId);
   }
 
   @Get('history/list')

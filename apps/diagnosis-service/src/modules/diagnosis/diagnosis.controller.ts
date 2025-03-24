@@ -45,8 +45,8 @@ export class DiagnosisController {
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_DELETE })
-  async diagnosisHistoryDelete(@Payload() data: { id: number }) {
-    return this.diagnosisService.diagnosisHistoryDelete(data.id);
+  async diagnosisHistoryDelete(@Payload() data: { id: number; userId }) {
+    return this.diagnosisService.diagnosisHistoryDelete(data.id, data.userId);
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_LIST })
