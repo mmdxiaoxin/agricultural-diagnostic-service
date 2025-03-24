@@ -3,6 +3,7 @@ import {
   DiagnosisHistory,
   File as FileEntity,
 } from '@app/database/entities';
+import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -56,7 +57,11 @@ export class DiagnosisService {
   }
 
   // 开始诊断数据
-  async startDiagnosis(diagnosisId: number, userId: number) {
+  async startDiagnosis(
+    diagnosisId: number,
+    userId: number,
+    dto: StartDiagnosisDto,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -81,7 +86,7 @@ export class DiagnosisService {
       await queryRunner.manager.save(diagnosis);
       // 获取服务配置
       const aiService = await this.aiServiceRepository.findOne({
-        where: { serviceId: 2 }, // TODO: 从配置中获取
+        where: { serviceId: dto.serviceId },
         relations: ['aiServiceConfigs'],
       });
       if (!aiService) {

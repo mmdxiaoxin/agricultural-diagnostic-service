@@ -1,4 +1,5 @@
 import { File as FileEntity } from '@app/database/entities';
+import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { DIAGNOSIS_MESSAGE_PATTERNS } from '@shared/constants/diagnosis-message-patterns';
@@ -42,12 +43,13 @@ export class DiagnosisService {
     );
   }
 
-  startDiagnosis(userId: number, id: number) {
+  startDiagnosis(userId: number, diagnosisId: number, dto: StartDiagnosisDto) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.START },
       {
-        diagnosisId: id,
+        diagnosisId,
         userId,
+        dto,
       },
     );
   }

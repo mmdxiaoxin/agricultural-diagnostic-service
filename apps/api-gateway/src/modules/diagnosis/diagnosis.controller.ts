@@ -1,4 +1,7 @@
+import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
+import { AuthGuard } from '@common/guards/auth.guard';
 import {
+  Body,
   Controller,
   Get,
   HttpStatus,
@@ -11,14 +14,13 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { AuthGuard } from '@common/guards/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
+import { MIME_TYPE } from '@shared/enum/mime.enum';
 import { Request } from 'express';
-import { DiagnosisService } from './diagnosis.service';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
-import { MIME_TYPE } from '@shared/enum/mime.enum';
+import { DiagnosisService } from './diagnosis.service';
 
 @ApiTags('病害诊断模块')
 @Controller('diagnosis')
@@ -46,9 +48,14 @@ export class DiagnosisController {
       'id',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
-    id: number,
+    diagnosisId: number,
+    @Body() dto: StartDiagnosisDto,
   ) {
-    return this.diagnosisService.startDiagnosis(req.user.userId, id);
+    return this.diagnosisService.startDiagnosis(
+      req.user.userId,
+      diagnosisId,
+      dto,
+    );
   }
 
   @Get(':id/status')

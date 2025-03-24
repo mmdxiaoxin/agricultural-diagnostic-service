@@ -2,6 +2,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DIAGNOSIS_MESSAGE_PATTERNS } from '@shared/constants/diagnosis-message-patterns';
 import { DiagnosisService } from './diagnosis.service';
+import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 
 @Controller()
 export class DiagnosisController {
@@ -14,9 +15,18 @@ export class DiagnosisController {
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.START })
   async startDiagnosis(
-    @Payload() data: { diagnosisId: number; userId: number },
+    @Payload()
+    payload: {
+      diagnosisId: number;
+      userId: number;
+      dto: StartDiagnosisDto;
+    },
   ) {
-    return this.diagnosisService.startDiagnosis(data.diagnosisId, data.userId);
+    return this.diagnosisService.startDiagnosis(
+      payload.diagnosisId,
+      payload.userId,
+      payload.dto,
+    );
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATUS })
