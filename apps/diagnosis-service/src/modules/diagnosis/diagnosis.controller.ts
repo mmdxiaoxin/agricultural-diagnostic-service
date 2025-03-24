@@ -16,32 +16,29 @@ export class DiagnosisController {
   async startDiagnosis(
     @Payload() data: { diagnosisId: number; userId: number },
   ) {
-    return await this.diagnosisService.startDiagnosis(
-      data.diagnosisId,
-      data.userId,
-    );
+    return this.diagnosisService.startDiagnosis(data.diagnosisId, data.userId);
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATUS })
   async getDiagnosisStatus(@Payload() data: { diagnosisId: number }) {
-    return await this.diagnosisService.getDiagnosisStatus(data.diagnosisId);
+    return this.diagnosisService.getDiagnosisStatus(data.diagnosisId);
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY })
   async diagnosisHistoryGet(@Payload() data: { userId: number }) {
-    return await this.diagnosisService.diagnosisHistoryGet(data.userId);
+    return this.diagnosisService.diagnosisHistoryGet(data.userId);
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT })
   async diagnosisSupportGet() {
-    return await this.diagnosisService.diagnosisSupportGet();
+    return this.diagnosisService.diagnosisSupportGet();
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_LIST })
   async diagnosisHistoryListGet(
     @Payload() data: { page?: number; pageSize?: number; userId: number },
   ) {
-    return await this.diagnosisService.diagnosisHistoryListGet(
+    return this.diagnosisService.diagnosisHistoryListGet(
       data.page,
       data.pageSize,
       data.userId,

@@ -152,7 +152,7 @@ export class DiagnosisService {
       diagnosis.diagnosisResult = response.data;
       await queryRunner.manager.save(diagnosis);
       await queryRunner.commitTransaction();
-      return { success: true, result: response.data };
+      return formatResponse(200, response.data, '开始诊断成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new RpcException({
@@ -173,10 +173,7 @@ export class DiagnosisService {
     if (!diagnosis) {
       throw new RpcException('未找到诊断记录');
     }
-    return {
-      success: true,
-      result: diagnosis,
-    };
+    return formatResponse(200, diagnosis, '获取诊断状态成功');
   }
 
   async diagnosisHistoryGet(userId: number) {
@@ -184,10 +181,7 @@ export class DiagnosisService {
       where: { createdBy: userId },
       order: { createdAt: 'DESC' },
     });
-    return {
-      success: true,
-      result: diagnosisHistory,
-    };
+    return formatResponse(200, diagnosisHistory, '获取诊断历史记录成功');
   }
 
   async diagnosisSupportGet() {
@@ -213,9 +207,10 @@ export class DiagnosisService {
       take: pageSize,
       skip: (page - 1) * pageSize,
     });
-    return {
-      success: true,
-      result: { list, total, page, pageSize },
-    };
+    return formatResponse(
+      200,
+      { list, total, page, pageSize },
+      '获取诊断历史记录成功',
+    );
   }
 }

@@ -64,7 +64,7 @@ export class DiagnosisController {
 
   @Get('history')
   async diagnosisHistoryGet(@Req() req: Request) {
-    return this.diagnosisService.diagnosisHistoryGet(req);
+    return this.diagnosisService.diagnosisHistoryGet(req.user.userId);
   }
 
   @Get('support')
@@ -78,6 +78,10 @@ export class DiagnosisController {
     @Query('page', ParseIntPipe) page?: number,
     @Query('pageSize', ParseIntPipe) pageSize?: number,
   ) {
-    return this.diagnosisService.diagnosisHistoryListGet(req, page, pageSize);
+    return this.diagnosisService.diagnosisHistoryListGet(
+      req.user.userId,
+      page,
+      pageSize,
+    );
   }
 }

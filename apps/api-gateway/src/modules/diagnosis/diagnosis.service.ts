@@ -47,74 +47,45 @@ export class DiagnosisService {
     return formatResponse(200, null, '上传成功');
   }
 
-  async startDiagnosis(req: Request, id: number) {
-    const { success, result } = await firstValueFrom(
-      this.diagnosisClient.send<{ success: boolean; result: any }>(
-        { cmd: DIAGNOSIS_MESSAGE_PATTERNS.START },
-        {
-          diagnosisId: id,
-          userId: req.user.userId,
-        },
-      ),
+  startDiagnosis(req: Request, id: number) {
+    return this.diagnosisClient.send<{ success: boolean; result: any }>(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.START },
+      {
+        diagnosisId: id,
+        userId: req.user.userId,
+      },
     );
-    return success
-      ? formatResponse(200, result, '开始诊断成功')
-      : formatResponse(500, null, result);
   }
 
-  async getDiagnosisStatus(id: number) {
-    const { success, result } = await firstValueFrom(
-      this.diagnosisClient.send<{ success: boolean; result: any }>(
-        { cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATUS },
-        { diagnosisId: id },
-      ),
+  getDiagnosisStatus(id: number) {
+    return this.diagnosisClient.send<{ success: boolean; result: any }>(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATUS },
+      { diagnosisId: id },
     );
-    return success
-      ? formatResponse(200, result, '获取诊断状态成功')
-      : formatResponse(500, null, result);
   }
 
-  async diagnosisHistoryGet(req: Request) {
-    const { success, result } = await firstValueFrom(
-      this.diagnosisClient.send<{ success: boolean; result: any }>(
-        { cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY },
-        { userId: req.user.userId },
-      ),
+  diagnosisHistoryGet(userId: number) {
+    return this.diagnosisClient.send<{ success: boolean; result: any }>(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY },
+      { userId },
     );
-    return success
-      ? formatResponse(200, result, '获取诊断历史记录成功')
-      : formatResponse(500, null, result);
   }
 
-  async diagnosisSupportGet() {
-    const { success, result } = await firstValueFrom(
-      this.diagnosisClient.send<{ success: boolean; result: any }>(
-        { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT },
-        {},
-      ),
+  diagnosisSupportGet() {
+    return this.diagnosisClient.send<{ success: boolean; result: any }>(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT },
+      {},
     );
-    return success
-      ? formatResponse(200, result, '获取诊断支持成功')
-      : formatResponse(500, null, result);
   }
 
-  async diagnosisHistoryListGet(
-    req: Request,
-    page?: number,
-    pageSize?: number,
-  ) {
-    const { success, result } = await firstValueFrom(
-      this.diagnosisClient.send<{ success: boolean; result: any }>(
-        { cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_LIST },
-        {
-          page,
-          pageSize,
-          userId: req.user.userId,
-        },
-      ),
+  diagnosisHistoryListGet(userId: number, page?: number, pageSize?: number) {
+    return this.diagnosisClient.send<{ success: boolean; result: any }>(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_LIST },
+      {
+        page,
+        pageSize,
+        userId,
+      },
     );
-    return success
-      ? formatResponse(200, result, '获取诊断历史记录成功')
-      : formatResponse(500, null, result);
   }
 }
