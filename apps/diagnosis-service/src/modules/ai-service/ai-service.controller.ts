@@ -100,8 +100,10 @@ export class AiServiceController {
   }
 
   @MessagePattern({ cmd: 'ai-service.config.remove' })
-  async removeConfig(@Payload() payload: number) {
-    await this.aiConfigs.removeConfig(payload);
+  async removeConfig(
+    @Payload() payload: { serviceId: number; configId: number },
+  ) {
+    await this.aiConfigs.removeConfig(payload.serviceId, payload.configId);
     return formatResponse(204, null, '删除成功');
   }
 }

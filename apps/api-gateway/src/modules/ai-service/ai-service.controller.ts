@@ -173,13 +173,13 @@ export class AiServiceController {
       'serviceId',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
-    _: number,
+    serviceId: number,
     @Param(
       'configId',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     configId: number,
   ) {
-    await this.aiService.removeAiConfig(configId);
+    return this.aiService.removeAiConfig(serviceId, configId);
   }
 }

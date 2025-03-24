@@ -1,15 +1,17 @@
 import { AiService, AiServiceConfig } from '@app/database/entities';
-import { Injectable } from '@nestjs/common';
+import { CreateAiConfigDto } from '@common/dto/ai-service/create-ai-config.dto';
+import { CreateAiConfigsDto } from '@common/dto/ai-service/create-ai-configs.dto';
+import { UpdateAiConfigDto } from '@common/dto/ai-service/update-ai-config.dto';
+import { UpdateAiConfigsDto } from '@common/dto/ai-service/update-ai-configs.dto';
+import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { CreateAiConfigDto } from '../../../../../../packages/common/src/dto/ai-service/create-ai-config.dto';
-import { CreateAiConfigsDto } from '../../../../../../packages/common/src/dto/ai-service/create-ai-configs.dto';
-import { UpdateAiConfigDto } from '../../../../../../packages/common/src/dto/ai-service/update-ai-config.dto';
-import { UpdateAiConfigsDto } from '@common/dto/ai-service/update-ai-configs.dto';
 
 @Injectable()
 export class AiConfigsService {
+  private readonly logger = new Logger(AiConfigsService.name);
+
   constructor(
     @InjectRepository(AiService)
     private aiServiceRepository: Repository<AiService>,
@@ -122,13 +124,51 @@ export class AiConfigsService {
   }
 
   // 删除AI服务配置
-  async removeConfig(configId: number) {
-    const config = await this.aiServiceConfigRepository.findOne({
-      where: { configId },
-    });
-    if (!config) {
-      throw new RpcException('AI服务配置不存在');
+  async removeConfig(serviceId: number, configId: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const service = await queryRunner.manager.findOne(
+        this.aiServiceRepository.target,
+        {
+          where: { serviceId },
+          relations: ['aiServiceConfigs'],
+        },
+      );
+
+      if (!service) {
+        throw new RpcException({
+          code: 404,
+          message: 'AI服务不存在',
+        });
+      }
+
+      const config = service.aiServiceConfigs.find(
+        (config) => config.configId === configId,
+      );
+
+      if (!config) {
+        throw new RpcException({
+          code: 404,
+          message: 'AI服务配置不存在',
+        });
+      }
+
+      // 使用事务删除
+      await queryRunner.manager.remove(
+        this.aiServiceConfigRepository.target,
+        config,
+      );
+
+      await queryRunner.commitTransaction();
+      this.logger.log(`删除AI服务配置成功: ${configId}`);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-    await this.aiServiceConfigRepository.remove(config);
   }
 }

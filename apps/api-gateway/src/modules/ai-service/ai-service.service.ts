@@ -13,75 +13,76 @@ export class AiServiceService {
     @Inject(DIAGNOSIS_SERVICE_NAME)
     private readonly diagnosisClient: ClientProxy,
   ) {}
-  async createAi(dto: CreateAiServiceDto) {
+
+  createAi(dto: CreateAiServiceDto) {
     return this.diagnosisClient.send({ cmd: 'ai-service.create' }, dto);
   }
 
-  async getAi() {
+  getAi() {
     return this.diagnosisClient.send({ cmd: 'ai-service.get' }, {});
   }
 
-  async getAiList(page: number, pageSize: number) {
+  getAiList(page: number, pageSize: number) {
     return this.diagnosisClient.send(
       { cmd: 'ai-service.get.list' },
       { page, pageSize },
     );
   }
 
-  async getAiById(id: number) {
+  getAiById(id: number) {
     return this.diagnosisClient.send({ cmd: 'ai-service.get.byId' }, id);
   }
 
-  async updateAi(serviceId: number, dto: UpdateAiServiceDto) {
+  updateAi(serviceId: number, dto: UpdateAiServiceDto) {
     return this.diagnosisClient.send(
       { cmd: 'ai-service.update' },
       { serviceId, dto },
     );
   }
 
-  async removeAi(id: number) {
+  removeAi(id: number) {
     return this.diagnosisClient.send({ cmd: 'ai-service.remove' }, id);
   }
 
-  async addAiConfig(configId: number, dto: CreateAiConfigDto) {
+  addAiConfig(configId: number, dto: CreateAiConfigDto) {
     return this.diagnosisClient.send(
       { cmd: 'ai-service.config.create' },
       { configId, dto },
     );
   }
 
-  async addAiConfigs(configId: number, dto: CreateAiConfigsDto) {
+  addAiConfigs(configId: number, dto: CreateAiConfigsDto) {
     return this.diagnosisClient.send(
       { cmd: 'ai-service.configs.create' },
       { configId, dto },
     );
   }
 
-  async getAiConfigs(configId: number) {
+  getAiConfigs(configId: number) {
     return this.diagnosisClient.send(
       { cmd: 'ai-service.configs.get' },
       configId,
     );
   }
 
-  async updateAiConfig(configId: number, dto: CreateAiConfigDto) {
+  updateAiConfig(configId: number, dto: CreateAiConfigDto) {
     return this.diagnosisClient.send(
       { cmd: 'ai-service.config.update' },
       { configId, dto },
     );
   }
 
-  async updateAiConfigs(serviceId: number, dto: UpdateAiConfigsDto) {
+  updateAiConfigs(serviceId: number, dto: UpdateAiConfigsDto) {
     return this.diagnosisClient.send(
       { cmd: 'ai-service.configs.update' },
       { serviceId, dto },
     );
   }
 
-  async removeAiConfig(configId: number) {
+  removeAiConfig(serviceId: number, configId: number) {
     return this.diagnosisClient.send(
       { cmd: 'ai-service.config.remove' },
-      configId,
+      { serviceId, configId },
     );
   }
 }
