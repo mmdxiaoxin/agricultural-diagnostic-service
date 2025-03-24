@@ -278,7 +278,7 @@ export class FileController {
 
       // 设定 HTTP 头信息
       res.set({
-        'Content-Disposition': `attachment; filename="${fileMeta.originalFileName}"`,
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(fileMeta.originalFileName)}"`,
         'Content-Type': fileMeta.fileType || 'application/octet-stream',
       });
 
