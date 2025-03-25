@@ -63,6 +63,7 @@ export class DiagnosisService {
     diagnosisId: number,
     userId: number,
     dto: StartDiagnosisDto,
+    token: string,
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -150,16 +151,26 @@ export class DiagnosisService {
       const fileBlob = new Blob([fileStream]);
       const formData = new FormData();
       formData.append('image', fileBlob, file.originalFileName);
-      const response = await axios.post(url, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      diagnosis.status = Status.COMPLETED;
-      diagnosis.diagnosisResult = response.data;
-      await queryRunner.manager.save(diagnosis);
-      await queryRunner.commitTransaction();
-      return formatResponse(200, response.data, '开始诊断成功');
+      try {
+        const response = await axios.post<{
+          predictions: object[];
+        }>(url, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        diagnosis.status = Status.COMPLETED;
+        diagnosis.diagnosisResult = response.data.predictions;
+        await queryRunner.manager.save(diagnosis);
+        await queryRunner.commitTransaction();
+        return response.data;
+      } catch (error) {
+        diagnosis.status = Status.FAILED;
+        await queryRunner.manager.save(diagnosis);
+        await queryRunner.commitTransaction();
+        return formatResponse(502, error, '诊断失败');
+      }
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new RpcException({

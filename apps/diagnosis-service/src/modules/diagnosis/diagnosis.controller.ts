@@ -20,12 +20,14 @@ export class DiagnosisController {
       diagnosisId: number;
       userId: number;
       dto: StartDiagnosisDto;
+      token: string;
     },
   ) {
     return this.diagnosisService.startDiagnosis(
       payload.diagnosisId,
       payload.userId,
       payload.dto,
+      payload.token,
     );
   }
 

@@ -43,13 +43,19 @@ export class DiagnosisService {
     );
   }
 
-  startDiagnosis(userId: number, diagnosisId: number, dto: StartDiagnosisDto) {
+  startDiagnosis(
+    userId: number,
+    diagnosisId: number,
+    dto: StartDiagnosisDto,
+    token: string,
+  ) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.START },
       {
         diagnosisId,
         userId,
         dto,
+        token,
       },
     );
   }
