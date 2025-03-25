@@ -123,6 +123,7 @@ export enum MIME_TYPE {
   TXT = 'text/plain',
   CSV = 'text/csv',
   ZIP = 'application/zip',
+  XZip = 'application/x-zip-compressed',
   TAR = 'application/x-tar',
   GZ = 'application/gzip',
   JSON = 'application/json',

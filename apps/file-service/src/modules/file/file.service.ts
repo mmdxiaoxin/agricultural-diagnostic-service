@@ -391,21 +391,22 @@ export class FileService {
 
     const imageTypes = getFileType('image');
     const videoTypes = getFileType('video');
-    const appTypes = getFileType('app');
+    const archiveTypes = getFileType('archive');
     const audioTypes = getFileType('audio');
     const docTypes = getFileType('application');
     const otherTypes = getFileType('other');
 
     try {
-      const [total, image, video, app, audio, docs, other] = await Promise.all([
-        computeFileSizeByType(userId, []),
-        computeFileSizeByType(userId, imageTypes),
-        computeFileSizeByType(userId, videoTypes),
-        computeFileSizeByType(userId, appTypes),
-        computeFileSizeByType(userId, audioTypes),
-        computeFileSizeByType(userId, docTypes),
-        computeFileSizeByType(userId, otherTypes),
-      ]);
+      const [total, image, video, archive, audio, docs, other] =
+        await Promise.all([
+          computeFileSizeByType(userId, []),
+          computeFileSizeByType(userId, imageTypes),
+          computeFileSizeByType(userId, videoTypes),
+          computeFileSizeByType(userId, archiveTypes),
+          computeFileSizeByType(userId, audioTypes),
+          computeFileSizeByType(userId, docTypes),
+          computeFileSizeByType(userId, otherTypes),
+        ]);
 
       return {
         success: true,
@@ -413,7 +414,7 @@ export class FileService {
           total: total || { used: 0, last_updated: null },
           image: image || { used: 0, last_updated: null },
           video: video || { used: 0, last_updated: null },
-          app: app || { used: 0, last_updated: null },
+          archive: archive || { used: 0, last_updated: null },
           audio: audio || { used: 0, last_updated: null },
           docs: docs || { used: 0, last_updated: null },
           other: other || { used: 0, last_updated: null },

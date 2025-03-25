@@ -15,6 +15,8 @@ export const getFileType = (type: string): MIMETypeValue[] => {
       return [...Object.values(MIME_TYPE.Application)];
     case 'audio':
       return [...Object.values(MIME_TYPE.Audio)];
+    case 'archive':
+      return [...Object.values(MIME_TYPE.Archive)];
     case 'other':
       return [
         ...Object.values(MIME_TYPE.Other),
