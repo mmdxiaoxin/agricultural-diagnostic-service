@@ -155,7 +155,7 @@ export class FileController {
 
   // 批量文件下载
   @Post('download')
-  @Roles(Role.Admin, Role.Expert)
+  @Roles(Role.Admin, Role.Expert, Role.User)
   @UseGuards(AuthGuard, RolesGuard, FilesGuard)
   async downloadFiles(
     @Body() _: DownloadFilesDto,
