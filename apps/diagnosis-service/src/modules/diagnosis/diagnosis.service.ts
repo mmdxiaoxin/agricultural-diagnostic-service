@@ -153,7 +153,9 @@ export class DiagnosisService {
       formData.append('image', fileBlob, file.originalFileName);
       try {
         const response = await axios.post<{
-          predictions: object[];
+          code: number;
+          data: { predictions: object[] };
+          message: string;
         }>(url, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -161,7 +163,7 @@ export class DiagnosisService {
           },
         });
         diagnosis.status = Status.COMPLETED;
-        diagnosis.diagnosisResult = response.data.predictions;
+        diagnosis.diagnosisResult = response.data.data;
         await queryRunner.manager.save(diagnosis);
         await queryRunner.commitTransaction();
         return response.data;
