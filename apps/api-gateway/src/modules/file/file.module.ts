@@ -4,16 +4,18 @@ import { JwtModule } from '@nestjs/jwt';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigEnum } from '@shared/enum/config.enum';
 import {
+  DOWNLOAD_SERVICE_HOST,
   DOWNLOAD_SERVICE_NAME,
   DOWNLOAD_SERVICE_TCP_PORT,
+  FILE_SERVICE_HOST,
   FILE_SERVICE_NAME,
   FILE_SERVICE_TCP_PORT,
+  UPLOAD_SERVICE_HOST,
   UPLOAD_SERVICE_NAME,
   UPLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { FileController } from './file.controller';
 import { FileService } from './file.service';
-import { FileOperationService } from './services/file-operation.service';
 
 @Module({
   imports: [
@@ -33,22 +35,25 @@ import { FileOperationService } from './services/file-operation.service';
       {
         name: UPLOAD_SERVICE_NAME,
         transport: Transport.TCP,
-        options: { host: 'localhost', port: UPLOAD_SERVICE_TCP_PORT },
+        options: { host: UPLOAD_SERVICE_HOST, port: UPLOAD_SERVICE_TCP_PORT },
       },
       {
         name: FILE_SERVICE_NAME,
         transport: Transport.TCP,
-        options: { host: 'localhost', port: FILE_SERVICE_TCP_PORT },
+        options: { host: FILE_SERVICE_HOST, port: FILE_SERVICE_TCP_PORT },
       },
       {
         name: DOWNLOAD_SERVICE_NAME,
         transport: Transport.TCP,
-        options: { host: 'localhost', port: DOWNLOAD_SERVICE_TCP_PORT },
+        options: {
+          host: DOWNLOAD_SERVICE_HOST,
+          port: DOWNLOAD_SERVICE_TCP_PORT,
+        },
       },
     ]),
   ],
-  providers: [FileOperationService, FileService],
+  providers: [FileService],
   controllers: [FileController],
-  exports: [FileOperationService, ClientsModule],
+  exports: [ClientsModule],
 })
 export class FileModule {}

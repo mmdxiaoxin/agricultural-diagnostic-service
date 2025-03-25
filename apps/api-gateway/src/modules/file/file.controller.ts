@@ -1,4 +1,13 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
+import { CreateTempLinkDto } from '@common/dto/file/create-link.dto';
+import { CreateTaskDto } from '@common/dto/file/create-task.dto';
+import { DownloadFilesDto } from '@common/dto/file/download-file.dto';
+import {
+  UpdateFileDto,
+  UpdateFilesAccessDto,
+} from '@common/dto/file/update-file.dto';
+import { UploadChunkDto } from '@common/dto/file/upload-chunk.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
@@ -9,8 +18,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Inject,
-  Logger,
   Param,
   ParseIntPipe,
   Post,
@@ -22,49 +29,20 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
-import {
-  DOWNLOAD_SERVICE_NAME,
-  FILE_SERVICE_NAME,
-  UPLOAD_SERVICE_NAME,
-} from 'config/microservice.config';
 import { Request, Response } from 'express';
-import { Observable } from 'rxjs';
-
-import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
-import { CreateTempLinkDto } from '@common/dto/file/create-link.dto';
-import { CreateTaskDto } from '@common/dto/file/create-task.dto';
-import { DownloadFilesDto } from '@common/dto/file/download-file.dto';
-import {
-  UpdateFileDto,
-  UpdateFilesAccessDto,
-} from '@common/dto/file/update-file.dto';
-import { UploadChunkDto } from '@common/dto/file/upload-chunk.dto';
 import { FileGuard } from '../file/guards/file.guard';
 import { FileService } from './file.service';
 import { FilesGuard } from './guards/files.guard';
 import { FileSizeValidationPipe } from './pipe/file-size.pipe';
 import { ParseFileTypePipe } from './pipe/type.pipe';
 
-export interface DownloadService {
-  // 定义一个接收 DownloadRequest，返回流式数据的接口
-  downloadFile(data: { fileId: number }): Observable<{ data: Buffer }>;
-}
-
 @ApiTags('文件模块')
 @Controller('file')
 export class FileController {
-  private readonly logger = new Logger(FileController.name);
-
-  constructor(
-    @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
-    @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
-    @Inject(DOWNLOAD_SERVICE_NAME) private readonly downloadClient: ClientProxy,
-    private readonly fileService: FileService,
-  ) {}
+  constructor(private readonly fileService: FileService) {}
 
   // 获取空间使用信息
   @Get('disk-usage')
