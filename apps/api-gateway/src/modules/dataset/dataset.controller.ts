@@ -11,7 +11,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Inject,
   Param,
   ParseIntPipe,
   Post,
@@ -20,24 +19,18 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
-import { formatResponse } from '@shared/helpers/response.helper';
-import { FILE_SERVICE_NAME } from 'config/microservice.config';
 import { Request } from 'express';
-import { firstValueFrom, lastValueFrom } from 'rxjs';
+import { DatasetService } from './dataset.service';
 
 @ApiTags('数据集管理模块')
 @Controller('dataset')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
 export class DatasetController {
-  constructor(
-    @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
-  ) {}
+  constructor(private readonly datasetService: DatasetService) {}
 
-  // 获取数据集列表
   @Get('list')
   async datasetsListGet(
     @Req() req: Request,
@@ -49,43 +42,24 @@ export class DatasetController {
     @Query('updatedStart', ParseStringDatePipe) updatedStart?: string,
     @Query('updatedEnd', ParseStringDatePipe) updatedEnd?: string,
   ) {
-    const response = await lastValueFrom(
-      this.fileClient.send(
-        { cmd: 'dataset.get.list' },
-        {
-          page,
-          pageSize,
-          name,
-          createdStart,
-          createdEnd,
-          updatedStart,
-          updatedEnd,
-          userId: req.user.userId,
-        },
-      ),
-    );
-    return formatResponse(200, response?.result, '获取数据集列表成功');
+    return this.datasetService.getDatasetList({
+      page,
+      pageSize,
+      name,
+      createdStart,
+      createdEnd,
+      updatedStart,
+      updatedEnd,
+      userId: req.user.userId,
+    });
   }
 
-  // 创建数据集
   @Post('create')
   @HttpCode(HttpStatus.CREATED)
   async createDataset(@Req() req: Request, @Body() dto: CreateDatasetDto) {
-    const response = await lastValueFrom(
-      this.fileClient.send(
-        {
-          cmd: 'dataset.create',
-        },
-        {
-          userId: req.user.userId,
-          dto,
-        },
-      ),
-    );
-    return formatResponse(201, response?.result, '创建数据集成功');
+    return this.datasetService.createDataset(req.user.userId, dto);
   }
 
-  // 获取数据集详情
   @Get(':datasetId')
   async getDatasetDetail(
     @Param(
@@ -94,20 +68,9 @@ export class DatasetController {
     )
     datasetId: number,
   ) {
-    const response = await lastValueFrom(
-      this.fileClient.send(
-        {
-          cmd: 'dataset.detail',
-        },
-        {
-          datasetId,
-        },
-      ),
-    );
-    return formatResponse(200, response?.result, '获取数据集详情成功');
+    return this.datasetService.getDatasetDetail(datasetId);
   }
 
-  // 更新数据集
   @Put(':datasetId')
   async updateDataset(
     @Param(
@@ -118,22 +81,9 @@ export class DatasetController {
     @Req() req: Request,
     @Body() dto: UpdateDatasetDto,
   ) {
-    const response = await lastValueFrom(
-      this.fileClient.send(
-        {
-          cmd: 'dataset.update',
-        },
-        {
-          datasetId,
-          userId: req.user.userId,
-          dto,
-        },
-      ),
-    );
-    return formatResponse(200, response?.result, '更新数据集成功');
+    return this.datasetService.updateDataset(datasetId, req.user.userId, dto);
   }
 
-  // 删除数据集
   @Delete(':datasetId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDataset(
@@ -144,17 +94,6 @@ export class DatasetController {
     datasetId: number,
     @Req() req: Request,
   ) {
-    await firstValueFrom(
-      this.fileClient.send(
-        {
-          cmd: 'dataset.delete',
-        },
-        {
-          datasetId,
-          userId: req.user.userId,
-        },
-      ),
-    );
-    return formatResponse(204, null, '删除数据集成功');
+    return this.datasetService.deleteDataset(datasetId, req.user.userId);
   }
 }
