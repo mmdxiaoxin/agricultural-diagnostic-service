@@ -1,29 +1,19 @@
-import {
-  AiService,
-  AiServiceAccessLog,
-  AiServiceConfig,
-  AiServiceLog,
-} from '@app/database/entities';
+import { AiService, AiServiceConfig } from '@app/database/entities';
 import { CreateAiServiceDto } from '@common/dto/ai-service/create-ai-service.dto';
 import { UpdateAiServiceDto } from '@common/dto/ai-service/update-ai-service.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+
 @Injectable()
 export class AiServiceService {
   constructor(
     @InjectRepository(AiService)
     private aiServiceRepository: Repository<AiService>,
 
-    @InjectRepository(AiServiceLog)
-    private aiServiceLogRepository: Repository<AiServiceLog>,
-
     @InjectRepository(AiServiceConfig)
     private aiServiceConfigRepository: Repository<AiServiceConfig>,
-
-    @InjectRepository(AiServiceAccessLog)
-    private aiServiceAccessLogRepository: Repository<AiServiceAccessLog>,
 
     private dataSource: DataSource,
   ) {}
@@ -52,7 +42,7 @@ export class AiServiceService {
   async getAIById(serviceId: number) {
     return this.aiServiceRepository.findOne({
       where: { serviceId },
-      relations: ['aiServiceLogs', 'aiServiceConfigs', 'aiServiceAccessLogs'],
+      relations: ['aiServiceConfigs'],
     });
   }
 
@@ -76,15 +66,10 @@ export class AiServiceService {
     await queryRunner.startTransaction();
 
     try {
-      // 查找服务及其关联数据
+      // 查找服务及其配置
       const aiService = await queryRunner.manager.findOne(AiService, {
         where: { serviceId },
-        relations: [
-          'aiServiceLogs',
-          'aiServiceConfigs',
-          'aiServiceAccessLogs',
-          'supportModels',
-        ],
+        relations: ['aiServiceConfigs'],
       });
 
       if (!aiService) {
@@ -94,24 +79,9 @@ export class AiServiceService {
         });
       }
 
-      // 删除关联的日志记录
-      if (aiService.aiServiceLogs?.length) {
-        await queryRunner.manager.remove(aiService.aiServiceLogs);
-      }
-
       // 删除关联的配置记录
       if (aiService.aiServiceConfigs?.length) {
         await queryRunner.manager.remove(aiService.aiServiceConfigs);
-      }
-
-      // 删除关联的访问日志记录
-      if (aiService.aiServiceAccessLogs?.length) {
-        await queryRunner.manager.remove(aiService.aiServiceAccessLogs);
-      }
-
-      // 清除与模型的关联关系
-      if (aiService.supportModels?.length) {
-        aiService.supportModels = [];
       }
 
       // 删除服务本身
@@ -140,7 +110,7 @@ export class AiServiceService {
       // 查找原始服务及其配置
       const originalService = await queryRunner.manager.findOne(AiService, {
         where: { serviceId },
-        relations: ['aiServiceConfigs', 'supportModels'],
+        relations: ['aiServiceConfigs'],
       });
 
       if (!originalService) {
@@ -167,19 +137,13 @@ export class AiServiceService {
         const newConfigs = originalService.aiServiceConfigs.map((config) =>
           queryRunner.manager.create(AiServiceConfig, {
             ...config,
-            id: undefined,
+            configId: undefined,
             service: savedService,
             createdAt: new Date(),
             updatedAt: new Date(),
           }),
         );
         await queryRunner.manager.save(newConfigs);
-      }
-
-      // 复制模型关联关系
-      if (originalService.supportModels?.length) {
-        savedService.supportModels = originalService.supportModels;
-        await queryRunner.manager.save(savedService);
       }
 
       await queryRunner.commitTransaction();

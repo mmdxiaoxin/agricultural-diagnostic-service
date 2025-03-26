@@ -1,5 +1,5 @@
 import { DatabaseModule } from '@app/database';
-import { AIModel, DiagnosisHistory, Plant } from '@app/database/entities';
+import { DiagnosisHistory } from '@app/database/entities';
 import { FileOperationModule } from '@app/file-operation';
 import { HttpService } from '@common/services/http.service';
 import { Module } from '@nestjs/common';
@@ -17,7 +17,7 @@ import { DiagnosisService } from './services/diagnosis.service';
 @Module({
   imports: [
     FileOperationModule,
-    DatabaseModule.forFeature([DiagnosisHistory, AIModel, Plant]),
+    DatabaseModule.forFeature([DiagnosisHistory]),
     ClientsModule.register([
       {
         name: DOWNLOAD_SERVICE_NAME,
