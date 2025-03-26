@@ -1,4 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CreateRoleDto } from '@common/dto/role/create-role.dto';
+import { UpdateRoleDto } from '@common/dto/role/update-role.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -21,8 +23,6 @@ import { Role } from '@shared/enum/role.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { defaultIfEmpty, lastValueFrom } from 'rxjs';
-import { CreateRoleDto } from './dto/create-role.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
 
 @ApiTags('角色模块')
 @Controller('role')
