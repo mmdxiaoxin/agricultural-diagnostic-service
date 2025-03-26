@@ -54,6 +54,27 @@ export class DatasetController {
     });
   }
 
+  @Get('public/list')
+  async publicDatasetsListGet(
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
+    @Query('name') name?: string,
+    @Query('createdStart', ParseStringDatePipe) createdStart?: string,
+    @Query('createdEnd', ParseStringDatePipe) createdEnd?: string,
+    @Query('updatedStart', ParseStringDatePipe) updatedStart?: string,
+    @Query('updatedEnd', ParseStringDatePipe) updatedEnd?: string,
+  ) {
+    return this.datasetService.getPublicDatasetList({
+      page,
+      pageSize,
+      name,
+      createdStart,
+      createdEnd,
+      updatedStart,
+      updatedEnd,
+    });
+  }
+
   @Post('create')
   @HttpCode(HttpStatus.CREATED)
   async createDataset(@Req() req: Request, @Body() dto: CreateDatasetDto) {

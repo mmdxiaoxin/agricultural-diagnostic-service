@@ -30,6 +30,27 @@ export class DatasetController {
     });
   }
 
+  // 获取公共数据集列表
+  @MessagePattern({ cmd: 'dataset.get.public.list' })
+  async publicDatasetsListGet(@Payload() payload: any) {
+    const {
+      page = 1,
+      pageSize = 10,
+      name,
+      createdStart,
+      createdEnd,
+      updatedStart,
+      updatedEnd,
+    } = payload;
+    return this.manageService.publicDatasetsListGet(page, pageSize, {
+      name,
+      createdStart,
+      createdEnd,
+      updatedStart,
+      updatedEnd,
+    });
+  }
+
   // 创建数据集
   @MessagePattern({ cmd: 'dataset.create' })
   async createDataset(
