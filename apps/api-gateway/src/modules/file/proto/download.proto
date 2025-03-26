@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package download;
+
+// 下载服务
+service DownloadService {
+  // 下载单个文件
+  rpc DownloadFile (DownloadFileRequest) returns (DownloadFileResponse) {}
+  // 下载多个文件（打包为zip）
+  rpc DownloadFiles (DownloadFilesRequest) returns (DownloadFilesResponse) {}
+}
+
+// 文件元数据
+message FileMeta {
+  int32 id = 1;
+  string originalFileName = 2;
+  string filePath = 3;
+  int64 fileSize = 4;
+  string fileType = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+}
+
+// 下载单个文件请求
+message DownloadFileRequest {
+  FileMeta fileMeta = 1;
+}
+
+// 下载单个文件响应
+message DownloadFileResponse {
+  bool success = 1;
+  bytes data = 2;
+  string message = 3;
+}
+
+// 下载多个文件请求
+message DownloadFilesRequest {
+  repeated FileMeta filesMeta = 1;
+}
+
+// 下载多个文件响应
+message DownloadFilesResponse {
+  bool success = 1;
+  bytes data = 2;
+  string message = 3;
+} 

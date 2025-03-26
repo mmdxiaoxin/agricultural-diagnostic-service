@@ -1,3 +1,4 @@
+import { File as FileEntity } from '@app/database/entities';
 import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
 import { CreateTaskDto } from '@common/dto/file/create-task.dto';
 import {
@@ -5,6 +6,7 @@ import {
   UpdateFilesAccessDto,
 } from '@common/dto/file/update-file.dto';
 import { UploadChunkDto } from '@common/dto/file/upload-chunk.dto';
+import { IDownloadService } from '@common/types/download/download.types';
 import {
   HttpException,
   HttpStatus,
@@ -13,11 +15,9 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { DOWNLOAD_MESSAGE_PATTERNS } from '@shared/constants/download-message-patterns';
+import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
 import {
-  DOWNLOAD_SERVICE_NAME,
   FILE_SERVICE_NAME,
   UPLOAD_SERVICE_NAME,
 } from 'config/microservice.config';
@@ -32,12 +32,18 @@ import {
 @Injectable()
 export class FileService {
   private readonly logger = new Logger(FileService.name);
+  private downloadService: IDownloadService;
 
   constructor(
     @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
     @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
-    @Inject(DOWNLOAD_SERVICE_NAME) private readonly downloadClient: ClientProxy,
+    @Inject('DOWNLOAD_SERVICE') private readonly downloadClient: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    this.downloadService =
+      this.downloadClient.getService<IDownloadService>('DownloadService');
+  }
 
   async getDiskUsage(userId: number) {
     const response = await lastValueFrom(
@@ -160,13 +166,10 @@ export class FileService {
     return formatResponse(200, rpcResponse?.result, '上传成功');
   }
 
-  async downloadFile(fileMeta: any, res: Response) {
+  async downloadFile(fileMeta: FileEntity, res: Response) {
     try {
       const response = await lastValueFrom(
-        this.downloadClient.send(
-          { cmd: DOWNLOAD_MESSAGE_PATTERNS.FILE_DOWNLOAD },
-          { fileMeta },
-        ),
+        this.downloadService.downloadFile({ fileMeta }),
       );
 
       if (!response.success || !response.data) {
@@ -193,21 +196,33 @@ export class FileService {
     }
   }
 
-  async downloadFiles(filesMeta: any[], res: Response) {
-    const response = await lastValueFrom(
-      this.downloadClient.send({ cmd: 'files.download' }, { filesMeta }),
-    );
-    if (!response.success || !response.data) {
-      throw new HttpException(
-        response.message || '文件获取失败',
-        HttpStatus.NOT_FOUND,
+  async downloadFiles(filesMeta: FileEntity[], res: Response) {
+    try {
+      const response = await lastValueFrom(
+        this.downloadService.downloadFiles({ filesMeta }),
       );
+
+      if (!response.success || !response.data) {
+        throw new HttpException(
+          response.message || '文件获取失败',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      const fileBuffer = Buffer.isBuffer(response.data)
+        ? response.data
+        : Buffer.from(response.data);
+
+      res.set({
+        'Content-Type': 'application/zip',
+        'Content-Length': fileBuffer.length.toString(),
+      });
+
+      res.send(fileBuffer);
+    } catch (err) {
+      this.logger.error(`下载失败: ${err.message}`);
+      throw new InternalServerErrorException('文件下载失败');
     }
-    const fileBuffer = Buffer.from(response.data, 'base64');
-    res.set({
-      'Content-Type': 'application/zip',
-    });
-    res.end(fileBuffer);
   }
 
   async updateFile(dto: UpdateFileDto, userId: number) {

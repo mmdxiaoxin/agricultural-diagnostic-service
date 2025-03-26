@@ -13,9 +13,11 @@ import {
   UPLOAD_SERVICE_HOST,
   UPLOAD_SERVICE_NAME,
   UPLOAD_SERVICE_TCP_PORT,
+  DOWNLOAD_SERVICE_GRPC_PORT,
 } from 'config/microservice.config';
 import { FileController } from './file.controller';
 import { FileService } from './file.service';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -48,6 +50,23 @@ import { FileService } from './file.service';
         options: {
           host: DOWNLOAD_SERVICE_HOST,
           port: DOWNLOAD_SERVICE_TCP_PORT,
+        },
+      },
+      {
+        name: 'DOWNLOAD_SERVICE',
+        transport: Transport.GRPC,
+        options: {
+          package: 'download',
+          protoPath: join(__dirname, 'modules/file/proto/download.proto'),
+          url: `${DOWNLOAD_SERVICE_HOST}:${DOWNLOAD_SERVICE_GRPC_PORT}`,
+          loader: {
+            keepCase: true,
+            longs: String,
+            enums: String,
+            defaults: true,
+            oneofs: true,
+            arrays: true,
+          },
         },
       },
     ]),

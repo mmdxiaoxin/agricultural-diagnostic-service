@@ -1,4 +1,5 @@
 import { File as FileEntity } from '@app/database/entities';
+import { Observable } from 'rxjs';
 
 // 请求类型
 export interface DownloadFileRequest {
@@ -24,6 +25,8 @@ export interface DownloadFilesResponse {
 
 // 服务接口定义
 export interface IDownloadService {
-  downloadFile(request: DownloadFileRequest): Promise<DownloadFileResponse>;
-  downloadFiles(request: DownloadFilesRequest): Promise<DownloadFilesResponse>;
+  downloadFile(request: DownloadFileRequest): Observable<DownloadFileResponse>;
+  downloadFiles(
+    request: DownloadFilesRequest,
+  ): Observable<DownloadFilesResponse>;
 }
