@@ -19,7 +19,7 @@ export class DownloadService {
       for await (const chunk of fileStream) {
         fileData = Buffer.concat([fileData, chunk]);
       }
-      return { success: true, data: fileData.toString('base64') };
+      return { success: true, data: fileData, message: '下载成功' };
     } catch (err) {
       this.logger.error(`下载失败: ${err.message}`);
       return { success: false, message: '文件下载失败' };
@@ -56,7 +56,7 @@ export class DownloadService {
         zip.finalize();
       });
 
-      return { success: true, data: zipBuffer.toString('base64') };
+      return { success: true, data: zipBuffer, message: '打包成功' };
     } catch (err) {
       this.logger.error(`打包失败: ${err.message}`);
       return { success: false, message: '文件打包失败' };

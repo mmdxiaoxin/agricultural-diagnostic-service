@@ -156,28 +156,28 @@ export class DiagnosisService {
   }
 
   private async getFileMeta(fileId: number): Promise<FileEntity> {
-    const { success, result: file } = await lastValueFrom(
+    const { success, result: fileMeta } = await lastValueFrom(
       this.fileClient.send(
         { cmd: FILE_MESSAGE_PATTERNS.GET_FILE_BY_ID },
         { fileId },
       ),
     );
 
-    if (!success || !file) {
+    if (!success || !fileMeta) {
       throw new RpcException({
         code: 500,
         message: '获取文件失败',
       });
     }
 
-    return file;
+    return fileMeta;
   }
 
-  private async downloadFile(file: FileEntity): Promise<Buffer> {
+  private async downloadFile(fileMeta: FileEntity): Promise<Buffer> {
     const { success, data } = await lastValueFrom(
       this.downloadClient.send(
         { cmd: DOWNLOAD_MESSAGE_PATTERNS.FILE_DOWNLOAD },
-        { fileMeta: file },
+        { fileMeta },
       ),
     );
 
@@ -188,7 +188,8 @@ export class DiagnosisService {
       });
     }
 
-    return Buffer.from(data, 'base64');
+    // 直接返回 Buffer 数据
+    return Buffer.isBuffer(data) ? data : Buffer.from(data);
   }
 
   // 获取诊断服务状态

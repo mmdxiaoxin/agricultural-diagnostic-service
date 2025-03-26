@@ -14,6 +14,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { DOWNLOAD_MESSAGE_PATTERNS } from '@shared/constants/download-message-patterns';
 import { formatResponse } from '@shared/helpers/response.helper';
 import {
   DOWNLOAD_SERVICE_NAME,
@@ -162,7 +163,10 @@ export class FileService {
   async downloadFile(fileMeta: any, res: Response) {
     try {
       const response = await lastValueFrom(
-        this.downloadClient.send({ cmd: 'file.download' }, { fileMeta }),
+        this.downloadClient.send(
+          { cmd: DOWNLOAD_MESSAGE_PATTERNS.FILE_DOWNLOAD },
+          { fileMeta },
+        ),
       );
 
       if (!response.success || !response.data) {
@@ -172,14 +176,19 @@ export class FileService {
         );
       }
 
-      const fileBuffer = Buffer.from(response.data, 'base64');
+      const fileBuffer = Buffer.isBuffer(response.data)
+        ? response.data
+        : Buffer.from(response.data);
+
       res.set({
         'Content-Disposition': `attachment; filename="${encodeURIComponent(fileMeta.originalFileName)}"`,
         'Content-Type': fileMeta.fileType || 'application/octet-stream',
+        'Content-Length': fileBuffer.length.toString(),
       });
-      res.end(fileBuffer);
+
+      res.send(fileBuffer);
     } catch (err) {
-      this.logger.error(`下载失败: ${err}`);
+      this.logger.error(`下载失败: ${err.message}`);
       throw new InternalServerErrorException('文件下载失败');
     }
   }

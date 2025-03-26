@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
 import { HttpService } from '@common/services/http.service';
 import { DiagnosisConfig, DiagnosisResponse } from '@common/types/diagnosis';
+import { Injectable } from '@nestjs/common';
+import * as FormData from 'form-data';
 
 @Injectable()
 export class DiagnosisHttpService {
@@ -16,15 +17,17 @@ export class DiagnosisHttpService {
     const url = `${baseUrl}${urlPrefix}${urlPath}`;
 
     const formData = new FormData();
-    const fileBlob = new Blob([file]);
-    formData.append('image', fileBlob, fileName);
+    formData.append('image', file, {
+      filename: fileName,
+      contentType: 'application/octet-stream',
+    });
 
     const response = await this.httpService.post<DiagnosisResponse>(
       url,
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          ...formData.getHeaders(),
           Authorization: `Bearer ${token}`,
         },
       },
