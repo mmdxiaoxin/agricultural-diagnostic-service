@@ -4,6 +4,7 @@ import {
   File as FileEntity,
 } from '@app/database/entities';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
+import { DiagnosisConfig } from '@common/types/diagnosis';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,13 +12,13 @@ import { DOWNLOAD_MESSAGE_PATTERNS } from '@shared/constants/download-message-pa
 import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
 import { Status } from '@shared/enum/status.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
-import axios from 'axios';
 import {
   DOWNLOAD_SERVICE_NAME,
   FILE_SERVICE_NAME,
 } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { DataSource, In, Repository } from 'typeorm';
+import { DiagnosisHttpService } from './services/diagnosis-http.service';
 
 @Injectable()
 export class DiagnosisService {
@@ -33,6 +34,7 @@ export class DiagnosisService {
     private readonly dataSource: DataSource,
     @InjectRepository(AiService)
     private readonly aiServiceRepository: Repository<AiService>,
+    private readonly diagnosisHttpService: DiagnosisHttpService,
   ) {}
 
   // 初始化诊断数据
@@ -68,6 +70,7 @@ export class DiagnosisService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
     try {
       const diagnosis = await queryRunner.manager.findOne(DiagnosisHistory, {
         where: { id: diagnosisId },
@@ -87,92 +90,59 @@ export class DiagnosisService {
       }
       diagnosis.status = Status.IN_PROGRESS;
       await queryRunner.manager.save(diagnosis);
+
       // 获取服务配置
       const aiService = await this.aiServiceRepository.findOne({
         where: { serviceId: dto.serviceId },
         relations: ['aiServiceConfigs'],
       });
+
       if (!aiService) {
         throw new RpcException({
           code: 500,
           message: '未找到AI服务配置',
         });
       }
-      const baseUrl = aiService.endpointUrl;
-      const urlPrefix = aiService.aiServiceConfigs.find(
-        (config) => config.configKey === 'prefix',
-      ) || { configValue: '' };
-      const urlPath = aiService.aiServiceConfigs.find(
-        (config) => config.configKey === 'path',
-      ) || { configValue: '' };
-      const url = `${baseUrl}${urlPrefix.configValue}${urlPath.configValue}`;
-      // 获取文件元数据
-      const { success: fileGet, result: file } = await lastValueFrom(
-        this.fileClient.send<{
-          success: boolean;
-          result: FileEntity;
-        }>(
-          {
-            cmd: FILE_MESSAGE_PATTERNS.GET_FILE_BY_ID,
-          },
-          {
-            fileId: diagnosis.fileId,
-          },
-        ),
-      );
-      if (!fileGet || !file) {
+
+      // 构建配置
+      const config: DiagnosisConfig = {
+        baseUrl: aiService.endpointUrl,
+        urlPrefix:
+          aiService.aiServiceConfigs.find(
+            (config) => config.configKey === 'prefix',
+          )?.configValue || '',
+        urlPath:
+          aiService.aiServiceConfigs.find(
+            (config) => config.configKey === 'path',
+          )?.configValue || '',
+      };
+
+      if (!diagnosis.fileId) {
         throw new RpcException({
-          code: 500,
-          message: '获取文件失败',
+          code: 404,
+          message: '无上传文件记录',
         });
       }
-      // 根据文件元数据下载文件
-      const { data, success } = await lastValueFrom(
-        this.downloadClient.send<{
-          success: boolean;
-          data: string;
-        }>(
-          {
-            cmd: DOWNLOAD_MESSAGE_PATTERNS.FILE_DOWNLOAD,
-          },
-          {
-            fileMeta: file,
-          },
-        ),
+
+      // 获取文件
+      const fileMeta = await this.getFileMeta(diagnosis.fileId);
+      const fileData = await this.downloadFile(fileMeta);
+
+      // 调用诊断服务
+      const result = await this.diagnosisHttpService.diagnose(
+        fileData,
+        fileMeta.originalFileName,
+        config,
+        token,
       );
-      if (!success) {
-        throw new RpcException({
-          code: 500,
-          message: '获取文件失败',
-        });
-      }
-      // 调用服务诊断文件
-      const fileStream = Buffer.from(data, 'base64');
-      const fileBlob = new Blob([fileStream]);
-      const formData = new FormData();
-      formData.append('image', fileBlob, file.originalFileName);
-      try {
-        const response = await axios.post<{
-          code: number;
-          data: { predictions: object[] };
-          message: string;
-        }>(url, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        diagnosis.status = Status.COMPLETED;
-        diagnosis.diagnosisResult = response.data.data;
-        await queryRunner.manager.save(diagnosis);
-        await queryRunner.commitTransaction();
-        return response.data;
-      } catch (error) {
-        diagnosis.status = Status.FAILED;
-        await queryRunner.manager.save(diagnosis);
-        await queryRunner.commitTransaction();
-        return formatResponse(502, error, '诊断失败');
-      }
+
+      // 更新诊断状态
+      diagnosis.status = Status.COMPLETED;
+      diagnosis.diagnosisResult = result;
+      await queryRunner.manager.save(diagnosis);
+      await queryRunner.commitTransaction();
+
+      return formatResponse(200, result, '诊断成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new RpcException({
@@ -183,6 +153,42 @@ export class DiagnosisService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  private async getFileMeta(fileId: number): Promise<FileEntity> {
+    const { success, result: file } = await lastValueFrom(
+      this.fileClient.send(
+        { cmd: FILE_MESSAGE_PATTERNS.GET_FILE_BY_ID },
+        { fileId },
+      ),
+    );
+
+    if (!success || !file) {
+      throw new RpcException({
+        code: 500,
+        message: '获取文件失败',
+      });
+    }
+
+    return file;
+  }
+
+  private async downloadFile(file: FileEntity): Promise<Buffer> {
+    const { success, data } = await lastValueFrom(
+      this.downloadClient.send(
+        { cmd: DOWNLOAD_MESSAGE_PATTERNS.FILE_DOWNLOAD },
+        { fileMeta: file },
+      ),
+    );
+
+    if (!success) {
+      throw new RpcException({
+        code: 500,
+        message: '获取文件失败',
+      });
+    }
+
+    return Buffer.from(data, 'base64');
   }
 
   // 获取诊断服务状态

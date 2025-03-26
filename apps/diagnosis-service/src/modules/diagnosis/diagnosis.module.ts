@@ -11,6 +11,9 @@ import {
 } from 'config/microservice.config';
 import { DiagnosisController } from './diagnosis.controller';
 import { DiagnosisService } from './diagnosis.service';
+import { DiagnosisHttpService } from './services/diagnosis-http.service';
+import { HttpModule } from '@nestjs/axios';
+import { HttpService } from '@common/services/http.service';
 
 @Module({
   imports: [
@@ -32,8 +35,10 @@ import { DiagnosisService } from './diagnosis.service';
         },
       },
     ]),
+    HttpModule,
   ],
-  providers: [DiagnosisService],
+  providers: [DiagnosisService, DiagnosisHttpService, HttpService],
   controllers: [DiagnosisController],
+  exports: [DiagnosisService],
 })
 export class DiagnosisModule {}
