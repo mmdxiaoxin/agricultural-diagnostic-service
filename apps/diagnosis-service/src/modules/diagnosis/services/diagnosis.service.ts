@@ -18,7 +18,7 @@ import {
 } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { DataSource, In, Repository } from 'typeorm';
-import { DiagnosisHttpService } from './services/diagnosis-http.service';
+import { DiagnosisHttpService } from './diagnosis-http.service';
 
 @Injectable()
 export class DiagnosisService {

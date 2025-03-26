@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DIAGNOSIS_MESSAGE_PATTERNS } from '@shared/constants/diagnosis-message-patterns';
-import { DiagnosisService } from './diagnosis.service';
+import { DiagnosisService } from './services/diagnosis.service';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 
 @Controller()
