@@ -5,10 +5,10 @@ import {
 } from '@app/database/entities';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { DiagnosisConfig } from '@common/types/diagnosis';
+import { GrpcDownloadService } from '@common/types/download/download.types';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientGrpc, ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DOWNLOAD_MESSAGE_PATTERNS } from '@shared/constants/download-message-patterns';
 import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
 import { Status } from '@shared/enum/status.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -23,6 +23,7 @@ import { DiagnosisHttpService } from './diagnosis-http.service';
 @Injectable()
 export class DiagnosisService {
   private readonly logger = new Logger(DiagnosisService.name);
+  private downloadService: GrpcDownloadService;
 
   constructor(
     @InjectRepository(DiagnosisHistory)
@@ -30,12 +31,17 @@ export class DiagnosisService {
     @Inject(FILE_SERVICE_NAME)
     private readonly fileClient: ClientProxy,
     @Inject(DOWNLOAD_SERVICE_NAME)
-    private readonly downloadClient: ClientProxy,
+    private readonly downloadClient: ClientGrpc,
     private readonly dataSource: DataSource,
     @InjectRepository(AiService)
     private readonly aiServiceRepository: Repository<AiService>,
     private readonly diagnosisHttpService: DiagnosisHttpService,
   ) {}
+
+  onModuleInit() {
+    this.downloadService =
+      this.downloadClient.getService<GrpcDownloadService>('DownloadService');
+  }
 
   // 初始化诊断数据
   async createDiagnosis(userId: number, fileId: number) {
@@ -175,10 +181,7 @@ export class DiagnosisService {
 
   private async downloadFile(fileMeta: FileEntity): Promise<Buffer> {
     const { success, data } = await lastValueFrom(
-      this.downloadClient.send(
-        { cmd: DOWNLOAD_MESSAGE_PATTERNS.FILE_DOWNLOAD },
-        { fileMeta },
-      ),
+      this.downloadService.downloadFile({ fileMeta }),
     );
 
     if (!success) {

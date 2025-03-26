@@ -24,7 +24,7 @@ export interface DownloadFilesResponse {
 }
 
 // 服务接口定义
-export interface IDownloadService {
+export interface GrpcDownloadService {
   downloadFile(request: DownloadFileRequest): Observable<DownloadFileResponse>;
   downloadFiles(
     request: DownloadFilesRequest,

@@ -5,11 +5,12 @@ import { HttpService } from '@common/services/http.service';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import {
-  DOWNLOAD_SERVICE_NAME,
-  DOWNLOAD_SERVICE_TCP_PORT,
+  DOWNLOAD_SERVICE_GRPC_PORT,
+  DOWNLOAD_SERVICE_HOST,
   FILE_SERVICE_NAME,
   FILE_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
+import { join } from 'path';
 import { DiagnosisController } from './diagnosis.controller';
 import { DiagnosisHttpService } from './services/diagnosis-http.service';
 import { DiagnosisService } from './services/diagnosis.service';
@@ -20,10 +21,20 @@ import { DiagnosisService } from './services/diagnosis.service';
     DatabaseModule.forFeature([DiagnosisHistory]),
     ClientsModule.register([
       {
-        name: DOWNLOAD_SERVICE_NAME,
-        transport: Transport.TCP,
+        name: 'DOWNLOAD_SERVICE',
+        transport: Transport.GRPC,
         options: {
-          port: DOWNLOAD_SERVICE_TCP_PORT,
+          package: 'download',
+          protoPath: join(__dirname, 'modules/diagnosis/proto/download.proto'),
+          url: `${DOWNLOAD_SERVICE_HOST}:${DOWNLOAD_SERVICE_GRPC_PORT}`,
+          loader: {
+            keepCase: true,
+            longs: String,
+            enums: String,
+            defaults: true,
+            oneofs: true,
+            arrays: true,
+          },
         },
       },
       {

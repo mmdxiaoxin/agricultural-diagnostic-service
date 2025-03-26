@@ -6,7 +6,7 @@ import {
   UpdateFilesAccessDto,
 } from '@common/dto/file/update-file.dto';
 import { UploadChunkDto } from '@common/dto/file/upload-chunk.dto';
-import { IDownloadService } from '@common/types/download/download.types';
+import { GrpcDownloadService } from '@common/types/download/download.types';
 import {
   HttpException,
   HttpStatus,
@@ -32,7 +32,7 @@ import {
 @Injectable()
 export class FileService {
   private readonly logger = new Logger(FileService.name);
-  private downloadService: IDownloadService;
+  private downloadService: GrpcDownloadService;
 
   constructor(
     @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
@@ -42,7 +42,7 @@ export class FileService {
 
   onModuleInit() {
     this.downloadService =
-      this.downloadClient.getService<IDownloadService>('DownloadService');
+      this.downloadClient.getService<GrpcDownloadService>('DownloadService');
   }
 
   async getDiskUsage(userId: number) {
