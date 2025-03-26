@@ -47,4 +47,19 @@ export class HttpService {
   ): Promise<BaseResponse<T>> {
     return this.axiosInstance.get(url, config);
   }
+
+  async put<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<BaseResponse<T>> {
+    return this.axiosInstance.put(url, data, config);
+  }
+
+  async delete<T>(
+    url: string,
+    config?: AxiosRequestConfig,
+  ): Promise<BaseResponse<T>> {
+    return this.axiosInstance.delete(url, config);
+  }
 }
