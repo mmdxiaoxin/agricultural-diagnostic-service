@@ -1,6 +1,7 @@
 import { DatabaseModule } from '@app/database';
 import { AIModel, DiagnosisHistory, Plant } from '@app/database/entities';
 import { FileOperationModule } from '@app/file-operation';
+import { HttpService } from '@common/services/http.service';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import {
@@ -10,10 +11,8 @@ import {
   FILE_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { DiagnosisController } from './diagnosis.controller';
-import { DiagnosisService } from './services/diagnosis.service';
 import { DiagnosisHttpService } from './services/diagnosis-http.service';
-import { HttpModule } from '@nestjs/axios';
-import { HttpService } from '@common/services/http.service';
+import { DiagnosisService } from './services/diagnosis.service';
 
 @Module({
   imports: [
@@ -35,7 +34,6 @@ import { HttpService } from '@common/services/http.service';
         },
       },
     ]),
-    HttpModule,
   ],
   providers: [DiagnosisService, DiagnosisHttpService, HttpService],
   controllers: [DiagnosisController],
