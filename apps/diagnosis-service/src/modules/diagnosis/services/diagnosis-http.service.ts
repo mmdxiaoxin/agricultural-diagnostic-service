@@ -33,12 +33,54 @@ export class DiagnosisHttpService {
     throw lastError || new Error('Retry failed');
   }
 
+  private checkPollingCondition(
+    result: any,
+    condition: InterfaceCallConfig['pollingCondition'],
+  ): boolean {
+    if (!condition) {
+      return result.status !== 'pending';
+    }
+
+    const { field, operator, value } = condition;
+
+    // 获取要检查的值
+    let fieldValue = result;
+    for (const key of field.split('.')) {
+      fieldValue = fieldValue?.[key];
+      if (fieldValue === undefined) {
+        return false;
+      }
+    }
+
+    // 根据操作符进行比较
+    switch (operator) {
+      case 'equals':
+        return fieldValue === value;
+      case 'notEquals':
+        return fieldValue !== value;
+      case 'contains':
+        return Array.isArray(fieldValue)
+          ? fieldValue.includes(value)
+          : fieldValue.toString().includes(value);
+      case 'greaterThan':
+        return fieldValue > value;
+      case 'lessThan':
+        return fieldValue < value;
+      case 'exists':
+        return fieldValue !== undefined && fieldValue !== null;
+      case 'notExists':
+        return fieldValue === undefined || fieldValue === null;
+      default:
+        return false;
+    }
+  }
+
   private async pollWithTimeout<T>(
     operation: () => Promise<T>,
     interval: number,
     maxAttempts: number,
     timeout: number,
-    condition: (result: T) => boolean,
+    condition: InterfaceCallConfig['pollingCondition'],
   ): Promise<T> {
     const startTime = Date.now();
     let attempts = 0;
@@ -49,7 +91,7 @@ export class DiagnosisHttpService {
       }
 
       const result = await operation();
-      if (condition(result)) {
+      if (this.checkPollingCondition(result, condition)) {
         return result;
       }
 
@@ -62,14 +104,46 @@ export class DiagnosisHttpService {
     throw new Error('Max polling attempts reached');
   }
 
+  private processParams(
+    params: Record<string, any>,
+    previousResults: Map<number, any>,
+  ): Record<string, any> {
+    const processedParams = { ...params };
+
+    for (const [key, value] of Object.entries(processedParams)) {
+      if (
+        typeof value === 'string' &&
+        value.startsWith('{{#') &&
+        value.endsWith('}}')
+      ) {
+        // 解析引用格式：{{#接口ID.response.data.xxx}}
+        const reference = value.slice(3, -2);
+        const [interfaceId, ...path] = reference.split('.');
+        const result = previousResults.get(Number(interfaceId));
+
+        if (result) {
+          let value = result;
+          for (const key of path) {
+            value = value?.[key];
+            if (value === undefined) break;
+          }
+          processedParams[key] = value;
+        }
+      }
+    }
+
+    return processedParams;
+  }
+
   async callInterface<T>(
     config: DiagnosisConfig,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     path: string,
     data?: any,
     token?: string,
+    previousResults?: Map<number, any>,
   ): Promise<T> {
-    const { baseUrl, urlPrefix, urlPath, interfaceConfig } = config;
+    const { baseUrl, urlPrefix, urlPath, requests: interfaceConfig } = config;
     const url = `${baseUrl}${urlPrefix}${urlPath}${path}`;
 
     // 构建请求头
@@ -78,9 +152,15 @@ export class DiagnosisHttpService {
       headers.Authorization = `Bearer ${token}`;
     }
 
+    // 处理参数引用
+    let processedData = data;
+    if (previousResults && typeof data === 'object') {
+      processedData = this.processParams(data, previousResults);
+    }
+
     // 如果是 FormData，添加相应的请求头
-    if (data instanceof FormData) {
-      Object.assign(headers, data.getHeaders());
+    if (processedData instanceof FormData) {
+      Object.assign(headers, processedData.getHeaders());
     }
 
     // 构建请求函数
@@ -88,13 +168,20 @@ export class DiagnosisHttpService {
       let response;
       switch (method) {
         case 'GET':
-          response = await this.httpService.get<T>(url, { headers });
+          response = await this.httpService.get<T>(url, {
+            headers,
+            params: processedData,
+          });
           break;
         case 'POST':
-          response = await this.httpService.post<T>(url, data, { headers });
+          response = await this.httpService.post<T>(url, processedData, {
+            headers,
+          });
           break;
         case 'PUT':
-          response = await this.httpService.put<T>(url, data, { headers });
+          response = await this.httpService.put<T>(url, processedData, {
+            headers,
+          });
           break;
         case 'DELETE':
           response = await this.httpService.delete<T>(url, { headers });
@@ -106,7 +193,7 @@ export class DiagnosisHttpService {
     };
 
     // 根据配置类型执行不同的调用策略
-    if (interfaceConfig.type === 'single') {
+    if (!interfaceConfig.polling) {
       if (interfaceConfig.retryCount && interfaceConfig.retryDelay) {
         return this.retryWithDelay(
           makeRequest,
@@ -115,13 +202,14 @@ export class DiagnosisHttpService {
         );
       }
       return makeRequest();
-    } else if (interfaceConfig.type === 'polling') {
+    } else {
       const {
         interval = 5000,
         maxAttempts = 10,
         timeout = 300000,
         retryCount = 3,
         retryDelay = 1000,
+        pollingCondition,
       } = interfaceConfig;
 
       return this.pollWithTimeout(
@@ -134,45 +222,8 @@ export class DiagnosisHttpService {
         interval,
         maxAttempts,
         timeout,
-        (result) => result.status !== 'pending',
+        pollingCondition,
       );
     }
-
-    throw new Error('Invalid interface configuration type');
-  }
-
-  async callInterfaceUpload(
-    file: Buffer,
-    fileName: string,
-    config: DiagnosisConfig,
-    token: string,
-  ): Promise<CreateDiagnosisTaskResponse> {
-    const formData = new FormData();
-    formData.append('image', file, {
-      filename: fileName,
-      contentType: 'application/octet-stream',
-    });
-
-    return this.callInterface<CreateDiagnosisTaskResponse>(
-      config,
-      'POST',
-      '',
-      formData,
-      token,
-    );
-  }
-
-  async callInterfaceQuery(
-    taskId: string,
-    config: DiagnosisConfig,
-    token: string,
-  ): Promise<DiagnosisTaskResponse> {
-    return this.callInterface<DiagnosisTaskResponse>(
-      config,
-      'GET',
-      `/${taskId}`,
-      undefined,
-      token,
-    );
   }
 }

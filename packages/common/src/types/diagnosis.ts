@@ -43,17 +43,32 @@ export interface DiagnosisTaskResponse {
 }
 
 export interface InterfaceCallConfig {
-  type: 'single' | 'polling'; // 调用类型：单次调用或轮询
+  type?: 'single' | 'polling'; // 调用类型
   interval?: number; // 轮询间隔（毫秒）
   maxAttempts?: number; // 最大尝试次数
   timeout?: number; // 超时时间（毫秒）
   retryCount?: number; // 重试次数
   retryDelay?: number; // 重试延迟（毫秒）
+  polling?: boolean; //是否开启轮询
+  next?: number[]; // 下一个接口ID
+  params?: Record<string, any>; // 调用需要传入的参数
+  pollingCondition?: {
+    field: string; // 要检查的字段路径，支持点号分隔
+    operator:
+      | 'equals'
+      | 'notEquals'
+      | 'contains'
+      | 'greaterThan'
+      | 'lessThan'
+      | 'exists'
+      | 'notExists';
+    value?: any; // 比较值，对于 exists/notExists 操作符不需要
+  };
 }
 
 export interface DiagnosisConfig {
   baseUrl: string;
   urlPrefix: string;
   urlPath: string;
-  interfaceConfig: InterfaceCallConfig;
+  requests: InterfaceCallConfig;
 }

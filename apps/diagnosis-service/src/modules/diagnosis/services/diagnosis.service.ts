@@ -125,6 +125,8 @@ export class DiagnosisService {
         timeout?: number;
         retryCount?: number;
         retryDelay?: number;
+        next?: number[];
+        params?: Record<string, any>;
       }>;
 
       if (!interfaceConfigs || interfaceConfigs.length === 0) {
@@ -155,63 +157,77 @@ export class DiagnosisService {
       const fileData = await this.downloadFile(fileMeta);
 
       // 7. 按顺序调用接口
-      let lastResult:
-        | CreateDiagnosisTaskResponse
-        | DiagnosisTaskResponse
-        | any = null;
-      for (const config of sortedConfigs) {
-        const remoteInterface = remoteInterfaces.get(config.interfaceId);
-        if (!remoteInterface) {
-          throw new RpcException({
-            code: 500,
-            message: `未找到ID为 ${config.interfaceId} 的接口配置`,
-          });
-        }
+      const results = new Map<number, any>();
+      let currentConfigs = sortedConfigs.filter(
+        (config) => !config.next || config.next.length === 0,
+      );
 
-        const interfaceConfig = remoteInterface.config as Record<string, any>;
-        const diagnosisConfig: DiagnosisConfig = {
-          baseUrl: serviceConfig.endpointUrl,
-          urlPrefix: interfaceConfig.urlPrefix || '',
-          urlPath: interfaceConfig.urlPath || '',
-          interfaceConfig: {
-            type: config.callType,
-            interval: config.interval,
-            maxAttempts: config.maxAttempts,
-            timeout: config.timeout,
-            retryCount: config.retryCount,
-            retryDelay: config.retryDelay,
-          },
-        };
+      while (currentConfigs.length > 0) {
+        // 并发调用当前层级的接口
+        const promises = currentConfigs.map(async (config) => {
+          const remoteInterface = remoteInterfaces.get(config.interfaceId);
+          if (!remoteInterface) {
+            throw new RpcException({
+              code: 500,
+              message: `未找到ID为 ${config.interfaceId} 的接口配置`,
+            });
+          }
 
-        // 根据接口类型调用不同的方法
-        if (interfaceConfig.type === 'upload') {
-          lastResult = await this.diagnosisHttpService.callInterfaceUpload(
-            fileData,
-            fileMeta.originalFileName,
-            diagnosisConfig,
-            token,
-          );
-        } else if (
-          interfaceConfig.type === 'query' &&
-          lastResult &&
-          'taskId' in lastResult
-        ) {
-          lastResult = await this.diagnosisHttpService.callInterfaceQuery(
-            lastResult.taskId,
-            diagnosisConfig,
-            token,
-          );
-        } else {
-          lastResult = await this.diagnosisHttpService.callInterface(
+          const interfaceConfig = remoteInterface.config as Record<string, any>;
+          const diagnosisConfig: DiagnosisConfig = {
+            baseUrl: serviceConfig.endpointUrl,
+            urlPrefix: interfaceConfig.urlPrefix || '',
+            urlPath: interfaceConfig.urlPath || '',
+            requests: {
+              type: config.callType,
+              interval: config.interval,
+              maxAttempts: config.maxAttempts,
+              timeout: config.timeout,
+              retryCount: config.retryCount,
+              retryDelay: config.retryDelay,
+              polling: config.callType === 'polling',
+            },
+          };
+
+          const result = await this.diagnosisHttpService.callInterface(
             diagnosisConfig,
             interfaceConfig.method || 'POST',
             interfaceConfig.path || '',
-            lastResult || fileData,
+            config.params || fileData,
             token,
+            results,
           );
-        }
+
+          results.set(config.interfaceId, result);
+          return result;
+        });
+
+        await Promise.all(promises);
+
+        // 获取下一层级的接口配置
+        const nextInterfaceIds = new Set<number>();
+        sortedConfigs.forEach((config) => {
+          if (config.next && config.next.length > 0) {
+            const allPreviousCompleted = config.next.every((id) =>
+              results.has(id),
+            );
+            if (allPreviousCompleted) {
+              config.next.forEach((id) => nextInterfaceIds.add(id));
+            }
+          }
+        });
+
+        currentConfigs = sortedConfigs.filter(
+          (config) =>
+            nextInterfaceIds.has(config.interfaceId) &&
+            !results.has(config.interfaceId),
+        );
       }
 
+      // 8. 获取最后一个接口的结果
+      const lastResult = results.get(
+        sortedConfigs[sortedConfigs.length - 1].interfaceId,
+      );
       if (!lastResult) {
         throw new RpcException({
           code: 500,
@@ -219,7 +235,7 @@ export class DiagnosisService {
         });
       }
 
-      // 8. 更新诊断结果
+      // 9. 更新诊断结果
       diagnosis.status = lastResult.status;
       diagnosis.diagnosisResult = lastResult;
       await queryRunner.manager.save(diagnosis);
