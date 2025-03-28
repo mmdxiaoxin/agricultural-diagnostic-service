@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { RemoteService } from './remote.entity';
 
@@ -12,9 +12,8 @@ export class RemoteConfig extends BaseEntity {
 
   @Column({ type: 'json' })
   config: {
-    endpointUrl: string;
-    interfaceConfigs: Array<{
-      interfaceId: number;
+    requests: Array<{
+      id: number;
       order: number;
       callType: 'single' | 'polling';
       interval?: number;
@@ -22,6 +21,20 @@ export class RemoteConfig extends BaseEntity {
       timeout?: number;
       retryCount?: number;
       retryDelay?: number;
+      next?: number[];
+      params?: Record<string, any>;
+      pollingCondition?: {
+        field: string;
+        operator:
+          | 'equals'
+          | 'notEquals'
+          | 'contains'
+          | 'greaterThan'
+          | 'lessThan'
+          | 'exists'
+          | 'notExists';
+        value?: any;
+      };
     }>;
   };
 

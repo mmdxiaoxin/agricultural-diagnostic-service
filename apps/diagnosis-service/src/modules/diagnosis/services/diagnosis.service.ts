@@ -113,35 +113,17 @@ export class DiagnosisService {
       }
 
       // 3. 从服务配置中获取接口调用配置
-      const serviceConfig = remoteService.configs.find(
+      const remoteConfig = remoteService.configs.find(
         (config) => config.id === dto.configId,
-      ) as Record<string, any>;
-      const interfaceConfigs = serviceConfig.requests as Array<{
-        id: number;
-        order: number;
-        callType: 'single' | 'polling';
-        interval?: number;
-        maxAttempts?: number;
-        timeout?: number;
-        retryCount?: number;
-        retryDelay?: number;
-        next?: number[];
-        params?: Record<string, any>;
-        pollingCondition?: {
-          field: string;
-          operator:
-            | 'equals'
-            | 'notEquals'
-            | 'contains'
-            | 'greaterThan'
-            | 'lessThan'
-            | 'exists'
-            | 'notExists';
-          value?: any;
-        };
-      }>;
-
-      if (!interfaceConfigs || interfaceConfigs.length === 0) {
+      );
+      if (!remoteConfig) {
+        throw new RpcException({
+          code: 500,
+          message: '服务配置无接口配置',
+        });
+      }
+      const requests = remoteConfig.config.requests;
+      if (!requests || requests.length === 0) {
         throw new RpcException({
           code: 500,
           message: '服务配置中未指定接口调用配置',
@@ -149,7 +131,7 @@ export class DiagnosisService {
       }
 
       // 4. 按顺序获取接口配置
-      const sortedConfigs = interfaceConfigs.sort((a, b) => a.order - b.order);
+      const sortedRequests = requests.sort((a, b) => a.order - b.order);
       const remoteInterfaces = new Map(
         remoteService.interfaces.map((interf) => [interf.id, interf]),
       );
@@ -170,13 +152,13 @@ export class DiagnosisService {
 
       // 7. 按顺序调用接口
       const results = new Map<number, any>();
-      let currentConfigs = sortedConfigs.filter(
+      let currentRequests = sortedRequests.filter(
         (config) => !config.next || config.next.length === 0,
       );
 
-      while (currentConfigs.length > 0) {
+      while (currentRequests.length > 0) {
         // 并发调用当前层级的接口
-        const promises = currentConfigs.map(async (config) => {
+        const promises = currentRequests.map(async (config) => {
           const remoteInterface = remoteInterfaces.get(config.id);
           if (!remoteInterface) {
             throw new RpcException({
@@ -187,7 +169,7 @@ export class DiagnosisService {
 
           const interfaceConfig = remoteInterface.config as Record<string, any>;
           const diagnosisConfig: DiagnosisConfig = {
-            baseUrl: serviceConfig.endpointUrl,
+            baseUrl: remoteInterface.url,
             urlPrefix: interfaceConfig.urlPrefix || '',
             urlPath: interfaceConfig.urlPath || '',
             requests: {
@@ -198,6 +180,7 @@ export class DiagnosisService {
               retryCount: config.retryCount,
               retryDelay: config.retryDelay,
               polling: config.callType === 'polling',
+              pollingCondition: config.pollingCondition,
             },
           };
 
@@ -218,7 +201,7 @@ export class DiagnosisService {
 
         // 获取下一层级的接口配置
         const nextInterfaceIds = new Set<number>();
-        sortedConfigs.forEach((config) => {
+        sortedRequests.forEach((config) => {
           if (config.next && config.next.length > 0) {
             const allPreviousCompleted = config.next.every((id) =>
               results.has(id),
@@ -229,7 +212,7 @@ export class DiagnosisService {
           }
         });
 
-        currentConfigs = sortedConfigs.filter(
+        currentRequests = sortedRequests.filter(
           (config) =>
             nextInterfaceIds.has(config.id) && !results.has(config.id),
         );
@@ -237,7 +220,7 @@ export class DiagnosisService {
 
       // 8. 获取最后一个接口的结果
       const lastResult = results.get(
-        sortedConfigs[sortedConfigs.length - 1].id,
+        sortedRequests[sortedRequests.length - 1].id,
       );
       if (!lastResult) {
         throw new RpcException({
