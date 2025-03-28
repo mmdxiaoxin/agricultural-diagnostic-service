@@ -7,12 +7,14 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { RemoteInterfaceService } from './services/remote-interface.service';
 import { RemoteServiceService } from './services/remote.service';
+import { RemoteConfigService } from './services/remote-config.service';
 
 @Controller()
 export class RemoteServiceController {
   constructor(
     private readonly remoteService: RemoteServiceService,
     private readonly interfaceService: RemoteInterfaceService,
+    private readonly configService: RemoteConfigService,
   ) {}
 
   @MessagePattern({ cmd: 'service.create' })
@@ -114,5 +116,51 @@ export class RemoteServiceController {
   async getInterfaceById(@Payload() payload: number) {
     const interface_ = await this.interfaceService.getInterfaceById(payload);
     return formatResponse(200, interface_, '获取成功');
+  }
+
+  @MessagePattern({ cmd: 'service.config.get' })
+  async getConfigs(@Payload() serviceId: number) {
+    const configs = await this.configService.findByServiceId(serviceId);
+    return formatResponse(200, configs, '获取成功');
+  }
+
+  @MessagePattern({ cmd: 'service.config.get.list' })
+  async getConfigsList(
+    @Payload() payload: { serviceId: number; page: number; pageSize: number },
+  ) {
+    const [list, total] = await this.configService.findList(
+      payload.serviceId,
+      payload.page,
+      payload.pageSize,
+    );
+    return formatResponse(
+      200,
+      { list, total, page: payload.page, pageSize: payload.pageSize },
+      '获取成功',
+    );
+  }
+
+  @MessagePattern({ cmd: 'service.config.get.byId' })
+  async getConfigById(@Payload() configId: number) {
+    const config = await this.configService.findById(configId);
+    return formatResponse(200, config, '获取成功');
+  }
+
+  @MessagePattern({ cmd: 'service.config.create' })
+  async createConfig(@Payload() payload: { serviceId: number; config: any }) {
+    await this.configService.create(payload.serviceId, payload.config);
+    return formatResponse(201, null, '创建成功');
+  }
+
+  @MessagePattern({ cmd: 'service.config.update' })
+  async updateConfig(@Payload() payload: { configId: number; config: any }) {
+    await this.configService.update(payload.configId, payload.config);
+    return formatResponse(200, null, '更新成功');
+  }
+
+  @MessagePattern({ cmd: 'service.config.remove' })
+  async removeConfig(@Payload() configId: number) {
+    await this.configService.remove(configId);
+    return formatResponse(204, null, '删除成功');
   }
 }
