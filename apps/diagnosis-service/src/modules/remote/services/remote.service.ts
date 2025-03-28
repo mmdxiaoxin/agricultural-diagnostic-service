@@ -162,10 +162,10 @@ export class RemoteServiceService {
     await queryRunner.startTransaction();
 
     try {
-      // 查找服务及其接口
+      // 查找服务及其接口和配置
       const remoteService = await queryRunner.manager.findOne(RemoteService, {
         where: { id: serviceId },
-        relations: ['interfaces'],
+        relations: ['interfaces', 'configs'],
       });
 
       if (!remoteService) {
@@ -178,6 +178,11 @@ export class RemoteServiceService {
       // 删除关联的接口
       if (remoteService.interfaces?.length) {
         await queryRunner.manager.remove(remoteService.interfaces);
+      }
+
+      // 删除关联的配置
+      if (remoteService.configs?.length) {
+        await queryRunner.manager.remove(remoteService.configs);
       }
 
       // 删除服务本身
@@ -203,10 +208,10 @@ export class RemoteServiceService {
     await queryRunner.startTransaction();
 
     try {
-      // 查找原始服务及其接口
+      // 查找原始服务及其接口和配置
       const originalService = await queryRunner.manager.findOne(RemoteService, {
         where: { id: serviceId },
-        relations: ['interfaces'],
+        relations: ['interfaces', 'configs'],
       });
 
       if (!originalService) {
@@ -218,9 +223,10 @@ export class RemoteServiceService {
 
       // 创建新的服务实例
       const newService = queryRunner.manager.create(RemoteService, {
-        ...originalService,
-        id: undefined,
         serviceName: `${originalService.serviceName} - 复制`,
+        serviceType: originalService.serviceType,
+        description: originalService.description,
+        status: originalService.status,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -235,11 +241,27 @@ export class RemoteServiceService {
             ...interface_,
             id: undefined,
             service: savedService,
+            serviceId: savedService.id,
             createdAt: new Date(),
             updatedAt: new Date(),
           }),
         );
         await queryRunner.manager.save(newInterfaces);
+      }
+
+      // 复制配置记录
+      if (originalService.configs?.length) {
+        const newConfigs = originalService.configs.map((config) =>
+          queryRunner.manager.create(RemoteConfig, {
+            ...config,
+            id: undefined,
+            service: savedService,
+            serviceId: savedService.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }),
+        );
+        await queryRunner.manager.save(newConfigs);
       }
 
       await queryRunner.commitTransaction();
