@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { RemoteInterface } from './remote-interface.entity';
+import { RemoteConfig } from './remote-config.entity';
 
 @Entity('remote_service')
 export class RemoteService extends BaseEntity {
@@ -20,8 +21,8 @@ export class RemoteService extends BaseEntity {
   })
   status: 'active' | 'inactive' | 'under_maintenance'; // 服务状态
 
-  @Column({ type: 'json' })
-  config: object;
+  @OneToMany(() => RemoteConfig, (config) => config.service)
+  configs: RemoteConfig[];
 
   @OneToMany(
     () => RemoteInterface,

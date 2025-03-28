@@ -103,7 +103,7 @@ export class DiagnosisService {
       // 2. 获取远程服务配置
       const remoteService = await this.remoteRepository.findOne({
         where: { id: dto.serviceId },
-        relations: ['interfaces'],
+        relations: ['interfaces', 'configs'],
       });
       if (!remoteService) {
         throw new RpcException({
@@ -113,7 +113,9 @@ export class DiagnosisService {
       }
 
       // 3. 从服务配置中获取接口调用配置
-      const serviceConfig = remoteService.config as Record<string, any>;
+      const serviceConfig = remoteService.configs.find(
+        (config) => config.id === dto.configId,
+      ) as Record<string, any>;
       const interfaceConfigs = serviceConfig.interfaceConfigs as Array<{
         interfaceId: number;
         order: number;

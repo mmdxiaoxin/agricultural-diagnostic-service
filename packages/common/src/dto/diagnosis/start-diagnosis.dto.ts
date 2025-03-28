@@ -6,4 +6,8 @@ export class StartDiagnosisDto {
   @Transform(({ value }) => Number(value))
   @IsNumber({}, { message: 'serviceId 必须为数字' })
   serviceId: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  configId: number;
 }
