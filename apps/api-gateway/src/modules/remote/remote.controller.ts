@@ -180,4 +180,82 @@ export class RemoteController {
   ) {
     return this.remoteService.removeRemoteInterface(interfaceId);
   }
+
+  // 获取服务的所有配置
+  @Get(':serviceId/config')
+  async getRemoteConfigs(
+    @Param(
+      'serviceId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
+  ) {
+    return this.remoteService.getRemoteConfigs(serviceId);
+  }
+
+  // 分页获取服务的配置
+  @Get(':serviceId/config/list')
+  async getRemoteConfigList(
+    @Param(
+      'serviceId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
+    @Query('page') page: number,
+    @Query('pageSize') pageSize: number,
+  ) {
+    return this.remoteService.getRemoteConfigList(serviceId, page, pageSize);
+  }
+
+  // 获取单个配置
+  @Get(':serviceId/config/:configId')
+  async getRemoteConfigById(
+    @Param(
+      'configId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    configId: number,
+  ) {
+    return this.remoteService.getRemoteConfigById(configId);
+  }
+
+  // 创建配置
+  @Post(':serviceId/config')
+  @HttpCode(HttpStatus.CREATED)
+  async createRemoteConfig(
+    @Param(
+      'serviceId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    serviceId: number,
+    @Body() config: any,
+  ) {
+    return this.remoteService.createRemoteConfig(serviceId, config);
+  }
+
+  // 更新配置
+  @Put(':serviceId/config/:configId')
+  async updateRemoteConfig(
+    @Param(
+      'configId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    configId: number,
+    @Body() config: any,
+  ) {
+    return this.remoteService.updateRemoteConfig(configId, config);
+  }
+
+  // 删除配置
+  @Delete(':serviceId/config/:configId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeRemoteConfig(
+    @Param(
+      'configId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    configId: number,
+  ) {
+    return this.remoteService.removeRemoteConfig(configId);
+  }
 }

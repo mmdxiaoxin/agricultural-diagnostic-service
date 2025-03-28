@@ -91,4 +91,49 @@ export class RemoteService {
       interfaceId,
     );
   }
+
+  // 获取服务的所有配置
+  getRemoteConfigs(serviceId: number) {
+    return this.diagnosisClient.send({ cmd: 'service.config.get' }, serviceId);
+  }
+
+  // 分页获取服务的配置
+  getRemoteConfigList(serviceId: number, page: number, pageSize: number) {
+    return this.diagnosisClient.send(
+      { cmd: 'service.config.get.list' },
+      { serviceId, page, pageSize },
+    );
+  }
+
+  // 获取单个配置
+  getRemoteConfigById(configId: number) {
+    return this.diagnosisClient.send(
+      { cmd: 'service.config.get.byId' },
+      configId,
+    );
+  }
+
+  // 创建配置
+  createRemoteConfig(serviceId: number, config: any) {
+    return this.diagnosisClient.send(
+      { cmd: 'service.config.create' },
+      { serviceId, config },
+    );
+  }
+
+  // 更新配置
+  updateRemoteConfig(configId: number, config: any) {
+    return this.diagnosisClient.send(
+      { cmd: 'service.config.update' },
+      { configId, config },
+    );
+  }
+
+  // 删除配置
+  removeRemoteConfig(configId: number) {
+    return this.diagnosisClient.send(
+      { cmd: 'service.config.remove' },
+      configId,
+    );
+  }
 }
