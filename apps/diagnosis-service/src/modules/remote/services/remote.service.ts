@@ -10,71 +10,74 @@ import { DataSource, Repository } from 'typeorm';
 export class RemoteServiceService {
   constructor(
     @InjectRepository(RemoteService)
-    private aiServiceRepository: Repository<RemoteService>,
+    private remoteServiceRepository: Repository<RemoteService>,
     private dataSource: DataSource,
   ) {}
 
-  // 获取全部AI服务
+  // 获取全部远程服务
   async getRemote(): Promise<RemoteService[]> {
-    return this.aiServiceRepository.find();
-  }
-
-  // 分页查询AI服务
-  async getRemoteList(page: number, pageSize: number) {
-    const skip = (page - 1) * pageSize;
-    return await this.aiServiceRepository.findAndCount({
-      skip,
-      take: pageSize,
+    return this.remoteServiceRepository.find({
+      relations: ['interfaces'],
     });
   }
 
-  // 获取单个AI服务
+  // 分页查询远程服务
+  async getRemoteList(page: number, pageSize: number) {
+    const skip = (page - 1) * pageSize;
+    return await this.remoteServiceRepository.findAndCount({
+      skip,
+      take: pageSize,
+      relations: ['interfaces'],
+    });
+  }
+
+  // 获取单个远程服务
   async getRemoteById(serviceId: number) {
-    return this.aiServiceRepository.findOne({
+    return this.remoteServiceRepository.findOne({
       where: { id: serviceId },
       relations: ['interfaces'],
     });
   }
 
-  // 创建AI服务
+  // 创建远程服务
   async create(dto: CreateRemoteServiceDto): Promise<RemoteService> {
-    const aiService = this.aiServiceRepository.create(dto);
-    return await this.aiServiceRepository.save(aiService);
+    const remoteService = this.remoteServiceRepository.create(dto);
+    return await this.remoteServiceRepository.save(remoteService);
   }
 
-  // 更新AI服务
+  // 更新远程服务
   async update(
     serviceId: number,
     dto: UpdateRemoteServiceDto,
   ): Promise<RemoteService> {
-    const aiService = await this.aiServiceRepository.findOne({
+    const remoteService = await this.remoteServiceRepository.findOne({
       where: { id: serviceId },
     });
-    if (!aiService) {
+    if (!remoteService) {
       throw new RpcException({
         code: 404,
         message: '未找到当前服务',
       });
     }
 
-    Object.assign(aiService, dto);
-    return this.aiServiceRepository.save(aiService);
+    Object.assign(remoteService, dto);
+    return this.remoteServiceRepository.save(remoteService);
   }
 
-  // 删除AI服务
+  // 删除远程服务
   async remove(serviceId: number): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // 查找服务及其配置
-      const aiService = await queryRunner.manager.findOne(RemoteService, {
+      // 查找服务及其接口
+      const remoteService = await queryRunner.manager.findOne(RemoteService, {
         where: { id: serviceId },
         relations: ['interfaces'],
       });
 
-      if (!aiService) {
+      if (!remoteService) {
         throw new RpcException({
           code: 404,
           message: '未找到当前服务',
@@ -82,12 +85,12 @@ export class RemoteServiceService {
       }
 
       // 删除关联的接口
-      if (aiService.interfaces?.length) {
-        await queryRunner.manager.remove(aiService.interfaces);
+      if (remoteService.interfaces?.length) {
+        await queryRunner.manager.remove(remoteService.interfaces);
       }
 
       // 删除服务本身
-      await queryRunner.manager.remove(aiService);
+      await queryRunner.manager.remove(remoteService);
 
       await queryRunner.commitTransaction();
     } catch (error) {
@@ -102,14 +105,14 @@ export class RemoteServiceService {
     }
   }
 
-  // 复制AI服务
+  // 复制远程服务
   async copy(serviceId: number): Promise<RemoteService> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // 查找原始服务及其配置
+      // 查找原始服务及其接口
       const originalService = await queryRunner.manager.findOne(RemoteService, {
         where: { id: serviceId },
         relations: ['interfaces'],
@@ -125,7 +128,7 @@ export class RemoteServiceService {
       // 创建新的服务实例
       const newService = queryRunner.manager.create(RemoteService, {
         ...originalService,
-        serviceId: undefined,
+        id: undefined,
         serviceName: `${originalService.serviceName} - 复制`,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -139,7 +142,10 @@ export class RemoteServiceService {
         const newInterfaces = originalService.interfaces.map((interface_) =>
           queryRunner.manager.create(RemoteInterface, {
             ...interface_,
+            id: undefined,
             service: savedService,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           }),
         );
         await queryRunner.manager.save(newInterfaces);

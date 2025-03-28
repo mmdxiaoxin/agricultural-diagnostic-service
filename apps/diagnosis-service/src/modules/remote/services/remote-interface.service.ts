@@ -12,7 +12,7 @@ export class RemoteInterfaceService {
     @InjectRepository(RemoteService)
     private serviceRepository: Repository<RemoteService>,
     @InjectRepository(RemoteInterface)
-    private serviceInterfaceRepository: Repository<RemoteInterface>,
+    private interfaceRepository: Repository<RemoteInterface>,
   ) {}
 
   async getInterfaces(serviceId: number) {
@@ -25,7 +25,7 @@ export class RemoteInterfaceService {
 
   async getInterfacesList(serviceId: number, page: number, pageSize: number) {
     const skip = (page - 1) * pageSize;
-    const [list, total] = await this.serviceInterfaceRepository.findAndCount({
+    const [list, total] = await this.interfaceRepository.findAndCount({
       where: { serviceId },
       skip,
       take: pageSize,
@@ -34,7 +34,7 @@ export class RemoteInterfaceService {
   }
 
   async getInterfaceById(interfaceId: number) {
-    return this.serviceInterfaceRepository.findOne({
+    return this.interfaceRepository.findOne({
       where: { id: interfaceId },
     });
   }
@@ -49,15 +49,15 @@ export class RemoteInterfaceService {
         message: '未找到当前服务',
       });
     }
-    const interface_ = this.serviceInterfaceRepository.create({
+    const interface_ = this.interfaceRepository.create({
       ...dto,
       service,
     });
-    return this.serviceInterfaceRepository.save(interface_);
+    return this.interfaceRepository.save(interface_);
   }
 
   async updateInterface(interfaceId: number, dto: UpdateRemoteInterfaceDto) {
-    const interface_ = await this.serviceInterfaceRepository.findOne({
+    const interface_ = await this.interfaceRepository.findOne({
       where: { id: interfaceId },
     });
     if (!interface_) {
@@ -67,11 +67,11 @@ export class RemoteInterfaceService {
       });
     }
     Object.assign(interface_, dto);
-    return this.serviceInterfaceRepository.save(interface_);
+    return this.interfaceRepository.save(interface_);
   }
 
   async removeInterface(interfaceId: number) {
-    const interface_ = await this.serviceInterfaceRepository.findOne({
+    const interface_ = await this.interfaceRepository.findOne({
       where: { id: interfaceId },
     });
     if (!interface_) {
@@ -80,6 +80,6 @@ export class RemoteInterfaceService {
         message: '未找到当前接口',
       });
     }
-    return this.serviceInterfaceRepository.delete(interfaceId);
+    return this.interfaceRepository.delete(interfaceId);
   }
 }
