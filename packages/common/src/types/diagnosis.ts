@@ -42,8 +42,18 @@ export interface DiagnosisTaskResponse {
   result: string;
 }
 
+export interface InterfaceCallConfig {
+  type: 'single' | 'polling'; // 调用类型：单次调用或轮询
+  interval?: number; // 轮询间隔（毫秒）
+  maxAttempts?: number; // 最大尝试次数
+  timeout?: number; // 超时时间（毫秒）
+  retryCount?: number; // 重试次数
+  retryDelay?: number; // 重试延迟（毫秒）
+}
+
 export interface DiagnosisConfig {
   baseUrl: string;
   urlPrefix: string;
   urlPath: string;
+  interfaceConfig: InterfaceCallConfig;
 }

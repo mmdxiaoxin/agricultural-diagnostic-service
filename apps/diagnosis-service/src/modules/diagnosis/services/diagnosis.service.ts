@@ -4,7 +4,12 @@ import {
   File as FileEntity,
 } from '@app/database/entities';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
-import { DiagnosisConfig } from '@common/types/diagnosis';
+import {
+  DiagnosisConfig,
+  InterfaceCallConfig,
+  CreateDiagnosisTaskResponse,
+  DiagnosisTaskResponse,
+} from '@common/types/diagnosis';
 import { GrpcDownloadService } from '@common/types/download/download.types';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientGrpc, ClientProxy, RpcException } from '@nestjs/microservices';
@@ -26,15 +31,15 @@ export class DiagnosisService {
   private downloadService: GrpcDownloadService;
 
   constructor(
-    @InjectRepository(DiagnosisHistory)
-    private readonly diagnosisRepository: Repository<DiagnosisHistory>,
     @Inject(FILE_SERVICE_NAME)
     private readonly fileClient: ClientProxy,
     @Inject(DOWNLOAD_SERVICE_NAME)
     private readonly downloadClient: ClientGrpc,
-    private readonly dataSource: DataSource,
+    @InjectRepository(DiagnosisHistory)
+    private readonly diagnosisRepository: Repository<DiagnosisHistory>,
     @InjectRepository(RemoteService)
-    private readonly aiServiceRepository: Repository<RemoteService>,
+    private readonly remoteRepository: Repository<RemoteService>,
+    private readonly dataSource: DataSource,
     private readonly diagnosisHttpService: DiagnosisHttpService,
   ) {}
 
@@ -76,8 +81,8 @@ export class DiagnosisService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
     try {
+      // 1. 获取诊断记录
       const diagnosis = await queryRunner.manager.findOne(DiagnosisHistory, {
         where: { id: diagnosisId },
         lock: { mode: 'pessimistic_write' },
@@ -94,63 +99,131 @@ export class DiagnosisService {
           message: '无权限操作此记录',
         });
       }
-      diagnosis.status = Status.IN_PROGRESS;
-      await queryRunner.manager.save(diagnosis);
 
-      // 获取服务配置
-      const aiService = await this.aiServiceRepository.findOne({
-        where: { serviceId: dto.serviceId },
-        relations: ['aiServiceConfigs'],
+      // 2. 获取远程服务配置
+      const remoteService = await this.remoteRepository.findOne({
+        where: { id: dto.serviceId },
+        relations: ['interfaces'],
       });
-
-      if (!aiService) {
+      if (!remoteService) {
         throw new RpcException({
           code: 500,
-          message: '未找到AI服务配置',
+          message: '未找到远程服务配置',
         });
       }
 
-      // 构建配置
-      const config: DiagnosisConfig = {
-        baseUrl: aiService.endpointUrl,
-        urlPrefix:
-          aiService.aiServiceConfigs.find(
-            (config) => config.configKey === 'prefix',
-          )?.configValue || '',
-        urlPath:
-          aiService.aiServiceConfigs.find(
-            (config) => config.configKey === 'path',
-          )?.configValue || '',
-      };
+      // 3. 从服务配置中获取接口调用配置
+      const serviceConfig = remoteService.config as Record<string, any>;
+      const interfaceConfigs = serviceConfig.interfaceConfigs as Array<{
+        interfaceId: number;
+        order: number;
+        callType: 'single' | 'polling';
+        interval?: number;
+        maxAttempts?: number;
+        timeout?: number;
+        retryCount?: number;
+        retryDelay?: number;
+      }>;
 
+      if (!interfaceConfigs || interfaceConfigs.length === 0) {
+        throw new RpcException({
+          code: 500,
+          message: '服务配置中未指定接口调用配置',
+        });
+      }
+
+      // 4. 按顺序获取接口配置
+      const sortedConfigs = interfaceConfigs.sort((a, b) => a.order - b.order);
+      const remoteInterfaces = new Map(
+        remoteService.interfaces.map((interf) => [interf.id, interf]),
+      );
+
+      // 5. 更新诊断状态
+      diagnosis.status = Status.IN_PROGRESS;
+      await queryRunner.manager.save(diagnosis);
+
+      // 6. 获取文件
       if (!diagnosis.fileId) {
         throw new RpcException({
           code: 404,
           message: '无上传文件记录',
         });
       }
-
-      // 获取文件
       const fileMeta = await this.getFileMeta(diagnosis.fileId);
       const fileData = await this.downloadFile(fileMeta);
 
-      // 调用诊断服务
-      const result = await this.diagnosisHttpService.createDiagnosisTask(
-        fileData,
-        fileMeta.originalFileName,
-        config,
-        token,
-      );
+      // 7. 按顺序调用接口
+      let lastResult:
+        | CreateDiagnosisTaskResponse
+        | DiagnosisTaskResponse
+        | any = null;
+      for (const config of sortedConfigs) {
+        const remoteInterface = remoteInterfaces.get(config.interfaceId);
+        if (!remoteInterface) {
+          throw new RpcException({
+            code: 500,
+            message: `未找到ID为 ${config.interfaceId} 的接口配置`,
+          });
+        }
 
-      // 更新诊断状态
-      this.logger.log(config);
-      this.logger.log(result);
-      diagnosis.status = result.status;
-      diagnosis.diagnosisResult = result;
+        const interfaceConfig = remoteInterface.config as Record<string, any>;
+        const diagnosisConfig: DiagnosisConfig = {
+          baseUrl: serviceConfig.endpointUrl,
+          urlPrefix: interfaceConfig.urlPrefix || '',
+          urlPath: interfaceConfig.urlPath || '',
+          interfaceConfig: {
+            type: config.callType,
+            interval: config.interval,
+            maxAttempts: config.maxAttempts,
+            timeout: config.timeout,
+            retryCount: config.retryCount,
+            retryDelay: config.retryDelay,
+          },
+        };
+
+        // 根据接口类型调用不同的方法
+        if (interfaceConfig.type === 'upload') {
+          lastResult = await this.diagnosisHttpService.uploadFile(
+            fileData,
+            fileMeta.originalFileName,
+            diagnosisConfig,
+            token,
+          );
+        } else if (
+          interfaceConfig.type === 'query' &&
+          lastResult &&
+          'taskId' in lastResult
+        ) {
+          lastResult = await this.diagnosisHttpService.getTaskStatus(
+            lastResult.taskId,
+            diagnosisConfig,
+            token,
+          );
+        } else {
+          lastResult = await this.diagnosisHttpService.callInterface(
+            diagnosisConfig,
+            interfaceConfig.method || 'POST',
+            interfaceConfig.path || '',
+            lastResult || fileData,
+            token,
+          );
+        }
+      }
+
+      if (!lastResult) {
+        throw new RpcException({
+          code: 500,
+          message: '接口调用失败，未获取到结果',
+        });
+      }
+
+      // 8. 更新诊断结果
+      diagnosis.status = lastResult.status;
+      diagnosis.diagnosisResult = lastResult;
       await queryRunner.manager.save(diagnosis);
-      await queryRunner.commitTransaction();
 
-      return formatResponse(200, result, '已经开始诊断，请稍后查看结果');
+      await queryRunner.commitTransaction();
+      return formatResponse(200, lastResult, '已经开始诊断，请稍后查看结果');
     } catch (error) {
       this.logger.error(error);
       await queryRunner.rollbackTransaction();
@@ -298,7 +371,7 @@ export class DiagnosisService {
   }
 
   async diagnosisSupportGet() {
-    const aiServiceList = await this.aiServiceRepository.find({
+    const aiServiceList = await this.remoteRepository.find({
       where: { status: 'active' },
     });
     return formatResponse(200, aiServiceList, '获取诊断支持成功');
