@@ -1,3 +1,16 @@
+const path = require('path');
+const dotenv = require('dotenv');
+
+// 加载环境变量
+const loadEnv = (envFile) => {
+  const envPath = path.resolve(__dirname, envFile);
+  return dotenv.config({ path: envPath }).parsed;
+};
+
+// 加载不同环境的配置
+const developmentEnv = loadEnv('.env.development.local');
+const productionEnv = loadEnv('.env.production.local');
+
 module.exports = {
   apps: [
     {
@@ -7,16 +20,13 @@ module.exports = {
       exec_mode: 'cluster',
       watch: false,
       env: {
-        NODE_ENV: 'production',
-        PORT: 3000,
+        ...productionEnv,
       },
       env_production: {
-        NODE_ENV: 'production',
-        PORT: 3000,
+        ...productionEnv,
       },
       env_development: {
-        NODE_ENV: 'development',
-        PORT: 3000,
+        ...developmentEnv,
       },
       max_memory_restart: '1G',
       error_file: 'logs/api-gateway-error.log',
@@ -39,7 +49,13 @@ module.exports = {
       exec_mode: 'cluster',
       watch: false,
       env: {
-        NODE_ENV: 'production',
+        ...productionEnv,
+      },
+      env_production: {
+        ...productionEnv,
+      },
+      env_development: {
+        ...developmentEnv,
       },
     },
     {
@@ -49,7 +65,13 @@ module.exports = {
       exec_mode: 'cluster',
       watch: false,
       env: {
-        NODE_ENV: 'production',
+        ...productionEnv,
+      },
+      env_production: {
+        ...productionEnv,
+      },
+      env_development: {
+        ...developmentEnv,
       },
     },
     {
@@ -59,7 +81,13 @@ module.exports = {
       exec_mode: 'cluster',
       watch: false,
       env: {
-        NODE_ENV: 'production',
+        ...productionEnv,
+      },
+      env_production: {
+        ...productionEnv,
+      },
+      env_development: {
+        ...developmentEnv,
       },
     },
     {
@@ -69,7 +97,13 @@ module.exports = {
       exec_mode: 'cluster',
       watch: false,
       env: {
-        NODE_ENV: 'production',
+        ...productionEnv,
+      },
+      env_production: {
+        ...productionEnv,
+      },
+      env_development: {
+        ...developmentEnv,
       },
     },
     {
@@ -79,7 +113,13 @@ module.exports = {
       exec_mode: 'cluster',
       watch: false,
       env: {
-        NODE_ENV: 'production',
+        ...productionEnv,
+      },
+      env_production: {
+        ...productionEnv,
+      },
+      env_development: {
+        ...developmentEnv,
       },
     },
     {
@@ -89,7 +129,13 @@ module.exports = {
       exec_mode: 'cluster',
       watch: false,
       env: {
-        NODE_ENV: 'production',
+        ...productionEnv,
+      },
+      env_production: {
+        ...productionEnv,
+      },
+      env_development: {
+        ...developmentEnv,
       },
     },
     {
@@ -99,7 +145,13 @@ module.exports = {
       exec_mode: 'cluster',
       watch: false,
       env: {
-        NODE_ENV: 'production',
+        ...productionEnv,
+      },
+      env_production: {
+        ...productionEnv,
+      },
+      env_development: {
+        ...developmentEnv,
       },
     },
   ],
