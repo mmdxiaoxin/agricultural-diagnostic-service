@@ -1,5 +1,5 @@
-import { CreateRemoteServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
-import { UpdateRemoteServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
+import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
+import { UpdateRemoteServiceDto } from '@common/dto/remote/update-remote-service.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';

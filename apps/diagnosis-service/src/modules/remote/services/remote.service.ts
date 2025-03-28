@@ -1,6 +1,6 @@
 import { RemoteService, RemoteInterface } from '@app/database/entities';
-import { CreateRemoteServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
-import { UpdateRemoteServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
+import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
+import { UpdateRemoteServiceDto } from '@common/dto/remote/update-remote-service.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';

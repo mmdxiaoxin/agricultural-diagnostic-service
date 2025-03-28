@@ -1,8 +1,8 @@
-import { CreateRemoteConfigDto } from '@common/dto/ai-service/create-remote-config.dto';
-import { CreateRemoteConfigsDto } from '@common/dto/ai-service/create-remote-configs.dto';
-import { CreateRemoteServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
-import { UpdateAiConfigsDto } from '@common/dto/ai-service/update-remote-configs.dto';
-import { UpdateRemoteServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
+import { CreateRemoteConfigDto } from '@common/dto/remote/create-remote-config.dto';
+import { CreateRemoteConfigsDto } from '@common/dto/remote/create-remote-configs.dto';
+import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
+import { UpdateAiConfigsDto } from '@common/dto/remote/update-remote-configs.dto';
+import { UpdateRemoteServiceDto } from '@common/dto/remote/update-remote-service.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { DIAGNOSIS_SERVICE_NAME } from 'config/microservice.config';
