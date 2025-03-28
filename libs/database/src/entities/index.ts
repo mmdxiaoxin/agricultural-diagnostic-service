@@ -1,5 +1,6 @@
 export * from './remote.entity';
 export * from './remote-interface.entity';
+export * from './remote-config.entity';
 export * from './dataset.entity';
 export * from './diagnosis-history.entity';
 export * from './file.entity';

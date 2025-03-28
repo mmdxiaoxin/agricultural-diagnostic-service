@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsEnum,
   IsNotEmpty,
-  IsObject,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -41,10 +41,20 @@ export class CreateRemoteServiceDto {
   status?: 'active' | 'inactive' | 'under_maintenance'; // 服务状态
 
   @IsOptional()
-  @IsObject()
+  @IsArray()
   @ApiProperty({
     description: '远程服务配置',
-    example: {},
+    example: [
+      {
+        name: 'config1',
+        value: 'value1',
+      },
+      {
+        name: 'config2',
+        value: 'value2',
+      },
+    ],
+    required: false,
   })
-  config?: Record<string, any>;
+  configs?: Record<string, any>[];
 }

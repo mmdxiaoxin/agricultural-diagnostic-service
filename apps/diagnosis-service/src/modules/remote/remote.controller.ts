@@ -23,13 +23,13 @@ export class RemoteServiceController {
 
   @MessagePattern({ cmd: 'service.get' })
   async findAll(@Payload() payload: void) {
-    const services = await this.remoteService.getRemote();
+    const services = await this.remoteService.find();
     return formatResponse(200, services, '获取成功');
   }
 
   @MessagePattern({ cmd: 'service.get.list' })
   async findPaginated(@Payload() payload: { page: number; pageSize: number }) {
-    const [list, total] = await this.remoteService.getRemoteList(
+    const [list, total] = await this.remoteService.findList(
       payload.page,
       payload.pageSize,
     );
@@ -42,7 +42,7 @@ export class RemoteServiceController {
 
   @MessagePattern({ cmd: 'service.get.byId' })
   async findOne(@Payload() payload: number) {
-    const service = await this.remoteService.getRemoteById(payload);
+    const service = await this.remoteService.findById(payload);
     return formatResponse(200, service, '获取成功');
   }
 
