@@ -21,7 +21,7 @@ export class RemoteServiceService {
   // 获取全部远程服务
   async find(): Promise<RemoteService[]> {
     return this.remoteServiceRepository.find({
-      relations: ['interfaces'],
+      relations: ['interfaces', 'configs'],
     });
   }
 
@@ -31,7 +31,7 @@ export class RemoteServiceService {
     return await this.remoteServiceRepository.findAndCount({
       skip,
       take: pageSize,
-      relations: ['interfaces'],
+      relations: ['interfaces', 'configs'],
     });
   }
 
@@ -39,7 +39,7 @@ export class RemoteServiceService {
   async findById(serviceId: number) {
     return this.remoteServiceRepository.findOne({
       where: { id: serviceId },
-      relations: ['interfaces'],
+      relations: ['interfaces', 'configs'],
     });
   }
 
