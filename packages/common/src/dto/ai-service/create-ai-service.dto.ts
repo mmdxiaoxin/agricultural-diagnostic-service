@@ -33,12 +33,4 @@ export class CreateAiServiceDto {
     example: 'active',
   })
   status?: 'active' | 'inactive' | 'under_maintenance'; // 服务状态
-
-  @IsOptional()
-  @IsString()
-  @ApiProperty({
-    description: '服务的访问URL',
-    example: 'http://localhost:5001',
-  })
-  endpointUrl?: string; // 服务的访问URL
 }
