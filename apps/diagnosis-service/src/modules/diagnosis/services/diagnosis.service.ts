@@ -66,7 +66,7 @@ export class DiagnosisService {
     }
   }
 
-  // 开始诊断数据
+  // 创建诊断任务并获取诊断结果
   async startDiagnosis(
     diagnosisId: number,
     userId: number,
@@ -135,7 +135,7 @@ export class DiagnosisService {
       const fileData = await this.downloadFile(fileMeta);
 
       // 调用诊断服务
-      const result = await this.diagnosisHttpService.diagnose(
+      const result = await this.diagnosisHttpService.createDiagnosisTask(
         fileData,
         fileMeta.originalFileName,
         config,
@@ -143,13 +143,16 @@ export class DiagnosisService {
       );
 
       // 更新诊断状态
-      diagnosis.status = Status.COMPLETED;
+      this.logger.log(config);
+      this.logger.log(result);
+      diagnosis.status = result.status;
       diagnosis.diagnosisResult = result;
       await queryRunner.manager.save(diagnosis);
       await queryRunner.commitTransaction();
 
-      return formatResponse(200, result, '诊断成功');
+      return formatResponse(200, result, '已经开始诊断，请稍后查看结果');
     } catch (error) {
+      this.logger.error(error);
       await queryRunner.rollbackTransaction();
       throw new RpcException({
         code: 500,

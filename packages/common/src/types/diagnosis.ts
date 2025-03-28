@@ -29,8 +29,17 @@ export type DetectPrediction = BasePrediction & {
 // 预测结果联合类型
 export type Prediction = ClassifyPrediction | DetectPrediction;
 
-export interface DiagnosisResponse {
-  predictions: Prediction[];
+export interface CreateDiagnosisTaskResponse {
+  taskId: string;
+  status: string;
+  message: string;
+}
+
+export interface DiagnosisTaskResponse {
+  taskId: string;
+  status: string;
+  message: string;
+  result: string;
 }
 
 export interface DiagnosisConfig {
