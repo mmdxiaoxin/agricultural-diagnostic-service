@@ -135,6 +135,36 @@ export class DiagnosisHttpService {
     return processedParams;
   }
 
+  private processUrlTemplate(
+    url: string,
+    params: Record<string, any>,
+    previousResults: Map<number, any>,
+  ): string {
+    return url.replace(/\{(\w+)\}/g, (match, key) => {
+      // 首先检查是否是引用格式
+      const value = params[key];
+      if (
+        typeof value === 'string' &&
+        value.startsWith('{{#') &&
+        value.endsWith('}}')
+      ) {
+        const reference = value.slice(3, -2);
+        const [interfaceId, ...path] = reference.split('.');
+        const result = previousResults.get(Number(interfaceId));
+
+        if (result) {
+          let refValue = result;
+          for (const pathKey of path) {
+            refValue = refValue?.[pathKey];
+            if (refValue === undefined) break;
+          }
+          return refValue?.toString() || match;
+        }
+      }
+      return value?.toString() || match;
+    });
+  }
+
   async callInterface<T>(
     config: DiagnosisConfig,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
@@ -144,7 +174,14 @@ export class DiagnosisHttpService {
     previousResults?: Map<number, any>,
   ): Promise<T> {
     const { baseUrl, urlPrefix, urlPath, requests: interfaceConfig } = config;
-    const url = `${baseUrl}${urlPrefix}${urlPath}${path}`;
+
+    // 处理 URL 模板
+    const processedPath = this.processUrlTemplate(
+      path,
+      interfaceConfig.params || {},
+      previousResults || new Map(),
+    );
+    const url = `${baseUrl}${urlPrefix}${urlPath}${processedPath}`;
 
     // 构建请求头
     const headers: Record<string, string> = {};
