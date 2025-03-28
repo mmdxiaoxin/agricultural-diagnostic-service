@@ -116,8 +116,8 @@ export class DiagnosisService {
       const serviceConfig = remoteService.configs.find(
         (config) => config.id === dto.configId,
       ) as Record<string, any>;
-      const interfaceConfigs = serviceConfig.interfaceConfigs as Array<{
-        interfaceId: number;
+      const interfaceConfigs = serviceConfig.requests as Array<{
+        id: number;
         order: number;
         callType: 'single' | 'polling';
         interval?: number;
@@ -127,6 +127,18 @@ export class DiagnosisService {
         retryDelay?: number;
         next?: number[];
         params?: Record<string, any>;
+        pollingCondition?: {
+          field: string;
+          operator:
+            | 'equals'
+            | 'notEquals'
+            | 'contains'
+            | 'greaterThan'
+            | 'lessThan'
+            | 'exists'
+            | 'notExists';
+          value?: any;
+        };
       }>;
 
       if (!interfaceConfigs || interfaceConfigs.length === 0) {
@@ -165,11 +177,11 @@ export class DiagnosisService {
       while (currentConfigs.length > 0) {
         // 并发调用当前层级的接口
         const promises = currentConfigs.map(async (config) => {
-          const remoteInterface = remoteInterfaces.get(config.interfaceId);
+          const remoteInterface = remoteInterfaces.get(config.id);
           if (!remoteInterface) {
             throw new RpcException({
               code: 500,
-              message: `未找到ID为 ${config.interfaceId} 的接口配置`,
+              message: `未找到ID为 ${config.id} 的接口配置`,
             });
           }
 
@@ -198,7 +210,7 @@ export class DiagnosisService {
             results,
           );
 
-          results.set(config.interfaceId, result);
+          results.set(config.id, result);
           return result;
         });
 
@@ -219,14 +231,13 @@ export class DiagnosisService {
 
         currentConfigs = sortedConfigs.filter(
           (config) =>
-            nextInterfaceIds.has(config.interfaceId) &&
-            !results.has(config.interfaceId),
+            nextInterfaceIds.has(config.id) && !results.has(config.id),
         );
       }
 
       // 8. 获取最后一个接口的结果
       const lastResult = results.get(
-        sortedConfigs[sortedConfigs.length - 1].interfaceId,
+        sortedConfigs[sortedConfigs.length - 1].id,
       );
       if (!lastResult) {
         throw new RpcException({
