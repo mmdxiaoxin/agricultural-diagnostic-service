@@ -15,6 +15,7 @@ import { DiagnosisModule } from './diagnosis/diagnosis.module';
 import { FileModule } from './file/file.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { MenuModule } from './menu/menu.module';
+import { RemoteModule } from './remote/remote.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
 
@@ -47,6 +48,7 @@ import { UserModule } from './user/user.module';
     KnowledgeModule,
     DiagnosisModule,
     AiServiceModule,
+    RemoteModule,
   ],
   controllers: [AppController],
   providers: [AppService],
