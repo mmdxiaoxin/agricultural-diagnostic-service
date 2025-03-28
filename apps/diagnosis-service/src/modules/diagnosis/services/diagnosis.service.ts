@@ -1,15 +1,11 @@
 import {
-  RemoteService,
   DiagnosisHistory,
   File as FileEntity,
+  RemoteConfig,
+  RemoteService,
 } from '@app/database/entities';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
-import {
-  DiagnosisConfig,
-  InterfaceCallConfig,
-  CreateDiagnosisTaskResponse,
-  DiagnosisTaskResponse,
-} from '@common/types/diagnosis';
+import { DiagnosisConfig } from '@common/types/diagnosis';
 import { GrpcDownloadService } from '@common/types/download/download.types';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientGrpc, ClientProxy, RpcException } from '@nestjs/microservices';
@@ -71,86 +67,27 @@ export class DiagnosisService {
     }
   }
 
-  // 创建诊断任务并获取诊断结果
-  async startDiagnosis(
-    diagnosisId: number,
-    userId: number,
-    dto: StartDiagnosisDto,
+  // 后台处理诊断任务
+  private async processDiagnosisTask(
+    diagnosis: DiagnosisHistory,
+    remoteService: RemoteService,
+    remoteConfig: RemoteConfig,
+    fileData: Buffer,
     token: string,
   ) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
     try {
-      // 1. 获取诊断记录
-      const diagnosis = await queryRunner.manager.findOne(DiagnosisHistory, {
-        where: { id: diagnosisId },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!diagnosis) {
-        throw new RpcException({
-          code: 500,
-          message: '未找到诊断记录',
-        });
-      }
-      if (diagnosis.createdBy !== userId) {
-        throw new RpcException({
-          code: 500,
-          message: '无权限操作此记录',
-        });
-      }
-
-      // 2. 获取远程服务配置
-      const remoteService = await this.remoteRepository.findOne({
-        where: { id: dto.serviceId },
-        relations: ['interfaces', 'configs'],
-      });
-      if (!remoteService) {
-        throw new RpcException({
-          code: 500,
-          message: '未找到远程服务配置',
-        });
-      }
-
-      // 3. 从服务配置中获取接口调用配置
-      const remoteConfig = remoteService.configs.find(
-        (config) => config.id === dto.configId,
-      );
-      if (!remoteConfig) {
-        throw new RpcException({
-          code: 500,
-          message: '服务配置无接口配置',
-        });
-      }
       const requests = remoteConfig.config.requests;
       if (!requests || requests.length === 0) {
-        throw new RpcException({
-          code: 500,
-          message: '服务配置中未指定接口调用配置',
-        });
+        throw new Error('服务配置中未指定接口调用配置');
       }
 
-      // 4. 按顺序获取接口配置
+      // 按顺序获取接口配置
       const sortedRequests = requests.sort((a, b) => a.order - b.order);
       const remoteInterfaces = new Map(
         remoteService.interfaces.map((interf) => [interf.id, interf]),
       );
 
-      // 5. 更新诊断状态
-      diagnosis.status = Status.IN_PROGRESS;
-      await queryRunner.manager.save(diagnosis);
-
-      // 6. 获取文件
-      if (!diagnosis.fileId) {
-        throw new RpcException({
-          code: 404,
-          message: '无上传文件记录',
-        });
-      }
-      const fileMeta = await this.getFileMeta(diagnosis.fileId);
-      const fileData = await this.downloadFile(fileMeta);
-
-      // 7. 按顺序调用接口
+      // 按顺序调用接口
       const results = new Map<number, any>();
       let currentRequests = sortedRequests.filter(
         (config) => !config.next || config.next.length === 0,
@@ -161,10 +98,7 @@ export class DiagnosisService {
         const promises = currentRequests.map(async (config) => {
           const remoteInterface = remoteInterfaces.get(config.id);
           if (!remoteInterface) {
-            throw new RpcException({
-              code: 500,
-              message: `未找到ID为 ${config.id} 的接口配置`,
-            });
+            throw new Error(`未找到ID为 ${config.id} 的接口配置`);
           }
 
           const interfaceConfig = remoteInterface.config as Record<string, any>;
@@ -218,30 +152,160 @@ export class DiagnosisService {
         );
       }
 
-      // 8. 获取最后一个接口的结果
+      // 获取最后一个接口的结果
       const lastResult = results.get(
         sortedRequests[sortedRequests.length - 1].id,
       );
       if (!lastResult) {
+        throw new Error('接口调用失败，未获取到结果');
+      }
+
+      // 更新诊断结果
+      const queryRunner = this.dataSource.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+      try {
+        const updatedDiagnosis = await queryRunner.manager.findOne(
+          DiagnosisHistory,
+          {
+            where: { id: diagnosis.id },
+            lock: { mode: 'pessimistic_write' },
+          },
+        );
+        if (updatedDiagnosis) {
+          updatedDiagnosis.status = lastResult.status;
+          updatedDiagnosis.diagnosisResult = lastResult;
+          await queryRunner.manager.save(updatedDiagnosis);
+        }
+        await queryRunner.commitTransaction();
+      } catch (error) {
+        await queryRunner.rollbackTransaction();
+        throw error;
+      } finally {
+        await queryRunner.release();
+      }
+    } catch (error) {
+      this.logger.error('诊断任务处理失败:', error);
+      const queryRunner = this.dataSource.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+      try {
+        const updatedDiagnosis = await queryRunner.manager.findOne(
+          DiagnosisHistory,
+          {
+            where: { id: diagnosis.id },
+            lock: { mode: 'pessimistic_write' },
+          },
+        );
+        if (updatedDiagnosis) {
+          updatedDiagnosis.status = Status.FAILED;
+          updatedDiagnosis.diagnosisResult = {
+            error: error.message,
+            timestamp: new Date().toISOString(),
+          };
+          await queryRunner.manager.save(updatedDiagnosis);
+        }
+        await queryRunner.commitTransaction();
+      } catch (saveError) {
+        await queryRunner.rollbackTransaction();
+        this.logger.error('保存诊断失败状态失败:', saveError);
+      } finally {
+        await queryRunner.release();
+      }
+    }
+  }
+
+  // 创建诊断任务并获取诊断结果
+  async startDiagnosis(
+    diagnosisId: number,
+    userId: number,
+    dto: StartDiagnosisDto,
+    token: string,
+  ) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      // 1. 获取诊断记录
+      const diagnosis = await queryRunner.manager.findOne(DiagnosisHistory, {
+        where: { id: diagnosisId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!diagnosis) {
         throw new RpcException({
           code: 500,
-          message: '接口调用失败，未获取到结果',
+          message: '未找到诊断记录',
+        });
+      }
+      if (diagnosis.createdBy !== userId) {
+        throw new RpcException({
+          code: 500,
+          message: '无权限操作此记录',
         });
       }
 
-      // 9. 更新诊断结果
-      diagnosis.status = lastResult.status;
-      diagnosis.diagnosisResult = lastResult;
+      // 2. 获取远程服务配置
+      const remoteService = await this.remoteRepository.findOne({
+        where: { id: dto.serviceId },
+        relations: ['interfaces', 'configs'],
+      });
+      if (!remoteService) {
+        throw new RpcException({
+          code: 500,
+          message: '未找到远程服务配置',
+        });
+      }
+
+      // 3. 从服务配置中获取接口调用配置
+      const remoteConfig = remoteService.configs.find(
+        (config) => config.id === dto.configId,
+      );
+      if (!remoteConfig) {
+        throw new RpcException({
+          code: 500,
+          message: '服务配置无接口配置',
+        });
+      }
+
+      // 4. 更新诊断状态
+      diagnosis.status = Status.IN_PROGRESS;
       await queryRunner.manager.save(diagnosis);
 
+      // 5. 获取文件
+      if (!diagnosis.fileId) {
+        throw new RpcException({
+          code: 404,
+          message: '无上传文件记录',
+        });
+      }
+      const fileMeta = await this.getFileMeta(diagnosis.fileId);
+      const fileData = await this.downloadFile(fileMeta);
+
+      // 6. 启动后台任务
+      process.nextTick(() => {
+        this.processDiagnosisTask(
+          diagnosis,
+          remoteService,
+          remoteConfig,
+          fileData,
+          token,
+        ).catch((error) => {
+          this.logger.error('后台诊断任务执行失败:', error);
+        });
+      });
+
       await queryRunner.commitTransaction();
-      return formatResponse(200, lastResult, '已经开始诊断，请稍后查看结果');
+      return formatResponse(
+        200,
+        { diagnosisId },
+        '诊断任务已启动，请稍后查看结果',
+      );
     } catch (error) {
       this.logger.error(error);
       await queryRunner.rollbackTransaction();
       throw new RpcException({
         code: 500,
-        message: '开始诊断失败',
+        message: '启动诊断任务失败',
         data: error,
       });
     } finally {
