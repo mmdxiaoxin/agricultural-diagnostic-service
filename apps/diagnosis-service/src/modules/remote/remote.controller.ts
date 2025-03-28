@@ -1,29 +1,35 @@
+import { CreateRemoteInterfaceDto } from '@common/dto/remote/create-remote-interface.dto';
 import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
+import { UpdateRemoteInterfaceDto } from '@common/dto/remote/update-remote-interface.dto';
 import { UpdateRemoteServiceDto } from '@common/dto/remote/update-remote-service.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
+import { RemoteInterfaceService } from './services/remote-interface.service';
 import { RemoteServiceService } from './services/remote.service';
 
 @Controller()
 export class RemoteServiceController {
-  constructor(private readonly service: RemoteServiceService) {}
+  constructor(
+    private readonly remoteService: RemoteServiceService,
+    private readonly interfaceService: RemoteInterfaceService,
+  ) {}
 
   @MessagePattern({ cmd: 'service.create' })
   async create(@Payload() payload: CreateRemoteServiceDto) {
-    await this.service.create(payload);
+    await this.remoteService.create(payload);
     return formatResponse(201, null, '创建成功');
   }
 
   @MessagePattern({ cmd: 'service.get' })
   async findAll(@Payload() payload: void) {
-    const services = await this.service.getRemote();
+    const services = await this.remoteService.getRemote();
     return formatResponse(200, services, '获取成功');
   }
 
   @MessagePattern({ cmd: 'service.get.list' })
   async findPaginated(@Payload() payload: { page: number; pageSize: number }) {
-    const [list, total] = await this.service.getRemoteList(
+    const [list, total] = await this.remoteService.getRemoteList(
       payload.page,
       payload.pageSize,
     );
@@ -36,7 +42,7 @@ export class RemoteServiceController {
 
   @MessagePattern({ cmd: 'service.get.byId' })
   async findOne(@Payload() payload: number) {
-    const service = await this.service.getRemoteById(payload);
+    const service = await this.remoteService.getRemoteById(payload);
     return formatResponse(200, service, '获取成功');
   }
 
@@ -44,19 +50,69 @@ export class RemoteServiceController {
   async update(
     @Payload() payload: { serviceId: number; dto: UpdateRemoteServiceDto },
   ) {
-    await this.service.update(payload.serviceId, payload.dto);
+    await this.remoteService.update(payload.serviceId, payload.dto);
     return formatResponse(200, null, '更新成功');
   }
 
   @MessagePattern({ cmd: 'service.remove' })
   async remove(@Payload() payload: number) {
-    await this.service.remove(payload);
+    await this.remoteService.remove(payload);
     return formatResponse(204, null, '删除成功');
   }
 
   @MessagePattern({ cmd: 'service.copy' })
   async copy(@Payload() payload: number) {
-    await this.service.copy(payload);
+    await this.remoteService.copy(payload);
     return formatResponse(201, null, '复制成功');
+  }
+
+  @MessagePattern({ cmd: 'service.interface.create' })
+  async createInterface(
+    @Payload() payload: { serviceId: number; dto: CreateRemoteInterfaceDto },
+  ) {
+    await this.interfaceService.createInterface(payload.serviceId, payload.dto);
+    return formatResponse(201, null, '创建成功');
+  }
+
+  @MessagePattern({ cmd: 'service.interface.update' })
+  async updateInterface(
+    @Payload() payload: { interfaceId: number; dto: UpdateRemoteInterfaceDto },
+  ) {
+    await this.interfaceService.updateInterface(
+      payload.interfaceId,
+      payload.dto,
+    );
+    return formatResponse(200, null, '更新成功');
+  }
+
+  @MessagePattern({ cmd: 'service.interface.remove' })
+  async removeInterface(@Payload() payload: number) {
+    await this.interfaceService.removeInterface(payload);
+    return formatResponse(204, null, '删除成功');
+  }
+
+  @MessagePattern({ cmd: 'service.interface.get' })
+  async getInterface(@Payload() payload: number) {
+    const interface_ = await this.interfaceService.getInterfaces(payload);
+    return formatResponse(200, interface_, '获取成功');
+  }
+
+  @MessagePattern({ cmd: 'service.interface.get.list' })
+  async getInterfaceList(
+    @Payload() payload: { serviceId: number; page: number; pageSize: number },
+  ) {
+    const { list, total, page, pageSize } =
+      await this.interfaceService.getInterfacesList(
+        payload.serviceId,
+        payload.page,
+        payload.pageSize,
+      );
+    return formatResponse(200, { list, total, page, pageSize }, '获取成功');
+  }
+
+  @MessagePattern({ cmd: 'service.interface.get.byId' })
+  async getInterfaceById(@Payload() payload: number) {
+    const interface_ = await this.interfaceService.getInterfaceById(payload);
+    return formatResponse(200, interface_, '获取成功');
   }
 }
