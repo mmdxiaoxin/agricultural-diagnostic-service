@@ -1,5 +1,5 @@
-export * from './service.entity';
-export * from './service-interface.entity';
+export * from './remote.entity';
+export * from './remote-interface.entity';
 export * from './dataset.entity';
 export * from './diagnosis-history.entity';
 export * from './file.entity';
@@ -8,4 +8,4 @@ export * from './role.entity';
 export * from './task.entity';
 export * from './user.entity';
 export * from './knowledge.entity';
-export * from './service.entity';
+export * from './remote.entity';

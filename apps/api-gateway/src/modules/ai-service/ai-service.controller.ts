@@ -1,9 +1,9 @@
 import { Roles } from '@common/decorator/roles.decorator';
-import { CreateAiConfigDto } from '@common/dto/ai-service/create-ai-config.dto';
-import { CreateAiConfigsDto } from '@common/dto/ai-service/create-ai-configs.dto';
-import { CreateAiServiceDto } from '@common/dto/ai-service/create-ai-service.dto';
-import { UpdateAiConfigsDto } from '@common/dto/ai-service/update-ai-configs.dto';
-import { UpdateAiServiceDto } from '@common/dto/ai-service/update-ai-service.dto';
+import { CreateAiConfigDto } from '@common/dto/ai-service/create-remote-config.dto';
+import { CreateAiConfigsDto } from '@common/dto/ai-service/create-remote-configs.dto';
+import { CreateAiServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
+import { UpdateAiConfigsDto } from '@common/dto/ai-service/update-remote-configs.dto';
+import { UpdateAiServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {

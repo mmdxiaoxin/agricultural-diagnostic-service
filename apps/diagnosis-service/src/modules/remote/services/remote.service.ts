@@ -1,36 +1,26 @@
-import { AiService, AiServiceConfig } from '@app/database/entities';
-import { CreateAiServiceDto } from '@common/dto/ai-service/create-ai-service.dto';
-import { UpdateAiServiceDto } from '@common/dto/ai-service/update-ai-service.dto';
+import { RemoteService, RemoteInterface } from '@app/database/entities';
+import { CreateAiServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
+import { UpdateAiServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
-export class AiServiceService {
+export class RemoteServiceService {
   constructor(
-    @InjectRepository(AiService)
-    private aiServiceRepository: Repository<AiService>,
-
-    @InjectRepository(AiServiceConfig)
-    private aiServiceConfigRepository: Repository<AiServiceConfig>,
-
+    @InjectRepository(RemoteService)
+    private aiServiceRepository: Repository<RemoteService>,
     private dataSource: DataSource,
   ) {}
 
-  // 创建AI服务
-  async create(dto: CreateAiServiceDto): Promise<AiService> {
-    const aiService = this.aiServiceRepository.create(dto);
-    return await this.aiServiceRepository.save(aiService);
-  }
-
   // 获取全部AI服务
-  async getAi(): Promise<AiService[]> {
+  async getRemote(): Promise<RemoteService[]> {
     return this.aiServiceRepository.find();
   }
 
   // 分页查询AI服务
-  async getAiList(page: number, pageSize: number) {
+  async getRemoteList(page: number, pageSize: number) {
     const skip = (page - 1) * pageSize;
     return await this.aiServiceRepository.findAndCount({
       skip,
@@ -39,20 +29,32 @@ export class AiServiceService {
   }
 
   // 获取单个AI服务
-  async getAIById(serviceId: number) {
+  async getRemoteById(serviceId: number) {
     return this.aiServiceRepository.findOne({
-      where: { serviceId },
-      relations: ['aiServiceConfigs'],
+      where: { id: serviceId },
+      relations: ['interfaces'],
     });
   }
 
+  // 创建AI服务
+  async create(dto: CreateAiServiceDto): Promise<RemoteService> {
+    const aiService = this.aiServiceRepository.create(dto);
+    return await this.aiServiceRepository.save(aiService);
+  }
+
   // 更新AI服务
-  async update(serviceId: number, dto: UpdateAiServiceDto): Promise<AiService> {
+  async update(
+    serviceId: number,
+    dto: UpdateAiServiceDto,
+  ): Promise<RemoteService> {
     const aiService = await this.aiServiceRepository.findOne({
-      where: { serviceId },
+      where: { id: serviceId },
     });
     if (!aiService) {
-      throw new RpcException('AI Service not found');
+      throw new RpcException({
+        code: 404,
+        message: '未找到当前服务',
+      });
     }
 
     Object.assign(aiService, dto);
@@ -67,9 +69,9 @@ export class AiServiceService {
 
     try {
       // 查找服务及其配置
-      const aiService = await queryRunner.manager.findOne(AiService, {
-        where: { serviceId },
-        relations: ['aiServiceConfigs'],
+      const aiService = await queryRunner.manager.findOne(RemoteService, {
+        where: { id: serviceId },
+        relations: ['interfaces'],
       });
 
       if (!aiService) {
@@ -79,9 +81,9 @@ export class AiServiceService {
         });
       }
 
-      // 删除关联的配置记录
-      if (aiService.aiServiceConfigs?.length) {
-        await queryRunner.manager.remove(aiService.aiServiceConfigs);
+      // 删除关联的接口
+      if (aiService.interfaces?.length) {
+        await queryRunner.manager.remove(aiService.interfaces);
       }
 
       // 删除服务本身
@@ -101,16 +103,16 @@ export class AiServiceService {
   }
 
   // 复制AI服务
-  async copy(serviceId: number): Promise<AiService> {
+  async copy(serviceId: number): Promise<RemoteService> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
       // 查找原始服务及其配置
-      const originalService = await queryRunner.manager.findOne(AiService, {
-        where: { serviceId },
-        relations: ['aiServiceConfigs'],
+      const originalService = await queryRunner.manager.findOne(RemoteService, {
+        where: { id: serviceId },
+        relations: ['interfaces'],
       });
 
       if (!originalService) {
@@ -121,7 +123,7 @@ export class AiServiceService {
       }
 
       // 创建新的服务实例
-      const newService = queryRunner.manager.create(AiService, {
+      const newService = queryRunner.manager.create(RemoteService, {
         ...originalService,
         serviceId: undefined,
         serviceName: `${originalService.serviceName} - 复制`,
@@ -132,18 +134,15 @@ export class AiServiceService {
       // 保存新服务
       const savedService = await queryRunner.manager.save(newService);
 
-      // 复制配置记录
-      if (originalService.aiServiceConfigs?.length) {
-        const newConfigs = originalService.aiServiceConfigs.map((config) =>
-          queryRunner.manager.create(AiServiceConfig, {
-            ...config,
-            configId: undefined,
+      // 复制接口记录
+      if (originalService.interfaces?.length) {
+        const newInterfaces = originalService.interfaces.map((interface_) =>
+          queryRunner.manager.create(RemoteInterface, {
+            ...interface_,
             service: savedService,
-            createdAt: new Date(),
-            updatedAt: new Date(),
           }),
         );
-        await queryRunner.manager.save(newConfigs);
+        await queryRunner.manager.save(newInterfaces);
       }
 
       await queryRunner.commitTransaction();

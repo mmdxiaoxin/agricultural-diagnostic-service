@@ -1,8 +1,8 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { ServiceInterface } from './service-interface.entity';
+import { RemoteInterface } from './remote-interface.entity';
 
-@Entity('service')
+@Entity('remote_service')
 export class RemoteService extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
   serviceName: string; // 服务名称
@@ -24,8 +24,8 @@ export class RemoteService extends BaseEntity {
   config: object;
 
   @OneToMany(
-    () => ServiceInterface,
+    () => RemoteInterface,
     (serviceInterface) => serviceInterface.service,
   )
-  interfaces: ServiceInterface[];
+  interfaces: RemoteInterface[];
 }

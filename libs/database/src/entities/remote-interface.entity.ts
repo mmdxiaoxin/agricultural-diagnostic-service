@@ -1,9 +1,9 @@
 import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { RemoteService } from './service.entity';
+import { RemoteService } from './remote.entity';
 
-@Entity('service_interface')
-export class ServiceInterface extends BaseEntity {
+@Entity('remote_service_interface')
+export class RemoteInterface extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
   endpointUrl: string; // 接口访问地址
 

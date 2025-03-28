@@ -1,9 +1,9 @@
 import { DatabaseModule } from '@app/database';
 import { Module } from '@nestjs/common';
-import { AiServiceModule } from './modules/ai-service/ai-service.module';
+import { RemoteServiceModule } from './modules/remote/remote.module';
 import { DiagnosisModule } from './modules/diagnosis/diagnosis.module';
 
 @Module({
-  imports: [DiagnosisModule, AiServiceModule, DatabaseModule.register()],
+  imports: [DiagnosisModule, RemoteServiceModule, DatabaseModule.register()],
 })
 export class AppModule {}

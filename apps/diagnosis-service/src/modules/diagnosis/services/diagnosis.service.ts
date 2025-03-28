@@ -1,5 +1,5 @@
 import {
-  AiService,
+  RemoteService,
   DiagnosisHistory,
   File as FileEntity,
 } from '@app/database/entities';
@@ -33,8 +33,8 @@ export class DiagnosisService {
     @Inject(DOWNLOAD_SERVICE_NAME)
     private readonly downloadClient: ClientGrpc,
     private readonly dataSource: DataSource,
-    @InjectRepository(AiService)
-    private readonly aiServiceRepository: Repository<AiService>,
+    @InjectRepository(RemoteService)
+    private readonly aiServiceRepository: Repository<RemoteService>,
     private readonly diagnosisHttpService: DiagnosisHttpService,
   ) {}
 
