@@ -183,7 +183,7 @@ export class DiagnosisService {
 
         // 根据接口类型调用不同的方法
         if (interfaceConfig.type === 'upload') {
-          lastResult = await this.diagnosisHttpService.uploadFile(
+          lastResult = await this.diagnosisHttpService.callInterfaceUpload(
             fileData,
             fileMeta.originalFileName,
             diagnosisConfig,
@@ -194,7 +194,7 @@ export class DiagnosisService {
           lastResult &&
           'taskId' in lastResult
         ) {
-          lastResult = await this.diagnosisHttpService.getTaskStatus(
+          lastResult = await this.diagnosisHttpService.callInterfaceQuery(
             lastResult.taskId,
             diagnosisConfig,
             token,

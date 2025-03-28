@@ -141,7 +141,7 @@ export class DiagnosisHttpService {
     throw new Error('Invalid interface configuration type');
   }
 
-  async uploadFile(
+  async callInterfaceUpload(
     file: Buffer,
     fileName: string,
     config: DiagnosisConfig,
@@ -162,7 +162,7 @@ export class DiagnosisHttpService {
     );
   }
 
-  async getTaskStatus(
+  async callInterfaceQuery(
     taskId: string,
     config: DiagnosisConfig,
     token: string,
