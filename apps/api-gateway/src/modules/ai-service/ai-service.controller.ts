@@ -1,9 +1,9 @@
 import { Roles } from '@common/decorator/roles.decorator';
-import { CreateAiConfigDto } from '@common/dto/ai-service/create-remote-config.dto';
-import { CreateAiConfigsDto } from '@common/dto/ai-service/create-remote-configs.dto';
-import { CreateAiServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
+import { CreateRemoteConfigDto } from '@common/dto/ai-service/create-remote-config.dto';
+import { CreateRemoteConfigsDto } from '@common/dto/ai-service/create-remote-configs.dto';
+import { CreateRemoteServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
 import { UpdateAiConfigsDto } from '@common/dto/ai-service/update-remote-configs.dto';
-import { UpdateAiServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
+import { UpdateRemoteServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -34,7 +34,7 @@ export class AiServiceController {
   // 创建AI服务
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() dto: CreateAiServiceDto) {
+  async create(@Body() dto: CreateRemoteServiceDto) {
     return this.aiService.createAi(dto);
   }
 
@@ -73,7 +73,7 @@ export class AiServiceController {
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     serviceId: number,
-    @Body() updateAiServiceDto: UpdateAiServiceDto,
+    @Body() updateAiServiceDto: UpdateRemoteServiceDto,
   ) {
     return this.aiService.updateAi(serviceId, updateAiServiceDto);
   }
@@ -113,7 +113,7 @@ export class AiServiceController {
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     serviceId: number,
-    @Body() dto: CreateAiConfigDto,
+    @Body() dto: CreateRemoteConfigDto,
   ) {
     return this.aiService.addAiConfig(serviceId, dto);
   }
@@ -127,7 +127,7 @@ export class AiServiceController {
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     serviceId: number,
-    @Body() dto: CreateAiConfigsDto,
+    @Body() dto: CreateRemoteConfigsDto,
   ) {
     return this.aiService.addAiConfigs(serviceId, dto);
   }
@@ -157,7 +157,7 @@ export class AiServiceController {
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     configId: number,
-    @Body() dto: CreateAiConfigDto,
+    @Body() dto: CreateRemoteConfigDto,
   ) {
     return this.aiService.updateAiConfig(configId, dto);
   }

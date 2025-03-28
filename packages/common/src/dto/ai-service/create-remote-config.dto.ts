@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class CreateAiConfigDto {
+export class CreateRemoteConfigDto {
   @IsString({ message: '配置项键名必须是字符串' })
   @IsNotEmpty({ message: '配置项键名不能为空' })
   @Type(() => String)

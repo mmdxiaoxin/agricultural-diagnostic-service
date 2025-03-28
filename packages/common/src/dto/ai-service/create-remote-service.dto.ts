@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class CreateAiServiceDto {
+export class CreateRemoteServiceDto {
   @IsString()
   @ApiProperty({
     description: '服务名称',

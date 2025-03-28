@@ -24,7 +24,7 @@ class ConfigDto {
 }
 
 // 创建 AI 配置的 DTO
-export class CreateAiConfigsDto {
+export class CreateRemoteConfigsDto {
   @ApiProperty({
     description: '配置项列表',
     type: [ConfigDto],

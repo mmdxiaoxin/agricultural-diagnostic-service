@@ -1,6 +1,6 @@
 import { RemoteService, RemoteInterface } from '@app/database/entities';
-import { CreateAiServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
-import { UpdateAiServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
+import { CreateRemoteServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
+import { UpdateRemoteServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -37,7 +37,7 @@ export class RemoteServiceService {
   }
 
   // 创建AI服务
-  async create(dto: CreateAiServiceDto): Promise<RemoteService> {
+  async create(dto: CreateRemoteServiceDto): Promise<RemoteService> {
     const aiService = this.aiServiceRepository.create(dto);
     return await this.aiServiceRepository.save(aiService);
   }
@@ -45,7 +45,7 @@ export class RemoteServiceService {
   // 更新AI服务
   async update(
     serviceId: number,
-    dto: UpdateAiServiceDto,
+    dto: UpdateRemoteServiceDto,
   ): Promise<RemoteService> {
     const aiService = await this.aiServiceRepository.findOne({
       where: { id: serviceId },

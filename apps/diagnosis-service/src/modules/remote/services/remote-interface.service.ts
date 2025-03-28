@@ -1,7 +1,7 @@
 import { RemoteService, RemoteInterface } from '@app/database/entities';
-import { CreateAiConfigDto } from '@common/dto/ai-service/create-remote-config.dto';
-import { CreateAiConfigsDto } from '@common/dto/ai-service/create-remote-configs.dto';
-import { UpdateAiConfigDto } from '@common/dto/ai-service/update-remote-config.dto';
+import { CreateRemoteConfigDto } from '@common/dto/ai-service/create-remote-config.dto';
+import { CreateRemoteConfigsDto } from '@common/dto/ai-service/create-remote-configs.dto';
+import { UpdateRemoteConfigDto } from '@common/dto/ai-service/update-remote-config.dto';
 import { UpdateAiConfigsDto } from '@common/dto/ai-service/update-remote-configs.dto';
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';

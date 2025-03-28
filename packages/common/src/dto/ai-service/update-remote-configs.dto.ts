@@ -1,3 +1,3 @@
-import { CreateAiConfigsDto } from './create-remote-configs.dto';
+import { CreateRemoteConfigsDto } from './create-remote-configs.dto';
 
-export class UpdateAiConfigsDto extends CreateAiConfigsDto {}
+export class UpdateAiConfigsDto extends CreateRemoteConfigsDto {}

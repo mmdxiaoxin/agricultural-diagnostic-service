@@ -1,5 +1,5 @@
-import { CreateAiServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
-import { UpdateAiServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
+import { CreateRemoteServiceDto } from '@common/dto/ai-service/create-remote-service.dto';
+import { UpdateRemoteServiceDto } from '@common/dto/ai-service/update-remote-service.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -10,7 +10,7 @@ export class RemoteServiceController {
   constructor(private readonly service: RemoteServiceService) {}
 
   @MessagePattern({ cmd: 'service.create' })
-  async create(@Payload() payload: CreateAiServiceDto) {
+  async create(@Payload() payload: CreateRemoteServiceDto) {
     await this.service.create(payload);
     return formatResponse(201, null, '创建成功');
   }
@@ -42,7 +42,7 @@ export class RemoteServiceController {
 
   @MessagePattern({ cmd: 'service.update' })
   async update(
-    @Payload() payload: { serviceId: number; dto: UpdateAiServiceDto },
+    @Payload() payload: { serviceId: number; dto: UpdateRemoteServiceDto },
   ) {
     await this.service.update(payload.serviceId, payload.dto);
     return formatResponse(200, null, '更新成功');
