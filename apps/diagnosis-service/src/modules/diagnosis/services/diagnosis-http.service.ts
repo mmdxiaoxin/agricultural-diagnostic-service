@@ -1,3 +1,4 @@
+import { File } from '@app/database/entities';
 import { HttpService } from '@common/services/http.service';
 import { DiagnosisConfig, InterfaceCallConfig } from '@common/types/diagnosis';
 import { HttpException, Injectable, Logger } from '@nestjs/common';
@@ -118,17 +119,30 @@ export class DiagnosisHttpService {
   private processParams(
     params: Record<string, any>,
     previousResults: Map<number, any>,
+    fileMeta?: File,
+    fileData?: Buffer,
   ): Record<string, any> {
     const processedParams = { ...params };
+    const formData = new FormData();
 
     for (const [key, paramValue] of Object.entries(processedParams)) {
+      // 处理文件参数
+      if (key === 'file' && fileMeta && fileData) {
+        formData.append(paramValue, fileData, {
+          filename: fileMeta.originalFileName,
+          contentType: fileMeta.fileType,
+        });
+        continue;
+      }
+
+      // 处理引用参数
       if (
         typeof paramValue === 'string' &&
         paramValue.startsWith('{{#') &&
         paramValue.endsWith('}}')
       ) {
         try {
-          // 解析引用格式：{{#接口ID.response.data.xxx}}
+          // 解析引用格式：{{#接口ID.response.data.xxx}} 或 {{#接口ID.xxx}}
           const reference = paramValue.slice(3, -2);
           const [interfaceId, ...path] = reference.split('.');
           const result = previousResults.get(Number(interfaceId));
@@ -141,13 +155,16 @@ export class DiagnosisHttpService {
           }
 
           let refValue = result;
-          for (const pathKey of path) {
-            refValue = refValue?.[pathKey];
-            if (refValue === undefined) {
-              throw new HttpException(
-                `接口 ${interfaceId} 的结果中未找到路径 ${path.join('.')}`,
-                500,
-              );
+          // 如果路径为空，直接使用结果
+          if (path.length > 0) {
+            for (const pathKey of path) {
+              refValue = refValue?.[pathKey];
+              if (refValue === undefined) {
+                throw new HttpException(
+                  `接口 ${interfaceId} 的结果中未找到路径 ${path.join('.')}`,
+                  500,
+                );
+              }
             }
           }
           processedParams[key] = refValue;
@@ -156,6 +173,11 @@ export class DiagnosisHttpService {
           throw error;
         }
       }
+    }
+
+    // 如果有文件参数，返回FormData
+    if (Object.keys(processedParams).some((key) => key === 'file')) {
+      return formData;
     }
 
     return processedParams;
@@ -188,6 +210,7 @@ export class DiagnosisHttpService {
             return refValue?.toString() || match;
           }
         }
+        // 如果不是引用格式，直接使用参数值
         return value?.toString() || match;
       } catch (error) {
         this.logger.error(`处理URL模板参数 ${key} 时出错: ${error.message}`);
@@ -196,129 +219,84 @@ export class DiagnosisHttpService {
     });
   }
 
-  async callInterface<T>(
+  async callInterface(
     config: DiagnosisConfig,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: string,
     path: string,
-    data?: any,
-    token?: string,
-    previousResults?: Map<number, any>,
-  ): Promise<T> {
-    const { baseUrl, urlPrefix, urlPath, requests } = config;
+    params: any,
+    token: string,
+    results: Map<number, any>,
+    fileMeta?: File,
+    fileData?: Buffer,
+  ): Promise<any> {
+    // 处理参数
+    const processedParams = await this.processParams(
+      params,
+      results,
+      fileMeta,
+      fileData,
+    );
 
-    try {
-      // 处理 URL 模板
-      const processedPath = this.processUrlTemplate(
-        path,
-        data || {},
-        previousResults || new Map(),
-      );
-      const url = `${baseUrl}${urlPrefix}${urlPath}${processedPath}`;
+    // 处理URL模板
+    const processedPath = this.processUrlTemplate(
+      path,
+      processedParams,
+      results,
+    );
+    const fullUrl = `${config.baseUrl}${config.urlPrefix}${config.urlPath}${processedPath}`;
+    this.logger.debug(`开始调用接口: ${method} ${fullUrl}`);
+    this.logger.debug(`接口参数: ${JSON.stringify(processedParams)}`);
 
-      // 构建请求头
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
+    // 构建请求配置
+    const requestConfig = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type':
+          processedParams instanceof FormData
+            ? 'multipart/form-data'
+            : 'application/json',
+      },
+    };
 
-      // 处理参数引用
-      let processedData = data;
-      if (previousResults && typeof data === 'object') {
-        processedData = this.processParams(data, previousResults);
-      }
-
-      // 如果是 FormData，添加相应的请求头
-      if (processedData instanceof FormData) {
-        Object.assign(headers, processedData.getHeaders());
-      }
-
-      // 构建请求函数
-      const makeRequest = async () => {
-        try {
-          let response;
-          const requestConfig = {
-            headers,
-            timeout: requests[0].timeout,
-            validateStatus: requests[0].validateStatus,
-            ...(method === 'GET'
-              ? { params: processedData }
-              : { data: processedData }),
-          };
-
-          switch (method) {
-            case 'GET':
-              response = await this.httpService.get<T>(url, requestConfig);
-              break;
-            case 'POST':
-              response = await this.httpService.post<T>(
-                url,
-                processedData,
-                requestConfig,
-              );
-              break;
-            case 'PUT':
-              response = await this.httpService.put<T>(
-                url,
-                processedData,
-                requestConfig,
-              );
-              break;
-            case 'DELETE':
-              response = await this.httpService.delete<T>(url, requestConfig);
-              break;
-            default:
-              throw new HttpException(`不支持的HTTP方法: ${method}`, 400);
-          }
-
-          return response.data;
-        } catch (error) {
-          this.logger.error(`HTTP请求失败: ${error.message}`);
-          throw new HttpException(
-            `接口调用失败: ${error.message}`,
-            error.response?.status || 500,
-          );
-        }
-      };
-
-      // 根据配置类型执行不同的调用策略
-      const currentRequest = requests[0];
-      if (currentRequest.type === 'single') {
-        if (currentRequest.retryCount && currentRequest.retryDelay) {
-          return this.retryWithDelay(
-            makeRequest,
-            currentRequest.retryCount,
-            currentRequest.retryDelay,
-          );
-        }
-        return makeRequest();
-      } else {
-        const {
-          interval = 5000,
-          maxAttempts = 10,
-          timeout = 300000,
-          retryCount = 3,
-          retryDelay = 1000,
-          pollingCondition,
-        } = currentRequest;
-
-        return this.pollWithTimeout(
-          async () => {
-            if (retryCount && retryDelay) {
-              return this.retryWithDelay(makeRequest, retryCount, retryDelay);
-            }
-            return makeRequest();
-          },
-          interval,
-          maxAttempts,
-          timeout,
-          pollingCondition,
+    // 发送请求
+    let response;
+    switch (method.toUpperCase()) {
+      case 'GET':
+        response = await this.httpService.get(fullUrl, {
+          ...requestConfig,
+          params: processedParams,
+        });
+        break;
+      case 'POST':
+        response = await this.httpService.post(
+          fullUrl,
+          processedParams,
+          requestConfig,
         );
-      }
-    } catch (error) {
-      this.logger.error(`接口调用失败: ${error.message}`);
-      throw error;
+        break;
+      case 'PUT':
+        response = await this.httpService.put(
+          fullUrl,
+          processedParams,
+          requestConfig,
+        );
+        break;
+      case 'DELETE':
+        response = await this.httpService.delete(fullUrl, {
+          ...requestConfig,
+          params: processedParams,
+        });
+        break;
+      default:
+        throw new HttpException(`不支持的HTTP方法: ${method}`, 400);
     }
+
+    this.logger.debug(`接口响应: ${JSON.stringify(response.data)}`);
+
+    // 处理响应
+    const result = response.data;
+    this.logger.debug(`处理后的结果: ${JSON.stringify(result)}`);
+
+    return result;
   }
 }

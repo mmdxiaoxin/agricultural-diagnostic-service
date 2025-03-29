@@ -1,12 +1,6 @@
-import {
-  Column,
-  Entity,
-  Index,
-  ManyToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { Dataset } from './dataset.entity';
+import { Column, Entity, Index, ManyToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { Dataset } from './dataset.entity';
 
 @Entity('file')
 @Index('file_user_id_fk', ['createdBy'])

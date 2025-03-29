@@ -152,13 +152,55 @@ export class DiagnosisService {
 
       // 7. 按顺序调用接口
       const results = new Map<number, any>();
-      let currentRequests = sortedRequests.filter(
-        (config) => !config.next || config.next.length === 0,
-      );
 
-      while (currentRequests.length > 0) {
+      // 递归调用接口
+      const callInterfaces = async (
+        requests: Array<{
+          id: number;
+          order: number;
+          type: 'single' | 'polling';
+          interval?: number;
+          maxAttempts?: number;
+          timeout?: number;
+          retryCount?: number;
+          retryDelay?: number;
+          next?: number[];
+          params?: Record<string, any>;
+          pollingCondition?: {
+            field: string;
+            operator:
+              | 'equals'
+              | 'notEquals'
+              | 'contains'
+              | 'greaterThan'
+              | 'lessThan'
+              | 'exists'
+              | 'notExists';
+            value?: any;
+          };
+        }>,
+      ) => {
+        // 找出当前层级的接口（没有被其他接口依赖的接口）
+        const currentRequests = requests.filter((config) => {
+          // 检查这个接口是否被其他接口依赖
+          const isDependent = requests.some(
+            (otherConfig) =>
+              otherConfig.next && otherConfig.next.includes(config.id),
+          );
+          return !isDependent && !results.has(config.id);
+        });
+
+        if (currentRequests.length === 0) {
+          return;
+        }
+
+        this.logger.debug(
+          `当前层级接口: ${JSON.stringify(currentRequests.map((r) => r.id))}`,
+        );
+
         // 并发调用当前层级的接口
         const promises = currentRequests.map(async (config) => {
+          this.logger.debug(`准备调用接口 ${config.id}`);
           const remoteInterface = remoteInterfaces.get(config.id);
           if (!remoteInterface) {
             throw new RpcException({
@@ -167,7 +209,7 @@ export class DiagnosisService {
             });
           }
 
-          const interfaceConfig = remoteInterface.config as Record<string, any>;
+          const interfaceConfig = remoteInterface.config;
           const diagnosisConfig: DiagnosisConfig = {
             baseUrl: remoteInterface.url,
             urlPrefix: interfaceConfig.urlPrefix || '',
@@ -196,32 +238,48 @@ export class DiagnosisService {
             config.params || fileData,
             token,
             results,
+            fileMeta,
+            fileData,
           );
 
+          this.logger.debug(
+            `接口 ${config.id} 调用结果: ${JSON.stringify(result)}`,
+          );
           results.set(config.id, result);
           return result;
         });
 
         await Promise.all(promises);
+        this.logger.debug(
+          `当前层级接口调用完成，当前结果: ${JSON.stringify(Object.fromEntries(results))}`,
+        );
 
-        // 获取下一层级的接口配置
-        const nextInterfaceIds = new Set<number>();
-        sortedRequests.forEach((config) => {
-          if (config.next && config.next.length > 0) {
-            const allPreviousCompleted = config.next.every((id) =>
-              results.has(id),
-            );
-            if (allPreviousCompleted) {
-              config.next.forEach((id) => nextInterfaceIds.add(id));
-            }
-          }
+        // 获取下一层级的接口
+        const nextRequests = requests.filter((config) => {
+          // 检查这个接口的所有依赖是否都已经执行完成
+          const allDependenciesCompleted =
+            config.next?.every((id) => results.has(id)) ?? true; // 如果没有next数组，则认为依赖已完成
+          const notExecuted = !results.has(config.id);
+          this.logger.debug(
+            `检查接口 ${config.id} 的依赖: ${JSON.stringify(config.next)}, 是否完成: ${allDependenciesCompleted}, 是否未执行: ${notExecuted}`,
+          );
+          return allDependenciesCompleted && notExecuted;
         });
 
-        currentRequests = sortedRequests.filter(
-          (config) =>
-            nextInterfaceIds.has(config.id) && !results.has(config.id),
+        this.logger.debug(
+          `下一层级接口: ${JSON.stringify(nextRequests.map((r) => r.id))}`,
         );
-      }
+
+        // 递归调用下一层级的接口
+        if (nextRequests.length > 0) {
+          await callInterfaces(nextRequests);
+        }
+      };
+
+      // 开始递归调用
+      await callInterfaces(sortedRequests);
+
+      this.logger.debug(`接口调用结果: ${JSON.stringify(results)}`);
 
       // 8. 获取最后一个接口的结果
       const lastResult = results.get(
