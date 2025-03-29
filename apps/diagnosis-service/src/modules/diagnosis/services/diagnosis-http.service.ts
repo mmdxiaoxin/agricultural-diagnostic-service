@@ -134,29 +134,14 @@ export class DiagnosisHttpService {
       urlParams.add(match[1]);
     }
 
+    // 处理所有参数中的引用
     for (const [key, paramValue] of Object.entries(processedParams)) {
-      // 如果参数已经被 URL 路径使用，则跳过
-      if (urlParams.has(key)) {
-        continue;
-      }
-
-      // 处理文件参数
-      if (key === 'file' && fileMeta && fileData) {
-        formData.append(paramValue, fileData, {
-          filename: fileMeta.originalFileName,
-          contentType: fileMeta.fileType,
-        });
-        continue;
-      }
-
-      // 处理引用参数
       if (
         typeof paramValue === 'string' &&
         paramValue.startsWith('{{#') &&
         paramValue.endsWith('}}')
       ) {
         try {
-          // 解析引用格式：{{#接口ID.response.data.xxx}} 或 {{#接口ID.xxx}}
           const reference = paramValue.slice(3, -2);
           const [interfaceId, ...path] = reference.split('.');
           const result = previousResults.get(Number(interfaceId));
@@ -169,7 +154,6 @@ export class DiagnosisHttpService {
           }
 
           let refValue = result;
-          // 如果路径为空，直接使用结果
           if (path.length > 0) {
             for (const pathKey of path) {
               refValue = refValue?.[pathKey];
@@ -189,11 +173,23 @@ export class DiagnosisHttpService {
       }
     }
 
+    // 处理文件参数
+    for (const [key, paramValue] of Object.entries(processedParams)) {
+      if (key === 'file' && fileMeta && fileData) {
+        formData.append(paramValue, fileData, {
+          filename: fileMeta.originalFileName,
+          contentType: fileMeta.fileType,
+        });
+        continue;
+      }
+    }
+
     // 如果有文件参数，返回FormData
     if (Object.keys(processedParams).some((key) => key === 'file')) {
       return formData;
     }
 
+    // 返回处理后的参数，不删除 URL 参数
     return processedParams;
   }
 
@@ -213,59 +209,69 @@ export class DiagnosisHttpService {
       `可用结果: ${JSON.stringify(Array.from(previousResults.entries()))}`,
     );
 
-    const processedUrl = url.replace(/\{(\w+)\}/g, (match, key) => {
-      try {
-        // 获取参数值
-        const value = params[key];
-        this.logger.debug(`处理参数 ${key}，原始值: ${value}`);
+    // 从 URL 中提取参数名
+    const urlParamRegex = /\{(\w+)\}/g;
+    let match;
+    const urlParams = new Set<string>();
+    while ((match = urlParamRegex.exec(url)) !== null) {
+      urlParams.add(match[1]);
+    }
 
-        if (!value) {
-          this.logger.warn(`URL模板参数 ${key} 未找到对应的值`);
-          return match;
-        }
+    // 处理 URL 参数
+    const urlParamsMap = new Map<string, any>();
+    for (const key of urlParams) {
+      const value = params[key];
+      if (!value) {
+        this.logger.warn(`URL模板参数 ${key} 未找到对应的值`);
+        continue;
+      }
 
-        // 如果是引用格式，需要重新处理
-        if (
-          typeof value === 'string' &&
-          value.startsWith('{{#') &&
-          value.endsWith('}}')
-        ) {
+      if (
+        typeof value === 'string' &&
+        value.startsWith('{{#') &&
+        value.endsWith('}}')
+      ) {
+        try {
           const reference = value.slice(3, -2);
-          this.logger.debug(`处理引用格式: ${reference}`);
-
           const [interfaceId, ...path] = reference.split('.');
-          this.logger.debug(`接口ID: ${interfaceId}, 路径: ${path.join('.')}`);
-
           const result = previousResults.get(Number(interfaceId));
+
           if (!result) {
-            this.logger.warn(`未找到接口 ${interfaceId} 的结果`);
-            return match;
+            throw new HttpException(
+              `未找到接口 ${interfaceId} 的结果，请确保上一步接口调用成功`,
+              500,
+            );
           }
 
           let refValue = result;
-          for (const pathKey of path) {
-            refValue = refValue?.[pathKey];
-            if (refValue === undefined) {
-              this.logger.warn(
-                `接口 ${interfaceId} 的结果中未找到路径 ${path.join('.')}`,
-              );
-              return match;
+          if (path.length > 0) {
+            for (const pathKey of path) {
+              refValue = refValue?.[pathKey];
+              if (refValue === undefined) {
+                throw new HttpException(
+                  `接口 ${interfaceId} 的结果中未找到路径 ${path.join('.')}`,
+                  500,
+                );
+              }
             }
           }
-
-          this.logger.debug(`引用值处理结果: ${refValue}`);
-          return refValue?.toString() || match;
+          urlParamsMap.set(key, refValue);
+        } catch (error) {
+          this.logger.error(`处理URL参数 ${key} 时出错: ${error.message}`);
+          throw error;
         }
-
-        // 如果不是引用格式，直接使用参数值
-        const finalValue = value.toString();
-        this.logger.debug(`非引用值处理结果: ${finalValue}`);
-        return finalValue;
-      } catch (error) {
-        this.logger.error(`处理URL模板参数 ${key} 时出错: ${error.message}`);
-        return match;
+      } else {
+        urlParamsMap.set(key, value);
       }
-    });
+    }
+
+    // 替换 URL 中的参数
+    let processedUrl = url;
+    for (const [key, value] of urlParamsMap.entries()) {
+      if (value !== undefined) {
+        processedUrl = processedUrl.replace(`{${key}}`, value.toString());
+      }
+    }
 
     this.logger.debug(`处理后的URL: ${processedUrl}`);
     return processedUrl;
@@ -321,43 +327,48 @@ export class DiagnosisHttpService {
     // 发送请求的函数
     const sendRequest = async () => {
       let response;
-      switch (method.toUpperCase()) {
-        case 'GET':
-          response = await this.httpService.get(processedUrl, {
-            ...requestConfig,
-            params: processedParams,
-          });
-          break;
-        case 'POST':
-          response = await this.httpService.post(
-            processedUrl,
-            processedParams,
-            requestConfig,
-          );
-          break;
-        case 'PUT':
-          response = await this.httpService.put(
-            processedUrl,
-            processedParams,
-            requestConfig,
-          );
-          break;
-        case 'DELETE':
-          response = await this.httpService.delete(processedUrl, {
-            ...requestConfig,
-            params: processedParams,
-          });
-          break;
-        default:
-          throw new HttpException(`不支持的HTTP方法: ${method}`, 400);
-      }
+      try {
+        switch (method.toUpperCase()) {
+          case 'GET':
+            response = await this.httpService.get(processedUrl, {
+              ...requestConfig,
+              params: processedParams,
+            });
+            break;
+          case 'POST':
+            response = await this.httpService.post(
+              processedUrl,
+              processedParams,
+              requestConfig,
+            );
+            break;
+          case 'PUT':
+            response = await this.httpService.put(
+              processedUrl,
+              processedParams,
+              requestConfig,
+            );
+            break;
+          case 'DELETE':
+            response = await this.httpService.delete(processedUrl, {
+              ...requestConfig,
+              params: processedParams,
+            });
+            break;
+          default:
+            throw new HttpException(`不支持的HTTP方法: ${method}`, 400);
+        }
 
-      if (!response || !response.data) {
-        throw new HttpException('接口响应为空', 500);
-      }
+        if (!response || !response.data) {
+          throw new HttpException('接口响应为空', 500);
+        }
 
-      this.logger.debug(`接口响应: ${JSON.stringify(response.data)}`);
-      return response.data;
+        this.logger.debug(`接口响应: ${JSON.stringify(response.data)}`);
+        return response.data;
+      } catch (error) {
+        this.logger.error(`请求失败: ${error.message}`);
+        throw error;
+      }
     };
 
     // 获取当前请求的配置
