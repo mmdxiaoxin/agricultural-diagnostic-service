@@ -6,7 +6,7 @@ import { RedisService } from '@app/redis';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, Repository, EntityManager, DataSource } from 'typeorm';
 
 @Injectable()
 export class DiagnosisLogService implements OnModuleDestroy {
@@ -22,6 +22,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
     @InjectRepository(DiagnosisLog)
     private readonly logRepository: Repository<DiagnosisLog>,
     private readonly redisService: RedisService,
+    private readonly dataSource: DataSource,
   ) {
     // 启动定时刷新
     this.flushIntervalId = setInterval(
@@ -77,117 +78,101 @@ export class DiagnosisLogService implements OnModuleDestroy {
     }
 
     this.isProcessing = true;
-    const startTime = Date.now();
-    let processedCount = 0;
+    const queryRunner = this.dataSource.createQueryRunner();
 
     try {
-      // 使用数据库事务
-      await this.logRepository.manager.transaction(
-        async (transactionalEntityManager) => {
-          // 获取并处理日志
-          const logs = await this.redisService.lrange(
-            this.REDIS_LOG_QUEUE_KEY,
-            0,
-            this.batchSize - 1,
-          );
+      await queryRunner.connect();
+      await queryRunner.startTransaction('READ COMMITTED');
 
-          if (!Array.isArray(logs) || logs.length === 0) {
-            return;
-          }
-
-          // 创建实体
-          const entities = logs
-            .map((log) => {
-              try {
-                if (!log.diagnosisId || !log.level || !log.message) {
-                  console.error('日志数据不完整:', log);
-                  return null;
-                }
-
-                return transactionalEntityManager.create(DiagnosisLog, {
-                  diagnosisId: log.diagnosisId,
-                  level: log.level,
-                  message: log.message,
-                  metadata: log.metadata || {},
-                  createdAt: new Date(log.timestamp || Date.now()),
-                });
-              } catch (error) {
-                console.error('解析日志数据失败:', error, '原始数据:', log);
-                return null;
-              }
-            })
-            .filter((entity): entity is DiagnosisLog => entity !== null);
-
-          if (entities.length === 0) {
-            return;
-          }
-
-          // 保存实体
-          await this.saveWithRetry(entities, transactionalEntityManager);
-          processedCount = entities.length;
-
-          // 删除已处理的日志
-          await this.redisService.ltrim(
-            this.REDIS_LOG_QUEUE_KEY,
-            entities.length,
-            -1,
-          );
-        },
+      const logs = await this.redisService.lrange(
+        this.REDIS_LOG_QUEUE_KEY,
+        0,
+        this.batchSize - 1,
       );
 
-      // 更新指标
-      const processTime = Date.now() - startTime;
-      const metrics = {
-        processedCount,
-        processTime,
-        errorCount: 0,
-        lastProcessedAt: new Date().toISOString(),
-      };
+      if (!Array.isArray(logs) || logs.length === 0) {
+        return;
+      }
 
-      await this.redisService.set(this.REDIS_METRICS_KEY, metrics, 3600);
+      // 分批处理，避免单次事务过大
+      const batchSize = 5;
+      for (let i = 0; i < logs.length; i += batchSize) {
+        const batch = logs.slice(i, i + batchSize);
+        const entities = batch
+          .map((log) => this.createLogEntity(log))
+          .filter((entity): entity is DiagnosisLog => entity !== null);
+
+        if (entities.length > 0) {
+          await this.saveWithRetry(entities, queryRunner.manager);
+        }
+      }
+
+      await queryRunner.commitTransaction();
     } catch (error) {
-      await this.redisService.increment(this.REDIS_ERROR_COUNT_KEY);
-      console.error('保存日志失败:', {
-        error: error.message,
-        code: error.code,
-        sqlMessage: error.sqlMessage,
-        sqlState: error.sqlState,
-        stack: error.stack,
-      });
-
-      if (error.code === 'ER_NO_DEFAULT_FOR_FIELD') {
-        console.error('数据库字段缺少默认值:', error.sqlMessage);
-      }
-      if (error.code === 'ER_NO_REFERENCED_ROW') {
-        console.error('外键约束错误: 诊断记录不存在:', error.sqlMessage);
-      }
+      await queryRunner.rollbackTransaction();
+      throw error;
     } finally {
+      await queryRunner.release();
       this.isProcessing = false;
+    }
+  }
+
+  private createLogEntity(log: any): DiagnosisLog | null {
+    try {
+      if (!log.diagnosisId || !log.level || !log.message) {
+        console.error('日志数据不完整:', log);
+        return null;
+      }
+
+      return this.logRepository.create({
+        diagnosisId: log.diagnosisId,
+        level: log.level,
+        message: log.message,
+        metadata: log.metadata || {},
+        createdAt: new Date(log.timestamp || Date.now()),
+      });
+    } catch (error) {
+      console.error('解析日志数据失败:', error, '原始数据:', log);
+      return null;
     }
   }
 
   private async saveWithRetry(
     entities: DiagnosisLog[],
-    transactionalEntityManager: any,
+    transactionalEntityManager: EntityManager,
     maxRetries = 3,
   ): Promise<void> {
     let lastError: Error | null = null;
 
     for (let i = 0; i < maxRetries; i++) {
       try {
+        // 添加随机延迟，避免多个重试同时发生
+        if (i > 0) {
+          const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+
         await transactionalEntityManager.save(entities);
         return;
       } catch (error) {
         lastError = error;
-        if (i < maxRetries - 1) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, Math.pow(2, i) * 1000),
-          );
+        // 只对特定错误进行重试
+        if (!this.isRetryableError(error)) {
+          throw error;
         }
       }
     }
 
     throw new Error(`保存日志失败: ${lastError?.message}`);
+  }
+
+  private isRetryableError(error: any): boolean {
+    return (
+      error.message?.includes('Lock wait timeout exceeded') ||
+      error.message?.includes('Deadlock found') ||
+      error.code === 'ER_LOCK_WAIT_TIMEOUT' ||
+      error.code === 'ER_LOCK_DEADLOCK'
+    );
   }
 
   async createLog(
