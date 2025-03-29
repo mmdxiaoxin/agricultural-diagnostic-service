@@ -1,6 +1,7 @@
 export const DIAGNOSIS_MESSAGE_PATTERNS = {
   CREATE: 'diagnosis.create',
   START: 'diagnosis.start',
+  START_ASYNC: 'diagnosis.start.async',
   STATUS: 'diagnosis.status',
   SUPPORT: 'diagnosis.support',
   HISTORY: 'diagnosis.history',

@@ -1,8 +1,8 @@
+import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DIAGNOSIS_MESSAGE_PATTERNS } from '@shared/constants/diagnosis-message-patterns';
 import { DiagnosisService } from './services/diagnosis.service';
-import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 
 @Controller()
 export class DiagnosisController {
@@ -24,6 +24,24 @@ export class DiagnosisController {
     },
   ) {
     return this.diagnosisService.startDiagnosis(
+      payload.diagnosisId,
+      payload.userId,
+      payload.dto,
+      payload.token,
+    );
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.START_ASYNC })
+  async startDiagnosisAsync(
+    @Payload()
+    payload: {
+      diagnosisId: number;
+      userId: number;
+      dto: StartDiagnosisDto;
+      token: string;
+    },
+  ) {
+    return this.diagnosisService.startDiagnosisAsync(
       payload.diagnosisId,
       payload.userId,
       payload.dto,

@@ -69,6 +69,30 @@ export class DiagnosisController {
     );
   }
 
+  @Post(':id/start/async')
+  async startDiagnosisAsync(
+    @Req() req: Request,
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    diagnosisId: number,
+    @Body() dto: StartDiagnosisDto,
+  ) {
+    // 从请求头获取 token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedException('未提供认证令牌');
+    }
+
+    return this.diagnosisService.startDiagnosisAsync(
+      req.user.userId,
+      diagnosisId,
+      dto,
+      token,
+    );
+  }
+
   @Get(':id/status')
   async getDiagnosisStatus(
     @Param(

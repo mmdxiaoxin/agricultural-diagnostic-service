@@ -60,6 +60,23 @@ export class DiagnosisService {
     );
   }
 
+  startDiagnosisAsync(
+    userId: number,
+    diagnosisId: number,
+    dto: StartDiagnosisDto,
+    token: string,
+  ) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.START_ASYNC },
+      {
+        diagnosisId,
+        userId,
+        dto,
+        token,
+      },
+    );
+  }
+
   getDiagnosisStatus(id: number) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATUS },
