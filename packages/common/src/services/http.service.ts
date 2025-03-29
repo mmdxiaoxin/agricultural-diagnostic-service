@@ -1,5 +1,10 @@
 // packages/common/src/services/http.service.ts
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosError,
+} from 'axios';
 import { Injectable, Logger } from '@nestjs/common';
 
 export interface BaseResponse<T = any> {
@@ -23,11 +28,34 @@ export class HttpService {
 
     // 响应拦截器
     this.axiosInstance.interceptors.response.use(
-      (response) => response.data,
+      (response) => {
+        // 检查响应数据是否有效
+        if (!response.data) {
+          return {
+            code: 500,
+            message: '响应数据为空',
+            data: null,
+          };
+        }
+        return response.data;
+      },
       (error) => {
         this.logger.error(`HTTP请求失败: ${JSON.stringify(error)}`);
+
+        // 处理不同类型的错误
+        if (error instanceof AxiosError) {
+          const status = error.response?.status;
+          const data = error.response?.data;
+
+          return {
+            code: status || 500,
+            message: data?.message || error.message || '请求失败',
+            data: data || null,
+          };
+        }
+
         return {
-          code: error.response?.status || 500,
+          code: 500,
           message: error.message || '请求失败',
           data: null,
         };

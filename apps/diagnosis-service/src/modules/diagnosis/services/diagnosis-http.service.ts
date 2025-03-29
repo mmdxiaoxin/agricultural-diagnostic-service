@@ -2,6 +2,7 @@ import { File } from '@app/database/entities';
 import { BaseResponse, HttpService } from '@common/services/http.service';
 import { DiagnosisConfig, InterfaceCallConfig } from '@common/types/diagnosis';
 import { HttpException, Injectable, Logger } from '@nestjs/common';
+import { AxiosError } from 'axios';
 import * as FormData from 'form-data';
 import {
   get,
@@ -115,6 +116,7 @@ export class DiagnosisHttpService {
   ): Promise<T> {
     const startTime = Date.now();
     let attempts = 0;
+    let lastResponse: T | null = null;
 
     while (attempts < maxAttempts) {
       if (Date.now() - startTime > timeout) {
@@ -122,17 +124,46 @@ export class DiagnosisHttpService {
       }
 
       try {
+        // 等待上一次请求完全响应
+        if (lastResponse) {
+          this.logger.debug(`等待 ${interval}ms 后进行下一次轮询`);
+          await new Promise((resolve) => setTimeout(resolve, interval));
+        }
+
         const result = await operation();
+        lastResponse = result;
+
+        // 检查任务状态
+        if (result?.data?.status === 'processing') {
+          attempts++;
+          if (attempts < maxAttempts) {
+            this.logger.debug(`任务处理中，第 ${attempts} 次轮询`);
+            continue;
+          }
+        }
+
         if (this.checkPollingCondition(result, condition)) {
           return result;
         }
 
         attempts++;
-        if (attempts < maxAttempts) {
-          this.logger.debug(`轮询第 ${attempts} 次，等待 ${interval}ms`);
-          await new Promise((resolve) => setTimeout(resolve, interval));
+        if (attempts >= maxAttempts) {
+          this.logger.debug(`达到最大轮询次数: ${maxAttempts}`);
         }
-      } catch (error) {
+      } catch (error: any) {
+        // 如果是 500 错误，且任务状态是 processing，继续轮询
+        if (
+          error instanceof AxiosError &&
+          error?.response?.status === 500 &&
+          error?.response?.data?.status === 'processing'
+        ) {
+          attempts++;
+          if (attempts < maxAttempts) {
+            this.logger.debug(`任务处理中，第 ${attempts} 次轮询`);
+            continue;
+          }
+        }
+
         this.logger.error(`轮询过程中出错: ${error.message}`);
         throw error;
       }
@@ -408,9 +439,9 @@ export class DiagnosisHttpService {
       if (currentRequest.type === 'polling') {
         return await this.pollWithTimeout(
           sendRequest<T>,
-          currentRequest.interval || 1000,
-          currentRequest.maxAttempts || 10,
-          currentRequest.timeout || 30000,
+          currentRequest.interval || 3000, // 增加默认轮询间隔
+          currentRequest.maxAttempts || 20, // 增加默认最大尝试次数
+          currentRequest.timeout || 60000, // 增加默认超时时间
           currentRequest.pollingCondition,
         );
       }
