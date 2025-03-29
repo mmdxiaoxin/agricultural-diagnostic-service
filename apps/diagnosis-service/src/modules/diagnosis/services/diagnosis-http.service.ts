@@ -1,8 +1,25 @@
 import { File } from '@app/database/entities';
-import { HttpService } from '@common/services/http.service';
+import { BaseResponse, HttpService } from '@common/services/http.service';
 import { DiagnosisConfig, InterfaceCallConfig } from '@common/types/diagnosis';
 import { HttpException, Injectable, Logger } from '@nestjs/common';
 import * as FormData from 'form-data';
+
+type PollingOperator =
+  | 'equals'
+  | 'notEquals'
+  | 'contains'
+  | 'greaterThan'
+  | 'lessThan'
+  | 'exists'
+  | 'notExists';
+
+interface PollingCondition {
+  field: string;
+  operator: PollingOperator;
+  value?: any;
+}
+
+type ProcessedParams = Record<string, any> | FormData;
 
 @Injectable()
 export class DiagnosisHttpService {
@@ -33,9 +50,9 @@ export class DiagnosisHttpService {
     );
   }
 
-  private checkPollingCondition(
-    result: any,
-    condition: InterfaceCallConfig['pollingCondition'],
+  private checkPollingCondition<T extends Record<string, any>>(
+    result: T,
+    condition?: PollingCondition,
   ): boolean {
     if (!condition) {
       return result.status !== 'pending';
@@ -81,12 +98,12 @@ export class DiagnosisHttpService {
     }
   }
 
-  private async pollWithTimeout<T>(
+  private async pollWithTimeout<T extends Record<string, any>>(
     operation: () => Promise<T>,
     interval: number,
     maxAttempts: number,
     timeout: number,
-    condition: InterfaceCallConfig['pollingCondition'],
+    condition?: PollingCondition,
   ): Promise<T> {
     const startTime = Date.now();
     let attempts = 0;
@@ -122,7 +139,7 @@ export class DiagnosisHttpService {
     path: string,
     fileMeta?: File,
     fileData?: Buffer,
-  ): Record<string, any> {
+  ): ProcessedParams {
     const processedParams = { ...params };
     const formData = new FormData();
     const urlParams = new Set<string>();
@@ -277,16 +294,16 @@ export class DiagnosisHttpService {
     return processedUrl;
   }
 
-  async callInterface(
+  async callInterface<T extends Record<string, any>>(
     config: DiagnosisConfig,
-    method: string,
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     path: string,
-    params: any,
+    params: Record<string, any>,
     token: string,
     results: Map<number, any>,
     fileMeta?: File,
     fileData?: Buffer,
-  ): Promise<any> {
+  ): Promise<BaseResponse<T>> {
     // 处理参数
     const processedParams = await this.processParams(
       params,
@@ -325,32 +342,32 @@ export class DiagnosisHttpService {
     };
 
     // 发送请求的函数
-    const sendRequest = async () => {
-      let response;
+    const sendRequest = async <T = any>() => {
+      let response: BaseResponse<T>;
       try {
         switch (method.toUpperCase()) {
           case 'GET':
-            response = await this.httpService.get(processedUrl, {
+            response = await this.httpService.get<T>(processedUrl, {
               ...requestConfig,
               params: processedParams,
             });
             break;
           case 'POST':
-            response = await this.httpService.post(
+            response = await this.httpService.post<T>(
               processedUrl,
               processedParams,
               requestConfig,
             );
             break;
           case 'PUT':
-            response = await this.httpService.put(
+            response = await this.httpService.put<T>(
               processedUrl,
               processedParams,
               requestConfig,
             );
             break;
           case 'DELETE':
-            response = await this.httpService.delete(processedUrl, {
+            response = await this.httpService.delete<T>(processedUrl, {
               ...requestConfig,
               params: processedParams,
             });
@@ -363,8 +380,8 @@ export class DiagnosisHttpService {
           throw new HttpException('接口响应为空', 500);
         }
 
-        this.logger.debug(`接口响应: ${JSON.stringify(response.data)}`);
-        return response.data;
+        this.logger.debug(`接口响应: ${JSON.stringify(response)}`);
+        return response;
       } catch (error) {
         this.logger.error(`请求失败: ${error.message}`);
         throw error;
@@ -381,7 +398,7 @@ export class DiagnosisHttpService {
       // 如果有重试配置，使用重试机制
       if (currentRequest.retryCount && currentRequest.retryCount > 0) {
         return await this.retryWithDelay(
-          sendRequest,
+          sendRequest<T>,
           currentRequest.retryCount,
           currentRequest.retryDelay || 1000,
         );
@@ -390,7 +407,7 @@ export class DiagnosisHttpService {
       // 如果是轮询类型，使用轮询机制
       if (currentRequest.type === 'polling') {
         return await this.pollWithTimeout(
-          sendRequest,
+          sendRequest<T>,
           currentRequest.interval || 1000,
           currentRequest.maxAttempts || 10,
           currentRequest.timeout || 30000,
@@ -399,7 +416,7 @@ export class DiagnosisHttpService {
       }
 
       // 普通请求直接发送
-      return await sendRequest();
+      return await sendRequest<T>();
     } catch (error) {
       this.logger.error(`接口调用失败: ${error.message}`);
       throw error;
