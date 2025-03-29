@@ -359,7 +359,17 @@ export class DiagnosisHttpService {
     );
 
     this.logger.debug(`开始调用接口: ${method} ${processedUrl}`);
-    this.logger.debug(`接口参数: ${JSON.stringify(processedParams)}`);
+    if (processedParams instanceof FormData) {
+      // 如果是 FormData，只输出文件名
+      if (fileMeta) {
+        this.logger.debug(`接口参数: file - ${fileMeta.originalFileName}`);
+      } else {
+        this.logger.debug('接口参数: {}');
+      }
+    } else {
+      // 如果不是 FormData，正常输出 JSON
+      this.logger.debug(`接口参数: ${JSON.stringify(processedParams)}`);
+    }
 
     // 构建请求配置
     const requestConfig = {
