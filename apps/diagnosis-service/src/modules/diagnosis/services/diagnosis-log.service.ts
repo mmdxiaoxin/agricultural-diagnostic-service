@@ -3,17 +3,20 @@ import {
   LogLevel,
 } from '@app/database/entities/diagnosis-log.entity';
 import { RedisService } from '@app/redis';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 
 @Injectable()
-export class DiagnosisLogService {
+export class DiagnosisLogService implements OnModuleDestroy {
   private readonly REDIS_LOG_QUEUE_KEY = 'diagnosis:log:queue';
+  private readonly REDIS_METRICS_KEY = 'diagnosis:log:metrics';
+  private readonly REDIS_ERROR_COUNT_KEY = 'diagnosis:log:metrics:error_count';
   private readonly batchSize = 10;
-  private readonly flushInterval = 1000; // 1秒
+  private readonly flushInterval = 1000;
   private isProcessing = false;
+  private flushIntervalId: NodeJS.Timeout;
 
   constructor(
     @InjectRepository(DiagnosisLog)
@@ -21,7 +24,18 @@ export class DiagnosisLogService {
     private readonly redisService: RedisService,
   ) {
     // 启动定时刷新
-    setInterval(() => this.flushLogs(), this.flushInterval);
+    this.flushIntervalId = setInterval(
+      () => this.flushLogs(),
+      this.flushInterval,
+    );
+  }
+
+  async onModuleDestroy() {
+    if (this.flushIntervalId) {
+      clearInterval(this.flushIntervalId);
+    }
+    // 确保所有日志都被处理
+    await this.flushLogs();
   }
 
   // 异步添加日志
@@ -39,13 +53,20 @@ export class DiagnosisLogService {
       timestamp: Date.now(),
     };
 
-    // 将日志添加到 Redis 队列
-    await this.redisService.rpush(this.REDIS_LOG_QUEUE_KEY, logEntry);
+    try {
+      await this.redisService.rpush(this.REDIS_LOG_QUEUE_KEY, logEntry);
 
-    // 如果队列长度达到批处理大小，立即处理
-    const queueLength = await this.redisService.llen(this.REDIS_LOG_QUEUE_KEY);
-    if (queueLength >= this.batchSize) {
-      await this.flushLogs();
+      // 如果队列长度达到批处理大小，立即处理
+      const queueLength = await this.redisService.llen(
+        this.REDIS_LOG_QUEUE_KEY,
+      );
+      if (queueLength >= this.batchSize) {
+        await this.flushLogs();
+      }
+    } catch (error) {
+      console.error('添加日志到 Redis 队列失败:', error);
+      // 如果 Redis 操作失败，直接写入数据库
+      await this.createLog(diagnosisId, level, message, metadata);
     }
   }
 
@@ -57,86 +78,116 @@ export class DiagnosisLogService {
 
     this.isProcessing = true;
     const startTime = Date.now();
+    let processedCount = 0;
+
     try {
-      // 使用 Redis 事务确保原子性
-      const result = await (
-        await this.redisService.multi()
-      ).exec(async (client) => {
-        // 获取一批日志
-        const logs = await client.lrange(
-          this.REDIS_LOG_QUEUE_KEY,
-          0,
-          this.batchSize - 1,
-        );
-        if (logs.length > 0) {
-          // 删除已获取的日志
-          await client.ltrim(this.REDIS_LOG_QUEUE_KEY, logs.length, -1);
-        }
-        return logs;
-      });
+      // 使用数据库事务
+      await this.logRepository.manager.transaction(
+        async (transactionalEntityManager) => {
+          // 获取并处理日志
+          const logs = await this.redisService.lrange(
+            this.REDIS_LOG_QUEUE_KEY,
+            0,
+            this.batchSize - 1,
+          );
 
-      // 从事务结果中提取日志数据
-      const logsToProcess = result?.[0]?.[1] || [];
-      if (!Array.isArray(logsToProcess) || logsToProcess.length === 0) {
-        return;
-      }
-
-      // 解析日志并创建实体
-      const entities = logsToProcess
-        .map((logStr) => {
-          try {
-            const log = JSON.parse(logStr);
-            // 确保所有必需字段都存在
-            if (!log.diagnosisId || !log.level || !log.message) {
-              console.error('日志数据不完整:', log);
-              return null;
-            }
-
-            return this.logRepository.create({
-              diagnosisId: log.diagnosisId,
-              level: log.level,
-              message: log.message,
-              metadata: log.metadata || {},
-              createdAt: new Date(log.timestamp || Date.now()),
-            });
-          } catch (error) {
-            console.error('解析日志数据失败:', error);
-            return null;
+          if (!Array.isArray(logs) || logs.length === 0) {
+            return;
           }
-        })
-        .filter(Boolean); // 过滤掉无效的日志
 
-      if (entities.length === 0) {
-        return;
-      }
-      // 批量保存到数据库
-      await this.logRepository.save(
-        entities.filter((entity): entity is DiagnosisLog => entity !== null),
+          // 创建实体
+          const entities = logs
+            .map((log) => {
+              try {
+                if (!log.diagnosisId || !log.level || !log.message) {
+                  console.error('日志数据不完整:', log);
+                  return null;
+                }
+
+                return transactionalEntityManager.create(DiagnosisLog, {
+                  diagnosisId: log.diagnosisId,
+                  level: log.level,
+                  message: log.message,
+                  metadata: log.metadata || {},
+                  createdAt: new Date(log.timestamp || Date.now()),
+                });
+              } catch (error) {
+                console.error('解析日志数据失败:', error, '原始数据:', log);
+                return null;
+              }
+            })
+            .filter((entity): entity is DiagnosisLog => entity !== null);
+
+          if (entities.length === 0) {
+            return;
+          }
+
+          // 保存实体
+          await this.saveWithRetry(entities, transactionalEntityManager);
+          processedCount = entities.length;
+
+          // 删除已处理的日志
+          await this.redisService.ltrim(
+            this.REDIS_LOG_QUEUE_KEY,
+            entities.length,
+            -1,
+          );
+        },
       );
 
+      // 更新指标
       const processTime = Date.now() - startTime;
       const metrics = {
-        processedCount: entities.length,
-        processTime: processTime,
+        processedCount,
+        processTime,
         errorCount: 0,
+        lastProcessedAt: new Date().toISOString(),
       };
 
-      await this.redisService.set(
-        'diagnosis:log:metrics',
-        metrics,
-        3600, // 1小时过期
-      );
+      await this.redisService.set(this.REDIS_METRICS_KEY, metrics, 3600);
     } catch (error) {
-      await this.redisService.increment('diagnosis:log:metrics:error_count');
-      console.error('保存日志失败:', error);
+      await this.redisService.increment(this.REDIS_ERROR_COUNT_KEY);
+      console.error('保存日志失败:', {
+        error: error.message,
+        code: error.code,
+        sqlMessage: error.sqlMessage,
+        sqlState: error.sqlState,
+        stack: error.stack,
+      });
 
-      // 添加更详细的错误日志
       if (error.code === 'ER_NO_DEFAULT_FOR_FIELD') {
         console.error('数据库字段缺少默认值:', error.sqlMessage);
+      }
+      if (error.code === 'ER_NO_REFERENCED_ROW') {
+        console.error('外键约束错误: 诊断记录不存在:', error.sqlMessage);
       }
     } finally {
       this.isProcessing = false;
     }
+  }
+
+  private async saveWithRetry(
+    entities: DiagnosisLog[],
+    transactionalEntityManager: any,
+    maxRetries = 3,
+  ): Promise<void> {
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        await transactionalEntityManager.save(entities);
+        return;
+      } catch (error) {
+        lastError = error;
+        if (i < maxRetries - 1) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.pow(2, i) * 1000),
+          );
+        }
+      }
+    }
+
+    throw new Error(`保存日志失败: ${lastError?.message}`);
   }
 
   async createLog(
@@ -194,8 +245,12 @@ export class DiagnosisLogService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
 
-    await this.logRepository.delete({
-      createdAt: Between(new Date(0), cutoffDate),
-    });
+    try {
+      await this.logRepository.delete({
+        createdAt: Between(new Date(0), cutoffDate),
+      });
+    } catch (error) {
+      console.error('清理过期日志失败:', error);
+    }
   }
 }
