@@ -177,17 +177,22 @@ export class DiagnosisHttpService {
           );
         }
       } catch (error: any) {
-        if (
-          error instanceof AxiosError &&
-          isEqual(get(error, 'response.status'), 500) &&
-          isEqual(get(error, 'response.data.status'), 'processing')
-        ) {
-          attempts++;
-          if (attempts < maxAttempts) {
+        // 处理第一次请求的特殊情况
+        if (attempts === 0 && error instanceof AxiosError) {
+          const status = error.response?.status;
+          const data = error.response?.data;
+
+          // 如果是500错误且包含"未知任务状态"或"STARTED"字样，继续等待
+          if (
+            status === 500 &&
+            (data?.message?.includes('未知任务状态') ||
+              data?.message?.includes('STARTED'))
+          ) {
+            attempts++;
             await this.log(
               diagnosisId!,
               LogLevel.DEBUG,
-              `任务处理中，第 ${attempts} 次轮询`,
+              '第一次请求任务状态未就绪，继续等待',
             );
             continue;
           }
