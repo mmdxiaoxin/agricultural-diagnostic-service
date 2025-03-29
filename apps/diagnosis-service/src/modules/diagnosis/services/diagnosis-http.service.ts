@@ -395,7 +395,7 @@ export class DiagnosisHttpService {
           ? this.log(
               diagnosisId!,
               LogLevel.DEBUG,
-              `接口参数: file - ${fileMeta.originalFileName}`,
+              `接口参数: {${params?.file || 'file'}: ${fileMeta.originalFileName}}`,
               {
                 method,
                 url: processedUrl,
