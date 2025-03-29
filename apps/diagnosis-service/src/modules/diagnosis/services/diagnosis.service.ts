@@ -256,6 +256,14 @@ export class DiagnosisService {
             }
           }
 
+          // 检查当前接口是否有delay配置
+          if (config.delay) {
+            this.logger.debug(
+              `等待当前接口 ${config.id} 的延时 ${config.delay}ms`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, config.delay));
+          }
+
           this.logger.debug(`准备调用接口 ${config.id}`);
           const remoteInterface = remoteInterfaces.get(config.id);
           if (!remoteInterface) {
@@ -695,6 +703,14 @@ export class DiagnosisService {
                 setTimeout(resolve, lastDependency.delay),
               );
             }
+          }
+
+          // 检查当前接口是否有delay配置
+          if (config.delay) {
+            this.logger.debug(
+              `等待当前接口 ${config.id} 的延时 ${config.delay}ms`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, config.delay));
           }
 
           this.logger.debug(`准备调用接口 ${config.id}`);
