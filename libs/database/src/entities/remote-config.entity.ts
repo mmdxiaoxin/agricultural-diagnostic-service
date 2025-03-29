@@ -15,7 +15,7 @@ export class RemoteConfig extends BaseEntity {
     requests: Array<{
       id: number;
       order: number;
-      callType: 'single' | 'polling';
+      type: 'single' | 'polling';
       interval?: number;
       maxAttempts?: number;
       timeout?: number;
@@ -23,6 +23,8 @@ export class RemoteConfig extends BaseEntity {
       retryDelay?: number;
       next?: number[];
       params?: Record<string, any>;
+      headers?: Record<string, string>;
+      validateStatus?: (status: number) => boolean;
       pollingCondition?: {
         field: string;
         operator:

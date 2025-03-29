@@ -52,6 +52,8 @@ export interface InterfaceCallConfig {
   polling?: boolean; //是否开启轮询
   next?: number[]; // 下一个接口ID
   params?: Record<string, any>; // 调用需要传入的参数
+  headers?: Record<string, string>; // 请求头
+  validateStatus?: (status: number) => boolean; // 验证响应状态
   pollingCondition?: {
     field: string; // 要检查的字段路径，支持点号分隔
     operator:
@@ -70,5 +72,30 @@ export interface DiagnosisConfig {
   baseUrl: string;
   urlPrefix: string;
   urlPath: string;
-  requests: InterfaceCallConfig;
+  requests: Array<{
+    id: number;
+    order: number;
+    type: 'single' | 'polling';
+    interval?: number;
+    maxAttempts?: number;
+    timeout?: number;
+    retryCount?: number;
+    retryDelay?: number;
+    next?: number[];
+    params?: Record<string, any>;
+    headers?: Record<string, string>;
+    validateStatus?: (status: number) => boolean;
+    pollingCondition?: {
+      field: string;
+      operator:
+        | 'equals'
+        | 'notEquals'
+        | 'contains'
+        | 'greaterThan'
+        | 'lessThan'
+        | 'exists'
+        | 'notExists';
+      value?: any;
+    };
+  }>;
 }

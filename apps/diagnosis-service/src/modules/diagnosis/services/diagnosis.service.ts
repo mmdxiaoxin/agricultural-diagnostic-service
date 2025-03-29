@@ -172,16 +172,21 @@ export class DiagnosisService {
             baseUrl: remoteInterface.url,
             urlPrefix: interfaceConfig.urlPrefix || '',
             urlPath: interfaceConfig.urlPath || '',
-            requests: {
-              type: config.callType,
-              interval: config.interval,
-              maxAttempts: config.maxAttempts,
-              timeout: config.timeout,
-              retryCount: config.retryCount,
-              retryDelay: config.retryDelay,
-              polling: config.callType === 'polling',
-              pollingCondition: config.pollingCondition,
-            },
+            requests: [
+              {
+                id: config.id,
+                order: config.order,
+                type: config.type,
+                interval: config.interval,
+                maxAttempts: config.maxAttempts,
+                timeout: config.timeout,
+                retryCount: config.retryCount,
+                retryDelay: config.retryDelay,
+                next: config.next,
+                params: config.params,
+                pollingCondition: config.pollingCondition,
+              },
+            ],
           };
 
           const result = await this.diagnosisHttpService.callInterface(
