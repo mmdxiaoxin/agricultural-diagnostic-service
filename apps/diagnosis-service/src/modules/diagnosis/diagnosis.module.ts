@@ -2,6 +2,7 @@ import { DatabaseModule } from '@app/database';
 import { DiagnosisHistory } from '@app/database/entities';
 import { DiagnosisLog } from '@app/database/entities/diagnosis-log.entity';
 import { FileOperationModule } from '@app/file-operation';
+import { RedisModule } from '@app/redis';
 import { HttpService } from '@common/services/http.service';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -19,6 +20,7 @@ import { DiagnosisService } from './services/diagnosis.service';
 
 @Module({
   imports: [
+    RedisModule,
     FileOperationModule,
     DatabaseModule.forFeature([DiagnosisHistory, DiagnosisLog]),
     ClientsModule.register([

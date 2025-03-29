@@ -1,8 +1,8 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
-import { v4 as uuidv4 } from 'uuid'; // npm install uuid
 import { ConfigEnum } from '@shared/enum/config.enum';
+import Redis, { ChainableCommander } from 'ioredis';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
@@ -11,10 +11,31 @@ export class RedisService implements OnModuleDestroy {
   constructor(private readonly configService: ConfigService) {
     const host = this.configService.get<string>(ConfigEnum.REDIS_HOST);
     const port = this.configService.get<number>(ConfigEnum.REDIS_PORT);
+    const password = this.configService.get<string>(ConfigEnum.REDIS_PASSWORD);
+    const db = this.configService.get<number>(ConfigEnum.REDIS_DB);
+
     this.client = new Redis({
       host,
       port,
-      db: 0, // 目标数据库
+      password,
+      db,
+      retryStrategy: (times: number) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+      maxRetriesPerRequest: 3,
+      enableReadyCheck: true,
+      connectTimeout: 10000,
+      keepAlive: 30000,
+    });
+
+    // 添加错误处理
+    this.client.on('error', (error) => {
+      console.error('Redis 连接错误:', error);
+    });
+
+    this.client.on('connect', () => {
+      console.log('Redis 连接成功');
     });
   }
 
@@ -25,13 +46,29 @@ export class RedisService implements OnModuleDestroy {
    * @param value 缓存值
    * @param ttl 可选过期时间（秒）
    */
-  async set(key: string, value: any, ttl?: number): Promise<void> {
+  async set(key: string, value: any, ttl?: number, retries = 3): Promise<void> {
     const serialized = JSON.stringify(value);
-    if (ttl) {
-      await this.client.set(key, serialized, 'EX', ttl);
-    } else {
-      await this.client.set(key, serialized);
+    let lastError: Error = new Error('set 错误');
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        if (ttl) {
+          await this.client.set(key, serialized, 'EX', ttl);
+        } else {
+          await this.client.set(key, serialized);
+        }
+        return;
+      } catch (error) {
+        lastError = error;
+        if (i < retries - 1) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.pow(2, i) * 100),
+          );
+        }
+      }
     }
+
+    throw new Error(`Redis set 操作失败: ${lastError.message}`);
   }
 
   /**
@@ -119,14 +156,22 @@ export class RedisService implements OnModuleDestroy {
   ): Promise<string> {
     const token = uuidv4();
     let retries = 0;
+
     while (retries < maxRetries) {
       const result = await this.client.set(lockKey, token, 'PX', ttl, 'NX');
       if (result === 'OK') {
         return token;
       }
-      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+
+      // 使用指数退避和随机抖动
+      const delay = Math.min(
+        retryDelay * Math.pow(2, retries) + Math.random() * 100,
+        1000,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
       retries++;
     }
+
     throw new Error(`无法获取锁：${lockKey}`);
   }
 
@@ -175,9 +220,84 @@ export class RedisService implements OnModuleDestroy {
   }
 
   /**
+   * 向列表右端添加元素
+   * @param key 列表键
+   * @param value 要添加的值
+   */
+  async rpush(key: string, value: any): Promise<number> {
+    const serialized = JSON.stringify(value);
+    return await this.client.rpush(key, serialized);
+  }
+
+  /**
+   * 获取列表指定范围的元素
+   * @param key 列表键
+   * @param start 开始索引
+   * @param end 结束索引
+   */
+  async lrange(key: string, start: number, end: number): Promise<any[]> {
+    const data = await this.client.lrange(key, start, end);
+    return data.map((item) => {
+      try {
+        return JSON.parse(item);
+      } catch (error) {
+        throw new Error(`反序列化数据失败: ${error.message}`);
+      }
+    });
+  }
+
+  /**
+   * 修剪列表，只保留指定范围内的元素
+   * @param key 列表键
+   * @param start 开始索引
+   * @param end 结束索引
+   */
+  async ltrim(key: string, start: number, end: number): Promise<void> {
+    await this.client.ltrim(key, start, end);
+  }
+
+  /**
+   * 获取列表长度
+   * @param key 列表键
+   */
+  async llen(key: string): Promise<number> {
+    return await this.client.llen(key);
+  }
+
+  /**
+   * 执行 Redis 事务
+   * @param fn 事务回调函数
+   */
+  async multi(): Promise<{
+    exec: (fn: (client: ChainableCommander) => Promise<any>) => Promise<any>;
+  }> {
+    const multi = this.client.multi();
+    return {
+      exec: async (fn: (client: ChainableCommander) => Promise<any>) => {
+        await fn(multi);
+        return await multi.exec();
+      },
+    };
+  }
+
+  /**
    * 模块销毁时自动关闭 Redis 连接，确保资源得以妥善释放
    */
   async onModuleDestroy() {
     await this.client.quit();
+  }
+
+  /**
+   * redis 健康检查
+   * @returns
+   */
+  async healthCheck(): Promise<boolean> {
+    try {
+      await this.client.ping();
+      return true;
+    } catch (error) {
+      console.error('Redis 健康检查失败:', error);
+      return false;
+    }
   }
 }
