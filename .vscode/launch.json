@@ -1,0 +1,29 @@
+{
+  // 使用 IntelliSense 了解相关属性。
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "diagnosis-service",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/apps/diagnosis-service/src/main.ts",
+      "preLaunchTask": "tsc: build - tsconfig.json",
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "env": {
+        "NODE_ENV": "development",
+        "DIAGNOSIS_SERVICE_HOST": "0.0.0.0",
+        "DIAGNOSIS_SERVICE_TCP_PORT": "3001",
+        "DIAGNOSIS_SERVICE_HTTP_PORT": "3002"
+      },
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
+    }
+  ]
+}
