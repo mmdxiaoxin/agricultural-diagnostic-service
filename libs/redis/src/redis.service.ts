@@ -1,8 +1,18 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ConfigEnum } from '@shared/enum/config.enum';
-import Redis, { ChainableCommander } from 'ioredis';
+import Redis, { ChainableCommander, RedisOptions } from 'ioredis';
 import { v4 as uuidv4 } from 'uuid';
+
+type RedisValue = string | number | boolean | null | object | any[];
+type RedisKey = string;
+type RedisTTL = number;
+type RedisRetryOptions = {
+  retries?: number;
+  retryDelay?: number;
+  maxWaitTime?: number;
+  maxRetries?: number;
+};
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
@@ -14,7 +24,7 @@ export class RedisService implements OnModuleDestroy {
     const password = this.configService.get<string>(ConfigEnum.REDIS_PASSWORD);
     const db = this.configService.get<number>(ConfigEnum.REDIS_DB);
 
-    this.client = new Redis({
+    const redisOptions: RedisOptions = {
       host,
       port,
       password,
@@ -27,10 +37,11 @@ export class RedisService implements OnModuleDestroy {
       enableReadyCheck: true,
       connectTimeout: 10000,
       keepAlive: 30000,
-    });
+    };
 
-    // 添加错误处理
-    this.client.on('error', (error) => {
+    this.client = new Redis(redisOptions);
+
+    this.client.on('error', (error: Error) => {
       console.error('Redis 连接错误:', error);
     });
 
@@ -45,12 +56,18 @@ export class RedisService implements OnModuleDestroy {
    * @param key 缓存键
    * @param value 缓存值
    * @param ttl 可选过期时间（秒）
+   * @param options 重试选项
    */
-  async set(key: string, value: any, ttl?: number, retries = 3): Promise<void> {
+  async set<T extends RedisValue>(
+    key: RedisKey,
+    value: T,
+    ttl?: RedisTTL,
+    options: RedisRetryOptions = { retries: 3 },
+  ): Promise<void> {
     const serialized = JSON.stringify(value);
     let lastError: Error | null = null;
 
-    for (let i = 0; i < retries; i++) {
+    for (let i = 0; i < (options.retries ?? 3); i++) {
       try {
         if (ttl) {
           await this.client.set(key, serialized, 'EX', ttl);
@@ -59,8 +76,8 @@ export class RedisService implements OnModuleDestroy {
         }
         return;
       } catch (error) {
-        lastError = error;
-        if (i < retries - 1) {
+        lastError = error as Error;
+        if (i < (options.retries ?? 3) - 1) {
           await new Promise((resolve) =>
             setTimeout(resolve, Math.pow(2, i) * 100),
           );
@@ -77,13 +94,12 @@ export class RedisService implements OnModuleDestroy {
    * @param key 缓存键
    * @returns 返回缓存值或 null
    */
-  async get<T>(key: string): Promise<T | null> {
+  async get<T extends RedisValue>(key: RedisKey): Promise<T | null> {
     const data = await this.client.get(key);
     if (!data) return null;
     try {
       return JSON.parse(data) as T;
     } catch (error) {
-      // 如果反序列化失败，则原样返回数据
       return data as unknown as T;
     }
   }
@@ -93,18 +109,17 @@ export class RedisService implements OnModuleDestroy {
    * @param key 缓存键
    * @returns 返回被删除的键数量
    */
-  async del(key: string): Promise<number> {
+  async del(key: RedisKey): Promise<number> {
     return await this.client.del(key);
   }
 
   /**
    * 对缓存中存储的数字进行自增操作
-   * 利用 Redis 内置的 incrby 命令保证操作的原子性
    * @param key 缓存键
    * @param delta 增量，默认为 1
    * @returns 返回自增后的值
    */
-  async increment(key: string, delta: number = 1): Promise<number> {
+  async increment(key: RedisKey, delta: number = 1): Promise<number> {
     return await this.client.incrby(key, delta);
   }
 
@@ -117,7 +132,7 @@ export class RedisService implements OnModuleDestroy {
   async storeSession(
     userId: string,
     sessionId: string,
-    ttl: number,
+    ttl: RedisTTL,
   ): Promise<void> {
     await this.client.set(`session:${sessionId}`, userId, 'EX', ttl);
   }
@@ -141,32 +156,36 @@ export class RedisService implements OnModuleDestroy {
 
   /**
    * 尝试获取分布式锁
-   * 采用 SET key value NX PX ttl 方式实现，内置重试机制确保尽可能获取锁
    * @param lockKey 锁的键
    * @param ttl 锁的有效期（毫秒）
-   * @param retryDelay 每次重试间隔（毫秒），默认 100ms
-   * @param maxRetries 最大重试次数，默认 10 次
+   * @param options 重试选项
    * @returns 成功则返回唯一 token，否则抛出异常
    */
   async acquireLock(
-    lockKey: string,
+    lockKey: RedisKey,
     ttl: number,
-    retryDelay = 100,
-    maxRetries = 10,
-    maxWaitTime = 10000, // 最大等待时间
+    options: RedisRetryOptions = {
+      retryDelay: 100,
+      maxRetries: 10,
+      maxWaitTime: 10000,
+    },
   ): Promise<string> {
     const token = uuidv4();
     let retries = 0;
     let totalWaitTime = 0;
 
-    while (retries < maxRetries && totalWaitTime < maxWaitTime) {
+    while (
+      retries < (options.maxRetries ?? 10) &&
+      totalWaitTime < (options.maxWaitTime ?? 10000)
+    ) {
       const result = await this.client.set(lockKey, token, 'PX', ttl, 'NX');
       if (result === 'OK') {
         return token;
       }
 
       const delay = Math.min(
-        retryDelay * Math.pow(2, retries) + Math.random() * 100,
+        (options.retryDelay ?? 100) * Math.pow(2, retries) +
+          Math.random() * 100,
         1000,
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
@@ -179,12 +198,11 @@ export class RedisService implements OnModuleDestroy {
 
   /**
    * 释放分布式锁
-   * 利用 Lua 脚本确保只有持有正确 token 的客户端才能释放锁
    * @param lockKey 锁的键
    * @param token 锁的唯一 token
    * @returns 是否成功释放锁
    */
-  async releaseLock(lockKey: string, token: string): Promise<boolean> {
+  async releaseLock(lockKey: RedisKey, token: string): Promise<boolean> {
     const script = `
       if redis.call("get", KEYS[1]) == ARGV[1] then 
         return redis.call("del", KEYS[1]) 
@@ -198,22 +216,22 @@ export class RedisService implements OnModuleDestroy {
 
   /**
    * 包装带锁操作
-   * 在获取锁后执行回调函数，确保操作的原子性和互斥性
    * @param lockKey 锁的键
    * @param ttl 锁的有效期（毫秒）
-   * @param fn 回调函数，返回 Promise<T>
-   * @param retryDelay 每次重试间隔（毫秒），默认 100ms
-   * @param maxRetries 最大重试次数，默认 10 次
+   * @param fn 回调函数
+   * @param options 重试选项
    * @returns 回调函数的返回结果
    */
   async executeWithLock<T>(
-    lockKey: string,
+    lockKey: RedisKey,
     ttl: number,
     fn: () => Promise<T>,
-    retryDelay = 100,
-    maxRetries = 10,
+    options: RedisRetryOptions = {
+      retryDelay: 100,
+      maxRetries: 10,
+    },
   ): Promise<T> {
-    const token = await this.acquireLock(lockKey, ttl, retryDelay, maxRetries);
+    const token = await this.acquireLock(lockKey, ttl, options);
     try {
       return await fn();
     } finally {
@@ -226,7 +244,7 @@ export class RedisService implements OnModuleDestroy {
    * @param key 列表键
    * @param value 要添加的值
    */
-  async rpush(key: string, value: any): Promise<number> {
+  async rpush<T extends RedisValue>(key: RedisKey, value: T): Promise<number> {
     const serialized = JSON.stringify(value);
     return await this.client.rpush(key, serialized);
   }
@@ -237,18 +255,22 @@ export class RedisService implements OnModuleDestroy {
    * @param start 开始索引
    * @param end 结束索引
    */
-  async lrange(key: string, start: number, end: number): Promise<any[]> {
+  async lrange<T extends RedisValue>(
+    key: RedisKey,
+    start: number,
+    end: number,
+  ): Promise<T[]> {
     const data = await this.client.lrange(key, start, end);
     return data
       .map((item) => {
         try {
-          return JSON.parse(item);
+          return JSON.parse(item) as T;
         } catch (error) {
           console.error('反序列化数据失败:', error, '原始数据:', item);
           return null;
         }
       })
-      .filter((item) => item !== null);
+      .filter((item): item is T => item !== null);
   }
 
   /**
@@ -257,7 +279,7 @@ export class RedisService implements OnModuleDestroy {
    * @param start 开始索引
    * @param end 结束索引
    */
-  async ltrim(key: string, start: number, end: number): Promise<void> {
+  async ltrim(key: RedisKey, start: number, end: number): Promise<void> {
     await this.client.ltrim(key, start, end);
   }
 
@@ -265,7 +287,7 @@ export class RedisService implements OnModuleDestroy {
    * 获取列表长度
    * @param key 列表键
    */
-  async llen(key: string): Promise<number> {
+  async llen(key: RedisKey): Promise<number> {
     return await this.client.llen(key);
   }
 
@@ -282,38 +304,35 @@ export class RedisService implements OnModuleDestroy {
    * @param commands 要执行的命令数组
    * @returns 执行结果
    */
-  async execTransaction(
+  async execTransaction<T>(
     commands: ((multi: ChainableCommander) => void)[],
-  ): Promise<any[]> {
+  ): Promise<T[]> {
     const multi = this.client.multi();
 
-    // 执行所有命令
     commands.forEach((cmd) => cmd(multi));
 
-    // 执行事务
     const results = await multi.exec();
 
-    // 处理结果
     return (
       results?.map((result) => {
         if (result[0]) {
           throw new Error(`Redis 事务执行失败: ${result[0]}`);
         }
-        return result[1];
+        return result[1] as T;
       }) || []
     );
   }
 
   /**
-   * 模块销毁时自动关闭 Redis 连接，确保资源得以妥善释放
+   * 模块销毁时自动关闭 Redis 连接
    */
-  async onModuleDestroy() {
+  async onModuleDestroy(): Promise<void> {
     await this.client.quit();
   }
 
   /**
    * redis 健康检查
-   * @returns
+   * @returns 是否健康
    */
   async healthCheck(): Promise<boolean> {
     try {
