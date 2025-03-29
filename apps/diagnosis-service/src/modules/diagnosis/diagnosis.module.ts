@@ -1,5 +1,6 @@
 import { DatabaseModule } from '@app/database';
 import { DiagnosisHistory } from '@app/database/entities';
+import { DiagnosisLog } from '@app/database/entities/diagnosis-log.entity';
 import { FileOperationModule } from '@app/file-operation';
 import { HttpService } from '@common/services/http.service';
 import { Module } from '@nestjs/common';
@@ -13,12 +14,13 @@ import {
 import { join } from 'path';
 import { DiagnosisController } from './diagnosis.controller';
 import { DiagnosisHttpService } from './services/diagnosis-http.service';
+import { DiagnosisLogService } from './services/diagnosis-log.service';
 import { DiagnosisService } from './services/diagnosis.service';
 
 @Module({
   imports: [
     FileOperationModule,
-    DatabaseModule.forFeature([DiagnosisHistory]),
+    DatabaseModule.forFeature([DiagnosisHistory, DiagnosisLog]),
     ClientsModule.register([
       {
         name: 'DOWNLOAD_SERVICE',
@@ -46,7 +48,12 @@ import { DiagnosisService } from './services/diagnosis.service';
       },
     ]),
   ],
-  providers: [DiagnosisService, DiagnosisHttpService, HttpService],
+  providers: [
+    DiagnosisService,
+    DiagnosisHttpService,
+    HttpService,
+    DiagnosisLogService,
+  ],
   controllers: [DiagnosisController],
   exports: [DiagnosisService],
 })
