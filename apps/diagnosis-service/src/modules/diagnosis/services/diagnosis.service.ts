@@ -18,6 +18,7 @@ import {
   DOWNLOAD_SERVICE_NAME,
   FILE_SERVICE_NAME,
 } from 'config/microservice.config';
+import { filter, get, isEmpty, isNil, sortBy } from 'lodash-es';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { DataSource, In, Repository } from 'typeorm';
 import { DiagnosisHttpService } from './diagnosis-http.service';
@@ -155,7 +156,7 @@ export class DiagnosisService {
       }
 
       // 4. 按顺序获取接口配置
-      const sortedRequests = requests.sort((a, b) => a.order - b.order);
+      const sortedRequests = sortBy(requests, 'order');
       const remoteInterfaces = new Map(
         remoteService.interfaces.map((interf) => [interf.id, interf]),
       );
@@ -219,16 +220,16 @@ export class DiagnosisService {
         }>,
       ) => {
         // 找出当前层级的接口（没有被其他接口依赖的接口）
-        const currentRequests = requests.filter((config) => {
+        const currentRequests = filter(requests, (request) => {
           // 检查这个接口是否被其他接口依赖
           const isDependent = requests.some(
-            (otherConfig) =>
-              otherConfig.next && otherConfig.next.includes(config.id),
+            (otherRequest) =>
+              otherRequest.next && otherRequest.next.includes(request.id),
           );
-          return !isDependent && !results.has(config.id);
+          return !isDependent && !results.has(request.id);
         });
 
-        if (currentRequests.length === 0) {
+        if (isEmpty(currentRequests)) {
           return;
         }
 
@@ -333,13 +334,13 @@ export class DiagnosisService {
         );
 
         // 获取下一层级的接口
-        const nextRequests = requests.filter((config) => {
+        const nextRequests = filter(requests, (request) => {
           // 检查这个接口的所有依赖是否都已经执行完成
           const allDependenciesCompleted =
-            config.next?.every((id) => results.has(id)) ?? true; // 如果没有next数组，则认为依赖已完成
-          const notExecuted = !results.has(config.id);
+            request.next?.every((id) => results.has(id)) ?? true; // 如果没有next数组，则认为依赖已完成
+          const notExecuted = !results.has(request.id);
           this.logger.debug(
-            `检查接口 ${config.id} 的依赖: ${JSON.stringify(config.next)}, 是否完成: ${allDependenciesCompleted}, 是否未执行: ${notExecuted}`,
+            `检查接口 ${request.id} 的依赖: ${JSON.stringify(request.next)}, 是否完成: ${allDependenciesCompleted}, 是否未执行: ${notExecuted}`,
           );
           return allDependenciesCompleted && notExecuted;
         });
@@ -363,7 +364,7 @@ export class DiagnosisService {
       const lastResult = results.get(
         sortedRequests[sortedRequests.length - 1].id,
       );
-      if (!lastResult) {
+      if (isNil(lastResult)) {
         await this.logService.addLog(
           diagnosisId,
           LogLevel.ERROR,
@@ -376,18 +377,18 @@ export class DiagnosisService {
       }
 
       // 9. 更新诊断结果
-      diagnosis.status = lastResult.data?.status;
-      diagnosis.diagnosisResult = lastResult.data;
+      diagnosis.status = get(lastResult, 'data.status');
+      diagnosis.diagnosisResult = get(lastResult, 'data');
       await queryRunner.manager.save(diagnosis);
       await this.logService.addLog(diagnosisId, LogLevel.INFO, '诊断任务完成', {
         status: diagnosis.status,
-        result: lastResult.data,
+        result: get(lastResult, 'data'),
       });
 
       await queryRunner.commitTransaction();
       return formatResponse(
         200,
-        lastResult.data,
+        get(lastResult, 'data'),
         '已经开始诊断，请稍后查看结果',
       );
     } catch (error) {
