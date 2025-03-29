@@ -79,22 +79,33 @@ export class DiagnosisLogService implements OnModuleDestroy {
 
     this.isProcessing = true;
     const queryRunner = this.dataSource.createQueryRunner();
+    let logs: any[] = [];
 
     try {
       await queryRunner.connect();
       await queryRunner.startTransaction('READ COMMITTED');
 
-      const logs = await this.redisService.lrange(
-        this.REDIS_LOG_QUEUE_KEY,
-        0,
-        this.batchSize - 1,
-      );
+      // 1. 获取并删除数据，使用原子操作
+      const multi = this.redisService.multi();
+      multi.lrange(this.REDIS_LOG_QUEUE_KEY, 0, this.batchSize - 1);
+      multi.ltrim(this.REDIS_LOG_QUEUE_KEY, this.batchSize, -1);
+      const results = await multi.exec();
 
-      if (!Array.isArray(logs) || logs.length === 0) {
+      if (!results || results.length === 0) {
         return;
       }
 
-      // 分批处理，避免单次事务过大
+      const lrangeResult = results[0];
+      if (!lrangeResult || !Array.isArray(lrangeResult[1])) {
+        return;
+      }
+
+      logs = lrangeResult[1];
+      if (logs.length === 0) {
+        return;
+      }
+
+      // 2. 分批处理数据
       const batchSize = 5;
       for (let i = 0; i < logs.length; i += batchSize) {
         const batch = logs.slice(i, i + batchSize);
@@ -110,6 +121,12 @@ export class DiagnosisLogService implements OnModuleDestroy {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      // 3. 发生错误时，将数据重新放回队列
+      if (logs && logs.length > 0) {
+        for (const log of logs) {
+          await this.redisService.rpush(this.REDIS_LOG_QUEUE_KEY, log);
+        }
+      }
       throw error;
     } finally {
       await queryRunner.release();

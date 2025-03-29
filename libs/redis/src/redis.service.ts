@@ -268,21 +268,37 @@ export class RedisService implements OnModuleDestroy {
 
   /**
    * 执行 Redis 事务
-   * @param fn 事务回调函数
+   * @returns ChainableCommander 实例
    */
-  async multi(): Promise<{
-    exec: (
-      fn: (client: ChainableCommander) => Promise<any>,
-    ) => Promise<[null, any]>;
-  }> {
+  multi(): ChainableCommander {
+    return this.client.multi();
+  }
+
+  /**
+   * 执行 Redis 事务
+   * @param commands 要执行的命令数组
+   * @returns 执行结果
+   */
+  async execTransaction(
+    commands: ((multi: ChainableCommander) => void)[],
+  ): Promise<any[]> {
     const multi = this.client.multi();
-    return {
-      exec: async (fn: (client: ChainableCommander) => Promise<any>) => {
-        await fn(multi);
-        const result = await multi.exec();
-        return [null, result?.[0]?.[1] || null];
-      },
-    };
+
+    // 执行所有命令
+    commands.forEach((cmd) => cmd(multi));
+
+    // 执行事务
+    const results = await multi.exec();
+
+    // 处理结果
+    return (
+      results?.map((result) => {
+        if (result[0]) {
+          throw new Error(`Redis 事务执行失败: ${result[0]}`);
+        }
+        return result[1];
+      }) || []
+    );
   }
 
   /**
