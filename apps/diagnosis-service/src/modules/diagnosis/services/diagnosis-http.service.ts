@@ -318,9 +318,9 @@ export class DiagnosisHttpService {
       },
     };
 
-    // 发送请求
-    let response;
-    try {
+    // 发送请求的函数
+    const sendRequest = async () => {
+      let response;
       switch (method.toUpperCase()) {
         case 'GET':
           response = await this.httpService.get(processedUrl, {
@@ -358,6 +358,37 @@ export class DiagnosisHttpService {
 
       this.logger.debug(`接口响应: ${JSON.stringify(response.data)}`);
       return response.data;
+    };
+
+    // 获取当前请求的配置
+    const currentRequest = config.requests[0];
+    if (!currentRequest) {
+      throw new HttpException('未找到请求配置', 500);
+    }
+
+    try {
+      // 如果有重试配置，使用重试机制
+      if (currentRequest.retryCount && currentRequest.retryCount > 0) {
+        return await this.retryWithDelay(
+          sendRequest,
+          currentRequest.retryCount,
+          currentRequest.retryDelay || 1000,
+        );
+      }
+
+      // 如果是轮询类型，使用轮询机制
+      if (currentRequest.type === 'polling') {
+        return await this.pollWithTimeout(
+          sendRequest,
+          currentRequest.interval || 1000,
+          currentRequest.maxAttempts || 10,
+          currentRequest.timeout || 30000,
+          currentRequest.pollingCondition,
+        );
+      }
+
+      // 普通请求直接发送
+      return await sendRequest();
     } catch (error) {
       this.logger.error(`接口调用失败: ${error.message}`);
       throw error;
