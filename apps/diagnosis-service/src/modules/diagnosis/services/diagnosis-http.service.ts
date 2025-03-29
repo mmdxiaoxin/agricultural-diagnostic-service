@@ -119,13 +119,27 @@ export class DiagnosisHttpService {
   private processParams(
     params: Record<string, any>,
     previousResults: Map<number, any>,
+    path: string,
     fileMeta?: File,
     fileData?: Buffer,
   ): Record<string, any> {
     const processedParams = { ...params };
     const formData = new FormData();
+    const urlParams = new Set<string>();
+
+    // 从 URL 中提取参数名
+    const urlParamRegex = /\{(\w+)\}/g;
+    let match;
+    while ((match = urlParamRegex.exec(path)) !== null) {
+      urlParams.add(match[1]);
+    }
 
     for (const [key, paramValue] of Object.entries(processedParams)) {
+      // 如果参数已经被 URL 路径使用，则跳过
+      if (urlParams.has(key)) {
+        continue;
+      }
+
       // 处理文件参数
       if (key === 'file' && fileMeta && fileData) {
         formData.append(paramValue, fileData, {
@@ -271,6 +285,7 @@ export class DiagnosisHttpService {
     const processedParams = await this.processParams(
       params,
       results,
+      path,
       fileMeta,
       fileData,
     );
