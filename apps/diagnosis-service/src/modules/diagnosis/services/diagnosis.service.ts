@@ -210,6 +210,15 @@ export class DiagnosisService {
           }
 
           const interfaceConfig = remoteInterface.config;
+
+          // 检查接口配置是否完整
+          if (!interfaceConfig.path) {
+            throw new RpcException({
+              code: 500,
+              message: `接口 ${config.id} 的路径配置为空`,
+            });
+          }
+
           const diagnosisConfig: DiagnosisConfig = {
             baseUrl: remoteInterface.url,
             urlPrefix: interfaceConfig.urlPrefix || '',
@@ -231,10 +240,19 @@ export class DiagnosisService {
             ],
           };
 
+          this.logger.debug(
+            `接口 ${config.id} 的配置: ${JSON.stringify({
+              path: interfaceConfig.path,
+              method: interfaceConfig.method,
+              urlPrefix: interfaceConfig.urlPrefix,
+              urlPath: interfaceConfig.urlPath,
+            })}`,
+          );
+
           const result = await this.diagnosisHttpService.callInterface(
             diagnosisConfig,
             interfaceConfig.method || 'POST',
-            interfaceConfig.path || '',
+            interfaceConfig.path,
             config.params || fileData,
             token,
             results,
