@@ -2,6 +2,30 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "type": "shell",
+      "label": "clean",
+      "command": "rm -rf dist",
+      "presentation": {
+        "reveal": "silent"
+      }
+    },
+    {
+      "type": "shell",
+      "label": "copy-proto",
+      "command": "mkdir -p dist/apps/diagnosis-service/src/modules/diagnosis/proto && cp apps/diagnosis-service/src/modules/diagnosis/proto/download.proto dist/apps/diagnosis-service/src/modules/diagnosis/proto/",
+      "dependsOn": ["clean"]
+    },
+    {
+      "type": "shell",
+      "label": "build",
+      "command": "npm run build:all",
+      "dependsOn": ["copy-proto"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
       "type": "typescript",
       "tsconfig": "tsconfig.json",
       "problemMatcher": ["$tsc"],
@@ -9,7 +33,8 @@
         "kind": "build",
         "isDefault": true
       },
-      "label": "tsc: build - tsconfig.json"
+      "label": "tsc: build - tsconfig.json",
+      "dependsOn": ["clean"]
     }
   ]
 }

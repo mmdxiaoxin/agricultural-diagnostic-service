@@ -10,8 +10,14 @@
       "name": "diagnosis-service",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/apps/diagnosis-service/src/main.ts",
-      "preLaunchTask": "tsc: build - tsconfig.json",
-      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "preLaunchTask": "build",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register"
+      ],
       "env": {
         "NODE_ENV": "development",
         "DIAGNOSIS_SERVICE_HOST": "0.0.0.0",
