@@ -274,6 +274,93 @@ export class RedisService implements OnModuleDestroy {
   }
 
   /**
+   * 批量获取列表元素
+   * @param key 列表键
+   * @param start 开始索引
+   * @param end 结束索引
+   * @param options 批量获取选项
+   * @returns 解析后的数据数组
+   */
+  async lrangeBatch<T extends RedisValue>(
+    key: RedisKey,
+    start: number,
+    end: number,
+    options: {
+      batchSize?: number;
+      maxConcurrent?: number;
+      retryOptions?: RedisRetryOptions;
+    } = {},
+  ): Promise<T[]> {
+    const {
+      batchSize = 100,
+      maxConcurrent = 3,
+      retryOptions = { retries: 3 },
+    } = options;
+
+    // 参数验证
+    if (start < 0) {
+      throw new Error('开始索引不能小于0');
+    }
+    if (end < start) {
+      throw new Error('结束索引不能小于开始索引');
+    }
+    if (batchSize < 1) {
+      throw new Error('批量大小必须大于0');
+    }
+    if (maxConcurrent < 1) {
+      throw new Error('最大并发数必须大于0');
+    }
+
+    const result: T[] = [];
+    const batches: { start: number; end: number }[] = [];
+    let batchStart = start;
+    let batchEnd = Math.min(batchStart + batchSize - 1, end);
+
+    // 生成所有批次
+    while (batchStart <= end) {
+      batches.push({ start: batchStart, end: batchEnd });
+      batchStart += batchSize;
+      batchEnd = Math.min(batchStart + batchSize - 1, end);
+    }
+
+    // 并发处理批次
+    for (let i = 0; i < batches.length; i += maxConcurrent) {
+      const currentBatches = batches.slice(i, i + maxConcurrent);
+      const batchPromises = currentBatches.map(async ({ start, end }) => {
+        let lastError: Error | null = null;
+        for (let retry = 0; retry < (retryOptions.retries ?? 3); retry++) {
+          try {
+            const data = await this.client.lrange(key, start, end);
+            return data
+              .map((item) => {
+                try {
+                  return JSON.parse(item) as T;
+                } catch (error) {
+                  console.error('反序列化数据失败:', error, '原始数据:', item);
+                  return null;
+                }
+              })
+              .filter((item): item is T => item !== null);
+          } catch (error) {
+            lastError = error as Error;
+            if (retry < (retryOptions.retries ?? 3) - 1) {
+              await new Promise((resolve) =>
+                setTimeout(resolve, Math.pow(2, retry) * 100),
+              );
+            }
+          }
+        }
+        throw new Error(`获取批次数据失败: ${lastError?.message}`);
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      result.push(...batchResults.flat());
+    }
+
+    return result;
+  }
+
+  /**
    * 修剪列表，只保留指定范围内的元素
    * @param key 列表键
    * @param start 开始索引
