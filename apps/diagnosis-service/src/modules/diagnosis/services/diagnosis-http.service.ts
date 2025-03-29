@@ -1,4 +1,5 @@
 import { File } from '@app/database/entities';
+import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 import { BaseResponse, HttpService } from '@common/services/http.service';
 import { DiagnosisConfig } from '@common/types/diagnosis';
 import { HttpException, Injectable, Logger } from '@nestjs/common';
@@ -9,23 +10,22 @@ import {
   endsWith,
   forEach,
   get,
+  gt,
+  includes,
+  isArray,
   isEmpty,
+  isEqual,
+  isNil,
   isString,
+  lt,
   omit,
   replace,
   set,
   some,
   startsWith,
   toString,
-  isEqual,
-  gt,
-  isNil,
-  isArray,
-  includes,
-  lt,
 } from 'lodash-es';
 import { DiagnosisLogService } from './diagnosis-log.service';
-import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 
 type PollingOperator =
   | 'equals'
@@ -127,6 +127,7 @@ export class DiagnosisHttpService {
     maxAttempts: number,
     timeout: number,
     condition?: PollingCondition,
+    diagnosisId?: number,
   ): Promise<T> {
     const startTime = Date.now();
     let attempts = 0;
@@ -138,36 +139,44 @@ export class DiagnosisHttpService {
       }
 
       try {
-        // 如果不是第一次请求，等待指定间隔
         if (lastResponse) {
-          this.logger.debug(`等待 ${interval}ms 后进行下一次轮询`);
+          await this.log(
+            diagnosisId!,
+            LogLevel.DEBUG,
+            `等待 ${interval}ms 后进行下一次轮询`,
+          );
           await new Promise((resolve) => setTimeout(resolve, interval));
         }
 
         const result = await operation();
         lastResponse = result;
 
-        // 检查响应状态
         const status = get(result, 'data.status');
         if (isEqual(status, 'processing')) {
           attempts++;
           if (attempts < maxAttempts) {
-            this.logger.debug(`任务处理中，第 ${attempts} 次轮询`);
+            await this.log(
+              diagnosisId!,
+              LogLevel.DEBUG,
+              `任务处理中，第 ${attempts} 次轮询`,
+            );
             continue;
           }
         }
 
-        // 检查轮询条件
         if (this.checkPollingCondition(result, condition)) {
           return result;
         }
 
         attempts++;
         if (attempts >= maxAttempts) {
-          this.logger.debug(`达到最大轮询次数: ${maxAttempts}`);
+          await this.log(
+            diagnosisId!,
+            LogLevel.DEBUG,
+            `达到最大轮询次数: ${maxAttempts}`,
+          );
         }
       } catch (error: any) {
-        // 处理 500 错误且状态为 processing 的情况
         if (
           error instanceof AxiosError &&
           isEqual(get(error, 'response.status'), 500) &&
@@ -175,13 +184,26 @@ export class DiagnosisHttpService {
         ) {
           attempts++;
           if (attempts < maxAttempts) {
-            this.logger.debug(`任务处理中，第 ${attempts} 次轮询`);
+            await this.log(
+              diagnosisId!,
+              LogLevel.DEBUG,
+              `任务处理中，第 ${attempts} 次轮询`,
+            );
             continue;
           }
         }
 
-        // 其他错误直接抛出
-        this.logger.error(`轮询过程中出错: ${error.message}`);
+        await this.log(
+          diagnosisId!,
+          LogLevel.ERROR,
+          `轮询过程中出错: ${error.message}`,
+          {
+            error: {
+              message: error.message,
+              stack: error.stack,
+            },
+          },
+        );
         throw error;
       }
     }
@@ -348,8 +370,43 @@ export class DiagnosisHttpService {
     // 控制台日志立即输出
     this.logger[level](message);
 
+    // 限制消息长度
+    const MAX_MESSAGE_LENGTH = 1000;
+    const truncatedMessage =
+      message.length > MAX_MESSAGE_LENGTH
+        ? `${message.substring(0, MAX_MESSAGE_LENGTH)}...`
+        : message;
+
+    // 限制元数据大小
+    let processedMetadata = metadata;
+    if (metadata) {
+      processedMetadata = this.truncateMetadata(metadata);
+    }
+
     // 数据库日志异步写入
-    await this.logService.addLog(diagnosisId, level, message, metadata);
+    await this.logService.addLog(
+      diagnosisId,
+      level,
+      truncatedMessage,
+      processedMetadata,
+    );
+  }
+
+  private truncateMetadata(metadata: Record<string, any>): Record<string, any> {
+    const MAX_STRING_LENGTH = 500;
+    const processed: Record<string, any> = {};
+
+    for (const [key, value] of Object.entries(metadata)) {
+      if (typeof value === 'string' && value.length > MAX_STRING_LENGTH) {
+        processed[key] = `${value.substring(0, MAX_STRING_LENGTH)}...`;
+      } else if (typeof value === 'object' && value !== null) {
+        processed[key] = this.truncateMetadata(value);
+      } else {
+        processed[key] = value;
+      }
+    }
+
+    return processed;
   }
 
   async callInterface<T extends Record<string, any>>(
@@ -467,10 +524,30 @@ export class DiagnosisHttpService {
           throw new HttpException('接口响应为空', 500);
         }
 
-        this.logger.debug(`接口响应: ${JSON.stringify(response)}`);
+        // 只记录响应状态和关键信息
+        await this.log(
+          diagnosisId!,
+          LogLevel.DEBUG,
+          `接口响应状态: ${response.message || 'unknown'}`,
+          {
+            code: response.code,
+            message: response.message,
+          },
+        );
         return response;
       } catch (error) {
-        this.logger.error(`请求失败: ${error.message}`);
+        await this.log(
+          diagnosisId!,
+          LogLevel.ERROR,
+          `请求失败: ${error.message}`,
+          {
+            error: {
+              message: error.message,
+              // 不记录完整的堆栈跟踪
+              stack: error.stack?.split('\n').slice(0, 3).join('\n'),
+            },
+          },
+        );
         throw error;
       }
     };
@@ -495,10 +572,11 @@ export class DiagnosisHttpService {
       if (currentRequest.type === 'polling') {
         return await this.pollWithTimeout(
           sendRequest<T>,
-          currentRequest.interval || 3000, // 增加默认轮询间隔
-          currentRequest.maxAttempts || 20, // 增加默认最大尝试次数
-          currentRequest.timeout || 60000, // 增加默认超时时间
+          currentRequest.interval || 3000,
+          currentRequest.maxAttempts || 20,
+          currentRequest.timeout || 60000,
           currentRequest.pollingCondition,
+          diagnosisId,
         );
       }
 
