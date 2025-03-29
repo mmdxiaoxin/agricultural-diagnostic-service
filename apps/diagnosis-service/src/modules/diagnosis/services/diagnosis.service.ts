@@ -970,10 +970,18 @@ export class DiagnosisService {
   }
 
   async diagnosisSupportGet() {
-    const aiServiceList = await this.remoteRepository.find({
+    const remoteList = await this.remoteRepository.find({
       where: { status: 'active' },
+      relations: ['configs'],
     });
-    return formatResponse(200, aiServiceList, '获取诊断支持成功');
+
+    // 过滤每个服务的 configs，只保留 status 为 active 的配置
+    const filteredRemoteList = remoteList.map((remote) => ({
+      ...remote,
+      configs: remote.configs.filter((config) => config.status === 'active'),
+    }));
+
+    return formatResponse(200, filteredRemoteList, '获取诊断支持成功');
   }
 
   // 获取诊断历史记录
