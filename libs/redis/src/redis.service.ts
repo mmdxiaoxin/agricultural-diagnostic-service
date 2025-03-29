@@ -239,13 +239,16 @@ export class RedisService implements OnModuleDestroy {
    */
   async lrange(key: string, start: number, end: number): Promise<any[]> {
     const data = await this.client.lrange(key, start, end);
-    return data.map((item) => {
-      try {
-        return JSON.parse(item);
-      } catch (error) {
-        throw new Error(`反序列化数据失败: ${error.message}`);
-      }
-    });
+    return data
+      .map((item) => {
+        try {
+          return JSON.parse(item);
+        } catch (error) {
+          console.error('反序列化数据失败:', error, '原始数据:', item);
+          return null;
+        }
+      })
+      .filter((item) => item !== null);
   }
 
   /**

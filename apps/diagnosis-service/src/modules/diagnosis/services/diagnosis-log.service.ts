@@ -83,7 +83,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
 
     try {
       await queryRunner.connect();
-      await queryRunner.startTransaction('READ COMMITTED');
+      await queryRunner.startTransaction();
 
       // 1. 获取并删除数据，使用原子操作
       const multi = this.redisService.multi();
@@ -92,16 +92,19 @@ export class DiagnosisLogService implements OnModuleDestroy {
       const results = await multi.exec();
 
       if (!results || results.length === 0) {
+        await queryRunner.commitTransaction();
         return;
       }
 
       const lrangeResult = results[0];
       if (!lrangeResult || !Array.isArray(lrangeResult[1])) {
+        await queryRunner.commitTransaction();
         return;
       }
 
       logs = lrangeResult[1];
       if (logs.length === 0) {
+        await queryRunner.commitTransaction();
         return;
       }
 
@@ -110,7 +113,14 @@ export class DiagnosisLogService implements OnModuleDestroy {
       for (let i = 0; i < logs.length; i += batchSize) {
         const batch = logs.slice(i, i + batchSize);
         const entities = batch
-          .map((log) => this.createLogEntity(log))
+          .map((log) => {
+            try {
+              return this.createLogEntity(log);
+            } catch (error) {
+              console.error('处理日志数据失败:', error, '原始数据:', log);
+              return null;
+            }
+          })
           .filter((entity): entity is DiagnosisLog => entity !== null);
 
         if (entities.length > 0) {
@@ -120,11 +130,17 @@ export class DiagnosisLogService implements OnModuleDestroy {
 
       await queryRunner.commitTransaction();
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+      }
       // 3. 发生错误时，将数据重新放回队列
       if (logs && logs.length > 0) {
         for (const log of logs) {
-          await this.redisService.rpush(this.REDIS_LOG_QUEUE_KEY, log);
+          try {
+            await this.redisService.rpush(this.REDIS_LOG_QUEUE_KEY, log);
+          } catch (error) {
+            console.error('重新添加日志到队列失败:', error, '日志数据:', log);
+          }
         }
       }
       throw error;
@@ -136,8 +152,27 @@ export class DiagnosisLogService implements OnModuleDestroy {
 
   private createLogEntity(log: any): DiagnosisLog | null {
     try {
-      if (!log.diagnosisId || !log.level || !log.message) {
-        console.error('日志数据不完整:', log);
+      // 验证必要字段
+      if (!log || typeof log !== 'object') {
+        console.error('日志数据格式错误:', log);
+        return null;
+      }
+
+      if (!log.diagnosisId || typeof log.diagnosisId !== 'number') {
+        console.error('诊断ID无效:', log);
+        return null;
+      }
+
+      if (
+        !log.level ||
+        !['info', 'debug', 'warn', 'error'].includes(log.level)
+      ) {
+        console.error('日志级别无效:', log);
+        return null;
+      }
+
+      if (!log.message || typeof log.message !== 'string') {
+        console.error('日志消息无效:', log);
         return null;
       }
 
