@@ -3,6 +3,7 @@ import {
   File as FileEntity,
   RemoteService,
 } from '@app/database/entities';
+import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { BaseResponse } from '@common/services/http.service';
 import { DiagnosisConfig } from '@common/types/diagnosis';
@@ -20,6 +21,7 @@ import {
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { DataSource, In, Repository } from 'typeorm';
 import { DiagnosisHttpService } from './diagnosis-http.service';
+import { DiagnosisLogService } from './diagnosis-log.service';
 
 @Injectable()
 export class DiagnosisService {
@@ -37,6 +39,7 @@ export class DiagnosisService {
     private readonly remoteRepository: Repository<RemoteService>,
     private readonly dataSource: DataSource,
     private readonly diagnosisHttpService: DiagnosisHttpService,
+    private readonly logService: DiagnosisLogService,
   ) {}
 
   onModuleInit() {
@@ -84,12 +87,22 @@ export class DiagnosisService {
         lock: { mode: 'pessimistic_write' },
       });
       if (!diagnosis) {
+        await this.logService.addLog(
+          diagnosisId,
+          LogLevel.ERROR,
+          '未找到诊断记录',
+        );
         throw new RpcException({
           code: 500,
           message: '未找到诊断记录',
         });
       }
       if (diagnosis.createdBy !== userId) {
+        await this.logService.addLog(
+          diagnosisId,
+          LogLevel.ERROR,
+          '无权限操作此记录',
+        );
         throw new RpcException({
           code: 500,
           message: '无权限操作此记录',
@@ -102,6 +115,11 @@ export class DiagnosisService {
         relations: ['interfaces', 'configs'],
       });
       if (!remoteService) {
+        await this.logService.addLog(
+          diagnosisId,
+          LogLevel.ERROR,
+          '未找到远程服务配置',
+        );
         throw new RpcException({
           code: 500,
           message: '未找到远程服务配置',
@@ -113,6 +131,11 @@ export class DiagnosisService {
         (config) => config.id === dto.configId,
       );
       if (!remoteConfig) {
+        await this.logService.addLog(
+          diagnosisId,
+          LogLevel.ERROR,
+          '服务配置无接口配置',
+        );
         throw new RpcException({
           code: 500,
           message: '服务配置无接口配置',
@@ -120,6 +143,11 @@ export class DiagnosisService {
       }
       const requests = remoteConfig.config.requests;
       if (!requests || requests.length === 0) {
+        await this.logService.addLog(
+          diagnosisId,
+          LogLevel.ERROR,
+          '服务配置中未指定接口调用配置',
+        );
         throw new RpcException({
           code: 500,
           message: '服务配置中未指定接口调用配置',
@@ -135,9 +163,17 @@ export class DiagnosisService {
       // 5. 更新诊断状态
       diagnosis.status = Status.IN_PROGRESS;
       await queryRunner.manager.save(diagnosis);
+      await this.logService.addLog(diagnosisId, LogLevel.INFO, '开始诊断任务', {
+        status: Status.IN_PROGRESS,
+      });
 
       // 6. 获取文件
       if (!diagnosis.fileId) {
+        await this.logService.addLog(
+          diagnosisId,
+          LogLevel.ERROR,
+          '无上传文件记录',
+        );
         throw new RpcException({
           code: 404,
           message: '无上传文件记录',
@@ -145,6 +181,11 @@ export class DiagnosisService {
       }
       const fileMeta = await this.getFileMeta(diagnosis.fileId);
       const fileData = await this.downloadFile(fileMeta);
+      await this.logService.addLog(
+        diagnosisId,
+        LogLevel.INFO,
+        `获取文件成功: ${fileMeta.originalFileName}`,
+      );
 
       // 7. 按顺序调用接口
       const results = new Map<number, BaseResponse<any>>();
@@ -268,16 +309,27 @@ export class DiagnosisService {
             diagnosisId,
           );
 
-          this.logger.debug(
-            `接口 ${config.id} 调用结果: ${JSON.stringify(result)}`,
+          await this.logService.addLog(
+            diagnosisId,
+            LogLevel.INFO,
+            `接口 ${config.id} 调用完成`,
+            {
+              interfaceId: config.id,
+              status: result.data?.status,
+            },
           );
           results.set(config.id, result);
           return result;
         });
 
         await Promise.all(promises);
-        this.logger.debug(
-          `当前层级接口调用完成，当前结果: ${JSON.stringify(Object.fromEntries(results))}`,
+        await this.logService.addLog(
+          diagnosisId,
+          LogLevel.INFO,
+          '当前层级接口调用完成',
+          {
+            results: Object.fromEntries(results),
+          },
         );
 
         // 获取下一层级的接口
@@ -312,6 +364,11 @@ export class DiagnosisService {
         sortedRequests[sortedRequests.length - 1].id,
       );
       if (!lastResult) {
+        await this.logService.addLog(
+          diagnosisId,
+          LogLevel.ERROR,
+          '接口调用失败，未获取到结果',
+        );
         throw new RpcException({
           code: 500,
           message: '接口调用失败，未获取到结果',
@@ -322,6 +379,10 @@ export class DiagnosisService {
       diagnosis.status = lastResult.data?.status;
       diagnosis.diagnosisResult = lastResult.data;
       await queryRunner.manager.save(diagnosis);
+      await this.logService.addLog(diagnosisId, LogLevel.INFO, '诊断任务完成', {
+        status: diagnosis.status,
+        result: lastResult.data,
+      });
 
       await queryRunner.commitTransaction();
       return formatResponse(
@@ -331,6 +392,17 @@ export class DiagnosisService {
       );
     } catch (error) {
       this.logger.error(error);
+      await this.logService.addLog(
+        diagnosisId,
+        LogLevel.ERROR,
+        '开始诊断失败',
+        {
+          error: {
+            message: error.message,
+            stack: error.stack?.split('\n').slice(0, 3).join('\n'),
+          },
+        },
+      );
       await queryRunner.rollbackTransaction();
       throw new RpcException({
         code: 500,
