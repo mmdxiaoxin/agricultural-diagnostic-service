@@ -1,16 +1,28 @@
 import { File } from '@app/database/entities';
 import { BaseResponse, HttpService } from '@common/services/http.service';
-import { DiagnosisConfig, InterfaceCallConfig } from '@common/types/diagnosis';
+import { DiagnosisConfig } from '@common/types/diagnosis';
 import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { AxiosError } from 'axios';
 import * as FormData from 'form-data';
 import {
+  cloneDeep,
+  endsWith,
+  forEach,
   get,
-  isString,
-  startsWith,
   isEmpty,
+  isString,
+  omit,
   replace,
+  set,
+  some,
+  startsWith,
   toString,
+  isEqual,
+  gt,
+  isNil,
+  isArray,
+  includes,
+  lt,
 } from 'lodash-es';
 
 type PollingOperator =
@@ -64,39 +76,36 @@ export class DiagnosisHttpService {
     condition?: PollingCondition,
   ): boolean {
     if (!condition) {
-      return result.status !== 'pending';
+      return get(result, 'status') !== 'pending';
     }
 
     const { field, operator, value } = condition;
 
     try {
-      // 获取要检查的值
-      let fieldValue = result;
-      for (const key of field.split('.')) {
-        fieldValue = fieldValue?.[key];
-        if (fieldValue === undefined) {
-          return false;
-        }
+      // 获取嵌套值
+      const fieldValue = get(result, field);
+      if (fieldValue === undefined) {
+        return false;
       }
 
       // 根据操作符进行比较
       switch (operator) {
         case 'equals':
-          return fieldValue === value;
+          return isEqual(fieldValue, value);
         case 'notEquals':
-          return fieldValue !== value;
+          return !isEqual(fieldValue, value);
         case 'contains':
-          return Array.isArray(fieldValue)
-            ? fieldValue.includes(value)
-            : fieldValue.toString().includes(value);
+          return isArray(fieldValue)
+            ? includes(fieldValue, value)
+            : includes(toString(fieldValue), toString(value));
         case 'greaterThan':
-          return fieldValue > value;
+          return gt(fieldValue, value);
         case 'lessThan':
-          return fieldValue < value;
+          return lt(fieldValue, value);
         case 'exists':
-          return fieldValue !== undefined && fieldValue !== null;
+          return !isNil(fieldValue);
         case 'notExists':
-          return fieldValue === undefined || fieldValue === null;
+          return isNil(fieldValue);
         default:
           this.logger.warn(`未知的操作符: ${operator}`);
           return false;
@@ -119,12 +128,11 @@ export class DiagnosisHttpService {
     let lastResponse: T | null = null;
 
     while (attempts < maxAttempts) {
-      if (Date.now() - startTime > timeout) {
+      if (gt(Date.now() - startTime, timeout)) {
         throw new HttpException('轮询超时', 408);
       }
 
       try {
-        // 等待上一次请求完全响应
         if (lastResponse) {
           this.logger.debug(`等待 ${interval}ms 后进行下一次轮询`);
           await new Promise((resolve) => setTimeout(resolve, interval));
@@ -133,8 +141,8 @@ export class DiagnosisHttpService {
         const result = await operation();
         lastResponse = result;
 
-        // 检查任务状态
-        if (result?.data?.status === 'processing') {
+        const status = get(result, 'data.status');
+        if (isEqual(status, 'processing')) {
           attempts++;
           if (attempts < maxAttempts) {
             this.logger.debug(`任务处理中，第 ${attempts} 次轮询`);
@@ -151,11 +159,10 @@ export class DiagnosisHttpService {
           this.logger.debug(`达到最大轮询次数: ${maxAttempts}`);
         }
       } catch (error: any) {
-        // 如果是 500 错误，且任务状态是 processing，继续轮询
         if (
           error instanceof AxiosError &&
-          error?.response?.status === 500 &&
-          error?.response?.data?.status === 'processing'
+          isEqual(get(error, 'response.status'), 500) &&
+          isEqual(get(error, 'response.data.status'), 'processing')
         ) {
           attempts++;
           if (attempts < maxAttempts) {
@@ -179,23 +186,24 @@ export class DiagnosisHttpService {
     fileMeta?: File,
     fileData?: Buffer,
   ): ProcessedParams {
-    const processedParams = { ...params };
+    // 深拷贝
+    const processedParams = cloneDeep(params);
     const formData = new FormData();
-    const urlParams = new Set<string>();
 
-    // 从 URL 中提取参数名
+    // 处理嵌套对象
+    const urlParams = new Set<string>();
     const urlParamRegex = /\{(\w+)\}/g;
     let match: RegExpExecArray | null;
     while ((match = urlParamRegex.exec(path)) !== null) {
       urlParams.add(match[1]);
     }
 
-    // 处理所有参数中的引用
-    for (const [key, paramValue] of Object.entries(processedParams)) {
+    // 处理参数引用
+    forEach(processedParams, (paramValue, key) => {
       if (
-        typeof paramValue === 'string' &&
-        paramValue.startsWith('{{#') &&
-        paramValue.endsWith('}}')
+        isString(paramValue) &&
+        startsWith(paramValue, '{{#') &&
+        endsWith(paramValue, '}}')
       ) {
         try {
           const reference = paramValue.slice(3, -2);
@@ -209,48 +217,40 @@ export class DiagnosisHttpService {
             );
           }
 
-          let refValue = result;
-          if (path.length > 0) {
-            for (const pathKey of path) {
-              refValue = refValue?.[pathKey];
-              if (refValue === undefined) {
-                throw new HttpException(
-                  `接口 ${interfaceId} 的结果中未找到路径 ${path.join('.')}`,
-                  500,
-                );
-              }
-            }
+          // 获取嵌套值
+          const refValue =
+            path.length > 0 ? get(result, path.join('.')) : result;
+          if (refValue === undefined) {
+            throw new HttpException(
+              `接口 ${interfaceId} 的结果中未找到路径 ${path.join('.')}`,
+              500,
+            );
           }
-          processedParams[key] = refValue;
+          set(processedParams, key, refValue);
         } catch (error) {
           this.logger.error(`处理参数 ${key} 时出错: ${error.message}`);
           throw error;
         }
       }
-    }
+    });
 
     // 处理文件参数
-    for (const [key, paramValue] of Object.entries(processedParams)) {
+    forEach(processedParams, (paramValue, key) => {
       if (key === 'file' && fileMeta && fileData) {
         formData.append(paramValue, fileData, {
           filename: fileMeta.originalFileName,
           contentType: fileMeta.fileType,
         });
-        continue;
       }
-    }
+    });
 
-    // 如果有文件参数，返回FormData
-    if (Object.keys(processedParams).some((key) => key === 'file')) {
+    // 检查文件参数
+    if (some(Object.keys(processedParams), (key) => key === 'file')) {
       return formData;
     }
 
-    // 返回处理后的参数，不包含 URL 参数
-    const filteredParams = { ...processedParams };
-    for (const key of urlParams) {
-      delete filteredParams[key];
-    }
-    return filteredParams;
+    // 移除 URL 参数
+    return omit(processedParams, Array.from(urlParams));
   }
 
   private processUrlTemplate(
