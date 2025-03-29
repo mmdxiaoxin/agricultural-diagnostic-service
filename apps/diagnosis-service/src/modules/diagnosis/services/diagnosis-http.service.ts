@@ -121,30 +121,39 @@ export class DiagnosisHttpService {
   ): Record<string, any> {
     const processedParams = { ...params };
 
-    for (const [key, value] of Object.entries(processedParams)) {
+    for (const [key, paramValue] of Object.entries(processedParams)) {
       if (
-        typeof value === 'string' &&
-        value.startsWith('{{#') &&
-        value.endsWith('}}')
+        typeof paramValue === 'string' &&
+        paramValue.startsWith('{{#') &&
+        paramValue.endsWith('}}')
       ) {
         try {
           // 解析引用格式：{{#接口ID.response.data.xxx}}
-          const reference = value.slice(3, -2);
+          const reference = paramValue.slice(3, -2);
           const [interfaceId, ...path] = reference.split('.');
           const result = previousResults.get(Number(interfaceId));
 
-          if (result) {
-            let value = result;
-            for (const key of path) {
-              value = value?.[key];
-              if (value === undefined) break;
-            }
-            processedParams[key] = value;
-          } else {
-            this.logger.warn(`未找到接口 ${interfaceId} 的结果`);
+          if (!result) {
+            throw new HttpException(
+              `未找到接口 ${interfaceId} 的结果，请确保上一步接口调用成功`,
+              500,
+            );
           }
+
+          let refValue = result;
+          for (const pathKey of path) {
+            refValue = refValue?.[pathKey];
+            if (refValue === undefined) {
+              throw new HttpException(
+                `接口 ${interfaceId} 的结果中未找到路径 ${path.join('.')}`,
+                500,
+              );
+            }
+          }
+          processedParams[key] = refValue;
         } catch (error) {
           this.logger.error(`处理参数 ${key} 时出错: ${error.message}`);
+          throw error;
         }
       }
     }
