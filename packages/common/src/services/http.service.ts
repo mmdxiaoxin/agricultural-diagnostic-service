@@ -1,6 +1,6 @@
 // packages/common/src/services/http.service.ts
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 export interface BaseResponse<T = any> {
   code: number;
@@ -11,6 +11,7 @@ export interface BaseResponse<T = any> {
 @Injectable()
 export class HttpService {
   private readonly axiosInstance: AxiosInstance;
+  private readonly logger = new Logger(HttpService.name);
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -24,6 +25,7 @@ export class HttpService {
     this.axiosInstance.interceptors.response.use(
       (response) => response.data,
       (error) => {
+        this.logger.error(`HTTP请求失败: ${JSON.stringify(error)}`);
         return {
           code: error.response?.status || 500,
           message: error.message || '请求失败',
