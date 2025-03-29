@@ -3,6 +3,14 @@ import { BaseResponse, HttpService } from '@common/services/http.service';
 import { DiagnosisConfig, InterfaceCallConfig } from '@common/types/diagnosis';
 import { HttpException, Injectable, Logger } from '@nestjs/common';
 import * as FormData from 'form-data';
+import {
+  get,
+  isString,
+  startsWith,
+  isEmpty,
+  replace,
+  toString,
+} from 'lodash-es';
 
 type PollingOperator =
   | 'equals'
@@ -219,7 +227,7 @@ export class DiagnosisHttpService {
     params: Record<string, any>,
     previousResults: Map<number, any>,
   ): string {
-    if (!url) {
+    if (isEmpty(url)) {
       this.logger.warn('URL模板为空');
       return '';
     }
@@ -247,11 +255,7 @@ export class DiagnosisHttpService {
         continue;
       }
 
-      if (
-        typeof value === 'string' &&
-        value.startsWith('{{#') &&
-        value.endsWith('}}')
-      ) {
+      if (isString(value) && startsWith(value, '{{#') && value.endsWith('}}')) {
         try {
           const reference = value.slice(3, -2);
           const [interfaceId, ...path] = reference.split('.');
@@ -264,17 +268,13 @@ export class DiagnosisHttpService {
             );
           }
 
-          let refValue = result;
-          if (path.length > 0) {
-            for (const pathKey of path) {
-              refValue = refValue?.[pathKey];
-              if (refValue === undefined) {
-                throw new HttpException(
-                  `接口 ${interfaceId} 的结果中未找到路径 ${path.join('.')}`,
-                  500,
-                );
-              }
-            }
+          const refValue =
+            path.length > 0 ? get(result, path.join('.')) : result;
+          if (refValue === undefined) {
+            throw new HttpException(
+              `接口 ${interfaceId} 的结果中未找到路径 ${path.join('.')}`,
+              500,
+            );
           }
           urlParamsMap.set(key, refValue);
         } catch (error) {
@@ -290,7 +290,7 @@ export class DiagnosisHttpService {
     let processedUrl = url;
     for (const [key, value] of urlParamsMap.entries()) {
       if (value !== undefined) {
-        processedUrl = processedUrl.replace(`{${key}}`, value.toString());
+        processedUrl = replace(processedUrl, `{${key}}`, toString(value));
       }
     }
 
