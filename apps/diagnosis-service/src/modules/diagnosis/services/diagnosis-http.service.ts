@@ -146,7 +146,7 @@ export class DiagnosisHttpService {
 
     // 从 URL 中提取参数名
     const urlParamRegex = /\{(\w+)\}/g;
-    let match;
+    let match: RegExpExecArray | null;
     while ((match = urlParamRegex.exec(path)) !== null) {
       urlParams.add(match[1]);
     }
@@ -206,8 +206,12 @@ export class DiagnosisHttpService {
       return formData;
     }
 
-    // 返回处理后的参数，不删除 URL 参数
-    return processedParams;
+    // 返回处理后的参数，不包含 URL 参数
+    const filteredParams = { ...processedParams };
+    for (const key of urlParams) {
+      delete filteredParams[key];
+    }
+    return filteredParams;
   }
 
   private processUrlTemplate(
@@ -304,28 +308,24 @@ export class DiagnosisHttpService {
     fileMeta?: File,
     fileData?: Buffer,
   ): Promise<BaseResponse<T>> {
-    // 处理参数
-    const processedParams = await this.processParams(
+    // 构建完整URL
+    const fullUrl = `${config.baseUrl}${config.urlPrefix}${config.urlPath}${path}`;
+
+    // 先处理URL模板
+    const processedUrl = this.processUrlTemplate(fullUrl, params, results);
+
+    if (!processedUrl) {
+      throw new HttpException('处理后的URL为空', 500);
+    }
+
+    // 处理参数（移除已用于URL的参数）
+    const processedParams = this.processParams(
       params,
       results,
       path,
       fileMeta,
       fileData,
     );
-
-    // 构建完整URL
-    const fullUrl = `${config.baseUrl}${config.urlPrefix}${config.urlPath}${path}`;
-
-    // 处理URL模板
-    const processedUrl = this.processUrlTemplate(
-      fullUrl,
-      processedParams,
-      results,
-    );
-
-    if (!processedUrl) {
-      throw new HttpException('处理后的URL为空', 500);
-    }
 
     this.logger.debug(`开始调用接口: ${method} ${processedUrl}`);
     this.logger.debug(`接口参数: ${JSON.stringify(processedParams)}`);
