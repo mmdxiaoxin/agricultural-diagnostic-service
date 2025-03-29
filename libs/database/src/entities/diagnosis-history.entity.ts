@@ -1,5 +1,6 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { DiagnosisLog } from './diagnosis-log.entity';
 
 @Entity('diagnosis_history')
 @Index('diagnosis_history_file_id_idx', ['fileId'])
@@ -23,4 +24,7 @@ export class DiagnosisHistory extends BaseEntity {
 
   @Column({ type: 'int' })
   updatedBy: number; // 更新者
+
+  @OneToMany(() => DiagnosisLog, (log) => log.diagnosis)
+  logs: DiagnosisLog[];
 }

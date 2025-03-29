@@ -4,6 +4,7 @@ import {
   Index,
   ManyToOne,
   PrimaryGeneratedColumn,
+  JoinColumn,
 } from 'typeorm';
 import { DiagnosisHistory } from './diagnosis-history.entity';
 
@@ -20,10 +21,14 @@ export class DiagnosisLog {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => DiagnosisHistory)
+  @ManyToOne(() => DiagnosisHistory, (diagnosis) => diagnosis.logs, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'diagnosisId' })
   diagnosis: DiagnosisHistory;
 
-  @Column()
+  @Column({ nullable: true })
   diagnosisId: number;
 
   @Column({
