@@ -1,15 +1,11 @@
 import {
-  RemoteService,
   DiagnosisHistory,
   File as FileEntity,
+  RemoteService,
 } from '@app/database/entities';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
-import {
-  DiagnosisConfig,
-  InterfaceCallConfig,
-  CreateDiagnosisTaskResponse,
-  DiagnosisTaskResponse,
-} from '@common/types/diagnosis';
+import { BaseResponse } from '@common/services/http.service';
+import { DiagnosisConfig } from '@common/types/diagnosis';
 import { GrpcDownloadService } from '@common/types/download/download.types';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientGrpc, ClientProxy, RpcException } from '@nestjs/microservices';
@@ -151,7 +147,7 @@ export class DiagnosisService {
       const fileData = await this.downloadFile(fileMeta);
 
       // 7. 按顺序调用接口
-      const results = new Map<number, any>();
+      const results = new Map<number, BaseResponse<any>>();
 
       // 递归调用接口
       const callInterfaces = async (
@@ -303,12 +299,16 @@ export class DiagnosisService {
       }
 
       // 9. 更新诊断结果
-      diagnosis.status = lastResult.status;
-      diagnosis.diagnosisResult = lastResult;
+      diagnosis.status = lastResult.data?.status;
+      diagnosis.diagnosisResult = lastResult.data;
       await queryRunner.manager.save(diagnosis);
 
       await queryRunner.commitTransaction();
-      return formatResponse(200, lastResult, '已经开始诊断，请稍后查看结果');
+      return formatResponse(
+        200,
+        lastResult.data,
+        '已经开始诊断，请稍后查看结果',
+      );
     } catch (error) {
       this.logger.error(error);
       await queryRunner.rollbackTransaction();
