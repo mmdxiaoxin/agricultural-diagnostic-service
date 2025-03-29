@@ -290,19 +290,21 @@ export class DiagnosisHttpService {
       fileData,
     );
 
+    // 构建完整URL
+    const fullUrl = `${config.baseUrl}${config.urlPrefix}${config.urlPath}${path}`;
+
     // 处理URL模板
-    const processedPath = this.processUrlTemplate(
-      path,
+    const processedUrl = this.processUrlTemplate(
+      fullUrl,
       processedParams,
       results,
     );
 
-    if (!processedPath) {
-      throw new HttpException('处理后的URL路径为空', 500);
+    if (!processedUrl) {
+      throw new HttpException('处理后的URL为空', 500);
     }
 
-    const fullUrl = `${config.baseUrl}${config.urlPrefix}${config.urlPath}${processedPath}`;
-    this.logger.debug(`开始调用接口: ${method} ${fullUrl}`);
+    this.logger.debug(`开始调用接口: ${method} ${processedUrl}`);
     this.logger.debug(`接口参数: ${JSON.stringify(processedParams)}`);
 
     // 构建请求配置
@@ -321,27 +323,27 @@ export class DiagnosisHttpService {
     try {
       switch (method.toUpperCase()) {
         case 'GET':
-          response = await this.httpService.get(fullUrl, {
+          response = await this.httpService.get(processedUrl, {
             ...requestConfig,
             params: processedParams,
           });
           break;
         case 'POST':
           response = await this.httpService.post(
-            fullUrl,
+            processedUrl,
             processedParams,
             requestConfig,
           );
           break;
         case 'PUT':
           response = await this.httpService.put(
-            fullUrl,
+            processedUrl,
             processedParams,
             requestConfig,
           );
           break;
         case 'DELETE':
-          response = await this.httpService.delete(fullUrl, {
+          response = await this.httpService.delete(processedUrl, {
             ...requestConfig,
             params: processedParams,
           });
