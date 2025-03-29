@@ -269,13 +269,16 @@ export class RedisService implements OnModuleDestroy {
    * @param fn 事务回调函数
    */
   async multi(): Promise<{
-    exec: (fn: (client: ChainableCommander) => Promise<any>) => Promise<any>;
+    exec: (
+      fn: (client: ChainableCommander) => Promise<any>,
+    ) => Promise<[null, any]>;
   }> {
     const multi = this.client.multi();
     return {
       exec: async (fn: (client: ChainableCommander) => Promise<any>) => {
         await fn(multi);
-        return await multi.exec();
+        const result = await multi.exec();
+        return [null, result?.[0]?.[1] || null];
       },
     };
   }

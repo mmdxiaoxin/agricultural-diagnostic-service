@@ -59,7 +59,7 @@ export class DiagnosisLogService {
     const startTime = Date.now();
     try {
       // 使用 Redis 事务确保原子性
-      const logsToProcess = await (
+      const result = await (
         await this.redisService.multi()
       ).exec(async (client) => {
         // 获取一批日志
@@ -75,33 +75,65 @@ export class DiagnosisLogService {
         return logs;
       });
 
-      if (logsToProcess.length === 0) {
+      // 从事务结果中提取日志数据
+      const logsToProcess = result?.[0]?.[1] || [];
+      if (!Array.isArray(logsToProcess) || logsToProcess.length === 0) {
         return;
       }
 
       // 解析日志并创建实体
-      const entities = logsToProcess.map((log) =>
-        this.logRepository.create({
-          diagnosisId: log.diagnosisId,
-          level: log.level,
-          message: log.message,
-          metadata: log.metadata,
-          createdAt: new Date(log.timestamp),
-        }),
+      const entities = logsToProcess
+        .map((logStr) => {
+          try {
+            const log = JSON.parse(logStr);
+            // 确保所有必需字段都存在
+            if (!log.diagnosisId || !log.level || !log.message) {
+              console.error('日志数据不完整:', log);
+              return null;
+            }
+
+            return this.logRepository.create({
+              diagnosisId: log.diagnosisId,
+              level: log.level,
+              message: log.message,
+              metadata: log.metadata || {},
+              createdAt: new Date(log.timestamp || Date.now()),
+            });
+          } catch (error) {
+            console.error('解析日志数据失败:', error);
+            return null;
+          }
+        })
+        .filter(Boolean); // 过滤掉无效的日志
+
+      if (entities.length === 0) {
+        return;
+      }
+      // 批量保存到数据库
+      await this.logRepository.save(
+        entities.filter((entity): entity is DiagnosisLog => entity !== null),
       );
 
-      // 批量保存到数据库
-      await this.logRepository.save(entities);
-
       const processTime = Date.now() - startTime;
+      const metrics = {
+        processedCount: entities.length,
+        processTime: processTime,
+        errorCount: 0,
+      };
+
       await this.redisService.set(
-        'diagnosis:log:metrics:process_time',
-        processTime,
+        'diagnosis:log:metrics',
+        metrics,
+        3600, // 1小时过期
       );
     } catch (error) {
       await this.redisService.increment('diagnosis:log:metrics:error_count');
       console.error('保存日志失败:', error);
-      // 这里可以添加重试机制或告警通知
+
+      // 添加更详细的错误日志
+      if (error.code === 'ER_NO_DEFAULT_FOR_FIELD') {
+        console.error('数据库字段缺少默认值:', error.sqlMessage);
+      }
     } finally {
       this.isProcessing = false;
     }
