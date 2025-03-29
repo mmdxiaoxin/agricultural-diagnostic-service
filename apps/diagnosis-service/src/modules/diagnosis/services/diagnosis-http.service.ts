@@ -24,6 +24,8 @@ import {
   includes,
   lt,
 } from 'lodash-es';
+import { DiagnosisLogService } from './diagnosis-log.service';
+import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 
 type PollingOperator =
   | 'equals'
@@ -46,7 +48,10 @@ type ProcessedParams = Record<string, any> | FormData;
 export class DiagnosisHttpService {
   private readonly logger = new Logger(DiagnosisHttpService.name);
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly logService: DiagnosisLogService,
+  ) {}
 
   private async retryWithDelay<T>(
     operation: () => Promise<T>,
@@ -329,6 +334,19 @@ export class DiagnosisHttpService {
     return processedUrl;
   }
 
+  private async log(
+    diagnosisId: number,
+    level: LogLevel,
+    message: string,
+    metadata?: Record<string, any>,
+  ) {
+    // 控制台日志立即输出
+    this.logger[level](message);
+
+    // 数据库日志异步写入
+    await this.logService.addLog(diagnosisId, level, message, metadata);
+  }
+
   async callInterface<T extends Record<string, any>>(
     config: DiagnosisConfig,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
@@ -338,6 +356,7 @@ export class DiagnosisHttpService {
     results: Map<number, any>,
     fileMeta?: File,
     fileData?: Buffer,
+    diagnosisId?: number,
   ): Promise<BaseResponse<T>> {
     // 构建完整URL
     const fullUrl = `${config.baseUrl}${config.urlPrefix}${config.urlPath}${path}`;
@@ -358,18 +377,40 @@ export class DiagnosisHttpService {
       fileData,
     );
 
-    this.logger.debug(`开始调用接口: ${method} ${processedUrl}`);
-    if (processedParams instanceof FormData) {
-      // 如果是 FormData，只输出文件名
-      if (fileMeta) {
-        this.logger.debug(`接口参数: file - ${fileMeta.originalFileName}`);
-      } else {
-        this.logger.debug('接口参数: {}');
-      }
-    } else {
-      // 如果不是 FormData，正常输出 JSON
-      this.logger.debug(`接口参数: ${JSON.stringify(processedParams)}`);
-    }
+    // 使用 Promise.all 并行处理日志
+    await Promise.all([
+      this.log(
+        diagnosisId!,
+        LogLevel.DEBUG,
+        `开始调用接口: ${method} ${processedUrl}`,
+        { method, url: processedUrl },
+      ),
+      processedParams instanceof FormData
+        ? fileMeta
+          ? this.log(
+              diagnosisId!,
+              LogLevel.DEBUG,
+              `接口参数: file - ${fileMeta.originalFileName}`,
+              {
+                method,
+                url: processedUrl,
+                file: {
+                  name: fileMeta.originalFileName,
+                  type: fileMeta.fileType,
+                },
+              },
+            )
+          : this.log(diagnosisId!, LogLevel.DEBUG, '接口参数: {}', {
+              method,
+              url: processedUrl,
+            })
+        : this.log(
+            diagnosisId!,
+            LogLevel.DEBUG,
+            `接口参数: ${JSON.stringify(processedParams)}`,
+            { method, url: processedUrl },
+          ),
+    ]);
 
     // 构建请求配置
     const requestConfig = {
@@ -459,7 +500,19 @@ export class DiagnosisHttpService {
       // 普通请求直接发送
       return await sendRequest<T>();
     } catch (error) {
-      this.logger.error(`接口调用失败: ${error.message}`);
+      await this.log(
+        diagnosisId!,
+        LogLevel.ERROR,
+        `接口调用失败: ${error.message}`,
+        {
+          method,
+          url: processedUrl,
+          error: {
+            message: error.message,
+            stack: error.stack,
+          },
+        },
+      );
       throw error;
     }
   }

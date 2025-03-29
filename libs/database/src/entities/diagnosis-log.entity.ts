@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { DiagnosisHistory } from './diagnosis-history.entity';
 
 export enum LogLevel {
@@ -9,6 +15,7 @@ export enum LogLevel {
 }
 
 @Entity()
+@Index(['diagnosisId', 'createdAt'])
 export class DiagnosisLog {
   @PrimaryGeneratedColumn()
   id: number;

@@ -246,6 +246,7 @@ export class DiagnosisService {
             results,
             fileMeta,
             fileData,
+            diagnosisId,
           );
 
           this.logger.debug(
