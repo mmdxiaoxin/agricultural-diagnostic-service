@@ -48,7 +48,7 @@ export class RedisService implements OnModuleDestroy {
    */
   async set(key: string, value: any, ttl?: number, retries = 3): Promise<void> {
     const serialized = JSON.stringify(value);
-    let lastError: Error = new Error('set 错误');
+    let lastError: Error | null = null;
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -68,7 +68,7 @@ export class RedisService implements OnModuleDestroy {
       }
     }
 
-    throw new Error(`Redis set 操作失败: ${lastError.message}`);
+    throw new Error(`Redis set 操作失败: ${lastError?.message}`);
   }
 
   /**
@@ -153,22 +153,24 @@ export class RedisService implements OnModuleDestroy {
     ttl: number,
     retryDelay = 100,
     maxRetries = 10,
+    maxWaitTime = 10000, // 最大等待时间
   ): Promise<string> {
     const token = uuidv4();
     let retries = 0;
+    let totalWaitTime = 0;
 
-    while (retries < maxRetries) {
+    while (retries < maxRetries && totalWaitTime < maxWaitTime) {
       const result = await this.client.set(lockKey, token, 'PX', ttl, 'NX');
       if (result === 'OK') {
         return token;
       }
 
-      // 使用指数退避和随机抖动
       const delay = Math.min(
         retryDelay * Math.pow(2, retries) + Math.random() * 100,
         1000,
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
+      totalWaitTime += delay;
       retries++;
     }
 
