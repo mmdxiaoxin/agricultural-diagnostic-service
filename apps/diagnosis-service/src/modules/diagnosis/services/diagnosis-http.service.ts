@@ -138,6 +138,7 @@ export class DiagnosisHttpService {
       }
 
       try {
+        // 如果不是第一次请求，等待指定间隔
         if (lastResponse) {
           this.logger.debug(`等待 ${interval}ms 后进行下一次轮询`);
           await new Promise((resolve) => setTimeout(resolve, interval));
@@ -146,6 +147,7 @@ export class DiagnosisHttpService {
         const result = await operation();
         lastResponse = result;
 
+        // 检查响应状态
         const status = get(result, 'data.status');
         if (isEqual(status, 'processing')) {
           attempts++;
@@ -155,6 +157,7 @@ export class DiagnosisHttpService {
           }
         }
 
+        // 检查轮询条件
         if (this.checkPollingCondition(result, condition)) {
           return result;
         }
@@ -164,6 +167,7 @@ export class DiagnosisHttpService {
           this.logger.debug(`达到最大轮询次数: ${maxAttempts}`);
         }
       } catch (error: any) {
+        // 处理 500 错误且状态为 processing 的情况
         if (
           error instanceof AxiosError &&
           isEqual(get(error, 'response.status'), 500) &&
@@ -176,6 +180,7 @@ export class DiagnosisHttpService {
           }
         }
 
+        // 其他错误直接抛出
         this.logger.error(`轮询过程中出错: ${error.message}`);
         throw error;
       }
