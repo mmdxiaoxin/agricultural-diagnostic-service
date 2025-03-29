@@ -258,4 +258,30 @@ export class RemoteController {
   ) {
     return this.remoteService.removeRemoteConfig(configId);
   }
+
+  // 复制配置
+  @Post(':serviceId/config/:configId/copy')
+  @HttpCode(HttpStatus.CREATED)
+  async copyRemoteConfig(
+    @Param(
+      'configId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    configId: number,
+  ) {
+    return this.remoteService.copyRemoteConfig(configId);
+  }
+
+  // 复制接口
+  @Post(':serviceId/interface/:interfaceId/copy')
+  @HttpCode(HttpStatus.CREATED)
+  async copyRemoteInterface(
+    @Param(
+      'interfaceId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    interfaceId: number,
+  ) {
+    return this.remoteService.copyRemoteInterface(interfaceId);
+  }
 }

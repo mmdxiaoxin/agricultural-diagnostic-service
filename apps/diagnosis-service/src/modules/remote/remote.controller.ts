@@ -163,4 +163,16 @@ export class RemoteServiceController {
     await this.configService.remove(configId);
     return formatResponse(204, null, '删除成功');
   }
+
+  @MessagePattern({ cmd: 'service.config.copy' })
+  async copyConfig(@Payload() configId: number) {
+    await this.configService.copy(configId);
+    return formatResponse(201, null, '复制成功');
+  }
+
+  @MessagePattern({ cmd: 'service.interface.copy' })
+  async copyInterface(@Payload() interfaceId: number) {
+    await this.interfaceService.copy(interfaceId);
+    return formatResponse(201, null, '复制成功');
+  }
 }

@@ -1,10 +1,7 @@
-import { CreateRemoteConfigDto } from '@common/dto/remote/create-remote-config.dto';
-import { CreateRemoteConfigsDto } from '@common/dto/remote/create-remote-configs.dto';
-import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
-import { UpdateAiConfigsDto } from '@common/dto/remote/update-remote-configs.dto';
-import { UpdateRemoteServiceDto } from '@common/dto/remote/update-remote-service.dto';
 import { CreateRemoteInterfaceDto } from '@common/dto/remote/create-remote-interface.dto';
+import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
 import { UpdateRemoteInterfaceDto } from '@common/dto/remote/update-remote-interface.dto';
+import { UpdateRemoteServiceDto } from '@common/dto/remote/update-remote-service.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { DIAGNOSIS_SERVICE_NAME } from 'config/microservice.config';
@@ -134,6 +131,17 @@ export class RemoteService {
     return this.diagnosisClient.send(
       { cmd: 'service.config.remove' },
       configId,
+    );
+  }
+
+  copyRemoteConfig(configId: number) {
+    return this.diagnosisClient.send({ cmd: 'service.config.copy' }, configId);
+  }
+
+  copyRemoteInterface(interfaceId: number) {
+    return this.diagnosisClient.send(
+      { cmd: 'service.interface.copy' },
+      interfaceId,
     );
   }
 }

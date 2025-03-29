@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class RemoteInterfaceService {
@@ -13,6 +14,7 @@ export class RemoteInterfaceService {
     private serviceRepository: Repository<RemoteService>,
     @InjectRepository(RemoteInterface)
     private interfaceRepository: Repository<RemoteInterface>,
+    private dataSource: DataSource,
   ) {}
 
   async getInterfaces(serviceId: number) {
@@ -81,5 +83,44 @@ export class RemoteInterfaceService {
       });
     }
     return this.interfaceRepository.delete(interfaceId);
+  }
+
+  async copy(interfaceId: number): Promise<RemoteInterface> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const interface_ = await queryRunner.manager.findOne(RemoteInterface, {
+        where: { id: interfaceId },
+        relations: ['service'],
+      });
+
+      if (!interface_) {
+        throw new RpcException({
+          code: 404,
+          message: '未找到当前接口',
+        });
+      }
+
+      const { id, createdAt, updatedAt, ...interfaceData } = interface_;
+      const newInterface = queryRunner.manager.create(RemoteInterface, {
+        ...interfaceData,
+        name: `${interfaceData.name}_copy`,
+      });
+
+      const savedInterface = await queryRunner.manager.save(newInterface);
+      await queryRunner.commitTransaction();
+      return savedInterface;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new RpcException({
+        code: 500,
+        message: '复制接口失败',
+        data: error,
+      });
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

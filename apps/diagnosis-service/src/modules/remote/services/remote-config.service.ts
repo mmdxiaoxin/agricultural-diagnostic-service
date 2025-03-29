@@ -162,4 +162,45 @@ export class RemoteConfigService {
       await queryRunner.release();
     }
   }
+
+  // 复制配置
+  async copy(configId: number): Promise<RemoteConfig> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const config = await queryRunner.manager.findOne(RemoteConfig, {
+        where: { id: configId },
+        relations: ['service'],
+      });
+
+      if (!config) {
+        throw new RpcException({
+          code: 404,
+          message: '未找到当前配置',
+        });
+      }
+
+      // 创建新的配置对象，移除 id 和创建时间等字段
+      const { id, createdAt, updatedAt, ...configData } = config;
+      const newConfig = queryRunner.manager.create(RemoteConfig, {
+        ...configData,
+        name: `${configData.name}_copy`,
+      });
+
+      const savedConfig = await queryRunner.manager.save(newConfig);
+      await queryRunner.commitTransaction();
+      return savedConfig;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new RpcException({
+        code: 500,
+        message: '复制配置失败',
+        data: error,
+      });
+    } finally {
+      await queryRunner.release();
+    }
+  }
 }
