@@ -160,6 +160,7 @@ export class DiagnosisService {
           timeout?: number;
           retryCount?: number;
           retryDelay?: number;
+          delay?: number;
           next?: number[];
           params?: Record<string, any>;
           pollingCondition?: {
@@ -196,6 +197,23 @@ export class DiagnosisService {
 
         // 并发调用当前层级的接口
         const promises = currentRequests.map(async (config) => {
+          // 检查是否有依赖的接口，如果有，等待依赖接口完成后再等待指定的延时
+          if (config.next && config.next.length > 0) {
+            const lastDependencyId = config.next[config.next.length - 1];
+            const lastDependency = requests.find(
+              (r) => r.id === lastDependencyId,
+            );
+
+            if (lastDependency?.delay) {
+              this.logger.debug(
+                `等待依赖接口 ${lastDependencyId} 完成后的延时 ${lastDependency.delay}ms`,
+              );
+              await new Promise((resolve) =>
+                setTimeout(resolve, lastDependency.delay),
+              );
+            }
+          }
+
           this.logger.debug(`准备调用接口 ${config.id}`);
           const remoteInterface = remoteInterfaces.get(config.id);
           if (!remoteInterface) {
@@ -221,6 +239,7 @@ export class DiagnosisService {
                 timeout: config.timeout,
                 retryCount: config.retryCount,
                 retryDelay: config.retryDelay,
+                delay: config.delay,
                 next: config.next,
                 params: config.params,
                 pollingCondition: config.pollingCondition,

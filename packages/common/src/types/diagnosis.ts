@@ -81,6 +81,7 @@ export interface DiagnosisConfig {
     timeout?: number;
     retryCount?: number;
     retryDelay?: number;
+    delay?: number;
     next?: number[];
     params?: Record<string, any>;
     headers?: Record<string, string>;
