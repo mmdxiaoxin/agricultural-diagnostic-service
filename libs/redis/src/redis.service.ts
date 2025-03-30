@@ -47,6 +47,28 @@ type StreamInfo = {
   lastEntry?: StreamEntry<any>;
 };
 
+/**
+ * 统一的 Stream 操作选项
+ */
+type StreamOptions = RedisRetryOptions & {
+  count?: number;
+  block?: number;
+  noack?: boolean;
+  mkstream?: boolean;
+  entriesRead?: number;
+  approximately?: boolean;
+  equal?: boolean;
+  limit?: number;
+};
+
+/**
+ * 统一的 Stream 操作结果
+ */
+type StreamResult<T> = {
+  id: string;
+  data: T;
+};
+
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   private readonly client: Redis;
@@ -446,242 +468,191 @@ export class RedisService implements OnModuleDestroy {
   }
 
   /**
-   * 向 Stream 添加消息
-   * @param key Stream 键
-   * @param data 消息数据
-   * @param options 重试选项
-   * @returns 消息ID
+   * 统一的错误处理和重试逻辑
    */
-  async xadd<T extends RedisValue>(
-    key: RedisKey,
-    data: T,
-    options: RedisRetryOptions = { retries: 3 },
-  ): Promise<string> {
+  private async withRetry<T>(
+    operation: () => Promise<T>,
+    options: StreamOptions = {},
+  ): Promise<T> {
+    const { retries = 3, retryDelay = 100 } = options;
     let lastError: Error | null = null;
-    const serialized = JSON.stringify(data);
 
-    for (let i = 0; i < (options.retries ?? 3); i++) {
+    for (let i = 0; i < retries; i++) {
       try {
-        const id = await this.client.xadd(key, '*', 'data', serialized);
-        if (!id) throw new Error('消息ID为空');
-        return id;
+        return await operation();
       } catch (error) {
         lastError = error as Error;
-        if (i < (options.retries ?? 3) - 1) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, Math.pow(2, i) * 100),
+        if (i < retries - 1) {
+          const delay = Math.min(
+            retryDelay * Math.pow(2, i) + Math.random() * 100,
+            1000,
           );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          console.warn('Stream 操作失败，准备重试:', {
+            attempt: i + 1,
+            error: error.message,
+            delay,
+          });
         }
       }
     }
 
-    throw new Error(`Stream 添加消息失败: ${lastError?.message}`);
+    throw new Error(
+      `Stream 操作失败，已重试 ${retries} 次: ${lastError?.message}`,
+    );
+  }
+
+  /**
+   * 统一的 Stream 消息序列化
+   */
+  private serializeStreamData<T>(data: T): string {
+    return JSON.stringify(data);
+  }
+
+  /**
+   * 统一的 Stream 消息反序列化
+   */
+  private deserializeStreamData<T>(data: string): T {
+    try {
+      return JSON.parse(data) as T;
+    } catch (error) {
+      console.error('Stream 消息反序列化失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 向 Stream 添加消息
+   */
+  async xadd<T extends RedisValue>(
+    key: RedisKey,
+    data: T,
+    options: StreamOptions = {},
+  ): Promise<string> {
+    return this.withRetry(async () => {
+      const serialized = this.serializeStreamData(data);
+      const id = await this.client.xadd(key, '*', 'data', serialized);
+      if (!id) throw new Error('消息ID为空');
+      return id;
+    }, options);
   }
 
   /**
    * 从 Stream 读取消息
-   * @param key Stream 键
-   * @param options 读取选项
-   * @returns 消息数组
    */
   async xread<T extends RedisValue>(
     key: RedisKey,
-    options: StreamReadOptions = {},
-  ): Promise<StreamEntry<T>[]> {
+    options: StreamOptions = {},
+  ): Promise<StreamResult<T>[]> {
     const { count = 10, block = 0 } = options;
     const args: ['STREAMS', string, ...(string | number)[]] = ['STREAMS', key];
 
-    if (block > 0) {
-      args.push('BLOCK', block);
-    }
-
-    if (count > 0) {
-      args.push('COUNT', count);
-    }
-
+    if (block > 0) args.push('BLOCK', block);
+    if (count > 0) args.push('COUNT', count);
     args.push('$');
 
-    const result = await this.client.xread(...args);
-    if (!result) return [];
+    return this.withRetry(async () => {
+      const result = await this.client.xread(...args);
+      if (!result) return [];
 
-    return result[0][1].map((entry: [string, [string, string]]) => ({
-      id: entry[0],
-      data: JSON.parse(entry[1][1]) as T,
-    }));
+      return result[0][1].map((entry: [string, string[]]) => {
+        const fields = entry[1];
+        const dataIndex = fields.indexOf('data');
+        if (dataIndex === -1) {
+          throw new Error('Stream 消息中缺少 data 字段');
+        }
+        return {
+          id: entry[0],
+          data: this.deserializeStreamData<T>(fields[dataIndex + 1]),
+        };
+      });
+    }, options);
   }
 
   /**
    * 创建消费者组
-   * @param key Stream 键
-   * @param group 消费者组名称
-   * @param startId 起始消息ID，默认为 '0'
-   * @param options 创建选项
-   * @returns Promise<void>
    */
   async xgroupCreate(
     key: RedisKey,
     group: string | Buffer,
     startId: string | Buffer | number = '0',
-    options: RedisRetryOptions & {
-      entriesRead?: number;
-      mkstream?: boolean;
-    } = { retries: 3, mkstream: true },
+    options: StreamOptions = {},
   ): Promise<void> {
     if (!key || !group) {
       throw new Error('Stream 键和消费者组名称不能为空');
     }
 
-    let lastError: Error | null = null;
-    const maxRetries = options.retries ?? 3;
-    const retryDelay = options.retryDelay ?? 100;
-
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        await (this.client.xgroup as any)(
-          'CREATE',
-          key,
-          group,
-          startId,
-          ...(options.mkstream ? ['MKSTREAM'] : []),
-          ...(options.entriesRead !== undefined
-            ? ['ENTRIESREAD', options.entriesRead]
-            : []),
-        );
-        return;
-      } catch (error) {
-        lastError = error as Error;
-        if (i < maxRetries - 1) {
-          const delay = Math.min(
-            retryDelay * Math.pow(2, i) + Math.random() * 100,
-            1000,
-          );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          console.warn('创建消费者组失败，准备重试:', {
-            key,
-            group,
-            startId,
-            attempt: i + 1,
-            error: error.message,
-            delay,
-          });
-        }
-      }
-    }
-
-    throw new Error(
-      `创建消费者组失败，已重试 ${maxRetries} 次: ${lastError?.message}`,
-    );
+    return this.withRetry(async () => {
+      await (this.client.xgroup as any)(
+        'CREATE',
+        key,
+        group,
+        startId.toString(),
+        ...(options.mkstream ? ['MKSTREAM'] : []),
+        ...(options.entriesRead !== undefined
+          ? ['ENTRIESREAD', options.entriesRead.toString()]
+          : []),
+      );
+    }, options);
   }
 
   /**
    * 从消费者组读取消息
-   * @param key Stream 键
-   * @param group 消费者组名称
-   * @param consumer 消费者名称
-   * @param options 读取选项
-   * @returns 消息数组
    */
   async xreadgroup<T extends RedisValue>(
     key: RedisKey,
     group: string | Buffer,
     consumer: string | Buffer,
-    options: StreamReadOptions & RedisRetryOptions = {},
-  ): Promise<StreamEntry<T>[]> {
+    options: StreamOptions = {},
+  ): Promise<StreamResult<T>[]> {
     if (!key || !group || !consumer) {
       throw new Error('Stream 键、消费者组名称和消费者名称不能为空');
     }
 
-    const {
-      count = 10,
-      block = 0,
-      noack = false,
-      retries = 3,
-      retryDelay = 100,
-    } = options;
+    const { count = 10, block = 0, noack = false } = options;
 
-    let lastError: Error | null = null;
-    const maxRetries = retries;
+    return this.withRetry(async () => {
+      const result = await (this.client.xreadgroup as any)(
+        'GROUP',
+        group,
+        consumer,
+        ...(noack ? ['NOACK'] : []),
+        ...(block > 0 ? ['BLOCK', block] : []),
+        ...(count > 0 ? ['COUNT', count] : []),
+        'STREAMS',
+        key,
+        '>',
+      );
 
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const result = await (this.client.xreadgroup as any)(
-          'GROUP',
-          group,
-          consumer,
-          ...(noack ? ['NOACK'] : []),
-          ...(block > 0 ? ['BLOCK', block] : []),
-          ...(count > 0 ? ['COUNT', count] : []),
-          'STREAMS',
-          key,
-          '>',
-        );
-        if (!result || !Array.isArray(result) || result.length === 0) {
-          return [];
-        }
-
-        const streamResult = result[0] as [
-          string,
-          Array<[string, [string, string]]>,
-        ];
-
-        if (!Array.isArray(streamResult[1])) {
-          throw new Error('返回数据格式错误');
-        }
-
-        return streamResult[1]
-          .map((entry) => {
-            try {
-              return {
-                id: entry[0],
-                data: JSON.parse(entry[1][1]) as T,
-              };
-            } catch (error) {
-              console.error('解析消息数据失败:', {
-                error: error.message,
-                entry,
-              });
-              return null;
-            }
-          })
-          .filter((entry): entry is StreamEntry<T> => entry !== null);
-      } catch (error) {
-        lastError = error as Error;
-        if (i < maxRetries - 1) {
-          const delay = Math.min(
-            retryDelay * Math.pow(2, i) + Math.random() * 100,
-            1000,
-          );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          console.warn('从消费者组读取消息失败，准备重试:', {
-            key,
-            group,
-            consumer,
-            attempt: i + 1,
-            error: error.message,
-            delay,
-          });
-        }
+      if (!result || !Array.isArray(result) || result.length === 0) {
+        return [];
       }
-    }
 
-    throw new Error(
-      `从消费者组读取消息失败，已重试 ${maxRetries} 次: ${lastError?.message}`,
-    );
+      const streamResult = result[0] as [
+        string,
+        Array<[string, [string, string]]>,
+      ];
+      if (!Array.isArray(streamResult[1])) {
+        throw new Error('返回数据格式错误');
+      }
+
+      return streamResult[1]
+        .map((entry) => ({
+          id: entry[0],
+          data: this.deserializeStreamData<T>(entry[1][1]),
+        }))
+        .filter((entry): entry is StreamResult<T> => entry !== null);
+    }, options);
   }
 
   /**
    * 确认消息已处理
-   * @param key Stream 键
-   * @param group 消费者组名称
-   * @param messageIds 消息ID数组
-   * @param options 重试选项
-   * @returns 成功确认的消息数量
    */
   async xack(
     key: RedisKey,
     group: string | Buffer,
     messageIds: (string | Buffer | number)[],
-    options: RedisRetryOptions = { retries: 3 },
+    options: StreamOptions = {},
   ): Promise<number> {
     if (!key || !group) {
       throw new Error('Stream 键和消费者组名称不能为空');
@@ -692,59 +663,26 @@ export class RedisService implements OnModuleDestroy {
       return 0;
     }
 
-    let lastError: Error | null = null;
-    const maxRetries = options.retries ?? 3;
-    const retryDelay = options.retryDelay ?? 100;
+    return this.withRetry(async () => {
+      const acknowledgedCount = await this.client.xack(
+        key,
+        group,
+        ...messageIds,
+      );
 
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const acknowledgedCount = await this.client.xack(
+      if (acknowledgedCount === 0) {
+        console.warn('没有消息被确认:', { key, group, messageIds });
+      } else if (acknowledgedCount < messageIds.length) {
+        console.warn('部分消息确认失败:', {
           key,
           group,
-          ...messageIds,
-        );
-
-        if (acknowledgedCount === 0) {
-          console.warn('没有消息被确认:', {
-            key,
-            group,
-            messageIds,
-            attempt: i + 1,
-          });
-        } else if (acknowledgedCount < messageIds.length) {
-          console.warn('部分消息确认失败:', {
-            key,
-            group,
-            total: messageIds.length,
-            acknowledged: acknowledgedCount,
-            attempt: i + 1,
-          });
-        }
-
-        return acknowledgedCount;
-      } catch (error) {
-        lastError = error as Error;
-        if (i < maxRetries - 1) {
-          const delay = Math.min(
-            retryDelay * Math.pow(2, i) + Math.random() * 100,
-            1000,
-          );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          console.warn('确认消息失败，准备重试:', {
-            key,
-            group,
-            messageIds,
-            attempt: i + 1,
-            error: error.message,
-            delay,
-          });
-        }
+          total: messageIds.length,
+          acknowledged: acknowledgedCount,
+        });
       }
-    }
 
-    throw new Error(
-      `确认消息失败，已重试 ${maxRetries} 次: ${lastError?.message}`,
-    );
+      return acknowledgedCount;
+    }, options);
   }
 
   /**
@@ -951,225 +889,22 @@ export class RedisService implements OnModuleDestroy {
 
   /**
    * 删除消息
-   * @param key Stream 键
-   * @param messageIds 消息ID数组
-   * @param options 重试选项
-   * @returns 删除的消息数量
    */
   async xdel(
     key: RedisKey,
     messageIds: (string | Buffer | number)[],
-    options: RedisRetryOptions = { retries: 3 },
+    options: StreamOptions = {},
   ): Promise<number> {
     if (!messageIds || messageIds.length === 0) {
       return 0;
     }
 
-    let lastError: Error | null = null;
-    const maxRetries = options.retries ?? 3;
-    const retryDelay = options.retryDelay ?? 100;
-
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const deletedCount = await this.client.xdel(key, ...messageIds);
-        if (deletedCount === 0) {
-          console.warn('没有消息被删除:', {
-            key,
-            messageIds,
-            attempt: i + 1,
-          });
-        }
-        return deletedCount;
-      } catch (error) {
-        lastError = error as Error;
-        if (i < maxRetries - 1) {
-          const delay = Math.min(
-            retryDelay * Math.pow(2, i) + Math.random() * 100,
-            1000,
-          );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          console.warn('删除消息失败，准备重试:', {
-            key,
-            messageIds,
-            attempt: i + 1,
-            error: error.message,
-            delay,
-          });
-        }
+    return this.withRetry(async () => {
+      const deletedCount = await this.client.xdel(key, ...messageIds);
+      if (deletedCount === 0) {
+        console.warn('没有消息被删除:', { key, messageIds });
       }
-    }
-
-    throw new Error(
-      `删除消息失败，已重试 ${maxRetries} 次: ${lastError?.message}`,
-    );
-  }
-
-  /**
-   * 修剪 Stream
-   * @param key Stream 键
-   * @param strategy 修剪策略，'MAXLEN' 或 'MINID'
-   * @param threshold 阈值，对于 MAXLEN 是最大长度，对于 MINID 是最小消息ID
-   * @param options 修剪选项
-   * @returns 删除的消息数量
-   */
-  async xtrim(
-    key: RedisKey,
-    strategy: 'MAXLEN' | 'MINID',
-    threshold: string | Buffer | number,
-    options: {
-      retries?: number;
-      retryDelay?: number;
-      limit?: number;
-      approximately?: boolean;
-      equal?: boolean;
-    } = {},
-  ): Promise<number> {
-    if (!key) {
-      throw new Error('Stream 键不能为空');
-    }
-
-    let lastError: Error | null = null;
-    const maxRetries = options.retries ?? 3;
-    const retryDelay = options.retryDelay ?? 100;
-
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        let deletedCount: number;
-
-        if (strategy === 'MAXLEN') {
-          if (options.approximately) {
-            if (options.limit) {
-              deletedCount = await this.client.xtrim(
-                key,
-                'MAXLEN',
-                '~',
-                threshold,
-                'LIMIT',
-                options.limit,
-              );
-            } else {
-              deletedCount = await this.client.xtrim(
-                key,
-                'MAXLEN',
-                '~',
-                threshold,
-              );
-            }
-          } else if (options.equal) {
-            if (options.limit) {
-              deletedCount = await this.client.xtrim(
-                key,
-                'MAXLEN',
-                '=',
-                threshold,
-                'LIMIT',
-                options.limit,
-              );
-            } else {
-              deletedCount = await this.client.xtrim(
-                key,
-                'MAXLEN',
-                '=',
-                threshold,
-              );
-            }
-          } else {
-            if (options.limit) {
-              deletedCount = await this.client.xtrim(
-                key,
-                'MAXLEN',
-                threshold,
-                'LIMIT',
-                options.limit,
-              );
-            } else {
-              deletedCount = await this.client.xtrim(key, 'MAXLEN', threshold);
-            }
-          }
-        } else {
-          if (options.approximately) {
-            if (options.limit) {
-              deletedCount = await this.client.xtrim(
-                key,
-                'MINID',
-                '~',
-                threshold,
-                'LIMIT',
-                options.limit,
-              );
-            } else {
-              deletedCount = await this.client.xtrim(
-                key,
-                'MINID',
-                '~',
-                threshold,
-              );
-            }
-          } else if (options.equal) {
-            if (options.limit) {
-              deletedCount = await this.client.xtrim(
-                key,
-                'MINID',
-                '=',
-                threshold,
-                'LIMIT',
-                options.limit,
-              );
-            } else {
-              deletedCount = await this.client.xtrim(
-                key,
-                'MINID',
-                '=',
-                threshold,
-              );
-            }
-          } else {
-            if (options.limit) {
-              deletedCount = await this.client.xtrim(
-                key,
-                'MINID',
-                threshold,
-                'LIMIT',
-                options.limit,
-              );
-            } else {
-              deletedCount = await this.client.xtrim(key, 'MINID', threshold);
-            }
-          }
-        }
-
-        if (deletedCount === 0) {
-          console.warn('没有消息被修剪:', {
-            key,
-            strategy,
-            threshold,
-            attempt: i + 1,
-          });
-        }
-
-        return deletedCount;
-      } catch (error) {
-        lastError = error as Error;
-        if (i < maxRetries - 1) {
-          const delay = Math.min(
-            retryDelay * Math.pow(2, i) + Math.random() * 100,
-            1000,
-          );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          console.warn('修剪 Stream 失败，准备重试:', {
-            key,
-            strategy,
-            threshold,
-            attempt: i + 1,
-            error: error.message,
-            delay,
-          });
-        }
-      }
-    }
-
-    throw new Error(
-      `修剪 Stream 失败，已重试 ${maxRetries} 次: ${lastError?.message}`,
-    );
+      return deletedCount;
+    }, options);
   }
 }
