@@ -11,6 +11,8 @@ import { GrpcDownloadService } from '@common/types/download/download.types';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientGrpc, ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
 import { Status } from '@shared/enum/status.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -39,6 +41,8 @@ export class DiagnosisService {
     private readonly dataSource: DataSource,
     private readonly diagnosisHttpService: DiagnosisHttpService,
     private readonly logService: DiagnosisLogService,
+    @InjectQueue('diagnosis')
+    private readonly diagnosisQueue: Queue,
   ) {}
 
   onModuleInit() {
@@ -46,8 +50,42 @@ export class DiagnosisService {
       this.downloadClient.getService<GrpcDownloadService>('DownloadService');
   }
 
-  // 后台执行诊断任务
-  private async executeDiagnosisAsync(
+  private async getFileMeta(fileId: number): Promise<FileEntity> {
+    const { success, result: fileMeta } = await lastValueFrom(
+      this.fileClient.send(
+        { cmd: FILE_MESSAGE_PATTERNS.GET_FILE_BY_ID },
+        { fileId },
+      ),
+    );
+
+    if (!success || !fileMeta) {
+      throw new RpcException({
+        code: 500,
+        message: '获取文件失败',
+      });
+    }
+
+    return fileMeta;
+  }
+
+  private async downloadFile(fileMeta: FileEntity): Promise<Buffer> {
+    const { success, data } = await lastValueFrom(
+      this.downloadService.downloadFile({ fileMeta }),
+    );
+
+    if (!success) {
+      throw new RpcException({
+        code: 500,
+        message: '获取文件失败',
+      });
+    }
+
+    // 直接返回 Buffer 数据
+    return Buffer.isBuffer(data) ? data : Buffer.from(data);
+  }
+
+  // 执行诊断任务
+  async executeDiagnosisAsync(
     diagnosisId: number,
     userId: number,
     dto: StartDiagnosisDto,
@@ -316,40 +354,6 @@ export class DiagnosisService {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  private async getFileMeta(fileId: number): Promise<FileEntity> {
-    const { success, result: fileMeta } = await lastValueFrom(
-      this.fileClient.send(
-        { cmd: FILE_MESSAGE_PATTERNS.GET_FILE_BY_ID },
-        { fileId },
-      ),
-    );
-
-    if (!success || !fileMeta) {
-      throw new RpcException({
-        code: 500,
-        message: '获取文件失败',
-      });
-    }
-
-    return fileMeta;
-  }
-
-  private async downloadFile(fileMeta: FileEntity): Promise<Buffer> {
-    const { success, data } = await lastValueFrom(
-      this.downloadService.downloadFile({ fileMeta }),
-    );
-
-    if (!success) {
-      throw new RpcException({
-        code: 500,
-        message: '获取文件失败',
-      });
-    }
-
-    // 直接返回 Buffer 数据
-    return Buffer.isBuffer(data) ? data : Buffer.from(data);
   }
 
   // 创建诊断任务并获取诊断结果
@@ -810,27 +814,24 @@ export class DiagnosisService {
 
       await queryRunner.commitTransaction();
 
-      // 6. 在后台执行诊断任务
-      this.executeDiagnosisAsync(
-        diagnosisId,
-        userId,
-        dto,
-        token,
-        diagnosis.fileId,
-      ).catch((error) => {
-        this.logger.error('后台诊断任务执行失败:', error);
-        this.logService.addLog(
+      // 6. 将任务添加到队列
+      await this.diagnosisQueue.add(
+        'diagnosis',
+        {
           diagnosisId,
-          LogLevel.ERROR,
-          '诊断任务执行失败',
-          {
-            error: {
-              message: error.message,
-              stack: error.stack?.split('\n').slice(0, 3).join('\n'),
-            },
+          userId,
+          dto,
+          token,
+          fileId: diagnosis.fileId,
+        },
+        {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 1000,
           },
-        );
-      });
+        },
+      );
 
       return formatResponse(
         200,

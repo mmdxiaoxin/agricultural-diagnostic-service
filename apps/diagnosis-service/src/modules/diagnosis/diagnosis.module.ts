@@ -4,7 +4,9 @@ import { DiagnosisLog } from '@app/database/entities/diagnosis-log.entity';
 import { FileOperationModule } from '@app/file-operation';
 import { RedisModule } from '@app/redis';
 import { HttpService } from '@common/services/http.service';
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import {
   DOWNLOAD_SERVICE_GRPC_PORT,
@@ -14,6 +16,7 @@ import {
 } from 'config/microservice.config';
 import { join } from 'path';
 import { DiagnosisController } from './diagnosis.controller';
+import { DiagnosisProcessor } from './processors/diagnosis.processor';
 import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisHttpService } from './services/diagnosis-http.service';
 import { DiagnosisLogService } from './services/diagnosis-log.service';
@@ -50,6 +53,20 @@ import { DiagnosisService } from './services/diagnosis.service';
         },
       },
     ]),
+    BullModule.registerQueueAsync({
+      name: 'diagnosis',
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 1000,
+          },
+        },
+      }),
+      inject: [ConfigService],
+    }),
   ],
   providers: [
     DiagnosisService,
@@ -57,6 +74,7 @@ import { DiagnosisService } from './services/diagnosis.service';
     HttpService,
     DiagnosisLogService,
     DiagnosisHistoryService,
+    DiagnosisProcessor,
   ],
   controllers: [DiagnosisController],
   exports: [DiagnosisService],
