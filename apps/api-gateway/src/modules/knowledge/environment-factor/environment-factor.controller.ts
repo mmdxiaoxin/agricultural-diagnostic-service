@@ -1,4 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CreateEnvironmentFactorDto } from '@common/dto/knowledge/create-environmentFactor.dto';
+import { UpdateEnvironmentFactorDto } from '@common/dto/knowledge/update-environmentFactor.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -11,11 +13,9 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Role } from '@shared/enum/role.enum';
-import { CreateEnvironmentFactorDto } from './dto/create-environment-factor.dto';
-import { UpdateEnvironmentFactorDto } from './dto/update-environment-factor.dto';
-import { EnvironmentFactorService } from './environment-factor.service';
 import { ApiTags } from '@nestjs/swagger';
+import { Role } from '@shared/enum/role.enum';
+import { EnvironmentFactorService } from './environment-factor.service';
 
 @ApiTags('环境因素管理')
 @Controller('environment-factor')

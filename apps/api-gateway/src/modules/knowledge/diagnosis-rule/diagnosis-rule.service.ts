@@ -1,8 +1,8 @@
+import { CreateDiagnosisRuleDto } from '@common/dto/knowledge/create-diagnosisRule.dto';
+import { UpdateDiagnosisRuleDto } from '@common/dto/knowledge/update-diagnosisRule.dto';
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateDiagnosisRuleDto } from './dto/create-diagnosis-rule.dto';
-import { UpdateDiagnosisRuleDto } from './dto/update-diagnosis-rule.dto';
-import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
 import { ClientProxy } from '@nestjs/microservices';
+import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
 
 @Injectable()
 export class DiagnosisRuleService {
@@ -11,22 +11,28 @@ export class DiagnosisRuleService {
   ) {}
 
   create(createDiagnosisRuleDto: CreateDiagnosisRuleDto) {
-    return 'This action adds a new diagnosisRule';
+    return this.client.send(
+      { cmd: 'diagnosisRule.create' },
+      { dto: createDiagnosisRuleDto },
+    );
   }
 
   findAll() {
-    return `This action returns all diagnosisRule`;
+    return this.client.send({ cmd: 'diagnosisRule.get' }, {});
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} diagnosisRule`;
+    return this.client.send({ cmd: 'diagnosisRule.get.byId' }, { id });
   }
 
   update(id: number, updateDiagnosisRuleDto: UpdateDiagnosisRuleDto) {
-    return `This action updates a #${id} diagnosisRule`;
+    return this.client.send(
+      { cmd: 'diagnosisRule.update' },
+      { id, dto: updateDiagnosisRuleDto },
+    );
   }
 
   remove(id: number) {
-    return `This action removes a #${id} diagnosisRule`;
+    return this.client.send({ cmd: 'diagnosisRule.delete' }, { id });
   }
 }

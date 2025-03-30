@@ -1,8 +1,8 @@
+import { CreateEnvironmentFactorDto } from '@common/dto/knowledge/create-environmentFactor.dto';
+import { UpdateEnvironmentFactorDto } from '@common/dto/knowledge/update-environmentFactor.dto';
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateEnvironmentFactorDto } from './dto/create-environment-factor.dto';
-import { UpdateEnvironmentFactorDto } from './dto/update-environment-factor.dto';
-import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
 import { ClientProxy } from '@nestjs/microservices';
+import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
 
 @Injectable()
 export class EnvironmentFactorService {
@@ -11,22 +11,28 @@ export class EnvironmentFactorService {
   ) {}
 
   create(createEnvironmentFactorDto: CreateEnvironmentFactorDto) {
-    return 'This action adds a new environmentFactor';
+    return this.client.send(
+      { cmd: 'environmentFactor.create' },
+      { dto: createEnvironmentFactorDto },
+    );
   }
 
   findAll() {
-    return `This action returns all environmentFactor`;
+    return this.client.send({ cmd: 'environmentFactor.get' }, {});
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} environmentFactor`;
+    return this.client.send({ cmd: 'environmentFactor.get.byId' }, { id });
   }
 
   update(id: number, updateEnvironmentFactorDto: UpdateEnvironmentFactorDto) {
-    return `This action updates a #${id} environmentFactor`;
+    return this.client.send(
+      { cmd: 'environmentFactor.update' },
+      { id, dto: updateEnvironmentFactorDto },
+    );
   }
 
   remove(id: number) {
-    return `This action removes a #${id} environmentFactor`;
+    return this.client.send({ cmd: 'environmentFactor.delete' }, { id });
   }
 }

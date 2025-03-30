@@ -1,8 +1,8 @@
+import { CreateCropDto } from '@common/dto/knowledge/create-crop.dto';
+import { UpdateCropDto } from '@common/dto/knowledge/update-crop.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
-import { CreateCropDto } from './dto/create-crop.dto';
-import { UpdateCropDto } from './dto/update-crop.dto';
 
 @Injectable()
 export class CropService {
@@ -11,22 +11,22 @@ export class CropService {
   ) {}
 
   create(createCropDto: CreateCropDto) {
-    return 'This action adds a new crop';
+    return this.client.send({ cmd: 'crop.create' }, { dto: createCropDto });
   }
 
   findAll() {
-    return `This action returns all crop`;
+    return this.client.send({ cmd: 'crop.get' }, {});
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} crop`;
+    return this.client.send({ cmd: 'crop.get.byId' }, { id });
   }
 
   update(id: number, updateCropDto: UpdateCropDto) {
-    return `This action updates a #${id} crop`;
+    return this.client.send({ cmd: 'crop.update' }, { id, dto: updateCropDto });
   }
 
   remove(id: number) {
-    return `This action removes a #${id} crop`;
+    return this.client.send({ cmd: 'crop.delete' }, { id });
   }
 }

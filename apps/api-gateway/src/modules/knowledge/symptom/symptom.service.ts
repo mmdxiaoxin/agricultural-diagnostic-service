@@ -1,8 +1,8 @@
+import { CreateSymptomDto } from '@common/dto/knowledge/create-symptom.dto';
+import { UpdateSymptomDto } from '@common/dto/knowledge/update-symptom.dto';
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateSymptomDto } from './dto/create-symptom.dto';
-import { UpdateSymptomDto } from './dto/update-symptom.dto';
-import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
 import { ClientProxy } from '@nestjs/microservices';
+import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
 
 @Injectable()
 export class SymptomService {
@@ -11,22 +11,28 @@ export class SymptomService {
   ) {}
 
   create(createSymptomDto: CreateSymptomDto) {
-    return 'This action adds a new symptom';
+    return this.client.send(
+      { cmd: 'symptom.create' },
+      { dto: createSymptomDto },
+    );
   }
 
   findAll() {
-    return `This action returns all symptom`;
+    return this.client.send({ cmd: 'symptom.get' }, {});
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} symptom`;
+    return this.client.send({ cmd: 'symptom.get.byId' }, { id });
   }
 
   update(id: number, updateSymptomDto: UpdateSymptomDto) {
-    return `This action updates a #${id} symptom`;
+    return this.client.send(
+      { cmd: 'symptom.update' },
+      { id, dto: updateSymptomDto },
+    );
   }
 
   remove(id: number) {
-    return `This action removes a #${id} symptom`;
+    return this.client.send({ cmd: 'symptom.delete' }, { id });
   }
 }

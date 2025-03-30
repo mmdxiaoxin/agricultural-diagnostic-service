@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { TreatmentType } from '@app/database/entities/treatment.entity';
 
-export class TreatmentDto {
+export class CreateTreatmentDto {
   @IsNotEmpty()
   @IsNumber()
   diseaseId: number;

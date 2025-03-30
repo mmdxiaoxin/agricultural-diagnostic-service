@@ -1,4 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CreateDiseaseDto } from '@common/dto/knowledge/create-disease.dto';
+import { UpdateDiseaseDto } from '@common/dto/knowledge/update-disease.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -11,11 +13,9 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { DiseaseService } from './disease.service';
-import { CreateDiseaseDto } from './dto/create-disease.dto';
-import { UpdateDiseaseDto } from './dto/update-disease.dto';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('疾病管理')
 @Controller('disease')

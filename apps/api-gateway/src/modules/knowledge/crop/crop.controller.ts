@@ -1,4 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CreateCropDto } from '@common/dto/knowledge/create-crop.dto';
+import { UpdateCropDto } from '@common/dto/knowledge/update-crop.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -11,11 +13,9 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { CropService } from './crop.service';
-import { CreateCropDto } from './dto/create-crop.dto';
-import { UpdateCropDto } from './dto/update-crop.dto';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('作物管理')
 @Controller('crop')

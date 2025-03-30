@@ -1,7 +1,8 @@
-import { SymptomDto } from '@common/dto/knowledge/symptom.dto';
+import { CreateSymptomDto } from '@common/dto/knowledge/create-symptom.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { SymptomService } from '../services/symptom.service';
+import { UpdateSymptomDto } from '@common/dto/knowledge/update-symptom.dto';
 
 @Controller()
 export class SymptomController {
@@ -9,22 +10,29 @@ export class SymptomController {
 
   // 症状相关接口
   @MessagePattern({ cmd: 'symptom.create' })
-  async createSymptom(@Payload() payload: { dto: SymptomDto }) {
+  async createSymptom(@Payload() payload: { dto: CreateSymptomDto }) {
     return this.symptomService.create(payload.dto);
   }
 
-  @MessagePattern({ cmd: 'symptom.findAll' })
+  @MessagePattern({ cmd: 'symptom.get' })
   async findAllSymptoms() {
     return this.symptomService.findAll();
   }
 
-  @MessagePattern({ cmd: 'symptom.findById' })
+  @MessagePattern({ cmd: 'symptom.get.list' })
+  async findList(@Payload() payload: { page: number; pageSize: number }) {
+    return this.symptomService.findList(payload.page, payload.pageSize);
+  }
+
+  @MessagePattern({ cmd: 'symptom.get.byId' })
   async findSymptomById(@Payload() payload: { id: number }) {
     return this.symptomService.findById(payload.id);
   }
 
   @MessagePattern({ cmd: 'symptom.update' })
-  async updateSymptom(@Payload() payload: { id: number; dto: SymptomDto }) {
+  async updateSymptom(
+    @Payload() payload: { id: number; dto: UpdateSymptomDto },
+  ) {
     return this.symptomService.update(payload.id, payload.dto);
   }
 

@@ -1,31 +1,38 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Disease } from '@app/database/entities';
-import { DiseaseDto } from '@common/dto/knowledge/disease.dto';
+import { Crop, Disease } from '@app/database/entities';
+import { CreateDiseaseDto } from '@common/dto/knowledge/create-disease.dto';
 import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
-import { CropService } from './crop.service';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { InjectRepository } from '@nestjs/typeorm';
+import { formatResponse } from '@shared/helpers/response.helper';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class DiseaseService {
   constructor(
     @InjectRepository(Disease) private diseaseRepository: Repository<Disease>,
-    private cropService: CropService,
+    @InjectRepository(Crop) private cropRepository: Repository<Crop>,
   ) {}
 
   // 创建病害
-  async create(dto: DiseaseDto) {
-    const crop = await this.cropService.findById(dto.cropId);
+  async create(dto: CreateDiseaseDto) {
+    const crop = await this.cropRepository.findOne({
+      where: { id: dto.cropId },
+    });
     if (!crop) {
-      throw new NotFoundException(`Crop with ID ${dto.cropId} not found`);
+      throw new RpcException({
+        code: 404,
+        message: `Crop with ID ${dto.cropId} not found`,
+      });
     }
     const disease = this.diseaseRepository.create({ ...dto, crop });
-    return await this.diseaseRepository.save(disease);
+    await this.diseaseRepository.save(disease);
+    return formatResponse(201, disease, '病害创建成功');
   }
 
   // 获取所有病害
   async findAll() {
-    return await this.diseaseRepository.find({
+    const diseases = await this.diseaseRepository.find({
       relations: [
         'crop',
         'symptoms',
@@ -34,6 +41,26 @@ export class DiseaseService {
         'diagnosisRules',
       ],
     });
+    return formatResponse(200, diseases, '病害列表获取成功');
+  }
+
+  async findList(page: number, pageSize: number) {
+    const [diseases, total] = await this.diseaseRepository.findAndCount({
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      relations: [
+        'crop',
+        'symptoms',
+        'treatments',
+        'environmentFactors',
+        'diagnosisRules',
+      ],
+    });
+    return formatResponse(
+      200,
+      { list: diseases, total, page, pageSize },
+      '病害列表获取成功',
+    );
   }
 
   // 获取单个病害详情
@@ -49,28 +76,38 @@ export class DiseaseService {
       ],
     });
     if (!disease) {
-      throw new NotFoundException(`Disease with ID ${id} not found`);
+      throw new RpcException({
+        code: 404,
+        message: `Disease with ID ${id} not found`,
+      });
     }
-    return disease;
+    return formatResponse(200, disease, '病害详情获取成功');
   }
 
   // 更新病害信息
   async update(id: number, dto: UpdateKnowledgeDto) {
     const disease = await this.diseaseRepository.findOne({ where: { id } });
     if (!disease) {
-      throw new NotFoundException(`Disease with ID ${id} not found`);
+      throw new RpcException({
+        code: 404,
+        message: `Disease with ID ${id} not found`,
+      });
     }
     Object.assign(disease, dto);
-    return await this.diseaseRepository.save(disease);
+    await this.diseaseRepository.save(disease);
+    return formatResponse(200, disease, '病害更新成功');
   }
 
   // 删除病害
   async remove(id: number) {
     const disease = await this.diseaseRepository.findOne({ where: { id } });
     if (!disease) {
-      throw new NotFoundException(`Disease with ID ${id} not found`);
+      throw new RpcException({
+        code: 404,
+        message: `Disease with ID ${id} not found`,
+      });
     }
     await this.diseaseRepository.remove(disease);
-    return { deleted: true };
+    return formatResponse(204, null, '病害删除成功');
   }
 }

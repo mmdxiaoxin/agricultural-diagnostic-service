@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class SymptomDto {
+export class CreateSymptomDto {
   @IsNotEmpty()
   @IsNumber()
   diseaseId: number;

@@ -1,4 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CreateTreatmentDto } from '@common/dto/knowledge/create-treatment.dto';
+import { UpdateTreatmentDto } from '@common/dto/knowledge/update-treatment.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -11,11 +13,9 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Role } from '@shared/enum/role.enum';
-import { CreateTreatmentDto } from './dto/create-treatment.dto';
-import { UpdateTreatmentDto } from './dto/update-treatment.dto';
-import { TreatmentService } from './treatment.service';
 import { ApiTags } from '@nestjs/swagger';
+import { Role } from '@shared/enum/role.enum';
+import { TreatmentService } from './treatment.service';
 
 @ApiTags('治疗方式管理')
 @Controller('treatment')

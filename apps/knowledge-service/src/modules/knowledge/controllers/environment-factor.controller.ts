@@ -1,4 +1,5 @@
-import { EnvironmentFactorDto } from '@common/dto/knowledge/environment-factor.dto';
+import { UpdateEnvironmentFactorDto } from './../../../../../../packages/common/src/dto/knowledge/update-environmentFactor.dto';
+import { CreateEnvironmentFactorDto } from '@common/dto/knowledge/create-environmentFactor.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { EnvironmentFactorService } from '../services/environment-factor.service';
@@ -12,24 +13,32 @@ export class EnvironmentFactorController {
   // 环境因素相关接口
   @MessagePattern({ cmd: 'environmentFactor.create' })
   async createEnvironmentFactor(
-    @Payload() payload: { dto: EnvironmentFactorDto },
+    @Payload() payload: { dto: CreateEnvironmentFactorDto },
   ) {
     return this.environmentFactorService.create(payload.dto);
   }
 
-  @MessagePattern({ cmd: 'environmentFactor.findAll' })
+  @MessagePattern({ cmd: 'environmentFactor.get' })
   async findAllEnvironmentFactors() {
     return this.environmentFactorService.findAll();
   }
 
-  @MessagePattern({ cmd: 'environmentFactor.findById' })
+  @MessagePattern({ cmd: 'environmentFactor.get.list' })
+  async findList(@Payload() payload: { page: number; pageSize: number }) {
+    return this.environmentFactorService.findList(
+      payload.page,
+      payload.pageSize,
+    );
+  }
+
+  @MessagePattern({ cmd: 'environmentFactor.get.byId' })
   async findEnvironmentFactorById(@Payload() payload: { id: number }) {
     return this.environmentFactorService.findById(payload.id);
   }
 
   @MessagePattern({ cmd: 'environmentFactor.update' })
   async updateEnvironmentFactor(
-    @Payload() payload: { id: number; dto: EnvironmentFactorDto },
+    @Payload() payload: { id: number; dto: UpdateEnvironmentFactorDto },
   ) {
     return this.environmentFactorService.update(payload.id, payload.dto);
   }

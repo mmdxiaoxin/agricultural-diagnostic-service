@@ -1,7 +1,8 @@
-import { CropDto } from '@common/dto/knowledge/crop.dto';
+import { CreateCropDto } from '@common/dto/knowledge/create-crop.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CropService } from '../services/crop.service';
+import { UpdateCropDto } from '@common/dto/knowledge/update-crop.dto';
 
 @Controller()
 export class CropController {
@@ -9,22 +10,27 @@ export class CropController {
 
   // 作物相关接口
   @MessagePattern({ cmd: 'crop.create' })
-  async createCrop(@Payload() payload: { dto: CropDto }) {
+  async createCrop(@Payload() payload: { dto: CreateCropDto }) {
     return this.cropService.create(payload.dto);
   }
 
-  @MessagePattern({ cmd: 'crop.findAll' })
+  @MessagePattern({ cmd: 'crop.get' })
   async findAllCrops() {
     return this.cropService.findAll();
   }
 
-  @MessagePattern({ cmd: 'crop.findById' })
+  @MessagePattern({ cmd: 'crop.get.list' })
+  async findList(@Payload() payload: { page: number; pageSize: number }) {
+    return this.cropService.findList(payload.page, payload.pageSize);
+  }
+
+  @MessagePattern({ cmd: 'crop.get.byId' })
   async findCropById(@Payload() payload: { id: number }) {
     return this.cropService.findById(payload.id);
   }
 
   @MessagePattern({ cmd: 'crop.update' })
-  async updateCrop(@Payload() payload: { id: number; dto: CropDto }) {
+  async updateCrop(@Payload() payload: { id: number; dto: UpdateCropDto }) {
     return this.cropService.update(payload.id, payload.dto);
   }
 

@@ -1,4 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CreateDiagnosisRuleDto } from '@common/dto/knowledge/create-diagnosisRule.dto';
+import { UpdateDiagnosisRuleDto } from '@common/dto/knowledge/update-diagnosisRule.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -11,11 +13,9 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { DiagnosisRuleService } from './diagnosis-rule.service';
-import { CreateDiagnosisRuleDto } from './dto/create-diagnosis-rule.dto';
-import { UpdateDiagnosisRuleDto } from './dto/update-diagnosis-rule.dto';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('诊断规则管理')
 @Controller('diagnosis-rule')

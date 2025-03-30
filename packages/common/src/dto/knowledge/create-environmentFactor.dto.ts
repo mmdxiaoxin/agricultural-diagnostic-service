@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class EnvironmentFactorDto {
+export class CreateEnvironmentFactorDto {
   @IsNotEmpty()
   @IsNumber()
   diseaseId: number;

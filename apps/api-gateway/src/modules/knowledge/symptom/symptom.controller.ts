@@ -1,4 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CreateSymptomDto } from '@common/dto/knowledge/create-symptom.dto';
+import { UpdateSymptomDto } from '@common/dto/knowledge/update-symptom.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -11,11 +13,9 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Role } from '@shared/enum/role.enum';
-import { CreateSymptomDto } from './dto/create-symptom.dto';
-import { UpdateSymptomDto } from './dto/update-symptom.dto';
-import { SymptomService } from './symptom.service';
 import { ApiTags } from '@nestjs/swagger';
+import { Role } from '@shared/enum/role.enum';
+import { SymptomService } from './symptom.service';
 
 @ApiTags('症状管理')
 @Controller('symptom')

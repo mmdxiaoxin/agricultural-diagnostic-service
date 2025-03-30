@@ -1,9 +1,16 @@
-import { IsNotEmpty, IsNumber, IsString, Max, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
-export class DiagnosisRuleDto {
-  @IsNotEmpty()
+export class UpdateDiagnosisRuleDto {
+  @IsOptional()
   @IsNumber()
-  diseaseId: number;
+  diseaseId?: number;
 
   @IsNotEmpty()
   @IsString()

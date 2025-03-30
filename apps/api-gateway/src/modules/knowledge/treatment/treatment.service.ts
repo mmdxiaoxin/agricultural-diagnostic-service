@@ -1,8 +1,8 @@
+import { CreateTreatmentDto } from '@common/dto/knowledge/create-treatment.dto';
+import { UpdateTreatmentDto } from '@common/dto/knowledge/update-treatment.dto';
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateTreatmentDto } from './dto/create-treatment.dto';
-import { UpdateTreatmentDto } from './dto/update-treatment.dto';
-import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
 import { ClientProxy } from '@nestjs/microservices';
+import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
 
 @Injectable()
 export class TreatmentService {
@@ -11,22 +11,28 @@ export class TreatmentService {
   ) {}
 
   create(createTreatmentDto: CreateTreatmentDto) {
-    return 'This action adds a new treatment';
+    return this.client.send(
+      { cmd: 'treatment.create' },
+      { dto: createTreatmentDto },
+    );
   }
 
   findAll() {
-    return `This action returns all treatment`;
+    return this.client.send({ cmd: 'treatment.get' }, {});
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} treatment`;
+    return this.client.send({ cmd: 'treatment.get.byId' }, { id });
   }
 
   update(id: number, updateTreatmentDto: UpdateTreatmentDto) {
-    return `This action updates a #${id} treatment`;
+    return this.client.send(
+      { cmd: 'treatment.update' },
+      { id, dto: updateTreatmentDto },
+    );
   }
 
   remove(id: number) {
-    return `This action removes a #${id} treatment`;
+    return this.client.send({ cmd: 'treatment.delete' }, { id });
   }
 }

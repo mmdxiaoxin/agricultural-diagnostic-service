@@ -1,33 +1,33 @@
 import { IsNotEmpty, IsObject } from 'class-validator';
-import { CropDto } from './crop.dto';
-import { DiseaseDto } from './disease.dto';
-import { SymptomDto } from './symptom.dto';
-import { TreatmentDto } from './treatment.dto';
-import { EnvironmentFactorDto } from './environment-factor.dto';
-import { DiagnosisRuleDto } from './diagnosis-rule.dto';
+import { CreateCropDto } from './create-crop.dto';
+import { CreateDiseaseDto } from './create-disease.dto';
+import { CreateSymptomDto } from './create-symptom.dto';
+import { CreateTreatmentDto } from './create-treatment.dto';
+import { CreateEnvironmentFactorDto } from './create-environmentFactor.dto';
+import { CreateDiagnosisRuleDto } from './create-diagnosisRule.dto';
 
 export class CreateKnowledgeDto {
   @IsNotEmpty()
   @IsObject()
-  crop: CropDto;
+  crop: CreateCropDto;
 
   @IsNotEmpty()
   @IsObject()
-  disease: DiseaseDto;
+  disease: CreateDiseaseDto;
 
   @IsNotEmpty()
   @IsObject()
-  symptom: SymptomDto;
+  symptom: CreateSymptomDto;
 
   @IsNotEmpty()
   @IsObject()
-  treatment: TreatmentDto;
+  treatment: CreateTreatmentDto;
 
   @IsNotEmpty()
   @IsObject()
-  environmentFactor: EnvironmentFactorDto;
+  environmentFactor: CreateEnvironmentFactorDto;
 
   @IsNotEmpty()
   @IsObject()
-  diagnosisRule: DiagnosisRuleDto;
+  diagnosisRule: CreateDiagnosisRuleDto;
 }
