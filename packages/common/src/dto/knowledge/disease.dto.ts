@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class DiseaseDto {
   @IsNotEmpty()
@@ -8,6 +8,10 @@ export class DiseaseDto {
   @IsOptional()
   @IsString()
   alias?: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  cropId: number;
 
   @IsOptional()
   @IsString()

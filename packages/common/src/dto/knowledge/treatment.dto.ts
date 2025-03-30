@@ -1,8 +1,20 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { TreatmentType } from '@app/database/entities/treatment.entity';
 
 export class TreatmentDto {
   @IsNotEmpty()
-  type: 'chemical' | 'biological' | 'physical' | 'cultural';
+  @IsNumber()
+  diseaseId: number;
+
+  @IsNotEmpty()
+  @IsEnum(TreatmentType)
+  type: TreatmentType;
 
   @IsNotEmpty()
   @IsString()
