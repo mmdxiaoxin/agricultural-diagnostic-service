@@ -27,7 +27,6 @@ export class RedisService implements OnModuleDestroy {
     const redisOptions: RedisOptions = {
       host,
       port,
-      password,
       db,
       retryStrategy: (times: number) => {
         const delay = Math.min(times * 50, 2000);
@@ -38,6 +37,11 @@ export class RedisService implements OnModuleDestroy {
       connectTimeout: 10000,
       keepAlive: 30000,
     };
+
+    // 只有在配置了密码时才添加密码选项
+    if (password) {
+      redisOptions.password = password;
+    }
 
     this.client = new Redis(redisOptions);
 
