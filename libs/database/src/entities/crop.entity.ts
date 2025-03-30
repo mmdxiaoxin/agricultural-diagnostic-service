@@ -1,5 +1,6 @@
-import { Entity, Column } from 'typeorm';
+import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { Disease } from './disease.entity';
 
 @Entity()
 export class Crop extends BaseEntity {
@@ -11,4 +12,7 @@ export class Crop extends BaseEntity {
 
   @Column({ nullable: true })
   growthStage: string;
+
+  @OneToMany(() => Disease, (disease) => disease.crop)
+  diseases: Disease[];
 }
