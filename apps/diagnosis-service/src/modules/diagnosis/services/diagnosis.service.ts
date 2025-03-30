@@ -869,10 +869,25 @@ export class DiagnosisService {
       relations: ['configs'],
     });
 
-    // 过滤每个服务的 configs，只保留 status 为 active 的配置
+    // 过滤每个服务的 configs，只保留 status 为 active 的配置,并排除敏感字段
     const filteredRemoteList = remoteList.map((remote) => ({
-      ...remote,
-      configs: remote.configs.filter((config) => config.status === 'active'),
+      id: remote.id,
+      serviceName: remote.serviceName,
+      serviceType: remote.serviceType,
+      description: remote.description,
+      status: remote.status,
+      createdAt: remote.createdAt,
+      updatedAt: remote.updatedAt,
+      configs: remote.configs
+        .filter((config) => config.status === 'active')
+        .map((config) => ({
+          id: config.id,
+          name: config.name,
+          description: config.description,
+          status: config.status,
+          createdAt: config.createdAt,
+          updatedAt: config.updatedAt,
+        })),
     }));
 
     return formatResponse(200, filteredRemoteList, '获取诊断支持成功');
