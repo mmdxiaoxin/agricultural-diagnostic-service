@@ -32,10 +32,28 @@ export class DiagnosisRuleService {
 
   // 根据ID获取诊断规则
   async findById(id: number) {
-    return await this.diagnosisRuleRepository.findOne({
+    const rule = await this.diagnosisRuleRepository.findOne({
       where: { id },
       relations: ['disease'],
     });
+    if (!rule) {
+      throw new NotFoundException(`DiagnosisRule with ID ${id} not found`);
+    }
+    return rule;
+  }
+
+  // 更新诊断规则
+  async update(id: number, dto: DiagnosisRuleDto) {
+    const rule = await this.findById(id);
+    Object.assign(rule, dto);
+    return await this.diagnosisRuleRepository.save(rule);
+  }
+
+  // 删除诊断规则
+  async remove(id: number) {
+    const rule = await this.findById(id);
+    await this.diagnosisRuleRepository.remove(rule);
+    return { deleted: true };
   }
 
   // 根据症状诊断病害

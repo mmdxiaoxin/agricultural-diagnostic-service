@@ -13,6 +13,28 @@ export class DiagnosisRuleController {
     return this.diagnosisRuleService.create(payload.dto);
   }
 
+  @MessagePattern({ cmd: 'diagnosisRule.findAll' })
+  async findAllDiagnosisRules() {
+    return this.diagnosisRuleService.findAll();
+  }
+
+  @MessagePattern({ cmd: 'diagnosisRule.findById' })
+  async findDiagnosisRuleById(@Payload() payload: { id: number }) {
+    return this.diagnosisRuleService.findById(payload.id);
+  }
+
+  @MessagePattern({ cmd: 'diagnosisRule.update' })
+  async updateDiagnosisRule(
+    @Payload() payload: { id: number; dto: DiagnosisRuleDto },
+  ) {
+    return this.diagnosisRuleService.update(payload.id, payload.dto);
+  }
+
+  @MessagePattern({ cmd: 'diagnosisRule.delete' })
+  async removeDiagnosisRule(@Payload() payload: { id: number }) {
+    return this.diagnosisRuleService.remove(payload.id);
+  }
+
   // 诊断相关接口
   @MessagePattern({ cmd: 'disease.diagnose' })
   async diagnoseDisease(@Payload() payload: { symptomIds: string[] }) {
