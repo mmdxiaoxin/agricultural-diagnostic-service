@@ -21,30 +21,89 @@ interface LogMetrics {
   processTime: number;
   errorCount: number;
   lastProcessedAt: string;
-  queueLength: number;
+  pendingCount: number;
 }
 
 @Injectable()
 export class DiagnosisLogService implements OnModuleDestroy {
-  private readonly REDIS_LOG_QUEUE_KEY = 'diagnosis:log:queue';
+  private readonly STREAM_KEY = 'diagnosis:log:stream';
+  private readonly CONSUMER_GROUP = 'diagnosis:log:group';
+  private readonly CONSUMER_NAME = 'diagnosis:log:consumer';
   private readonly REDIS_METRICS_KEY = 'diagnosis:log:metrics';
   private readonly REDIS_ERROR_COUNT_KEY = 'diagnosis:log:metrics:error_count';
-  private readonly REDIS_LOCK_KEY = 'diagnosis:log:lock';
   private readonly batchSize = 100;
   private readonly flushInterval = 1000;
-  private readonly maxRetries = 3;
-  private readonly lockTTL = 30000; // 30秒
   private flushIntervalId: NodeJS.Timeout;
-  private lockRenewalId: NodeJS.Timeout | null = null;
+  private isInitialized = false;
 
   constructor(
     @InjectRepository(DiagnosisLog)
     private readonly logRepository: Repository<DiagnosisLog>,
     private readonly redisService: RedisService,
   ) {
+    this.initializeStream().catch((error) => {
+      console.error('初始化 Stream 失败:', error);
+    });
     this.flushIntervalId = setInterval(
-      () => this.flushLogs(),
+      () => this.processLogs(),
       this.flushInterval,
+    );
+  }
+
+  private async initializeStream(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+
+    const maxRetries = 3;
+    const retryDelay = 1000;
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        // 检查 Stream 是否存在
+        const streamInfo = await this.redisService.xinfo(this.STREAM_KEY);
+
+        if (!streamInfo) {
+          // Stream 不存在，创建新的 Stream 和消费者组
+          await this.redisService.xgroupCreate(
+            this.STREAM_KEY,
+            this.CONSUMER_GROUP,
+            '0',
+            { mkstream: true },
+          );
+        } else {
+          // Stream 存在，检查消费者组是否存在
+          try {
+            await this.redisService.xinfoGroup(
+              this.STREAM_KEY,
+              this.CONSUMER_GROUP,
+            );
+          } catch (error) {
+            // 消费者组不存在，创建新的消费者组
+            await this.redisService.xgroupCreate(
+              this.STREAM_KEY,
+              this.CONSUMER_GROUP,
+              '0',
+            );
+          }
+        }
+
+        this.isInitialized = true;
+        console.log('Stream 初始化成功');
+        return;
+      } catch (error) {
+        lastError = error as Error;
+        if (i < maxRetries - 1) {
+          const delay = retryDelay * Math.pow(2, i);
+          console.warn(`Stream 初始化失败，${delay}ms 后重试:`, error.message);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw new Error(
+      `Stream 初始化失败，已重试 ${maxRetries} 次: ${lastError?.message}`,
     );
   }
 
@@ -52,10 +111,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
     if (this.flushIntervalId) {
       clearInterval(this.flushIntervalId);
     }
-    if (this.lockRenewalId) {
-      clearInterval(this.lockRenewalId);
-    }
-    await this.flushLogs();
+    await this.processLogs();
   }
 
   async addLog(
@@ -64,6 +120,11 @@ export class DiagnosisLogService implements OnModuleDestroy {
     message: string,
     metadata?: Record<string, any>,
   ): Promise<void> {
+    // 确保 Stream 已初始化
+    if (!this.isInitialized) {
+      await this.initializeStream();
+    }
+
     const logEntry: LogEntry = {
       diagnosisId,
       level,
@@ -73,102 +134,45 @@ export class DiagnosisLogService implements OnModuleDestroy {
     };
 
     try {
-      // 使用 Redis 事务确保原子性
-      await this.redisService.execTransaction([
-        (multi) =>
-          multi.rpush(this.REDIS_LOG_QUEUE_KEY, JSON.stringify(logEntry)),
-        (multi) => multi.llen(this.REDIS_LOG_QUEUE_KEY),
-      ]);
-
-      // 如果队列长度超过批处理大小，触发处理
-      const queueLength = await this.redisService.llen(
-        this.REDIS_LOG_QUEUE_KEY,
-      );
-      if (queueLength >= this.batchSize) {
-        await this.flushLogs();
-      }
+      await this.redisService.xadd(this.STREAM_KEY, logEntry);
     } catch (error) {
-      console.error('添加日志到 Redis 队列失败:', error);
+      console.error('添加日志到 Stream 失败:', error);
       await this.createLog(diagnosisId, level, message, metadata);
     }
   }
 
-  private async flushLogs(): Promise<void> {
-    let lockToken: string | null = null;
-    let retryCount = 0;
-    const maxLockRetries = 5;
-    const lockRetryDelay = 200;
-
-    while (retryCount < maxLockRetries) {
-      try {
-        lockToken = await this.redisService.acquireLock(
-          this.REDIS_LOCK_KEY,
-          this.lockTTL,
-          {
-            retryDelay: 50,
-            maxRetries: 5,
-            maxWaitTime: 2000,
-          },
-        );
-
-        if (!lockToken) {
-          retryCount++;
-          await new Promise((resolve) => setTimeout(resolve, lockRetryDelay));
-          continue;
-        }
-
-        // 使用 try-finally 确保锁一定会被释放
-        try {
-          // 处理日志的逻辑
-          await this.processLogs();
-        } finally {
-          if (lockToken) {
-            await this.redisService.releaseLock(this.REDIS_LOCK_KEY, lockToken);
-          }
-        }
-        return;
-      } catch (error) {
-        console.error('处理日志失败:', error);
-        retryCount++;
-        if (retryCount < maxLockRetries) {
-          await new Promise((resolve) => setTimeout(resolve, lockRetryDelay));
-          continue;
-        }
-        return;
-      }
-    }
-  }
-
   private async processLogs(): Promise<void> {
+    // 确保 Stream 已初始化
+    if (!this.isInitialized) {
+      await this.initializeStream();
+    }
+
     const startTime = Date.now();
     let processedCount = 0;
 
     try {
-      // 使用批量获取和并发处理
-      const logs = await this.redisService.lrangeBatch<LogEntry>(
-        this.REDIS_LOG_QUEUE_KEY,
-        0,
-        this.batchSize - 1,
+      // 从消费者组读取消息
+      const messages = await this.redisService.xreadgroup(
+        this.STREAM_KEY,
+        this.CONSUMER_GROUP,
+        this.CONSUMER_NAME,
         {
-          batchSize: 20,
-          maxConcurrent: 3,
-          retryOptions: {
-            retries: this.maxRetries,
-            retryDelay: 100,
-          },
+          count: this.batchSize,
+          noack: false,
         },
       );
 
-      if (!Array.isArray(logs) || logs.length === 0) {
+      if (!messages || messages.length === 0) {
         return;
       }
 
-      // 使用数据库事务
+      // 使用数据库事务处理消息
       await this.logRepository.manager.transaction(
         async (transactionalEntityManager) => {
-          const entities = logs
-            .map((log) => {
+          const entities = messages
+            .map((msg) => {
               try {
+                const log = msg.data as LogEntry;
                 if (!log.diagnosisId || !log.level || !log.message) {
                   console.error('日志数据不完整:', log);
                   return null;
@@ -182,7 +186,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
                   createdAt: new Date(log.timestamp || Date.now()),
                 });
               } catch (error) {
-                console.error('解析日志数据失败:', error, '原始数据:', log);
+                console.error('解析日志数据失败:', error, '原始数据:', msg);
                 return null;
               }
             })
@@ -195,31 +199,28 @@ export class DiagnosisLogService implements OnModuleDestroy {
           await this.saveWithRetry(entities, transactionalEntityManager);
           processedCount = entities.length;
 
-          // 使用 Redis 事务删除已处理的日志
-          await this.redisService.execTransaction([
-            (multi) => {
-              // 先删除已处理的日志
-              for (let i = 0; i < processedCount; i++) {
-                multi.lpop(this.REDIS_LOG_QUEUE_KEY);
-              }
-              // 获取剩余队列长度
-              multi.llen(this.REDIS_LOG_QUEUE_KEY);
-            },
-          ]);
+          // 确认消息已处理
+          const messageIds = messages.map((msg) => msg.id);
+          await this.redisService.xack(
+            this.STREAM_KEY,
+            this.CONSUMER_GROUP,
+            messageIds,
+          );
         },
       );
 
       // 更新指标
       const processTime = Date.now() - startTime;
-      const queueLength = await this.redisService.llen(
-        this.REDIS_LOG_QUEUE_KEY,
+      const pendingInfo = await this.redisService.xpending(
+        this.STREAM_KEY,
+        this.CONSUMER_GROUP,
       );
       const metrics: LogMetrics = {
         processedCount,
         processTime,
         errorCount: 0,
         lastProcessedAt: new Date().toISOString(),
-        queueLength,
+        pendingCount: pendingInfo.length,
       };
 
       await this.redisService.set(this.REDIS_METRICS_KEY, metrics, 3600);
