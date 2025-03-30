@@ -17,4 +17,19 @@ export class CropController {
   async findAllCrops() {
     return this.cropService.findAll();
   }
+
+  @MessagePattern({ cmd: 'crop.findById' })
+  async findCropById(@Payload() payload: { id: number }) {
+    return this.cropService.findById(payload.id);
+  }
+
+  @MessagePattern({ cmd: 'crop.update' })
+  async updateCrop(@Payload() payload: { id: number; dto: CropDto }) {
+    return this.cropService.update(payload.id, payload.dto);
+  }
+
+  @MessagePattern({ cmd: 'crop.delete' })
+  async removeCrop(@Payload() payload: { id: number }) {
+    return this.cropService.remove(payload.id);
+  }
 }

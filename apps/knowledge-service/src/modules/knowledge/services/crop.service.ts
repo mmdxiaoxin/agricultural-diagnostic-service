@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Crop } from '@app/database/entities';
@@ -23,6 +23,24 @@ export class CropService {
 
   // 根据ID获取作物
   async findById(id: number) {
-    return await this.cropRepository.findOne({ where: { id } });
+    const crop = await this.cropRepository.findOne({ where: { id } });
+    if (!crop) {
+      throw new NotFoundException(`Crop with ID ${id} not found`);
+    }
+    return crop;
+  }
+
+  // 更新作物
+  async update(id: number, dto: CropDto) {
+    const crop = await this.findById(id);
+    Object.assign(crop, dto);
+    return await this.cropRepository.save(crop);
+  }
+
+  // 删除作物
+  async remove(id: number) {
+    const crop = await this.findById(id);
+    await this.cropRepository.remove(crop);
+    return { deleted: true };
   }
 }
