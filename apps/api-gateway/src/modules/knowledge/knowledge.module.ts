@@ -7,6 +7,12 @@ import {
 } from 'config/microservice.config';
 import { KnowledgeController } from './knowledge.controller';
 import { KnowledgeService } from './knowledge.service';
+import { CropModule } from './crop/crop.module';
+import { DiseaseModule } from './disease/disease.module';
+import { EnvironmentFactorModule } from './environment-factor/environment-factor.module';
+import { SymptomModule } from './symptom/symptom.module';
+import { DiagnosisRuleModule } from './diagnosis-rule/diagnosis-rule.module';
+import { TreatmentModule } from './treatment/treatment.module';
 
 @Module({
   imports: [
@@ -20,6 +26,12 @@ import { KnowledgeService } from './knowledge.service';
         },
       },
     ]),
+    CropModule,
+    DiseaseModule,
+    EnvironmentFactorModule,
+    SymptomModule,
+    DiagnosisRuleModule,
+    TreatmentModule,
   ],
   controllers: [KnowledgeController],
   providers: [KnowledgeService],

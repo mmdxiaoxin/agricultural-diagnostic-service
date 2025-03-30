@@ -17,6 +17,13 @@ import { MenuModule } from './menu/menu.module';
 import { RemoteModule } from './remote/remote.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
+import { RouterModule } from '@nestjs/core';
+import { CropModule } from './knowledge/crop/crop.module';
+import { DiseaseModule } from './knowledge/disease/disease.module';
+import { EnvironmentFactorModule } from './knowledge/environment-factor/environment-factor.module';
+import { SymptomModule } from './knowledge/symptom/symptom.module';
+import { DiagnosisRuleModule } from './knowledge/diagnosis-rule/diagnosis-rule.module';
+import { TreatmentModule } from './knowledge/treatment/treatment.module';
 
 /**
  * 根模块
@@ -45,6 +52,32 @@ import { UserModule } from './user/user.module';
     DatasetModule,
     MenuModule,
     KnowledgeModule,
+    RouterModule.register([
+      {
+        path: 'knowledge',
+        module: CropModule,
+      },
+      {
+        path: 'knowledge',
+        module: DiseaseModule,
+      },
+      {
+        path: 'knowledge',
+        module: EnvironmentFactorModule,
+      },
+      {
+        path: 'knowledge',
+        module: SymptomModule,
+      },
+      {
+        path: 'knowledge',
+        module: DiagnosisRuleModule,
+      },
+      {
+        path: 'knowledge',
+        module: TreatmentModule,
+      },
+    ]),
     DiagnosisModule,
     RemoteModule,
   ],
