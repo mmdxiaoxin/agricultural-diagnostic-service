@@ -86,7 +86,7 @@ export class AuthService {
     await this.clearLoginAttempts(login);
 
     const sessionId = uuidv4();
-    await this.redis.storeSession(user.id.toString(), sessionId, 3600); // 存储会话到 Redis 中
+    await this.storeSession(user.id.toString(), sessionId, 3600);
 
     return {
       access_token: this.jwt.sign({
@@ -99,11 +99,42 @@ export class AuthService {
   }
 
   /**
+   * 存储用户会话信息
+   * @param userId 用户ID
+   * @param sessionId 会话ID
+   * @param ttl 会话有效期，单位秒
+   */
+  private async storeSession(
+    userId: string,
+    sessionId: string,
+    ttl: number,
+  ): Promise<void> {
+    await this.redis.set(`session:${sessionId}`, userId, ttl);
+  }
+
+  /**
+   * 获取用户会话信息
+   * @param sessionId 会话ID
+   * @returns 返回用户ID或null
+   */
+  async getSession(sessionId: string): Promise<string | null> {
+    return await this.redis.get(`session:${sessionId}`);
+  }
+
+  /**
+   * 删除用户会话
+   * @param sessionId 会话ID
+   */
+  async deleteSession(sessionId: string): Promise<void> {
+    await this.redis.del(`session:${sessionId}`);
+  }
+
+  /**
    * 限制登录尝试次数
    * @param login 用户名或邮箱
    */
   private async checkLoginAttempts(login: string) {
-    const attempts = await this.redis.getSession(`login_attempts:${login}`);
+    const attempts = await this.getSession(`login_attempts:${login}`);
     if (attempts && parseInt(attempts) >= 5) {
       throw new RpcException({
         code: 400,
