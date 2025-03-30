@@ -8,22 +8,11 @@ const getServerInfo = () => {
   const freeMemory = os.freemem();
   const cpus = os.cpus();
   const cpuCores = cpus.length;
-  const cpuThreads = cpus.reduce(
-    (acc, cpu) =>
-      acc +
-      (cpu.times.user +
-        cpu.times.nice +
-        cpu.times.sys +
-        cpu.times.idle +
-        cpu.times.irq),
-    0,
-  );
 
   return {
     totalMemory: Math.floor(totalMemory / (1024 * 1024 * 1024)), // 转换为GB
     freeMemory: Math.floor(freeMemory / (1024 * 1024 * 1024)), // 转换为GB
     cpuCores,
-    cpuThreads,
   };
 };
 
