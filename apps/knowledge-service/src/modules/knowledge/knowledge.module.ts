@@ -1,11 +1,27 @@
 import { DatabaseModule } from '@app/database';
-import { PlantDiseaseKnowledge } from '@app/database/entities';
+import {
+  Crop,
+  DiagnosisRule,
+  Disease,
+  EnvironmentFactor,
+  Symptom,
+  Treatment,
+} from '@app/database/entities';
 import { Module } from '@nestjs/common';
 import { KnowledgeController } from './knowledge.controller';
 import { KnowledgeService } from './knowledge.service';
 
 @Module({
-  imports: [DatabaseModule.forFeature([PlantDiseaseKnowledge])],
+  imports: [
+    DatabaseModule.forFeature([
+      Crop,
+      Disease,
+      DiagnosisRule,
+      EnvironmentFactor,
+      Treatment,
+      Symptom,
+    ]),
+  ],
   controllers: [KnowledgeController],
   providers: [KnowledgeService],
 })
