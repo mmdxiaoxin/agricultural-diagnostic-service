@@ -14,6 +14,7 @@ import {
 } from 'config/microservice.config';
 import { join } from 'path';
 import { DiagnosisController } from './diagnosis.controller';
+import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisHttpService } from './services/diagnosis-http.service';
 import { DiagnosisLogService } from './services/diagnosis-log.service';
 import { DiagnosisService } from './services/diagnosis.service';
@@ -55,6 +56,7 @@ import { DiagnosisService } from './services/diagnosis.service';
     DiagnosisHttpService,
     HttpService,
     DiagnosisLogService,
+    DiagnosisHistoryService,
   ],
   controllers: [DiagnosisController],
   exports: [DiagnosisService],

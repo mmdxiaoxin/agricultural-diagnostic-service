@@ -2,15 +2,24 @@ import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DIAGNOSIS_MESSAGE_PATTERNS } from '@shared/constants/diagnosis-message-patterns';
+import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisService } from './services/diagnosis.service';
 
 @Controller()
 export class DiagnosisController {
-  constructor(private readonly diagnosisService: DiagnosisService) {}
+  constructor(
+    private readonly diagnosisService: DiagnosisService,
+    private readonly diagnosisHistoryService: DiagnosisHistoryService,
+  ) {}
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.CREATE })
-  async uploadData(@Payload() data: { userId: number; fileId: number }) {
-    return this.diagnosisService.createDiagnosis(data.userId, data.fileId);
+  async diagnosisHistoryCreate(
+    @Payload() data: { userId: number; fileId: number },
+  ) {
+    return this.diagnosisHistoryService.diagnosisHistoryCreate(
+      data.userId,
+      data.fileId,
+    );
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.START })
@@ -50,8 +59,10 @@ export class DiagnosisController {
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATUS })
-  async getDiagnosisStatus(@Payload() data: { diagnosisId: number }) {
-    return this.diagnosisService.getDiagnosisStatus(data.diagnosisId);
+  async diagnosisHistoryStatusGet(@Payload() data: { diagnosisId: number }) {
+    return this.diagnosisHistoryService.diagnosisHistoryStatusGet(
+      data.diagnosisId,
+    );
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT })
@@ -61,19 +72,22 @@ export class DiagnosisController {
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY })
   async diagnosisHistoryGet(@Payload() data: { userId: number }) {
-    return this.diagnosisService.diagnosisHistoryGet(data.userId);
+    return this.diagnosisHistoryService.diagnosisHistoryGet(data.userId);
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_DELETE })
   async diagnosisHistoryDelete(@Payload() data: { id: number; userId }) {
-    return this.diagnosisService.diagnosisHistoryDelete(data.id, data.userId);
+    return this.diagnosisHistoryService.diagnosisHistoryDelete(
+      data.id,
+      data.userId,
+    );
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORIES_DELETE })
   async diagnosisHistoriesDelete(
     @Payload() data: { userId: number; diagnosisIds: number[] },
   ) {
-    return this.diagnosisService.diagnosisHistoriesDelete(
+    return this.diagnosisHistoryService.diagnosisHistoriesDelete(
       data.userId,
       data.diagnosisIds,
     );
@@ -83,7 +97,7 @@ export class DiagnosisController {
   async diagnosisHistoryListGet(
     @Payload() data: { page?: number; pageSize?: number; userId: number },
   ) {
-    return this.diagnosisService.diagnosisHistoryListGet(
+    return this.diagnosisHistoryService.diagnosisHistoryListGet(
       data.page,
       data.pageSize,
       data.userId,
