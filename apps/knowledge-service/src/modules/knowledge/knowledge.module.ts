@@ -9,20 +9,32 @@ import {
 } from '@app/database/entities';
 import { Module } from '@nestjs/common';
 import { KnowledgeController } from './knowledge.controller';
-import { KnowledgeService } from './knowledge.service';
+import { CropService } from './services/crop.service';
+import { DiagnosisRuleService } from './services/diagnosis-rule.service';
+import { DiseaseService } from './services/disease.service';
+import { EnvironmentFactorService } from './services/environment-factor.service';
+import { SymptomService } from './services/symptom.service';
+import { TreatmentService } from './services/treatment.service';
 
 @Module({
   imports: [
     DatabaseModule.forFeature([
       Crop,
       Disease,
-      DiagnosisRule,
-      EnvironmentFactor,
-      Treatment,
       Symptom,
+      Treatment,
+      EnvironmentFactor,
+      DiagnosisRule,
     ]),
   ],
   controllers: [KnowledgeController],
-  providers: [KnowledgeService],
+  providers: [
+    CropService,
+    DiseaseService,
+    SymptomService,
+    TreatmentService,
+    EnvironmentFactorService,
+    DiagnosisRuleService,
+  ],
 })
 export class KnowledgeModule {}

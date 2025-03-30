@@ -7,61 +7,73 @@ import { DiagnosisRuleDto } from '@common/dto/knowledge/diagnosis-rule.dto';
 import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { KnowledgeService } from './knowledge.service';
+import { CropService } from './services/crop.service';
+import { DiseaseService } from './services/disease.service';
+import { SymptomService } from './services/symptom.service';
+import { TreatmentService } from './services/treatment.service';
+import { EnvironmentFactorService } from './services/environment-factor.service';
+import { DiagnosisRuleService } from './services/diagnosis-rule.service';
 
 @Controller()
 export class KnowledgeController {
-  constructor(private readonly knowledgeService: KnowledgeService) {}
+  constructor(
+    private readonly cropService: CropService,
+    private readonly diseaseService: DiseaseService,
+    private readonly symptomService: SymptomService,
+    private readonly treatmentService: TreatmentService,
+    private readonly environmentFactorService: EnvironmentFactorService,
+    private readonly diagnosisRuleService: DiagnosisRuleService,
+  ) {}
 
   // 作物相关接口
   @MessagePattern({ cmd: 'crop.create' })
   async createCrop(@Payload() payload: { dto: CropDto }) {
-    return this.knowledgeService.createCrop(payload.dto);
+    return this.cropService.create(payload.dto);
   }
 
   @MessagePattern({ cmd: 'crop.findAll' })
   async findAllCrops() {
-    return this.knowledgeService.findAllCrops();
+    return this.cropService.findAll();
   }
 
   // 病害相关接口
   @MessagePattern({ cmd: 'disease.create' })
   async createDisease(@Payload() payload: { dto: DiseaseDto }) {
-    return this.knowledgeService.createDisease(payload.dto);
+    return this.diseaseService.create(payload.dto);
   }
 
   @MessagePattern({ cmd: 'disease.findAll' })
   async findAllDiseases() {
-    return this.knowledgeService.findAllDiseases();
+    return this.diseaseService.findAll();
   }
 
   @MessagePattern({ cmd: 'disease.findById' })
   async findDiseaseById(@Payload() payload: { id: number }) {
-    return this.knowledgeService.findDiseaseById(payload.id);
+    return this.diseaseService.findById(payload.id);
   }
 
   @MessagePattern({ cmd: 'disease.update' })
   async updateDisease(
     @Payload() payload: { id: number; dto: UpdateKnowledgeDto },
   ) {
-    return this.knowledgeService.updateDisease(payload.id, payload.dto);
+    return this.diseaseService.update(payload.id, payload.dto);
   }
 
   @MessagePattern({ cmd: 'disease.delete' })
   async removeDisease(@Payload() payload: { id: number }) {
-    return this.knowledgeService.removeDisease(payload.id);
+    return this.diseaseService.remove(payload.id);
   }
 
   // 症状相关接口
   @MessagePattern({ cmd: 'symptom.create' })
   async createSymptom(@Payload() payload: { dto: SymptomDto }) {
-    return this.knowledgeService.createSymptom(payload.dto);
+    return this.symptomService.create(payload.dto);
   }
 
   // 治疗方案相关接口
   @MessagePattern({ cmd: 'treatment.create' })
   async createTreatment(@Payload() payload: { dto: TreatmentDto }) {
-    return this.knowledgeService.createTreatment(payload.dto);
+    return this.treatmentService.create(payload.dto);
   }
 
   // 环境因素相关接口
@@ -69,18 +81,18 @@ export class KnowledgeController {
   async createEnvironmentFactor(
     @Payload() payload: { dto: EnvironmentFactorDto },
   ) {
-    return this.knowledgeService.createEnvironmentFactor(payload.dto);
+    return this.environmentFactorService.create(payload.dto);
   }
 
   // 诊断规则相关接口
   @MessagePattern({ cmd: 'diagnosisRule.create' })
   async createDiagnosisRule(@Payload() payload: { dto: DiagnosisRuleDto }) {
-    return this.knowledgeService.createDiagnosisRule(payload.dto);
+    return this.diagnosisRuleService.create(payload.dto);
   }
 
   // 诊断相关接口
   @MessagePattern({ cmd: 'disease.diagnose' })
   async diagnoseDisease(@Payload() payload: { symptomIds: string[] }) {
-    return this.knowledgeService.diagnoseDisease(payload.symptomIds);
+    return this.diagnosisRuleService.diagnoseDisease(payload.symptomIds);
   }
 }
