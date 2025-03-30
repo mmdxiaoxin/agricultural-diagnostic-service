@@ -32,9 +32,27 @@ export class EnvironmentFactorService {
 
   // 根据ID获取环境因素
   async findById(id: number) {
-    return await this.environmentFactorRepository.findOne({
+    const factor = await this.environmentFactorRepository.findOne({
       where: { id },
       relations: ['disease'],
     });
+    if (!factor) {
+      throw new NotFoundException(`EnvironmentFactor with ID ${id} not found`);
+    }
+    return factor;
+  }
+
+  // 更新环境因素
+  async update(id: number, dto: EnvironmentFactorDto) {
+    const factor = await this.findById(id);
+    Object.assign(factor, dto);
+    return await this.environmentFactorRepository.save(factor);
+  }
+
+  // 删除环境因素
+  async remove(id: number) {
+    const factor = await this.findById(id);
+    await this.environmentFactorRepository.remove(factor);
+    return { deleted: true };
   }
 }

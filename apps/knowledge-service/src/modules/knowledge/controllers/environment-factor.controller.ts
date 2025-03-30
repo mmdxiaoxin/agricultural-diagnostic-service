@@ -16,4 +16,26 @@ export class EnvironmentFactorController {
   ) {
     return this.environmentFactorService.create(payload.dto);
   }
+
+  @MessagePattern({ cmd: 'environmentFactor.findAll' })
+  async findAllEnvironmentFactors() {
+    return this.environmentFactorService.findAll();
+  }
+
+  @MessagePattern({ cmd: 'environmentFactor.findById' })
+  async findEnvironmentFactorById(@Payload() payload: { id: number }) {
+    return this.environmentFactorService.findById(payload.id);
+  }
+
+  @MessagePattern({ cmd: 'environmentFactor.update' })
+  async updateEnvironmentFactor(
+    @Payload() payload: { id: number; dto: EnvironmentFactorDto },
+  ) {
+    return this.environmentFactorService.update(payload.id, payload.dto);
+  }
+
+  @MessagePattern({ cmd: 'environmentFactor.delete' })
+  async removeEnvironmentFactor(@Payload() payload: { id: number }) {
+    return this.environmentFactorService.remove(payload.id);
+  }
 }
