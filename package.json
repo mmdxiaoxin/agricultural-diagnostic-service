@@ -24,6 +24,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.13.0",
     "@grpc/proto-loader": "^0.7.13",
+    "@nestjs/bullmq": "^11.0.2",
     "@nestjs/cache-manager": "^3.0.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
@@ -40,6 +41,7 @@
     "archiver": "^7.0.1",
     "axios": "^1.8.2",
     "bcryptjs": "^3.0.2",
+    "bullmq": "^5.45.2",
     "cache-manager": "^6.4.1",
     "cache-manager-redis-store": "^3.0.1",
     "class-transformer": "^0.5.1",
