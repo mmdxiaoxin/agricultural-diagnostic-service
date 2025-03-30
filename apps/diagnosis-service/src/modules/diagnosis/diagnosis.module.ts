@@ -11,11 +11,13 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import {
   DOWNLOAD_SERVICE_GRPC_PORT,
   DOWNLOAD_SERVICE_HOST,
+  DOWNLOAD_SERVICE_NAME,
   FILE_SERVICE_NAME,
   FILE_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { join } from 'path';
 import { DiagnosisController } from './diagnosis.controller';
+import { DIAGNOSIS_PROCESSOR } from './processors';
 import { DiagnosisProcessor } from './processors/diagnosis.processor';
 import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisHttpService } from './services/diagnosis-http.service';
@@ -29,7 +31,7 @@ import { DiagnosisService } from './services/diagnosis.service';
     DatabaseModule.forFeature([DiagnosisHistory, DiagnosisLog]),
     ClientsModule.register([
       {
-        name: 'DOWNLOAD_SERVICE',
+        name: DOWNLOAD_SERVICE_NAME,
         transport: Transport.GRPC,
         options: {
           package: 'download',
@@ -54,7 +56,7 @@ import { DiagnosisService } from './services/diagnosis.service';
       },
     ]),
     BullModule.registerQueueAsync({
-      name: 'diagnosis',
+      name: DIAGNOSIS_PROCESSOR,
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         defaultJobOptions: {

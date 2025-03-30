@@ -8,14 +8,14 @@ import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { BaseResponse } from '@common/services/http.service';
 import { DiagnosisConfig } from '@common/types/diagnosis';
 import { GrpcDownloadService } from '@common/types/download/download.types';
+import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientGrpc, ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
 import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
 import { Status } from '@shared/enum/status.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
+import { Queue } from 'bullmq';
 import {
   DOWNLOAD_SERVICE_NAME,
   FILE_SERVICE_NAME,
@@ -23,6 +23,7 @@ import {
 import { filter, get, isEmpty, isNil, sortBy } from 'lodash-es';
 import { lastValueFrom } from 'rxjs';
 import { DataSource, Repository } from 'typeorm';
+import { DIAGNOSIS_PROCESSOR } from '../processors';
 import { DiagnosisHttpService } from './diagnosis-http.service';
 import { DiagnosisLogService } from './diagnosis-log.service';
 
@@ -41,7 +42,7 @@ export class DiagnosisService {
     private readonly dataSource: DataSource,
     private readonly diagnosisHttpService: DiagnosisHttpService,
     private readonly logService: DiagnosisLogService,
-    @InjectQueue('diagnosis')
+    @InjectQueue(DIAGNOSIS_PROCESSOR)
     private readonly diagnosisQueue: Queue,
   ) {}
 

@@ -1,11 +1,11 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
-import { DiagnosisService } from '../services/diagnosis.service';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
-import { Inject } from '@nestjs/common';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Inject, Logger } from '@nestjs/common';
+import { Job } from 'bullmq';
+import { DIAGNOSIS_PROCESSOR } from '.';
+import { DiagnosisService } from '../services/diagnosis.service';
 
-@Processor('diagnosis')
+@Processor(DIAGNOSIS_PROCESSOR)
 export class DiagnosisProcessor extends WorkerHost {
   private readonly logger = new Logger(DiagnosisProcessor.name);
 
