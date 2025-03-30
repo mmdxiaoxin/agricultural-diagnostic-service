@@ -1,9 +1,11 @@
-import { DiagnosisHistory } from '@app/database/entities';
+import {
+  DiagnosisHistory,
+  DiagnosisHistoryStatus,
+} from '@app/database/entities';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
-import { Status } from '@shared/enum/status.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { FILE_SERVICE_NAME } from 'config/microservice.config';
 import { firstValueFrom } from 'rxjs';
@@ -29,7 +31,7 @@ export class DiagnosisHistoryService {
       const diagnosisHistory = queryRunner.manager.create(DiagnosisHistory, {
         createdBy: userId,
         updatedBy: userId,
-        status: Status.PENDING,
+        status: DiagnosisHistoryStatus.PENDING,
       });
       diagnosisHistory.fileId = fileId;
       await queryRunner.manager.save(diagnosisHistory);

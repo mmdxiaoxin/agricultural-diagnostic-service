@@ -1,5 +1,6 @@
 import {
   DiagnosisHistory,
+  DiagnosisHistoryStatus,
   File as FileEntity,
   RemoteService,
 } from '@app/database/entities';
@@ -13,7 +14,6 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientGrpc, ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
-import { Status } from '@shared/enum/status.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { Queue } from 'bullmq';
 import {
@@ -448,10 +448,10 @@ export class DiagnosisService {
       );
 
       // 5. 更新诊断状态
-      diagnosis.status = Status.IN_PROGRESS;
+      diagnosis.status = DiagnosisHistoryStatus.PROCESSING;
       await queryRunner.manager.save(diagnosis);
       await this.logService.addLog(diagnosisId, LogLevel.INFO, '开始诊断任务', {
-        status: Status.IN_PROGRESS,
+        status: DiagnosisHistoryStatus.PROCESSING,
       });
 
       // 6. 获取文件
@@ -807,10 +807,10 @@ export class DiagnosisService {
       }
 
       // 5. 更新诊断状态为进行中
-      diagnosis.status = Status.IN_PROGRESS;
+      diagnosis.status = DiagnosisHistoryStatus.PROCESSING;
       await queryRunner.manager.save(diagnosis);
       await this.logService.addLog(diagnosisId, LogLevel.INFO, '开始诊断任务', {
-        status: Status.IN_PROGRESS,
+        status: DiagnosisHistoryStatus.PROCESSING,
       });
 
       await queryRunner.commitTransaction();

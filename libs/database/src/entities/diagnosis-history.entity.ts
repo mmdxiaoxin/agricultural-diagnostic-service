@@ -2,6 +2,13 @@ import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { DiagnosisLog } from './diagnosis-log.entity';
 
+export enum DiagnosisHistoryStatus {
+  PENDING = 'pending',
+  SUCCESS = 'success',
+  FAILED = 'failed',
+  PROCESSING = 'processing',
+}
+
 @Entity('diagnosis_history')
 @Index('diagnosis_history_file_id_idx', ['fileId'])
 @Index('diagnosis_history_created_by_idx', ['createdBy'])
@@ -13,16 +20,17 @@ export class DiagnosisHistory extends BaseEntity {
   diagnosisResult: object | null;
 
   @Column({
-    type: 'varchar',
-    length: 25,
-    default: 'pending',
+    type: 'enum',
+    enum: DiagnosisHistoryStatus,
+    default: DiagnosisHistoryStatus.PENDING,
+    comment: '状态',
   })
-  status: string; // 状态（默认值为 'pending'）
+  status: DiagnosisHistoryStatus;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', comment: '创建者' })
   createdBy: number; // 创建者
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', comment: '更新者' })
   updatedBy: number; // 更新者
 
   @OneToMany(() => DiagnosisLog, (log) => log.diagnosis)
