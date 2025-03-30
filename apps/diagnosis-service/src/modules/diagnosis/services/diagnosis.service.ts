@@ -19,7 +19,7 @@ import {
   FILE_SERVICE_NAME,
 } from 'config/microservice.config';
 import { filter, get, isEmpty, isNil, sortBy } from 'lodash-es';
-import { firstValueFrom, lastValueFrom } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 import { DataSource, Repository } from 'typeorm';
 import { DiagnosisHttpService } from './diagnosis-http.service';
 import { DiagnosisLogService } from './diagnosis-log.service';
@@ -854,46 +854,6 @@ export class DiagnosisService {
       throw new RpcException({
         code: 500,
         message: '开始诊断失败',
-        data: error,
-      });
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  async diagnosisHistoryDelete(id: number, userId: number) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const diagnosis = await queryRunner.manager.findOne(DiagnosisHistory, {
-        where: { id },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!diagnosis) {
-        throw new RpcException('未找到诊断记录');
-      }
-      try {
-        await firstValueFrom(
-          this.fileClient.send<{ success: boolean }>(
-            { cmd: FILE_MESSAGE_PATTERNS.DELETE_FILE },
-            {
-              fileId: diagnosis.fileId,
-              userId,
-            },
-          ),
-        );
-      } catch (error) {
-        this.logger.error(error);
-      }
-      await queryRunner.manager.remove(DiagnosisHistory, diagnosis);
-      await queryRunner.commitTransaction();
-      return formatResponse(204, null, '删除诊断记录成功');
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw new RpcException({
-        code: 500,
-        message: '删除诊断记录失败',
         data: error,
       });
     } finally {
