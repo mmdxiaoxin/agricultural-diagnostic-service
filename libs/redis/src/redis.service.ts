@@ -88,6 +88,14 @@ export class RedisService implements OnModuleDestroy {
   }
 
   /**
+   * 获取 Redis 客户端实例
+   * @returns Redis 客户端实例
+   */
+  getClient(): Redis {
+    return this.client;
+  }
+
+  /**
    * 设置缓存，支持可选 TTL（单位：秒）
    * 数据将被 JSON 序列化存储，从而兼容任意类型
    * @param key 缓存键
