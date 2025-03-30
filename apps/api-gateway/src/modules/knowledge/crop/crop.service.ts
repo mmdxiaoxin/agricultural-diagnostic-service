@@ -1,9 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
 import { CreateCropDto } from './dto/create-crop.dto';
 import { UpdateCropDto } from './dto/update-crop.dto';
 
 @Injectable()
 export class CropService {
+  constructor(
+    @Inject(KNOWLEDGE_SERVICE_NAME) private readonly client: ClientProxy,
+  ) {}
+
   create(createCropDto: CreateCropDto) {
     return 'This action adds a new crop';
   }

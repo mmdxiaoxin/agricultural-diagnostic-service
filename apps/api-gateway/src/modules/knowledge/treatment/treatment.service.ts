@@ -1,9 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateTreatmentDto } from './dto/create-treatment.dto';
 import { UpdateTreatmentDto } from './dto/update-treatment.dto';
+import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class TreatmentService {
+  constructor(
+    @Inject(KNOWLEDGE_SERVICE_NAME) private readonly client: ClientProxy,
+  ) {}
+
   create(createTreatmentDto: CreateTreatmentDto) {
     return 'This action adds a new treatment';
   }

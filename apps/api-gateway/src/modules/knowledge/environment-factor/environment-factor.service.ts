@@ -1,9 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateEnvironmentFactorDto } from './dto/create-environment-factor.dto';
 import { UpdateEnvironmentFactorDto } from './dto/update-environment-factor.dto';
+import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class EnvironmentFactorService {
+  constructor(
+    @Inject(KNOWLEDGE_SERVICE_NAME) private readonly client: ClientProxy,
+  ) {}
+
   create(createEnvironmentFactorDto: CreateEnvironmentFactorDto) {
     return 'This action adds a new environmentFactor';
   }
