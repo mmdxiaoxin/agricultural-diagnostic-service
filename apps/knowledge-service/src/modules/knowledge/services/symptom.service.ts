@@ -31,9 +31,27 @@ export class SymptomService {
 
   // 根据ID获取症状
   async findById(id: number) {
-    return await this.symptomRepository.findOne({
+    const symptom = await this.symptomRepository.findOne({
       where: { id },
       relations: ['disease'],
     });
+    if (!symptom) {
+      throw new NotFoundException(`Symptom with ID ${id} not found`);
+    }
+    return symptom;
+  }
+
+  // 更新症状
+  async update(id: number, dto: SymptomDto) {
+    const symptom = await this.findById(id);
+    Object.assign(symptom, dto);
+    return await this.symptomRepository.save(symptom);
+  }
+
+  // 删除症状
+  async remove(id: number) {
+    const symptom = await this.findById(id);
+    await this.symptomRepository.remove(symptom);
+    return { deleted: true };
   }
 }

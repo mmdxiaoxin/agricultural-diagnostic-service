@@ -12,4 +12,24 @@ export class SymptomController {
   async createSymptom(@Payload() payload: { dto: SymptomDto }) {
     return this.symptomService.create(payload.dto);
   }
+
+  @MessagePattern({ cmd: 'symptom.findAll' })
+  async findAllSymptoms() {
+    return this.symptomService.findAll();
+  }
+
+  @MessagePattern({ cmd: 'symptom.findById' })
+  async findSymptomById(@Payload() payload: { id: number }) {
+    return this.symptomService.findById(payload.id);
+  }
+
+  @MessagePattern({ cmd: 'symptom.update' })
+  async updateSymptom(@Payload() payload: { id: number; dto: SymptomDto }) {
+    return this.symptomService.update(payload.id, payload.dto);
+  }
+
+  @MessagePattern({ cmd: 'symptom.delete' })
+  async removeSymptom(@Payload() payload: { id: number }) {
+    return this.symptomService.remove(payload.id);
+  }
 }

@@ -12,4 +12,24 @@ export class TreatmentController {
   async createTreatment(@Payload() payload: { dto: TreatmentDto }) {
     return this.treatmentService.create(payload.dto);
   }
+
+  @MessagePattern({ cmd: 'treatment.findAll' })
+  async findAllTreatments() {
+    return this.treatmentService.findAll();
+  }
+
+  @MessagePattern({ cmd: 'treatment.findById' })
+  async findTreatmentById(@Payload() payload: { id: number }) {
+    return this.treatmentService.findById(payload.id);
+  }
+
+  @MessagePattern({ cmd: 'treatment.update' })
+  async updateTreatment(@Payload() payload: { id: number; dto: TreatmentDto }) {
+    return this.treatmentService.update(payload.id, payload.dto);
+  }
+
+  @MessagePattern({ cmd: 'treatment.delete' })
+  async removeTreatment(@Payload() payload: { id: number }) {
+    return this.treatmentService.remove(payload.id);
+  }
 }
