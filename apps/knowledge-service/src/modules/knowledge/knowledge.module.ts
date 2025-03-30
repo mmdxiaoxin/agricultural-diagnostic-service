@@ -8,7 +8,12 @@ import {
   Treatment,
 } from '@app/database/entities';
 import { Module } from '@nestjs/common';
-import { KnowledgeController } from './knowledge.controller';
+import { CropController } from './controllers/crop.controller';
+import { DiagnosisRuleController } from './controllers/diagnosis-rule.controller';
+import { DiseaseController } from './controllers/disease.controller';
+import { EnvironmentFactorController } from './controllers/environment-factor.controller';
+import { SymptomController } from './controllers/symptom.controller';
+import { TreatmentController } from './controllers/treatment.controller';
 import { CropService } from './services/crop.service';
 import { DiagnosisRuleService } from './services/diagnosis-rule.service';
 import { DiseaseService } from './services/disease.service';
@@ -27,7 +32,14 @@ import { TreatmentService } from './services/treatment.service';
       DiagnosisRule,
     ]),
   ],
-  controllers: [KnowledgeController],
+  controllers: [
+    CropController,
+    DiseaseController,
+    SymptomController,
+    TreatmentController,
+    EnvironmentFactorController,
+    DiagnosisRuleController,
+  ],
   providers: [
     CropService,
     DiseaseService,
