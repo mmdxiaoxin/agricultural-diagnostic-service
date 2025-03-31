@@ -3,6 +3,7 @@ import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
 import { CreateTempLinkDto } from '@common/dto/file/create-link.dto';
 import { CreateTaskDto } from '@common/dto/file/create-task.dto';
 import { DownloadFilesDto } from '@common/dto/file/download-file.dto';
+import { FileQueryDto } from '@common/dto/file/file-query.dto';
 import {
   UpdateFileDto,
   UpdateFilesAccessDto,
@@ -37,7 +38,6 @@ import { FileGuard } from '../file/guards/file.guard';
 import { FileService } from './file.service';
 import { FilesGuard } from './guards/files.guard';
 import { FileSizeValidationPipe } from './pipe/file-size.pipe';
-import { ParseFileTypePipe } from './pipe/type.pipe';
 
 @ApiTags('文件模块')
 @Controller('file')
@@ -49,7 +49,7 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async diskUsageGet(@Req() req: Request) {
-    return this.fileService.getDiskUsage(req.user.userId);
+    return this.fileService.findDisk(req.user.userId);
   }
 
   // 获取文件列表
@@ -57,35 +57,15 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
   async filesGet(@Req() req: Request) {
-    return this.fileService.getFiles(req.user.userId);
+    return this.fileService.findAll(req.user.userId);
   }
 
   // 获取文件列表分页
   @Get('list')
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(AuthGuard, RolesGuard)
-  async fileListGet(
-    @Req() req: Request,
-    @Query('page', ParseIntPipe) page?: number,
-    @Query('pageSize', ParseIntPipe) pageSize?: number,
-    @Query('fileType', ParseFileTypePipe) fileType?: string[],
-    @Query('originalFileName') originalFileName?: string,
-    @Query('createdStart') createdStart?: string,
-    @Query('createdEnd') createdEnd?: string,
-    @Query('updatedStart') updatedStart?: string,
-    @Query('updatedEnd') updatedEnd?: string,
-  ) {
-    return this.fileService.getFileList({
-      userId: req.user.userId,
-      page,
-      pageSize,
-      fileType,
-      originalFileName,
-      createdStart,
-      createdEnd,
-      updatedStart,
-      updatedEnd,
-    });
+  async fileListGet(@Req() req: Request, @Query() query: FileQueryDto) {
+    return this.fileService.findList(req.user.userId, query);
   }
 
   // 单文件上传

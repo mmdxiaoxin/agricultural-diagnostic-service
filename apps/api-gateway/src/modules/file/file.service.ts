@@ -1,6 +1,7 @@
 import { File as FileEntity } from '@app/database/entities';
 import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
 import { CreateTaskDto } from '@common/dto/file/create-task.dto';
+import { FileQueryDto } from '@common/dto/file/file-query.dto';
 import {
   UpdateFileDto,
   UpdateFilesAccessDto,
@@ -16,6 +17,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
+import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
 import { formatResponse } from '@shared/helpers/response.helper';
 import {
   FILE_SERVICE_NAME,
@@ -45,44 +47,28 @@ export class FileService {
       this.downloadClient.getService<GrpcDownloadService>('DownloadService');
   }
 
-  async getDiskUsage(userId: number) {
+  async findDisk(userId: number) {
     const response = await lastValueFrom(
-      this.fileClient.send({ cmd: 'files.statistic.usage' }, { userId }),
+      this.fileClient.send(
+        { cmd: FILE_MESSAGE_PATTERNS.FILE_DISK },
+        { userId },
+      ),
     );
     return formatResponse(200, response?.result, '获取空间使用信息成功');
   }
 
-  async getFiles(userId: number) {
+  async findAll(userId: number) {
     const rpcResponse = await lastValueFrom(
-      this.fileClient.send({ cmd: 'files.get' }, { userId }),
+      this.fileClient.send({ cmd: FILE_MESSAGE_PATTERNS.FILE_GET }, { userId }),
     );
     return formatResponse(200, rpcResponse?.result, '文件列表查询成功');
   }
 
-  async getFileList(params: {
-    userId: number;
-    page?: number;
-    pageSize?: number;
-    fileType?: string[];
-    originalFileName?: string;
-    createdStart?: string;
-    createdEnd?: string;
-    updatedStart?: string;
-    updatedEnd?: string;
-  }) {
-    const { userId, page, pageSize, ...filters } = params;
-    const rpcResponse = await lastValueFrom(
-      this.fileClient.send(
-        { cmd: 'files.get.list' },
-        {
-          page,
-          pageSize,
-          filters,
-          userId,
-        },
-      ),
+  findList(userId: number, query: FileQueryDto) {
+    return this.fileClient.send(
+      { cmd: FILE_MESSAGE_PATTERNS.FILE_GET_LIST },
+      { query, userId },
     );
-    return formatResponse(200, rpcResponse?.result, '文件列表查询成功');
   }
 
   async uploadSingle(file: Express.Multer.File, userId: number) {
@@ -228,7 +214,7 @@ export class FileService {
   async updateFile(dto: UpdateFileDto, userId: number) {
     await firstValueFrom(
       this.fileClient.send(
-        { cmd: 'file.update' },
+        { cmd: FILE_MESSAGE_PATTERNS.FILE_UPDATE },
         {
           userId,
           dto,
@@ -241,7 +227,7 @@ export class FileService {
   async updateFilesAccess(dto: UpdateFilesAccessDto, userId: number) {
     await firstValueFrom(
       this.fileClient.send(
-        { cmd: 'files.update.access' },
+        { cmd: FILE_MESSAGE_PATTERNS.FILE_UPDATE_ACCESS },
         {
           userId,
           dto,
@@ -254,7 +240,7 @@ export class FileService {
   async deleteFile(fileId: number, userId: number): Promise<Observable<any>> {
     return this.fileClient
       .send(
-        { cmd: 'file.delete' },
+        { cmd: FILE_MESSAGE_PATTERNS.FILE_DELETE },
         {
           fileId,
           userId,
@@ -269,7 +255,7 @@ export class FileService {
   ): Promise<Observable<any>> {
     return this.fileClient
       .send(
-        { cmd: 'files.delete' },
+        { cmd: FILE_MESSAGE_PATTERNS.FILE_DELETE_BATCH },
         {
           fileIds,
           userId,

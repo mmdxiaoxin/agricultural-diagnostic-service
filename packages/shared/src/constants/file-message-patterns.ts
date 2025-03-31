@@ -1,14 +1,13 @@
 export const FILE_MESSAGE_PATTERNS = {
-  GET_FILE: 'file.get',
-  GET_FILE_BY_ID: 'file.get.byId',
-  UPDATE_FILE: 'file.update',
-  DELETE_FILE: 'file.delete',
-  GET_FILES: 'files.get',
-  GET_FILES_BY_ID: 'files.get.byId',
-  GET_FILES_LIST: 'files.get.list',
-  UPDATE_FILES_ACCESS: 'files.update.access',
-  DELETE_FILES: 'files.delete',
-  FILES_STATISTIC_USAGE: 'files.statistic.usage',
+  FILE_GET_BYID: 'file.get.byId',
+  FILE_UPDATE: 'file.update',
+  FILE_DELETE: 'file.delete',
+  FILE_GET: 'file.get',
+  FILE_GET_BYIDS: 'file.get.byIds',
+  FILE_GET_LIST: 'file.get.list',
+  FILE_UPDATE_ACCESS: 'file.update.access',
+  FILE_DELETE_BATCH: 'file.delete.batch',
+  FILE_DISK: 'file.disk',
 } as const;
 
 // TypeScript 类型推导，确保 `cmd` 的值受约束

@@ -54,7 +54,7 @@ export class DiagnosisService {
   private async getFileMeta(fileId: number): Promise<FileEntity> {
     const { success, result: fileMeta } = await lastValueFrom(
       this.fileClient.send(
-        { cmd: FILE_MESSAGE_PATTERNS.GET_FILE_BY_ID },
+        { cmd: FILE_MESSAGE_PATTERNS.FILE_GET_BYID },
         { fileId },
       ),
     );

@@ -79,7 +79,7 @@ export class DiagnosisHistoryService {
       try {
         await firstValueFrom(
           this.fileClient.send<{ success: boolean }>(
-            { cmd: FILE_MESSAGE_PATTERNS.DELETE_FILE },
+            { cmd: FILE_MESSAGE_PATTERNS.FILE_DELETE },
             {
               fileId: diagnosis.fileId,
               userId,
@@ -119,7 +119,7 @@ export class DiagnosisHistoryService {
       try {
         await firstValueFrom(
           this.fileClient.send<{ success: boolean }>(
-            { cmd: FILE_MESSAGE_PATTERNS.DELETE_FILES },
+            { cmd: FILE_MESSAGE_PATTERNS.FILE_DELETE_BATCH },
             {
               fileIds: diagnosisList.map((diagnosis) => diagnosis.fileId),
               userId,

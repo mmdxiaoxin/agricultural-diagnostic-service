@@ -8,6 +8,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
 import { FILE_SERVICE_NAME } from 'config/microservice.config';
 import { Request } from 'express';
 import { firstValueFrom } from 'rxjs';
@@ -45,7 +46,7 @@ export class FilesGuard implements CanActivate {
           result: FileEntity[];
         },
         { fileIds: number[] }
-      >({ cmd: 'files.get.byId' }, { fileIds }),
+      >({ cmd: FILE_MESSAGE_PATTERNS.FILE_GET_BYIDS }, { fileIds }),
     );
 
     if (!files || files.length === 0) {

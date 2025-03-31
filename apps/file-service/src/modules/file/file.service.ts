@@ -28,7 +28,7 @@ export class FileService {
    * @param userId
    * @returns
    */
-  async getFiles(userId: number) {
+  async findAll(userId: number) {
     const files = await this.fileRepository.find({
       where: { createdBy: userId },
     });
@@ -43,7 +43,7 @@ export class FileService {
    * @param fileIds
    * @returns
    */
-  async getFilesById(fileIds: number[]) {
+  async findByIds(fileIds: number[]) {
     const files = await this.fileRepository.find({
       where: { id: In(fileIds) },
     });
@@ -61,7 +61,7 @@ export class FileService {
    * @param userId
    * @returns
    */
-  async getFilesList(
+  async findList(
     page: number,
     pageSize: number,
     filters: {
@@ -122,15 +122,11 @@ export class FileService {
       .take(pageSize)
       .getManyAndCount();
 
-    return {
-      success: true,
-      result: {
-        list,
-        total,
-        page,
-        pageSize,
-      },
-    };
+    return formatResponse(
+      200,
+      { list, total, page, pageSize },
+      '文件列表获取成功',
+    );
   }
 
   /**
@@ -138,22 +134,7 @@ export class FileService {
    * @param fileId
    * @returns
    */
-  async getFile(fileId: number) {
-    const file = await this.fileRepository.findOne({
-      where: { id: fileId },
-    });
-    return {
-      success: true,
-      result: file,
-    };
-  }
-
-  /**
-   * 获取文件信息
-   * @param fileId
-   * @returns
-   */
-  async getFileById(fileId: number) {
+  async findById(fileId: number) {
     const file = await this.fileRepository.findOne({
       where: { id: fileId },
     });
@@ -166,7 +147,7 @@ export class FileService {
    * @param dto
    * @returns
    */
-  async updateFile(userId: number, dto: UpdateFileDto) {
+  async update(userId: number, dto: UpdateFileDto) {
     const { fileId, ...fileMeta } = dto;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -208,7 +189,7 @@ export class FileService {
    * @param dto
    * @returns
    */
-  async updateFilesAccess(userId: number, dto: UpdateFilesAccessDto) {
+  async updateAccessBatch(userId: number, dto: UpdateFilesAccessDto) {
     const { fileIds, access } = dto;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -251,7 +232,7 @@ export class FileService {
    * @param userId
    * @returns
    */
-  async deleteFile(fileId: number, userId: number) {
+  async delete(fileId: number, userId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -305,7 +286,7 @@ export class FileService {
    * @param fileIds
    * @returns
    */
-  async deleteFiles(fileIds: number[], userId: number) {
+  async deleteBatch(fileIds: number[], userId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -368,7 +349,7 @@ export class FileService {
    * @param userId
    * @returns
    */
-  async getFilesStatisticUsage(userId: number) {
+  async findDisk(userId: number) {
     const computeFileSizeByType = async (
       createdBy: number,
       fileTypes: string[],
