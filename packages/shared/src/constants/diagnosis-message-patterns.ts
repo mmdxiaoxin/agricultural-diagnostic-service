@@ -8,6 +8,8 @@ export const DIAGNOSIS_MESSAGE_PATTERNS = {
   HISTORY_LIST: 'diagnosis.history.list',
   HISTORY_DELETE: 'diagnosis.history.delete',
   HISTORIES_DELETE: 'diagnosis.histories.delete',
+  LOG: 'diagnosis.log',
+  LOG_LIST: 'diagnosis.log.list',
 } as const;
 
 export type DiagnosisMessagePattern =

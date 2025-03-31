@@ -1,8 +1,10 @@
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
+import { PageQueryDto } from '@common/dto/page-query.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DIAGNOSIS_MESSAGE_PATTERNS } from '@shared/constants/diagnosis-message-patterns';
 import { DiagnosisHistoryService } from './services/diagnosis-history.service';
+import { DiagnosisLogService } from './services/diagnosis-log.service';
 import { DiagnosisService } from './services/diagnosis.service';
 
 @Controller()
@@ -10,6 +12,7 @@ export class DiagnosisController {
   constructor(
     private readonly diagnosisService: DiagnosisService,
     private readonly diagnosisHistoryService: DiagnosisHistoryService,
+    private readonly diagnosisLogService: DiagnosisLogService,
   ) {}
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.CREATE })
@@ -102,5 +105,20 @@ export class DiagnosisController {
       data.pageSize,
       data.userId,
     );
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.LOG_LIST })
+  async diagnosisLogListGet(
+    @Payload() payload: { diagnosisId: number; query: PageQueryDto },
+  ) {
+    return this.diagnosisLogService.getDiagnosisLogsList(
+      payload.diagnosisId,
+      payload.query,
+    );
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.LOG })
+  async diagnosisLogGet(@Payload() payload: { diagnosisId: number }) {
+    return this.diagnosisLogService.getDiagnosisLogs(payload.diagnosisId);
   }
 }

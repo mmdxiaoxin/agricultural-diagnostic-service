@@ -1,5 +1,7 @@
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
+import { PageQueryDto } from '@common/dto/page-query.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
+import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
 import {
   Body,
   Controller,
@@ -12,10 +14,10 @@ import {
   Post,
   Query,
   Req,
+  UnauthorizedException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
@@ -24,7 +26,6 @@ import { Request } from 'express';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { DiagnosisService } from './diagnosis.service';
-import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
 
 @ApiTags('病害诊断模块')
 @Controller('diagnosis')
@@ -102,6 +103,29 @@ export class DiagnosisController {
     id: number,
   ) {
     return this.diagnosisService.getDiagnosisStatus(id);
+  }
+
+  @Get(':id/log')
+  async getDiagnosisLog(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.diagnosisService.getDiagnosisLog(id);
+  }
+
+  @Get(':id/log/list')
+  async getDiagnosisLogList(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+    @Query() query: PageQueryDto,
+  ) {
+    return this.diagnosisService.getDiagnosisLogList(id, query);
   }
 
   @Get('support')

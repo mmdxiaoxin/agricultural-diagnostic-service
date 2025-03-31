@@ -3,9 +3,11 @@ import {
   LogLevel,
 } from '@app/database/entities/diagnosis-log.entity';
 import { RedisService } from '@app/redis';
+import { PageQueryDto } from '@common/dto/page-query.dto';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
+import { formatResponse } from '@shared/helpers/response.helper';
 import { Between, Repository } from 'typeorm';
 
 interface LogEntry {
@@ -295,11 +297,27 @@ export class DiagnosisLogService implements OnModuleDestroy {
     return this.logRepository.save(entities);
   }
 
-  async getDiagnosisLogs(diagnosisId: number): Promise<DiagnosisLog[]> {
-    return this.logRepository.find({
+  async getDiagnosisLogs(diagnosisId: number) {
+    const logs = await this.logRepository.find({
       where: { diagnosisId },
       order: { createdAt: 'ASC' },
     });
+    return formatResponse(200, logs, '诊断日志获取成功');
+  }
+
+  async getDiagnosisLogsList(diagnosisId: number, query: PageQueryDto) {
+    const { page = 1, pageSize = 10 } = query;
+    const [logs, total] = await this.logRepository.findAndCount({
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      where: { diagnosisId },
+      order: { createdAt: 'ASC' },
+    });
+    return formatResponse(
+      200,
+      { list: logs, total, page, pageSize },
+      '诊断日志列表获取成功',
+    );
   }
 
   async getDiagnosisLogsByTimeRange(
