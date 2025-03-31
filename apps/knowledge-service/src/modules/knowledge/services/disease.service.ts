@@ -1,6 +1,7 @@
 import { Crop, Disease } from '@app/database/entities';
 import { CreateDiseaseDto } from '@common/dto/knowledge/create-disease.dto';
 import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
+import { PageQueryDateDto } from '@common/dto/page-query-date.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -44,7 +45,8 @@ export class DiseaseService {
     return formatResponse(200, diseases, '病害列表获取成功');
   }
 
-  async findList(page: number, pageSize: number) {
+  async findList(query: PageQueryDateDto) {
+    const { page = 1, pageSize = 10 } = query;
     const [diseases, total] = await this.diseaseRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,

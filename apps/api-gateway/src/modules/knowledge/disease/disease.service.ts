@@ -1,5 +1,6 @@
 import { CreateDiseaseDto } from '@common/dto/knowledge/create-disease.dto';
 import { UpdateDiseaseDto } from '@common/dto/knowledge/update-disease.dto';
+import { PageQueryDateDto } from '@common/dto/page-query-date.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { KNOWLEDGE_SERVICE_NAME } from 'config/microservice.config';
@@ -19,6 +20,10 @@ export class DiseaseService {
 
   findAll() {
     return this.client.send({ cmd: 'disease.get' }, {});
+  }
+
+  findList(query: PageQueryDateDto) {
+    return this.client.send({ cmd: 'disease.get.list' }, { query });
   }
 
   findOne(id: number) {

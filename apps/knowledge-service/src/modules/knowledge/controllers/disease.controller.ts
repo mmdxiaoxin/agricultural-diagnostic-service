@@ -3,6 +3,7 @@ import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DiseaseService } from '../services/disease.service';
+import { PageQueryDateDto } from '@common/dto/page-query-date.dto';
 
 @Controller()
 export class DiseaseController {
@@ -20,8 +21,8 @@ export class DiseaseController {
   }
 
   @MessagePattern({ cmd: 'disease.get.list' })
-  async findList(@Payload() payload: { page: number; pageSize: number }) {
-    return this.diseaseService.findList(payload.page, payload.pageSize);
+  async findList(@Payload() payload: { query: PageQueryDateDto }) {
+    return this.diseaseService.findList(payload.query);
   }
 
   @MessagePattern({ cmd: 'disease.get.byId' })
