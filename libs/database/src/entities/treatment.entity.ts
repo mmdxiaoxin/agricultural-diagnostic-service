@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Disease } from './disease.entity';
 
@@ -12,7 +12,11 @@ export enum TreatmentType {
 @Entity()
 export class Treatment extends BaseEntity {
   @ManyToOne(() => Disease, (disease) => disease.treatments)
+  @JoinColumn({ name: 'diseaseId' })
   disease: Disease;
+
+  @Column({ type: 'int' })
+  diseaseId: number;
 
   @Column({
     type: 'enum',
