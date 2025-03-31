@@ -37,6 +37,15 @@ export class CreateKnowledgeDto {
   transmission?: string;
 
   @IsOptional()
+  @IsString()
+  @ApiProperty({
+    example: 'easy',
+    description: '防治难度等级',
+    required: false,
+  })
+  difficultyLevel?: number;
+
+  @IsOptional()
   @IsArray()
   @ApiProperty({ type: [SymptomDto], description: '症状' })
   symptoms?: SymptomDto[];
