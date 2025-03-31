@@ -17,7 +17,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { EnvironmentFactorService } from './environment-factor.service';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @ApiTags('环境因素管理')
 @Controller('environment-factor')
@@ -39,7 +39,7 @@ export class EnvironmentFactorController {
   }
 
   @Get('list')
-  findList(@Query() query: PageKeywordsDto) {
+  findList(@Query() query: PageQueryKeywordsDto) {
     return this.environmentFactorService.findList(query);
   }
 

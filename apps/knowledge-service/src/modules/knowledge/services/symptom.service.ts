@@ -6,7 +6,7 @@ import { CreateSymptomDto } from '@common/dto/knowledge/create-symptom.dto';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { RpcException } from '@nestjs/microservices';
 import { UpdateSymptomDto } from '@common/dto/knowledge/update-symptom.dto';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @Injectable()
 export class SymptomService {
@@ -39,7 +39,7 @@ export class SymptomService {
     return formatResponse(200, symptoms, '症状列表获取成功');
   }
 
-  async findList(query: PageKeywordsDto) {
+  async findList(query: PageQueryKeywordsDto) {
     const { page = 1, pageSize = 10, keyword = '' } = query;
     const [symptoms, total] = await this.symptomRepository.findAndCount({
       skip: (page - 1) * pageSize,

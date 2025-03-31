@@ -3,7 +3,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DiagnosisRuleService } from '../services/diagnosis-rule.service';
 import { UpdateDiagnosisRuleDto } from '@common/dto/knowledge/update-diagnosisRule.dto';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @Controller()
 export class DiagnosisRuleController {
@@ -23,7 +23,7 @@ export class DiagnosisRuleController {
   }
 
   @MessagePattern({ cmd: 'diagnosisRule.get.list' })
-  async findList(@Payload() payload: { query: PageKeywordsDto }) {
+  async findList(@Payload() payload: { query: PageQueryKeywordsDto }) {
     return this.diagnosisRuleService.findList(payload.query);
   }
 

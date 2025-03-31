@@ -1,5 +1,5 @@
 import { CreateTreatmentDto } from '@common/dto/knowledge/create-treatment.dto';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 import { UpdateTreatmentDto } from '@common/dto/knowledge/update-treatment.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -22,7 +22,7 @@ export class TreatmentService {
     return this.client.send({ cmd: 'treatment.get' }, {});
   }
 
-  findList(query: PageKeywordsDto) {
+  findList(query: PageQueryKeywordsDto) {
     return this.client.send({ cmd: 'treatment.get.list' }, { query });
   }
 

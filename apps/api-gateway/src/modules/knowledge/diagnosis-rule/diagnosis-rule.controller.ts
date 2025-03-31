@@ -17,7 +17,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { DiagnosisRuleService } from './diagnosis-rule.service';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @ApiTags('诊断规则管理')
 @Controller('diagnosis-rule')
@@ -37,7 +37,7 @@ export class DiagnosisRuleController {
   }
 
   @Get('list')
-  findList(@Query() query: PageKeywordsDto) {
+  findList(@Query() query: PageQueryKeywordsDto) {
     return this.diagnosisRuleService.findList(query);
   }
 

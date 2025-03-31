@@ -1,6 +1,6 @@
 import { Disease, EnvironmentFactor } from '@app/database/entities';
 import { CreateEnvironmentFactorDto } from '@common/dto/knowledge/create-environmentFactor.dto';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 import { UpdateEnvironmentFactorDto } from '@common/dto/knowledge/update-environmentFactor.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
@@ -40,7 +40,7 @@ export class EnvironmentFactorService {
     return formatResponse(200, factors, '环境因素列表获取成功');
   }
 
-  async findList(query: PageKeywordsDto) {
+  async findList(query: PageQueryKeywordsDto) {
     const { page = 1, pageSize = 10, keyword = '' } = query;
     const [factors, total] =
       await this.environmentFactorRepository.findAndCount({

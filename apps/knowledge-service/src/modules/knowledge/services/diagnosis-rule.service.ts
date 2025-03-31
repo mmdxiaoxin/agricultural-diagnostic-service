@@ -6,7 +6,7 @@ import { CreateDiagnosisRuleDto } from '@common/dto/knowledge/create-diagnosisRu
 import { formatResponse } from '@shared/helpers/response.helper';
 import { RpcException } from '@nestjs/microservices';
 import { UpdateDiagnosisRuleDto } from '@common/dto/knowledge/update-diagnosisRule.dto';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @Injectable()
 export class DiagnosisRuleService {
@@ -41,7 +41,7 @@ export class DiagnosisRuleService {
     return formatResponse(200, rules, '诊断规则列表获取成功');
   }
 
-  async findList(query: PageKeywordsDto) {
+  async findList(query: PageQueryKeywordsDto) {
     const { page = 1, pageSize = 10, keyword = '' } = query;
     const [rules, total] = await this.diagnosisRuleRepository.findAndCount({
       skip: (page - 1) * pageSize,

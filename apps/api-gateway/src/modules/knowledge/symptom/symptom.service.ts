@@ -1,5 +1,5 @@
 import { CreateSymptomDto } from '@common/dto/knowledge/create-symptom.dto';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 import { UpdateSymptomDto } from '@common/dto/knowledge/update-symptom.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -22,7 +22,7 @@ export class SymptomService {
     return this.client.send({ cmd: 'symptom.get' }, {});
   }
 
-  findList(query: PageKeywordsDto) {
+  findList(query: PageQueryKeywordsDto) {
     return this.client.send({ cmd: 'symptom.get.list' }, { query });
   }
 

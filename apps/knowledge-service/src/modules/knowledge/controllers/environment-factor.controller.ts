@@ -3,7 +3,7 @@ import { CreateEnvironmentFactorDto } from '@common/dto/knowledge/create-environ
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { EnvironmentFactorService } from '../services/environment-factor.service';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @Controller()
 export class EnvironmentFactorController {
@@ -25,7 +25,7 @@ export class EnvironmentFactorController {
   }
 
   @MessagePattern({ cmd: 'environmentFactor.get.list' })
-  async findList(@Payload() payload: { query: PageKeywordsDto }) {
+  async findList(@Payload() payload: { query: PageQueryKeywordsDto }) {
     return this.environmentFactorService.findList(payload.query);
   }
 

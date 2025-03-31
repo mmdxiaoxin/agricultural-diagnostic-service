@@ -1,6 +1,6 @@
 import { Disease, Treatment } from '@app/database/entities';
 import { CreateTreatmentDto } from '@common/dto/knowledge/create-treatment.dto';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 import { UpdateTreatmentDto } from '@common/dto/knowledge/update-treatment.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
@@ -40,7 +40,7 @@ export class TreatmentService {
     return formatResponse(200, treatments, '治疗方案列表获取成功');
   }
 
-  async findList(query: PageKeywordsDto) {
+  async findList(query: PageQueryKeywordsDto) {
     const { page = 1, pageSize = 10, keyword = '' } = query;
     const [treatments, total] = await this.treatmentRepository.findAndCount({
       skip: (page - 1) * pageSize,

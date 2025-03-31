@@ -1,6 +1,6 @@
 import { Crop } from '@app/database/entities';
 import { CreateCropDto } from '@common/dto/knowledge/create-crop.dto';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 import { UpdateCropDto } from '@common/dto/knowledge/update-crop.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
@@ -27,7 +27,7 @@ export class CropService {
     return formatResponse(200, crops, '作物列表获取成功');
   }
 
-  async findList(query: PageKeywordsDto) {
+  async findList(query: PageQueryKeywordsDto) {
     const { page = 1, pageSize = 10, keyword = '' } = query;
     const [crops, total] = await this.cropRepository.findAndCount({
       skip: (page - 1) * pageSize,

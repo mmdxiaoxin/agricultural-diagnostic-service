@@ -18,7 +18,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { CropService } from './crop.service';
 import { PageQueryDto } from '@common/dto/page-query.dto';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @ApiTags('作物管理')
 @Controller('crop')
@@ -38,7 +38,7 @@ export class CropController {
   }
 
   @Get('list')
-  findList(@Query() query: PageKeywordsDto) {
+  findList(@Query() query: PageQueryKeywordsDto) {
     return this.cropService.findList(query);
   }
 

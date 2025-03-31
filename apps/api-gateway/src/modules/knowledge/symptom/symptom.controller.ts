@@ -17,7 +17,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { SymptomService } from './symptom.service';
-import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @ApiTags('症状管理')
 @Controller('symptom')
@@ -37,7 +37,7 @@ export class SymptomController {
   }
 
   @Get('list')
-  findList(@Query() query: PageKeywordsDto) {
+  findList(@Query() query: PageQueryKeywordsDto) {
     return this.symptomService.findList(query);
   }
 
