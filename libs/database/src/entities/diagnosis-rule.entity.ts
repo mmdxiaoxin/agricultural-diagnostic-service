@@ -13,12 +13,12 @@ export class DiagnosisRule extends BaseEntity {
   @Column({ type: 'int' })
   diseaseId: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', comment: '症状ID列表' })
   symptomIds: string;
 
-  @Column('float')
+  @Column({ type: 'float', comment: '概率' })
   probability: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', comment: '推荐措施' })
   recommendedAction: string;
 }

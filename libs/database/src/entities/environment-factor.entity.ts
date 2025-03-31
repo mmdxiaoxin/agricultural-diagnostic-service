@@ -13,9 +13,9 @@ export class EnvironmentFactor extends BaseEntity {
   @Column({ type: 'int' })
   diseaseId: number;
 
-  @Column()
+  @Column({ comment: '环境因素' })
   factor: string;
 
-  @Column()
+  @Column({ comment: '最佳范围' })
   optimalRange: string;
 }

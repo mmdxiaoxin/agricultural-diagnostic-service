@@ -23,12 +23,16 @@ export class Treatment extends BaseEntity {
   @Column({
     type: 'enum',
     enum: TreatmentType,
+    comment: '防治措施类型',
   })
   type: TreatmentType;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', comment: '防治措施' })
   method: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: true, comment: '推荐产品' })
   recommendedProducts: string;
+
+  @Column({ type: 'text', nullable: true, comment: '注意事项' })
+  precautions: string;
 }
