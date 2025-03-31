@@ -1,4 +1,5 @@
 import { CreateKnowledgeDto } from '@common/dto/knowledge/create-knowledge.dto';
+import { PageQueryKnowledgeDto } from '@common/dto/knowledge/page-query-knowledge.dto';
 import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -11,22 +12,22 @@ export class KnowledgeService {
   ) {}
 
   async findAll() {
-    return this.client.send('findAll', {});
+    return this.client.send('knowledge.get', {});
   }
 
-  async findList() {
-    return this.client.send('findList', {});
+  async findList(query: PageQueryKnowledgeDto) {
+    return this.client.send('knowledge.get.list', { query });
   }
 
   create(createKnowledgeDto: CreateKnowledgeDto) {
-    throw new Error('Method not implemented.');
+    return this.client.send('knowledge.create', { createKnowledgeDto });
   }
 
-  update(id: string, updateKnowledgeDto: UpdateKnowledgeDto) {
-    throw new Error('Method not implemented.');
+  update(id: number, updateKnowledgeDto: UpdateKnowledgeDto) {
+    return this.client.send('knowledge.update', { id, updateKnowledgeDto });
   }
 
-  remove(id: string) {
-    throw new Error('Method not implemented.');
+  remove(id: number) {
+    return this.client.send('knowledge.delete', { id });
   }
 }

@@ -38,16 +38,16 @@ export class CreateKnowledgeDto {
 
   @IsOptional()
   @IsArray()
-  @ApiProperty({ description: '症状' })
+  @ApiProperty({ type: [SymptomDto], description: '症状' })
   symptoms?: SymptomDto[];
 
   @IsOptional()
   @IsArray()
-  @ApiProperty({ description: '治疗方式' })
+  @ApiProperty({ type: [TreatmentDto], description: '治疗方式' })
   treatments?: TreatmentDto[];
 
   @IsOptional()
   @IsArray()
-  @ApiProperty({ description: '环境因素' })
+  @ApiProperty({ type: [EnvironmentFactorDto], description: '环境因素' })
   environmentFactors?: EnvironmentFactorDto[];
 }

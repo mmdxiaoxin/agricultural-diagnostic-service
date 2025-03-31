@@ -20,6 +20,8 @@ import { DiseaseService } from './services/disease.service';
 import { EnvironmentFactorService } from './services/environment-factor.service';
 import { SymptomService } from './services/symptom.service';
 import { TreatmentService } from './services/treatment.service';
+import { KnowledgeController } from './controllers/knowledge.controller';
+import { KnowledgeService } from './services/knowledge.service';
 
 @Module({
   imports: [
@@ -39,6 +41,7 @@ import { TreatmentService } from './services/treatment.service';
     TreatmentController,
     EnvironmentFactorController,
     DiagnosisRuleController,
+    KnowledgeController,
   ],
   providers: [
     CropService,
@@ -47,6 +50,7 @@ import { TreatmentService } from './services/treatment.service';
     TreatmentService,
     EnvironmentFactorService,
     DiagnosisRuleService,
+    KnowledgeService,
   ],
 })
 export class KnowledgeModule {}

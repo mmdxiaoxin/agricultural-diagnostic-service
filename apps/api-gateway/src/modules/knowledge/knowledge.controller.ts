@@ -1,4 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CreateKnowledgeDto } from '@common/dto/knowledge/create-knowledge.dto';
+import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -6,16 +8,18 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { KnowledgeService } from './knowledge.service';
-import { CreateKnowledgeDto } from '@common/dto/knowledge/create-knowledge.dto';
-import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
+import { PageQueryKnowledgeDto } from '@common/dto/knowledge/page-query-knowledge.dto';
 
 @ApiTags('病害知识库管理')
 @Controller('knowledge')
@@ -30,8 +34,8 @@ export class KnowledgeController {
   }
 
   @Get('list')
-  findList() {
-    return this.KnowledgeService.findList();
+  findList(@Query() query: PageQueryKnowledgeDto) {
+    return this.KnowledgeService.findList(query);
   }
 
   @Post()
@@ -41,14 +45,24 @@ export class KnowledgeController {
 
   @Put(':id')
   update(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
     @Body() updateKnowledgeDto: UpdateKnowledgeDto,
   ) {
     return this.KnowledgeService.update(id, updateKnowledgeDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     return this.KnowledgeService.remove(id);
   }
 }
