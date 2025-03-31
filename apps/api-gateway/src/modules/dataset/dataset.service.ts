@@ -16,7 +16,7 @@ export class DatasetService {
   }
 
   getPublicDatasetList(query: DatasetQueryDto) {
-    return this.fileClient.send({ cmd: 'dataset.get.public.list' }, query);
+    return this.fileClient.send({ cmd: 'dataset.get.public.list' }, { query });
   }
 
   createDataset(userId: number, dto: CreateDatasetDto) {
