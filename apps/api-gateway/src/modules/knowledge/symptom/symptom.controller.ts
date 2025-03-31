@@ -8,6 +8,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -29,6 +30,7 @@ export class SymptomController {
   constructor(private readonly symptomService: SymptomService) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   create(@Body() createSymptomDto: CreateSymptomDto) {
     return this.symptomService.create(createSymptomDto);
   }
@@ -67,6 +69,7 @@ export class SymptomController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(
       'id',

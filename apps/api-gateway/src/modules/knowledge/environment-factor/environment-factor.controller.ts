@@ -8,6 +8,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -31,6 +32,7 @@ export class EnvironmentFactorController {
   ) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   create(@Body() createEnvironmentFactorDto: CreateEnvironmentFactorDto) {
     return this.environmentFactorService.create(createEnvironmentFactorDto);
   }
@@ -69,6 +71,7 @@ export class EnvironmentFactorController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(
       'id',

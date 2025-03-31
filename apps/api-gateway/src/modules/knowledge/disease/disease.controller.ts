@@ -8,6 +8,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -29,6 +30,7 @@ export class DiseaseController {
   constructor(private readonly diseaseService: DiseaseService) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   create(@Body() createDiseaseDto: CreateDiseaseDto) {
     return this.diseaseService.create(createDiseaseDto);
   }
@@ -78,6 +80,7 @@ export class DiseaseController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(
       'id',

@@ -8,6 +8,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -30,6 +31,7 @@ export class CropController {
   constructor(private readonly cropService: CropService) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   create(@Body() createCropDto: CreateCropDto) {
     return this.cropService.create(createCropDto);
   }
@@ -68,6 +70,7 @@ export class CropController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(
       'id',
