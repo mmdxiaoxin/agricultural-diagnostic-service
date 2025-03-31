@@ -12,22 +12,22 @@ export class KnowledgeService {
   ) {}
 
   async findAll() {
-    return this.client.send('knowledge.get', {});
+    return this.client.send({ cmd: 'knowledge.get' }, {});
   }
 
   async findList(query: PageQueryKnowledgeDto) {
-    return this.client.send('knowledge.get.list', { query });
+    return this.client.send({ cmd: 'knowledge.get.list' }, { query });
   }
 
-  create(createKnowledgeDto: CreateKnowledgeDto) {
-    return this.client.send('knowledge.create', { createKnowledgeDto });
+  create(dto: CreateKnowledgeDto) {
+    return this.client.send({ cmd: 'knowledge.create' }, { dto });
   }
 
-  update(id: number, updateKnowledgeDto: UpdateKnowledgeDto) {
-    return this.client.send('knowledge.update', { id, updateKnowledgeDto });
+  update(id: number, dto: UpdateKnowledgeDto) {
+    return this.client.send({ cmd: 'knowledge.update' }, { id, dto });
   }
 
   remove(id: number) {
-    return this.client.send('knowledge.delete', { id });
+    return this.client.send({ cmd: 'knowledge.delete' }, { id });
   }
 }

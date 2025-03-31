@@ -2,7 +2,7 @@ import { Crop, Disease } from '@app/database/entities';
 import { CreateKnowledgeDto } from '@common/dto/knowledge/create-knowledge.dto';
 import { PageQueryKnowledgeDto } from '@common/dto/knowledge/page-query-knowledge.dto';
 import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -10,6 +10,8 @@ import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class KnowledgeService {
+  private readonly logger = new Logger(KnowledgeService.name);
+
   constructor(
     @InjectRepository(Disease)
     private diseaseRepository: Repository<Disease>,
@@ -93,6 +95,7 @@ export class KnowledgeService {
       await queryRunner.commitTransaction();
       return formatResponse(201, completeDisease, '知识创建成功');
     } catch (error) {
+      this.logger.error(error);
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
@@ -284,6 +287,7 @@ export class KnowledgeService {
       await queryRunner.commitTransaction();
       return formatResponse(200, completeDisease, '知识更新成功');
     } catch (error) {
+      this.logger.error(error);
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
