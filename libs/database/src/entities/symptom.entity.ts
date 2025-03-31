@@ -4,7 +4,9 @@ import { Disease } from './disease.entity';
 
 @Entity()
 export class Symptom extends BaseEntity {
-  @ManyToOne(() => Disease, (disease) => disease.symptoms)
+  @ManyToOne(() => Disease, (disease) => disease.symptoms, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'diseaseId' })
   disease: Disease;
 

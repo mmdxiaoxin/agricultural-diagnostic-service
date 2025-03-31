@@ -14,7 +14,7 @@ export class Disease extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   alias: string;
 
-  @ManyToOne(() => Crop, (crop) => crop.diseases)
+  @ManyToOne(() => Crop, (crop) => crop.diseases, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'cropId' })
   crop: Crop;
 
@@ -27,15 +27,19 @@ export class Disease extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   transmission: string;
 
-  @OneToMany(() => Symptom, (symptom) => symptom.disease)
+  @OneToMany(() => Symptom, (symptom) => symptom.disease, { cascade: true })
   symptoms: Symptom[];
 
-  @OneToMany(() => Treatment, (treatment) => treatment.disease)
+  @OneToMany(() => Treatment, (treatment) => treatment.disease, {
+    cascade: true,
+  })
   treatments: Treatment[];
 
-  @OneToMany(() => EnvironmentFactor, (factor) => factor.disease)
+  @OneToMany(() => EnvironmentFactor, (factor) => factor.disease, {
+    cascade: true,
+  })
   environmentFactors: EnvironmentFactor[];
 
-  @OneToMany(() => DiagnosisRule, (rule) => rule.disease)
+  @OneToMany(() => DiagnosisRule, (rule) => rule.disease, { cascade: true })
   diagnosisRules: DiagnosisRule[];
 }

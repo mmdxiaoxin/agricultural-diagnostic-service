@@ -11,7 +11,9 @@ export enum TreatmentType {
 
 @Entity()
 export class Treatment extends BaseEntity {
-  @ManyToOne(() => Disease, (disease) => disease.treatments)
+  @ManyToOne(() => Disease, (disease) => disease.treatments, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'diseaseId' })
   disease: Disease;
 

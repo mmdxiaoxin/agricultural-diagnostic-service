@@ -13,6 +13,6 @@ export class Crop extends BaseEntity {
   @Column({ nullable: true })
   growthStage: string;
 
-  @OneToMany(() => Disease, (disease) => disease.crop)
+  @OneToMany(() => Disease, (disease) => disease.crop, { cascade: true })
   diseases: Disease[];
 }
