@@ -1,4 +1,5 @@
 import { CreateEnvironmentFactorDto } from '@common/dto/knowledge/create-environmentFactor.dto';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 import { UpdateEnvironmentFactorDto } from '@common/dto/knowledge/update-environmentFactor.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -19,6 +20,10 @@ export class EnvironmentFactorService {
 
   findAll() {
     return this.client.send({ cmd: 'environmentFactor.get' }, {});
+  }
+
+  findList(query: PageKeywordsDto) {
+    return this.client.send({ cmd: 'environmentFactor.get.list' }, { query });
   }
 
   findOne(id: number) {

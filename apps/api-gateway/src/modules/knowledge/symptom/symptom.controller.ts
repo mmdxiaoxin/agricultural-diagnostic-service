@@ -11,11 +11,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { SymptomService } from './symptom.service';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 
 @ApiTags('症状管理')
 @Controller('symptom')
@@ -32,6 +34,11 @@ export class SymptomController {
   @Get()
   findAll() {
     return this.symptomService.findAll();
+  }
+
+  @Get('list')
+  findList(@Query() query: PageKeywordsDto) {
+    return this.symptomService.findList(query);
   }
 
   @Get(':id')

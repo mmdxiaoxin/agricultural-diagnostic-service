@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Disease, Symptom } from '@app/database/entities';
 import { CreateSymptomDto } from '@common/dto/knowledge/create-symptom.dto';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { RpcException } from '@nestjs/microservices';
 import { UpdateSymptomDto } from '@common/dto/knowledge/update-symptom.dto';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 
 @Injectable()
 export class SymptomService {
@@ -38,10 +39,12 @@ export class SymptomService {
     return formatResponse(200, symptoms, '症状列表获取成功');
   }
 
-  async findList(page: number, pageSize: number) {
+  async findList(query: PageKeywordsDto) {
+    const { page = 1, pageSize = 10, keyword = '' } = query;
     const [symptoms, total] = await this.symptomRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
+      where: [{ description: Like(`%${keyword}%`) }],
       relations: ['disease'],
     });
     return formatResponse(

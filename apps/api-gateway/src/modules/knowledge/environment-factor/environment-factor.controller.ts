@@ -11,11 +11,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { EnvironmentFactorService } from './environment-factor.service';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 
 @ApiTags('环境因素管理')
 @Controller('environment-factor')
@@ -34,6 +36,11 @@ export class EnvironmentFactorController {
   @Get()
   findAll() {
     return this.environmentFactorService.findAll();
+  }
+
+  @Get('list')
+  findList(@Query() query: PageKeywordsDto) {
+    return this.environmentFactorService.findList(query);
   }
 
   @Get(':id')

@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { DiagnosisRule, Disease } from '@app/database/entities';
 import { CreateDiagnosisRuleDto } from '@common/dto/knowledge/create-diagnosisRule.dto';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { RpcException } from '@nestjs/microservices';
 import { UpdateDiagnosisRuleDto } from '@common/dto/knowledge/update-diagnosisRule.dto';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 
 @Injectable()
 export class DiagnosisRuleService {
@@ -40,10 +41,12 @@ export class DiagnosisRuleService {
     return formatResponse(200, rules, '诊断规则列表获取成功');
   }
 
-  async findList(page: number, pageSize: number) {
+  async findList(query: PageKeywordsDto) {
+    const { page = 1, pageSize = 10, keyword = '' } = query;
     const [rules, total] = await this.diagnosisRuleRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
+      where: [{ recommendedAction: Like(`%${keyword}%`) }],
     });
     return formatResponse(
       200,

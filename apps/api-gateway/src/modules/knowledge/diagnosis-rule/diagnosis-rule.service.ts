@@ -1,4 +1,5 @@
 import { CreateDiagnosisRuleDto } from '@common/dto/knowledge/create-diagnosisRule.dto';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 import { UpdateDiagnosisRuleDto } from '@common/dto/knowledge/update-diagnosisRule.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -19,6 +20,10 @@ export class DiagnosisRuleService {
 
   findAll() {
     return this.client.send({ cmd: 'diagnosisRule.get' }, {});
+  }
+
+  findList(query: PageKeywordsDto) {
+    return this.client.send({ cmd: 'diagnosisRule.get.list' }, { query });
   }
 
   findOne(id: number) {

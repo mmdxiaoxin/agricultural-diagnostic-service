@@ -3,6 +3,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { TreatmentService } from '../services/treatment.service';
 import { UpdateTreatmentDto } from '@common/dto/knowledge/update-treatment.dto';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 
 @Controller()
 export class TreatmentController {
@@ -20,8 +21,8 @@ export class TreatmentController {
   }
 
   @MessagePattern({ cmd: 'treatment.get.list' })
-  async findList(@Payload() payload: { page: number; pageSize: number }) {
-    return this.treatmentService.findList(payload.page, payload.pageSize);
+  async findList(@Payload() payload: { query: PageKeywordsDto }) {
+    return this.treatmentService.findList(payload.query);
   }
 
   @MessagePattern({ cmd: 'treatment.get.byId' })

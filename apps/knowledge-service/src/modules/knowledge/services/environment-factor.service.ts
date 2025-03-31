@@ -1,11 +1,12 @@
 import { Disease, EnvironmentFactor } from '@app/database/entities';
 import { CreateEnvironmentFactorDto } from '@common/dto/knowledge/create-environmentFactor.dto';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 import { UpdateEnvironmentFactorDto } from '@common/dto/knowledge/update-environmentFactor.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class EnvironmentFactorService {
@@ -39,12 +40,14 @@ export class EnvironmentFactorService {
     return formatResponse(200, factors, '环境因素列表获取成功');
   }
 
-  async findList(page: number, pageSize: number) {
+  async findList(query: PageKeywordsDto) {
+    const { page = 1, pageSize = 10, keyword = '' } = query;
     const [factors, total] =
       await this.environmentFactorRepository.findAndCount({
         skip: (page - 1) * pageSize,
         take: pageSize,
         relations: ['disease'],
+        where: [{ factor: Like(`%${keyword}%`) }],
       });
     return formatResponse(
       200,

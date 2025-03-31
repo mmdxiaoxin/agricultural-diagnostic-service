@@ -11,11 +11,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { TreatmentService } from './treatment.service';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 
 @ApiTags('治疗方式管理')
 @Controller('treatment')
@@ -32,6 +34,11 @@ export class TreatmentController {
   @Get()
   findAll() {
     return this.treatmentService.findAll();
+  }
+
+  @Get('list')
+  findList(@Query() query: PageKeywordsDto) {
+    return this.treatmentService.findList(query);
   }
 
   @Get(':id')
