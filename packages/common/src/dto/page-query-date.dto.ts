@@ -1,25 +1,37 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsOptional } from 'class-validator';
 import { PageQueryDto } from './page-query.dto';
 
 export class PageQueryDateDto extends PageQueryDto {
   @IsOptional()
-  @IsString()
-  @ApiProperty({ description: '创建开始时间' })
+  @IsDateString()
+  @ApiProperty({
+    description: '创建开始时间',
+    example: '2023-01-01T00:00:00Z',
+  })
   createdStart?: string;
 
   @IsOptional()
-  @IsString()
-  @ApiProperty({ description: '创建结束时间' })
+  @IsDateString()
+  @ApiProperty({
+    description: '创建结束时间',
+    example: '2023-12-31T23:59:59Z',
+  })
   createdEnd?: string;
 
   @IsOptional()
-  @IsString()
-  @ApiProperty({ description: '更新开始时间' })
+  @IsDateString()
+  @ApiProperty({
+    description: '更新开始时间',
+    example: '2023-01-01T00:00:00Z',
+  })
   updatedStart?: string;
 
   @IsOptional()
-  @IsString()
-  @ApiProperty({ description: '更新结束时间' })
+  @IsDateString()
+  @ApiProperty({
+    description: '更新结束时间',
+    example: '2023-12-31T23:59:59Z',
+  })
   updatedEnd?: string;
 }

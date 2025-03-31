@@ -1,5 +1,6 @@
 import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
+import { DatasetQueryDto } from '@common/dto/diagnosis/dastaset-query.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { FILE_SERVICE_NAME } from 'config/microservice.config';
@@ -10,29 +11,12 @@ export class DatasetService {
     @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
   ) {}
 
-  getDatasetList(params: {
-    page: number;
-    pageSize: number;
-    name?: string;
-    createdStart?: string;
-    createdEnd?: string;
-    updatedStart?: string;
-    updatedEnd?: string;
-    userId: number;
-  }) {
-    return this.fileClient.send({ cmd: 'dataset.get.list' }, params);
+  getDatasetList(query: DatasetQueryDto, userId: number) {
+    return this.fileClient.send({ cmd: 'dataset.get.list' }, { query, userId });
   }
 
-  getPublicDatasetList(params: {
-    page: number;
-    pageSize: number;
-    name?: string;
-    createdStart?: string;
-    createdEnd?: string;
-    updatedStart?: string;
-    updatedEnd?: string;
-  }) {
-    return this.fileClient.send({ cmd: 'dataset.get.public.list' }, params);
+  getPublicDatasetList(query: DatasetQueryDto) {
+    return this.fileClient.send({ cmd: 'dataset.get.public.list' }, query);
   }
 
   createDataset(userId: number, dto: CreateDatasetDto) {

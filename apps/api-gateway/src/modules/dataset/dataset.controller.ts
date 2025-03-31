@@ -1,9 +1,9 @@
 import { Roles } from '@common/decorator/roles.decorator';
 import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
+import { DatasetQueryDto } from '@common/dto/diagnosis/dastaset-query.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
-import { ParseStringDatePipe } from '@common/pipe/string-date.pipe';
 import {
   Body,
   Controller,
@@ -32,47 +32,13 @@ export class DatasetController {
   constructor(private readonly datasetService: DatasetService) {}
 
   @Get('list')
-  async datasetsListGet(
-    @Req() req: Request,
-    @Query('page', ParseIntPipe) page: number = 1,
-    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
-    @Query('name') name?: string,
-    @Query('createdStart', ParseStringDatePipe) createdStart?: string,
-    @Query('createdEnd', ParseStringDatePipe) createdEnd?: string,
-    @Query('updatedStart', ParseStringDatePipe) updatedStart?: string,
-    @Query('updatedEnd', ParseStringDatePipe) updatedEnd?: string,
-  ) {
-    return this.datasetService.getDatasetList({
-      page,
-      pageSize,
-      name,
-      createdStart,
-      createdEnd,
-      updatedStart,
-      updatedEnd,
-      userId: req.user.userId,
-    });
+  async datasetsListGet(@Req() req: Request, @Query() query: DatasetQueryDto) {
+    return this.datasetService.getDatasetList(query, req.user.userId);
   }
 
   @Get('public/list')
-  async publicDatasetsListGet(
-    @Query('page', ParseIntPipe) page: number = 1,
-    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
-    @Query('name') name?: string,
-    @Query('createdStart', ParseStringDatePipe) createdStart?: string,
-    @Query('createdEnd', ParseStringDatePipe) createdEnd?: string,
-    @Query('updatedStart', ParseStringDatePipe) updatedStart?: string,
-    @Query('updatedEnd', ParseStringDatePipe) updatedEnd?: string,
-  ) {
-    return this.datasetService.getPublicDatasetList({
-      page,
-      pageSize,
-      name,
-      createdStart,
-      createdEnd,
-      updatedStart,
-      updatedEnd,
-    });
+  async publicDatasetsListGet(@Query() query: DatasetQueryDto) {
+    return this.datasetService.getPublicDatasetList(query);
   }
 
   @Post('create')

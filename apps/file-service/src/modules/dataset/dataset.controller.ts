@@ -1,5 +1,6 @@
 import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
+import { DatasetQueryDto } from '@common/dto/diagnosis/dastaset-query.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DatasetService } from './dataset.service';
@@ -10,44 +11,31 @@ export class DatasetController {
 
   // 获取数据集列表
   @MessagePattern({ cmd: 'dataset.get.list' })
-  async datasetsListGet(@Payload() payload: any) {
-    const {
-      page = 1,
-      pageSize = 10,
-      name,
-      createdStart,
-      createdEnd,
-      updatedStart,
-      updatedEnd,
-      userId,
-    } = payload;
+  async datasetsListGet(
+    @Payload() payload: { query: DatasetQueryDto; userId: number },
+  ) {
+    const { query, userId } = payload;
+    const { page = 1, pageSize = 10 } = query;
     return this.manageService.datasetsListGet(page, pageSize, userId, {
-      name,
-      createdStart,
-      createdEnd,
-      updatedStart,
-      updatedEnd,
+      name: query.name,
+      createdStart: query.createdStart,
+      createdEnd: query.createdEnd,
+      updatedStart: query.updatedStart,
+      updatedEnd: query.updatedEnd,
     });
   }
 
   // 获取公共数据集列表
   @MessagePattern({ cmd: 'dataset.get.public.list' })
-  async publicDatasetsListGet(@Payload() payload: any) {
-    const {
-      page = 1,
-      pageSize = 10,
-      name,
-      createdStart,
-      createdEnd,
-      updatedStart,
-      updatedEnd,
-    } = payload;
+  async publicDatasetsListGet(@Payload() payload: { query: DatasetQueryDto }) {
+    const { query } = payload;
+    const { page = 1, pageSize = 10 } = query;
     return this.manageService.publicDatasetsListGet(page, pageSize, {
-      name,
-      createdStart,
-      createdEnd,
-      updatedStart,
-      updatedEnd,
+      name: query.name,
+      createdStart: query.createdStart,
+      createdEnd: query.createdEnd,
+      updatedStart: query.updatedStart,
+      updatedEnd: query.updatedEnd,
     });
   }
 
