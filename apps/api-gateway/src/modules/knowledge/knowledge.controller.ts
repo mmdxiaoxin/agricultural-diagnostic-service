@@ -8,6 +8,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -39,6 +40,7 @@ export class KnowledgeController {
   }
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   create(@Body() createKnowledgeDto: CreateKnowledgeDto) {
     return this.KnowledgeService.create(createKnowledgeDto);
   }
@@ -56,6 +58,7 @@ export class KnowledgeController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(
       'id',
