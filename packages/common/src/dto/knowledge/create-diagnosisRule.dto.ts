@@ -1,12 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsString, Max, Min } from 'class-validator';
 
-export class CreateDiagnosisRuleDto {
-  @IsNotEmpty()
-  @IsNumber()
-  @ApiProperty({ description: '疾病ID', required: true })
-  diseaseId: number;
-
+export class DiagnosisRuleDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty({ description: '逗号分隔的症状ID列表', required: true })
@@ -23,4 +18,11 @@ export class CreateDiagnosisRuleDto {
   @IsString()
   @ApiProperty({ description: '建议采取的措施', required: true })
   recommendedAction: string;
+}
+
+export class CreateDiagnosisRuleDto extends DiagnosisRuleDto {
+  @IsNotEmpty()
+  @IsNumber()
+  @ApiProperty({ description: '疾病ID', required: true })
+  diseaseId: number;
 }

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class CreateDiseaseDto {
+export class DiseaseDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty({ description: '疾病名称', required: true })
@@ -12,11 +12,6 @@ export class CreateDiseaseDto {
   @ApiProperty({ description: '别名', required: false })
   alias?: string;
 
-  @IsNotEmpty()
-  @IsNumber()
-  @ApiProperty({ description: '作物ID', required: true })
-  cropId: number;
-
   @IsOptional()
   @IsString()
   @ApiProperty({ description: '发病原因', required: false })
@@ -26,4 +21,11 @@ export class CreateDiseaseDto {
   @IsString()
   @ApiProperty({ description: '传播方式', required: false })
   transmission?: string;
+}
+
+export class CreateDiseaseDto extends DiseaseDto {
+  @IsNotEmpty()
+  @IsNumber()
+  @ApiProperty({ description: '作物ID', required: true })
+  cropId: number;
 }

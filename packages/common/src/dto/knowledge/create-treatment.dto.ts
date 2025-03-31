@@ -8,12 +8,7 @@ import {
 import { TreatmentType } from '@app/database/entities/treatment.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateTreatmentDto {
-  @IsNotEmpty()
-  @IsNumber()
-  @ApiProperty({ description: '疾病ID', required: true })
-  diseaseId: number;
-
+export class TreatmentDto {
   @IsNotEmpty()
   @IsEnum(TreatmentType)
   @ApiProperty({ description: '治疗方式类型', required: true })
@@ -28,4 +23,11 @@ export class CreateTreatmentDto {
   @IsString()
   @ApiProperty({ description: '推荐产品', required: false })
   recommendedProducts?: string;
+}
+
+export class CreateTreatmentDto extends TreatmentDto {
+  @IsNotEmpty()
+  @IsNumber()
+  @ApiProperty({ description: '疾病ID', required: true })
+  diseaseId: number;
 }

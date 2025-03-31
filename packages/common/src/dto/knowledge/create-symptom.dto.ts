@@ -1,12 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class CreateSymptomDto {
-  @IsNotEmpty()
-  @IsNumber()
-  @ApiProperty({ description: '疾病ID', required: true })
-  diseaseId: number;
-
+export class SymptomDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty({ description: '症状描述', required: true })
@@ -21,4 +16,11 @@ export class CreateSymptomDto {
   @IsString()
   @ApiProperty({ description: '生长阶段', required: false })
   stage?: string;
+}
+
+export class CreateSymptomDto extends SymptomDto {
+  @IsNotEmpty()
+  @IsNumber()
+  @ApiProperty({ description: '疾病ID', required: true })
+  diseaseId: number;
 }
