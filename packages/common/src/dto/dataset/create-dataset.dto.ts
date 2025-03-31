@@ -22,6 +22,7 @@ export class CreateDatasetDto {
   @ApiProperty({
     description: '数据集描述',
     example: '这是一个数据集',
+    required: false,
   })
   description?: string;
 
@@ -40,6 +41,7 @@ export class CreateDatasetDto {
   @ApiProperty({
     description: '文件ID',
     example: [1, 2, 3],
+    required: false,
   })
   fileIds?: number[];
 }

@@ -7,6 +7,7 @@ export class CreateTempLinkDto {
   @ApiProperty({
     description: '链接过期时间',
     example: '1h',
+    required: false,
   })
   expiresIn?: string;
 }

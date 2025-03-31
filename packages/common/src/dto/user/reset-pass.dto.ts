@@ -8,6 +8,7 @@ export class ResetPasswordDto {
   @ApiProperty({
     description: '密码',
     example: '123456',
+    required: false,
   })
   password?: string;
 }

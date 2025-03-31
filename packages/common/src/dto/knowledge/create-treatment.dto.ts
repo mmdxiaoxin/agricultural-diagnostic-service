@@ -11,21 +11,21 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CreateTreatmentDto {
   @IsNotEmpty()
   @IsNumber()
-  @ApiProperty({ description: '疾病ID' })
+  @ApiProperty({ description: '疾病ID', required: true })
   diseaseId: number;
 
   @IsNotEmpty()
   @IsEnum(TreatmentType)
-  @ApiProperty({ description: '治疗方式类型' })
+  @ApiProperty({ description: '治疗方式类型', required: true })
   type: TreatmentType;
 
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({ description: '治疗方式方法' })
+  @ApiProperty({ description: '治疗方式方法', required: true })
   method: string;
 
   @IsOptional()
   @IsString()
-  @ApiProperty({ description: '推荐产品' })
+  @ApiProperty({ description: '推荐产品', required: false })
   recommendedProducts?: string;
 }

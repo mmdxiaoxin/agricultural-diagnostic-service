@@ -18,6 +18,7 @@ export class CreateUserDto {
   @ApiProperty({
     description: '邮箱',
     example: '5165133@asdf.com',
+    required: false,
   })
   email?: string;
 
@@ -27,6 +28,7 @@ export class CreateUserDto {
   @ApiProperty({
     description: '用户名',
     example: 'sdfgsafgasgsad',
+    required: false,
   })
   username?: string;
 
@@ -36,6 +38,7 @@ export class CreateUserDto {
   @ApiProperty({
     description: '密码',
     example: '123456',
+    required: false,
   })
   password?: string;
 
@@ -44,6 +47,7 @@ export class CreateUserDto {
   @ApiProperty({
     description: '状态',
     example: 1,
+    required: false,
   })
   status?: UserStatus; // 使用枚举来限制状态值
 
@@ -53,6 +57,7 @@ export class CreateUserDto {
   @ApiProperty({
     description: '角色',
     example: [1, 2],
+    required: false,
   })
   roles?: number[];
 
@@ -62,6 +67,7 @@ export class CreateUserDto {
   @ApiProperty({
     description: 'Profile',
     type: Profile,
+    required: false,
   })
   profile?: Profile;
 }

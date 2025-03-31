@@ -12,6 +12,7 @@ export class CreateRemoteServiceDto {
   @ApiProperty({
     description: '服务名称',
     example: '病害智能诊断服务',
+    required: true,
   })
   @IsNotEmpty()
   serviceName: string; // 服务名称
@@ -21,6 +22,7 @@ export class CreateRemoteServiceDto {
   @ApiProperty({
     description: '服务类型',
     example: 'diagnosis',
+    required: false,
   })
   serviceType?: string; // 服务类型
 
@@ -29,6 +31,7 @@ export class CreateRemoteServiceDto {
   @ApiProperty({
     description: '服务描述',
     example: '用于病害智能诊断的服务',
+    required: false,
   })
   description?: string; // 服务描述
 
@@ -37,6 +40,7 @@ export class CreateRemoteServiceDto {
   @ApiProperty({
     description: '服务状态',
     example: 'active',
+    required: false,
   })
   status?: 'active' | 'inactive' | 'under_maintenance'; // 服务状态
 

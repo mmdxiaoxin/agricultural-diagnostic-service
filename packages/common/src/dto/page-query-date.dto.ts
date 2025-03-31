@@ -8,6 +8,7 @@ export class PageQueryDateDto extends PageQueryDto {
   @ApiProperty({
     description: '创建开始时间',
     example: '2023-01-01T00:00:00Z',
+    required: false,
   })
   createdStart?: string;
 
@@ -16,6 +17,7 @@ export class PageQueryDateDto extends PageQueryDto {
   @ApiProperty({
     description: '创建结束时间',
     example: '2023-12-31T23:59:59Z',
+    required: false,
   })
   createdEnd?: string;
 
@@ -24,6 +26,7 @@ export class PageQueryDateDto extends PageQueryDto {
   @ApiProperty({
     description: '更新开始时间',
     example: '2023-01-01T00:00:00Z',
+    required: false,
   })
   updatedStart?: string;
 
@@ -32,6 +35,7 @@ export class PageQueryDateDto extends PageQueryDto {
   @ApiProperty({
     description: '更新结束时间',
     example: '2023-12-31T23:59:59Z',
+    required: false,
   })
   updatedEnd?: string;
 }

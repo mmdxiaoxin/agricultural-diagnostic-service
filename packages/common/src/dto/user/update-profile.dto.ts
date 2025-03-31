@@ -7,6 +7,7 @@ export class UpdateProfileDto {
   @ApiProperty({
     description: '性别',
     example: 1,
+    required: false,
   })
   gender?: number;
 
@@ -15,6 +16,7 @@ export class UpdateProfileDto {
   @ApiProperty({
     description: '姓名',
     example: '张三',
+    required: false,
   })
   name?: string;
 
@@ -23,6 +25,7 @@ export class UpdateProfileDto {
   @ApiProperty({
     description: '手机号',
     example: '18888888888',
+    required: false,
   })
   phone?: string;
 
@@ -31,6 +34,7 @@ export class UpdateProfileDto {
   @ApiProperty({
     description: '地址',
     example: '北京市朝阳区',
+    required: false,
   })
   address?: string;
 }

@@ -8,14 +8,16 @@ export class UpdateDatasetDto {
   @ApiProperty({
     description: '数据集名称',
     example: '数据集1',
+    required: false,
   })
-  name: string;
+  name?: string;
 
   @IsOptional()
   @IsString({ message: '数据集description必须是字符串！' })
   @ApiProperty({
     description: '数据集描述',
     example: '这是一个数据集',
+    required: false,
   })
   description?: string;
 
@@ -34,6 +36,7 @@ export class UpdateDatasetDto {
   @ApiProperty({
     description: '文件ID',
     example: [1, 2, 3],
+    required: false,
   })
   fileIds?: number[];
 }

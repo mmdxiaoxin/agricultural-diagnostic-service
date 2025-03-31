@@ -8,6 +8,7 @@ export class UpdatePasswordDto {
   @ApiProperty({
     description: '新密码',
     example: '123456',
+    required: true,
   })
   confirmPassword: string;
 }
