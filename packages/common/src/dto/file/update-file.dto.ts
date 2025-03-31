@@ -57,9 +57,9 @@ export class UpdateFilesAccessDto {
   @ApiProperty({
     description: '文件ID',
     example: [1, 2, 3],
-    required: false,
+    required: true,
   })
-  fileIds?: number[];
+  fileIds: number[];
 
   @IsNotEmpty({ message: '权限不能为空！' })
   @IsIn(['public', 'private'], {
@@ -68,6 +68,7 @@ export class UpdateFilesAccessDto {
   @ApiProperty({
     description: '权限',
     example: 'public',
+    required: true,
   })
   access: string;
 }
