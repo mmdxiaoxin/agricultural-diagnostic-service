@@ -30,6 +30,11 @@ export class DiseaseController {
     return this.diseaseService.findById(payload.id);
   }
 
+  @MessagePattern({ cmd: 'disease.get.symptoms' })
+  async findSymptoms(@Payload() payload: { id: number }) {
+    return this.diseaseService.findSymptoms(payload.id);
+  }
+
   @MessagePattern({ cmd: 'disease.update' })
   async updateDisease(
     @Payload() payload: { id: number; dto: UpdateKnowledgeDto },

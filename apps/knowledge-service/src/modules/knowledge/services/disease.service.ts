@@ -86,6 +86,21 @@ export class DiseaseService {
     return formatResponse(200, disease, '病害详情获取成功');
   }
 
+  // 获取病害症状
+  async findSymptoms(id: number) {
+    const disease = await this.diseaseRepository.findOne({
+      where: { id },
+      relations: ['symptoms'],
+    });
+    if (!disease) {
+      throw new RpcException({
+        code: 404,
+        message: `Disease with ID ${id} not found`,
+      });
+    }
+    return formatResponse(200, disease.symptoms, '病害症状获取成功');
+  }
+
   // 更新病害信息
   async update(id: number, dto: UpdateKnowledgeDto) {
     const disease = await this.diseaseRepository.findOne({ where: { id } });
