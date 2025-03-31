@@ -8,7 +8,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -42,20 +44,36 @@ export class DiagnosisRuleController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.diagnosisRuleService.findOne(+id);
+  findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.diagnosisRuleService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
     @Body() updateDiagnosisRuleDto: UpdateDiagnosisRuleDto,
   ) {
-    return this.diagnosisRuleService.update(+id, updateDiagnosisRuleDto);
+    return this.diagnosisRuleService.update(id, updateDiagnosisRuleDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.diagnosisRuleService.remove(+id);
+  remove(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.diagnosisRuleService.remove(id);
   }
 }

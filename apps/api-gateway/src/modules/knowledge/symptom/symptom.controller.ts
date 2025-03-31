@@ -8,7 +8,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -42,17 +44,36 @@ export class SymptomController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.symptomService.findOne(+id);
+  findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.symptomService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSymptomDto: UpdateSymptomDto) {
-    return this.symptomService.update(+id, updateSymptomDto);
+  update(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+    @Body() updateSymptomDto: UpdateSymptomDto,
+  ) {
+    return this.symptomService.update(id, updateSymptomDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.symptomService.remove(+id);
+  remove(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.symptomService.remove(id);
   }
 }

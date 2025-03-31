@@ -8,7 +8,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -42,20 +44,36 @@ export class TreatmentController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.treatmentService.findOne(+id);
+  findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.treatmentService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
     @Body() updateTreatmentDto: UpdateTreatmentDto,
   ) {
-    return this.treatmentService.update(+id, updateTreatmentDto);
+    return this.treatmentService.update(id, updateTreatmentDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.treatmentService.remove(+id);
+  remove(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.treatmentService.remove(id);
   }
 }

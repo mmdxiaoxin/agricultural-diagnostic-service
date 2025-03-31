@@ -8,7 +8,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -44,23 +46,36 @@ export class EnvironmentFactorController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     return this.environmentFactorService.findOne(+id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
     @Body() updateEnvironmentFactorDto: UpdateEnvironmentFactorDto,
   ) {
-    return this.environmentFactorService.update(
-      +id,
-      updateEnvironmentFactorDto,
-    );
+    return this.environmentFactorService.update(id, updateEnvironmentFactorDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.environmentFactorService.remove(+id);
+  remove(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.environmentFactorService.remove(id);
   }
 }

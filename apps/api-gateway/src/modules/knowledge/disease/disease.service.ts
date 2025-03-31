@@ -30,6 +30,10 @@ export class DiseaseService {
     return this.client.send({ cmd: 'disease.get.byId' }, { id });
   }
 
+  findSymptoms(id: number) {
+    return this.client.send({ cmd: 'disease.get.symptoms' }, { id });
+  }
+
   update(id: number, updateDiseaseDto: UpdateDiseaseDto) {
     return this.client.send(
       { cmd: 'disease.update' },

@@ -8,7 +8,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -43,17 +45,36 @@ export class CropController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.cropService.findOne(+id);
+  findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.cropService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCropDto: UpdateCropDto) {
-    return this.cropService.update(+id, updateCropDto);
+  update(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+    @Body() updateCropDto: UpdateCropDto,
+  ) {
+    return this.cropService.update(id, updateCropDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cropService.remove(+id);
+  remove(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.cropService.remove(id);
   }
 }

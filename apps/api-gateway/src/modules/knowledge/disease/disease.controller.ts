@@ -8,7 +8,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -42,17 +44,47 @@ export class DiseaseController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.diseaseService.findOne(+id);
+  findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.diseaseService.findOne(id);
+  }
+
+  @Get(':id/symptoms')
+  findSymptoms(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.diseaseService.findSymptoms(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDiseaseDto: UpdateDiseaseDto) {
-    return this.diseaseService.update(+id, updateDiseaseDto);
+  update(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+    @Body() updateDiseaseDto: UpdateDiseaseDto,
+  ) {
+    return this.diseaseService.update(id, updateDiseaseDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.diseaseService.remove(+id);
+  remove(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.diseaseService.remove(id);
   }
 }
