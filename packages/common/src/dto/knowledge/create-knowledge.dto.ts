@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { DiagnosisRuleDto } from './create-diagnosisRule.dto';
 import { EnvironmentFactorDto } from './create-environmentFactor.dto';
 import { SymptomDto } from './create-symptom.dto';
 import { TreatmentDto } from './create-treatment.dto';
@@ -59,4 +60,16 @@ export class CreateKnowledgeDto {
   @IsArray()
   @ApiProperty({ type: [EnvironmentFactorDto], description: '环境因素' })
   environmentFactors?: EnvironmentFactorDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ApiProperty({
+    example: [
+      {
+        name: '不必提交该属性，创建更新不会使用',
+      },
+    ],
+    description: '诊断规则',
+  })
+  diagnosisRules?: DiagnosisRuleDto[];
 }
