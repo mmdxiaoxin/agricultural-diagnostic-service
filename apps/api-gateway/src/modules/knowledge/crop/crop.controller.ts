@@ -11,11 +11,14 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { CropService } from './crop.service';
+import { PageQueryDto } from '@common/dto/page-query.dto';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 
 @ApiTags('作物管理')
 @Controller('crop')
@@ -32,6 +35,11 @@ export class CropController {
   @Get()
   findAll() {
     return this.cropService.findAll();
+  }
+
+  @Get('list')
+  findList(@Query() query: PageKeywordsDto) {
+    return this.cropService.findList(query);
   }
 
   @Get(':id')

@@ -1,8 +1,9 @@
 import { CreateCropDto } from '@common/dto/knowledge/create-crop.dto';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
+import { UpdateCropDto } from '@common/dto/knowledge/update-crop.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CropService } from '../services/crop.service';
-import { UpdateCropDto } from '@common/dto/knowledge/update-crop.dto';
 
 @Controller()
 export class CropController {
@@ -20,8 +21,8 @@ export class CropController {
   }
 
   @MessagePattern({ cmd: 'crop.get.list' })
-  async findList(@Payload() payload: { page: number; pageSize: number }) {
-    return this.cropService.findList(payload.page, payload.pageSize);
+  async findList(@Payload() payload: { query: PageKeywordsDto }) {
+    return this.cropService.findList(payload.query);
   }
 
   @MessagePattern({ cmd: 'crop.get.byId' })

@@ -1,4 +1,5 @@
 import { CreateCropDto } from '@common/dto/knowledge/create-crop.dto';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 import { UpdateCropDto } from '@common/dto/knowledge/update-crop.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -16,6 +17,10 @@ export class CropService {
 
   findAll() {
     return this.client.send({ cmd: 'crop.get' }, {});
+  }
+
+  findList(query: PageKeywordsDto) {
+    return this.client.send({ cmd: 'crop.get.list' }, { query });
   }
 
   findOne(id: number) {

@@ -1,11 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Crop } from '@app/database/entities';
 import { CreateCropDto } from '@common/dto/knowledge/create-crop.dto';
-import { formatResponse } from '@shared/helpers/response.helper';
-import { RpcException } from '@nestjs/microservices';
+import { PageKeywordsDto } from '@common/dto/knowledge/page-keywords.dto';
 import { UpdateCropDto } from '@common/dto/knowledge/update-crop.dto';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { InjectRepository } from '@nestjs/typeorm';
+import { formatResponse } from '@shared/helpers/response.helper';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class CropService {
@@ -26,10 +27,16 @@ export class CropService {
     return formatResponse(200, crops, '作物列表获取成功');
   }
 
-  async findList(page: number, pageSize: number) {
+  async findList(query: PageKeywordsDto) {
+    const { page = 1, pageSize = 10, keyword = '' } = query;
     const [crops, total] = await this.cropRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
+      where: [
+        { name: Like(`%${keyword}%`) },
+        { scientificName: Like(`%${keyword}%`) },
+        { growthStage: Like(`%${keyword}%`) },
+      ],
     });
     return formatResponse(
       200,
