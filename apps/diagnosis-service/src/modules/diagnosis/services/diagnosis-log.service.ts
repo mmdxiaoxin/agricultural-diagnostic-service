@@ -300,7 +300,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
   async getDiagnosisLogs(diagnosisId: number) {
     const logs = await this.logRepository.find({
       where: { diagnosisId },
-      order: { createdAt: 'ASC' },
+      order: { createdAt: 'DESC' },
     });
     return formatResponse(200, logs, '诊断日志获取成功');
   }
@@ -311,7 +311,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
       skip: (page - 1) * pageSize,
       take: pageSize,
       where: { diagnosisId },
-      order: { createdAt: 'ASC' },
+      order: { createdAt: 'DESC' },
     });
     return formatResponse(
       200,
