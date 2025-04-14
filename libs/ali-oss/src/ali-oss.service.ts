@@ -1,7 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OSS from 'ali-oss';
-import * as fs from 'fs';
+
+// 默认请求头配置
+const defaultHeaders: OSS.PutObjectOptions['headers'] = {
+  // 指定Object的存储类型
+  'x-oss-storage-class': 'Standard',
+  // 指定Object的访问权限
+  'x-oss-object-acl': 'private',
+  // 通过文件URL访问文件时，指定以附件形式下载文件
+  'Content-Disposition': 'attachment',
+  // 设置Object的标签
+  'x-oss-tagging': 'Tag1=disease',
+  // 指定PutObject操作时是否覆盖同名目标Object
+  'x-oss-forbid-overwrite': 'true',
+};
+
+// 自定义上传选项
+interface UploadOptions extends Partial<OSS.PutObjectOptions> {
+  filename?: string;
+}
 
 @Injectable()
 export class AliOssService {
@@ -18,22 +36,25 @@ export class AliOssService {
   }
 
   async uploadFile(
-    file: string | Buffer,
+    file: Buffer,
     fileKey: string,
+    options: UploadOptions = {},
   ): Promise<OSS.PutObjectResult> {
     try {
-      let result: OSS.PutObjectResult;
+      // 合并默认请求头和自定义请求头
+      const headers = {
+        ...defaultHeaders,
+        ...options.headers,
+        // 如果提供了文件名，更新Content-Disposition
+        ...(options.filename && {
+          'Content-Disposition': `attachment; filename="${options.filename}"`,
+        }),
+      };
 
-      if (typeof file === 'string') {
-        result = await this.client.put(fileKey, file);
-        fs.unlinkSync(file);
-      } else if (Buffer.isBuffer(file)) {
-        result = await this.client.put(fileKey, file);
-      } else {
-        throw new Error('Invalid file type. Expected string or buffer.');
-      }
-
-      return result;
+      return await this.client.put(fileKey, file, {
+        ...options,
+        headers,
+      });
     } catch (error) {
       throw new Error(`Error uploading file to OSS: ${error.message}`);
     }
