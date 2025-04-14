@@ -44,7 +44,7 @@ export class CreateKnowledgeDto {
     description: '防治难度等级',
     required: false,
   })
-  difficultyLevel?: number;
+  difficultyLevel?: string;
 
   @IsOptional()
   @IsArray()

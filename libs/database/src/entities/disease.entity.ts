@@ -27,7 +27,7 @@ export class Disease extends BaseEntity {
   @Column({ type: 'text', nullable: true, comment: '传播途径' })
   transmission: string;
 
-  @Column({ type: 'text', nullable: true, comment: '防治难度等级' })
+  @Column({ type: 'varchar', nullable: true, comment: '防治难度等级' })
   difficultyLevel: string;
 
   @OneToMany(() => Symptom, (symptom) => symptom.disease, { cascade: true })

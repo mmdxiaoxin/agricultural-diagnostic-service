@@ -45,6 +45,7 @@ export class KnowledgeService {
         crop,
         cause: dto.cause,
         transmission: dto.transmission,
+        difficultyLevel: dto.difficultyLevel,
       });
 
       // 3. 保存病害基本信息
@@ -213,6 +214,7 @@ export class KnowledgeService {
         alias: dto.alias,
         cause: dto.cause,
         transmission: dto.transmission,
+        difficultyLevel: dto.difficultyLevel,
       });
 
       // 4. 保存更新后的病害信息
