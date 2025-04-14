@@ -14,6 +14,15 @@
   "monorepo": true,
   "root": "apps/api-gateway",
   "projects": {
+    "ali-oss": {
+      "type": "library",
+      "root": "libs/ali-oss",
+      "entryFile": "index",
+      "sourceRoot": "libs/ali-oss/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/ali-oss/tsconfig.lib.json"
+      }
+    },
     "api-gateway": {
       "type": "application",
       "root": "apps/api-gateway",

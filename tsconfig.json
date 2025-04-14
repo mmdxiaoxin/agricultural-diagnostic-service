@@ -18,6 +18,12 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "@app/ali-oss": [
+        "libs/ali-oss/src"
+      ],
+      "@app/ali-oss/*": [
+        "libs/ali-oss/src/*"
+      ],
       "@app/database": [
         "libs/database/src"
       ],

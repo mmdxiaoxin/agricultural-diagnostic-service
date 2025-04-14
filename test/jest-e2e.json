@@ -11,6 +11,8 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
+    "@app/ali-oss": "<rootDir>/../libs/ali-oss/src",
+    "@app/ali-oss/(.*)": "<rootDir>/../libs/ali-oss/src/$1",
     "@app/database": "<rootDir>/../libs/database/src",
     "@app/database/(.*)": "<rootDir>/../libs/database/src/$1",
     "@app/file-operation": "<rootDir>/../libs/file-operation/src",
