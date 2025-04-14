@@ -271,18 +271,43 @@ export class DiagnosisHttpService {
       }
     });
 
-    // 处理文件参数
+    // 处理文件参数和普通表单字段
     forEach(processedParams, (paramValue, key) => {
       if (key === 'file' && fileMeta && fileData) {
         formData.append(paramValue, fileData, {
           filename: fileMeta.originalFileName,
           contentType: fileMeta.fileType,
         });
+      } else if (key !== 'file') {
+        // 处理普通表单字段
+        if (isArray(paramValue)) {
+          // 如果是数组，需要分别添加每个元素
+          paramValue.forEach((value, index) => {
+            formData.append(`${key}[${index}]`, value);
+          });
+        } else if (typeof paramValue === 'object' && paramValue !== null) {
+          // 如果是对象，需要递归处理
+          Object.entries(paramValue).forEach(([subKey, value]) => {
+            formData.append(`${key}[${subKey}]`, value);
+          });
+        } else {
+          // 普通值直接添加
+          formData.append(key, paramValue);
+        }
       }
     });
 
-    // 检查文件参数
-    if (some(Object.keys(processedParams), (key) => key === 'file')) {
+    // 检查是否需要返回 FormData
+    if (
+      some(Object.keys(processedParams), (key) => key === 'file') ||
+      some(
+        Object.values(processedParams),
+        (value) =>
+          value instanceof File ||
+          value instanceof Blob ||
+          value instanceof Buffer,
+      )
+    ) {
       return formData;
     }
 
