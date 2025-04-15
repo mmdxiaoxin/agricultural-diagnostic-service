@@ -300,9 +300,10 @@ export class RemoteController {
     @Req() req: Request,
     @Body() dto: CallRemoteInterfaceDto,
   ) {
-    const token = req.headers.authorization;
+    // 从请求头获取 token
+    const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
-      throw new UnauthorizedException('请先登录');
+      throw new UnauthorizedException('未提供认证令牌');
     }
     return this.remoteService.callRemoteInterface(interfaceId, token, dto);
   }
