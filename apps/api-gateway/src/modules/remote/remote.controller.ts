@@ -17,10 +17,13 @@ import {
   Post,
   Put,
   Query,
+  Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
+import { Request } from 'express';
 import { RemoteService } from './remote.service';
 
 @ApiTags('远程服务模块')
@@ -283,5 +286,28 @@ export class RemoteController {
     interfaceId: number,
   ) {
     return this.remoteService.copyRemoteInterface(interfaceId);
+  }
+
+  // 调用远程服务接口
+  @Post(':serviceId/interface/:interfaceId/call')
+  async callRemoteInterface(
+    @Param(
+      'interfaceId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    interfaceId: number,
+    @Req() req: Request,
+    @Body() data: { params?: any; data?: any },
+  ) {
+    const token = req.headers.authorization;
+    if (!token) {
+      throw new UnauthorizedException('请先登录');
+    }
+    return this.remoteService.callRemoteInterface(
+      interfaceId,
+      token,
+      data.params,
+      data.data,
+    );
   }
 }

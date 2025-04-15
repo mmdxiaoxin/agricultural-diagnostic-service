@@ -175,4 +175,23 @@ export class RemoteServiceController {
     await this.interfaceService.copy(interfaceId);
     return formatResponse(201, null, '复制成功');
   }
+
+  @MessagePattern({ cmd: 'service.interface.call' })
+  async callInterface(
+    @Payload()
+    payload: {
+      interfaceId: number;
+      token: string;
+      params?: any;
+      data?: any;
+    },
+  ) {
+    const result = await this.interfaceService.call(
+      payload.interfaceId,
+      payload.token,
+      payload.params,
+      payload.data,
+    );
+    return formatResponse(200, result, '调用成功');
+  }
 }

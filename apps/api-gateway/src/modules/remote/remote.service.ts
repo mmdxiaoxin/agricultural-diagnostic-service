@@ -144,4 +144,16 @@ export class RemoteService {
       interfaceId,
     );
   }
+
+  callRemoteInterface(
+    interfaceId: number,
+    token: string,
+    params?: any,
+    data?: any,
+  ) {
+    return this.diagnosisClient.send(
+      { cmd: 'service.interface.call' },
+      { interfaceId, token, params, data },
+    );
+  }
 }
