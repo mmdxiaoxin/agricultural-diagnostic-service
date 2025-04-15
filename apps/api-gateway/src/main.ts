@@ -1,20 +1,23 @@
 import { HttpExceptionFilter } from '@common/filters/http-exception.filter';
+import { OtherExceptionsFilter } from '@common/filters/other-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './modules/app.module';
-import { OtherExceptionsFilter } from '@common/filters/other-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const subnetIp = configService.get<string>('SUBNET_IP');
 
   // 配置CORS
   app.enableCors({
     origin: [
       'http://localhost:3000', // 开发环境
       'http://localhost:5173', // Vite开发服务器
-      'http://10.114.248.186', // 子网IP
-      'https://10.114.248.186', // 子网IP HTTPS
+      `http://${subnetIp}`, // 子网IP
+      `https://${subnetIp}`, // 子网IP HTTPS
       'http://www.binghai-zhenduan.com', // 生产环境域名
       'https://www.binghai-zhenduan.com', // 生产环境HTTPS域名
       /\.binghai-zhenduan\.com$/, // 允许所有子域名
