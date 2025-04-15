@@ -42,6 +42,13 @@ export class KnowledgeController {
     return this.KnowledgeService.findList(query);
   }
 
+  @Get(':id')
+  @Roles(Role.Admin, Role.Expert, Role.User)
+  @UseGuards(RolesGuard)
+  findById(@Param('id', ParseIntPipe) id: number) {
+    return this.KnowledgeService.findById(id);
+  }
+
   @Post()
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(RolesGuard)
