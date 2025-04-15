@@ -1,3 +1,4 @@
+import { CallRemoteInterfaceDto } from '@common/dto/remote/call-remote-interface.dto';
 import { CreateRemoteInterfaceDto } from '@common/dto/remote/create-remote-interface.dto';
 import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
 import { UpdateRemoteInterfaceDto } from '@common/dto/remote/update-remote-interface.dto';
@@ -148,12 +149,11 @@ export class RemoteService {
   callRemoteInterface(
     interfaceId: number,
     token: string,
-    params?: any,
-    data?: any,
+    dto: CallRemoteInterfaceDto,
   ) {
     return this.diagnosisClient.send(
       { cmd: 'service.interface.call' },
-      { interfaceId, token, params, data },
+      { interfaceId, token, dto },
     );
   }
 }

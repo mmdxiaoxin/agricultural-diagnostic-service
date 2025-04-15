@@ -1,3 +1,4 @@
+import { CallRemoteInterfaceDto } from '@common/dto/remote/call-remote-interface.dto';
 import { CreateRemoteInterfaceDto } from '@common/dto/remote/create-remote-interface.dto';
 import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
 import { UpdateRemoteInterfaceDto } from '@common/dto/remote/update-remote-interface.dto';
@@ -5,9 +6,9 @@ import { UpdateRemoteServiceDto } from '@common/dto/remote/update-remote-service
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
+import { RemoteConfigService } from './services/remote-config.service';
 import { RemoteInterfaceService } from './services/remote-interface.service';
 import { RemoteServiceService } from './services/remote.service';
-import { RemoteConfigService } from './services/remote-config.service';
 
 @Controller()
 export class RemoteServiceController {
@@ -182,15 +183,13 @@ export class RemoteServiceController {
     payload: {
       interfaceId: number;
       token: string;
-      params?: any;
-      data?: any;
+      dto: CallRemoteInterfaceDto;
     },
   ) {
     const result = await this.interfaceService.call(
       payload.interfaceId,
       payload.token,
-      payload.params,
-      payload.data,
+      payload.dto,
     );
     return formatResponse(200, result, '调用成功');
   }

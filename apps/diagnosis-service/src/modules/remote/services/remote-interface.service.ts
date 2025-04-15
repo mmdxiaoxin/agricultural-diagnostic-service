@@ -1,4 +1,5 @@
 import { RemoteInterface, RemoteService } from '@app/database/entities';
+import { CallRemoteInterfaceDto } from '@common/dto/remote/call-remote-interface.dto';
 import { CreateRemoteInterfaceDto } from '@common/dto/remote/create-remote-interface.dto';
 import { UpdateRemoteInterfaceDto } from '@common/dto/remote/update-remote-interface.dto';
 import { BaseResponse, HttpService } from '@common/services/http.service';
@@ -125,7 +126,8 @@ export class RemoteInterfaceService {
     }
   }
 
-  async call(interfaceId: number, token: string, params?: any, data?: any) {
+  async call(interfaceId: number, token: string, dto: CallRemoteInterfaceDto) {
+    const { params, data } = dto;
     const interface_ = await this.interfaceRepository.findOne({
       where: { id: interfaceId },
     });

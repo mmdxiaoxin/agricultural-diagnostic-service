@@ -1,4 +1,5 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import { CallRemoteInterfaceDto } from '@common/dto/remote/call-remote-interface.dto';
 import { CreateRemoteInterfaceDto } from '@common/dto/remote/create-remote-interface.dto';
 import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
 import { UpdateRemoteInterfaceDto } from '@common/dto/remote/update-remote-interface.dto';
@@ -297,17 +298,12 @@ export class RemoteController {
     )
     interfaceId: number,
     @Req() req: Request,
-    @Body() data: { params?: any; data?: any },
+    @Body() dto: CallRemoteInterfaceDto,
   ) {
     const token = req.headers.authorization;
     if (!token) {
       throw new UnauthorizedException('请先登录');
     }
-    return this.remoteService.callRemoteInterface(
-      interfaceId,
-      token,
-      data.params,
-      data.data,
-    );
+    return this.remoteService.callRemoteInterface(interfaceId, token, dto);
   }
 }
