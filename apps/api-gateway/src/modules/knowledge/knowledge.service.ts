@@ -11,16 +11,12 @@ export class KnowledgeService {
     @Inject(KNOWLEDGE_SERVICE_NAME) private readonly client: ClientProxy,
   ) {}
 
-  findAll() {
+  async findAll() {
     return this.client.send({ cmd: 'knowledge.get' }, {});
   }
 
-  findList(query: PageQueryKnowledgeDto) {
+  async findList(query: PageQueryKnowledgeDto) {
     return this.client.send({ cmd: 'knowledge.get.list' }, { query });
-  }
-
-  findById(id: number) {
-    return this.client.send({ cmd: 'knowledge.get.byId' }, { id });
   }
 
   create(dto: CreateKnowledgeDto) {
