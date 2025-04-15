@@ -10,8 +10,7 @@ export type ContentType =
 
 export interface RemoteInterfaceConfig {
   method?: HttpMethod;
-  urlPrefix?: string;
-  urlPath?: string;
+  prefix?: string;
   path?: string;
   headers?: Record<string, string>;
   timeout?: number;

@@ -451,7 +451,7 @@ export class DiagnosisHttpService {
     diagnosisId?: number,
   ): Promise<BaseResponse<T>> {
     // 构建完整URL
-    const fullUrl = `${config.baseUrl}${config.urlPrefix}${config.urlPath}${path}`;
+    const fullUrl = `${config.baseUrl}${config.urlPrefix}${path}`;
 
     // 先处理URL模板
     const processedUrl = this.processUrlTemplate(fullUrl, params, results);

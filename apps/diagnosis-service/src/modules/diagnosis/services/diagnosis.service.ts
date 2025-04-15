@@ -228,8 +228,7 @@ export class DiagnosisService {
 
           const diagnosisConfig: DiagnosisConfig = {
             baseUrl: remoteInterface.url,
-            urlPrefix: interfaceConfig.urlPrefix || '',
-            urlPath: interfaceConfig.urlPath || '',
+            urlPrefix: interfaceConfig.prefix || '',
             requests: [
               {
                 id: config.id,
@@ -252,8 +251,7 @@ export class DiagnosisService {
             `接口 ${config.id} 的配置: ${JSON.stringify({
               path: interfaceConfig.path,
               method: interfaceConfig.method,
-              urlPrefix: interfaceConfig.urlPrefix,
-              urlPath: interfaceConfig.urlPath,
+              urlPrefix: interfaceConfig.prefix,
             })}`,
           );
 
@@ -563,8 +561,7 @@ export class DiagnosisService {
 
           const diagnosisConfig: DiagnosisConfig = {
             baseUrl: remoteInterface.url,
-            urlPrefix: interfaceConfig.urlPrefix || '',
-            urlPath: interfaceConfig.urlPath || '',
+            urlPrefix: interfaceConfig.prefix || '',
             requests: [
               {
                 id: config.id,
@@ -587,8 +584,7 @@ export class DiagnosisService {
             `接口 ${config.id} 的配置: ${JSON.stringify({
               path: interfaceConfig.path,
               method: interfaceConfig.method,
-              urlPrefix: interfaceConfig.urlPrefix,
-              urlPath: interfaceConfig.urlPath,
+              urlPrefix: interfaceConfig.prefix,
             })}`,
           );
 
