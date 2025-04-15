@@ -1,14 +1,15 @@
 import { DatabaseModule } from '@app/database';
 import {
+  RemoteConfig,
   RemoteInterface,
   RemoteService,
-  RemoteConfig,
 } from '@app/database/entities';
+import { HttpService } from '@common/services/http.service';
 import { Module } from '@nestjs/common';
 import { RemoteServiceController } from './remote.controller';
+import { RemoteConfigService } from './services/remote-config.service';
 import { RemoteInterfaceService } from './services/remote-interface.service';
 import { RemoteServiceService } from './services/remote.service';
-import { RemoteConfigService } from './services/remote-config.service';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { RemoteConfigService } from './services/remote-config.service';
     RemoteServiceService,
     RemoteInterfaceService,
     RemoteConfigService,
+    HttpService,
   ],
   controllers: [RemoteServiceController],
 })

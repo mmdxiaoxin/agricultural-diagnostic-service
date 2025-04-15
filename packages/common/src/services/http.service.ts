@@ -1,11 +1,5 @@
-// packages/common/src/services/http.service.ts
-import axios, {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-  AxiosError,
-} from 'axios';
 import { Injectable, Logger } from '@nestjs/common';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 
 export interface BaseResponse<T = any> {
   code: number;
@@ -84,6 +78,14 @@ export class HttpService {
     config?: AxiosRequestConfig,
   ): Promise<BaseResponse<T>> {
     return this.axiosInstance.put(url, data, config);
+  }
+
+  async patch<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<BaseResponse<T>> {
+    return this.axiosInstance.patch(url, data, config);
   }
 
   async delete<T>(

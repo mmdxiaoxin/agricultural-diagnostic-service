@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { RemoteService } from './remote.entity';
 
@@ -21,10 +21,6 @@ export interface RemoteInterfaceConfig {
   maxBodyLength?: number;
   maxRedirects?: number;
   withCredentials?: boolean;
-  auth?: {
-    username: string;
-    password: string;
-  };
 }
 
 @Entity('remote_service_interface')
