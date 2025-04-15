@@ -8,6 +8,22 @@ import { OtherExceptionsFilter } from '@common/filters/other-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // 配置CORS
+  app.enableCors({
+    origin: [
+      'http://localhost:3000', // 开发环境
+      'http://localhost:5173', // Vite开发服务器
+      'http://10.114.248.186', // 子网IP
+      'https://10.114.248.186', // 子网IP HTTPS
+      'http://www.binghai-zhenduan.com', // 生产环境域名
+      'https://www.binghai-zhenduan.com', // 生产环境HTTPS域名
+      /\.binghai-zhenduan\.com$/, // 允许所有子域名
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true, // 允许发送cookies
+    allowedHeaders: 'Content-Type, Accept, Authorization',
+  });
+
   // Swagger 文档配置
   const config = new DocumentBuilder()
     .setTitle('病害智能诊断系统')
