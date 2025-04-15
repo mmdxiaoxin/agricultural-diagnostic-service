@@ -191,6 +191,6 @@ export class RemoteServiceController {
       payload.token,
       payload.dto,
     );
-    return formatResponse(200, result, '调用成功');
+    return result;
   }
 }
