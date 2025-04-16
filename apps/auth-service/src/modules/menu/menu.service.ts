@@ -12,12 +12,13 @@ export class MenuService {
 
   async findAuthRoutes(roleId: number) {
     const menus = await this.menuRepository.find({
-      relations: ['parent', 'children'],
-      // TODO: 这里可以根据实际情况加入角色ID过滤
-      // where: {
-      //   roleId: roleId,
-      // },
-      order: { id: 'ASC' }, // 按照ID升序排列
+      relations: ['parent', 'children', 'roles'],
+      where: {
+        roles: {
+          id: roleId,
+        },
+      },
+      order: { id: 'ASC' },
     });
 
     // 按照 sort 属性对菜单进行排序

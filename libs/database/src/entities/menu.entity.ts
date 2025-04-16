@@ -5,7 +5,9 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  ManyToMany,
 } from 'typeorm';
+import { Role } from './role.entity';
 
 @Entity('menu')
 export class Menu {
@@ -38,4 +40,7 @@ export class Menu {
   // 定义子级菜单（OneToMany）
   @OneToMany(() => Menu, (menu) => menu.parent)
   children: Menu[];
+
+  @ManyToMany(() => Role, (role) => role.menus)
+  roles: Role[];
 }
