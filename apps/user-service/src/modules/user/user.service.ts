@@ -338,7 +338,11 @@ export class UserService {
   }
 
   async profileUpdate(userId: number, profile: Partial<Profile>) {
-    const user = await this.findById(userId);
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['profile'],
+    });
+
     if (!user) {
       throw new RpcException({
         code: 404,
@@ -346,13 +350,9 @@ export class UserService {
       });
     }
 
-    let userProfile = await this.profileRepository.findOne({
-      where: { user },
-    });
-
+    let userProfile = user.profile;
     if (!userProfile) {
-      userProfile = new Profile();
-      userProfile.user = user;
+      userProfile = this.profileRepository.create({ user });
     }
 
     Object.assign(userProfile, profile);
