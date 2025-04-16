@@ -81,7 +81,16 @@ export class KnowledgeService {
         );
       }
 
-      // 7. 重新获取完整的病害信息（包含所有关联数据）
+      // 7. 处理诊断规则
+      if (dto.diagnosisRules && dto.diagnosisRules.length > 0) {
+        const diagnosisRules = dto.diagnosisRules.map((rule) => ({
+          ...rule,
+          disease: savedDisease,
+        }));
+        await queryRunner.manager.save('diagnosis_rule', diagnosisRules);
+      }
+
+      // 8. 重新获取完整的病害信息（包含所有关联数据）
       const completeDisease = await queryRunner.manager.findOne(Disease, {
         where: { id: savedDisease.id },
         relations: [
@@ -274,7 +283,23 @@ export class KnowledgeService {
         }
       }
 
-      // 8. 重新获取完整的病害信息（包含所有关联数据）
+      // 8. 处理诊断规则更新
+      if (dto.diagnosisRules) {
+        // 删除原有诊断规则
+        if (disease.diagnosisRules && disease.diagnosisRules.length > 0) {
+          await queryRunner.manager.remove(disease.diagnosisRules);
+        }
+        // 创建新的诊断规则
+        if (dto.diagnosisRules.length > 0) {
+          const diagnosisRules = dto.diagnosisRules.map((rule) => ({
+            ...rule,
+            disease: updatedDisease,
+          }));
+          await queryRunner.manager.save('diagnosis_rule', diagnosisRules);
+        }
+      }
+
+      // 9. 重新获取完整的病害信息（包含所有关联数据）
       const completeDisease = await queryRunner.manager.findOne(Disease, {
         where: { id: updatedDisease.id },
         relations: [
