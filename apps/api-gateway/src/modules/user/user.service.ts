@@ -56,7 +56,7 @@ export class UserService {
 
       res.send(avatarBuffer);
     } else {
-      res.status(404).send('Avatar not found.');
+      return result;
     }
   }
 
