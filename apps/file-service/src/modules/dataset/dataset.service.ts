@@ -1,5 +1,6 @@
 import { Dataset, File } from '@app/database/entities';
 import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
+import { UpdateDatasetAccessDto } from '@common/dto/dataset/update-dataset-access.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
@@ -234,6 +235,25 @@ export class DatasetService {
     }
     await this.datasetRepository.save(dataset);
     return formatResponse(200, dataset, '更新数据集成功');
+  }
+
+  async updateDatasetAccess(
+    datasetId: number,
+    userId: number,
+    dto: UpdateDatasetAccessDto,
+  ) {
+    const dataset = await this.datasetRepository.findOne({
+      where: { id: datasetId },
+    });
+    if (!dataset) {
+      return formatResponse(404, null, '未发现该数据集');
+    }
+    if (dataset.createdBy !== userId) {
+      return formatResponse(403, null, '无权限更新数据集权限');
+    }
+    dataset.access = dto.access;
+    await this.datasetRepository.save(dataset);
+    return formatResponse(200, dataset, '更新数据集权限成功');
   }
 
   async deleteDataset(datasetId: number, userId: number) {

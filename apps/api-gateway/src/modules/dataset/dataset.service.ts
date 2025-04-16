@@ -1,4 +1,5 @@
 import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
+import { UpdateDatasetAccessDto } from '@common/dto/dataset/update-dataset-access.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
 import { DatasetQueryDto } from '@common/dto/diagnosis/dastaset-query.dto';
 import { Inject, Injectable } from '@nestjs/common';
@@ -30,6 +31,17 @@ export class DatasetService {
   updateDataset(datasetId: number, userId: number, dto: UpdateDatasetDto) {
     return this.fileClient.send(
       { cmd: 'dataset.update' },
+      { datasetId, userId, dto },
+    );
+  }
+
+  updateDatasetAccess(
+    datasetId: number,
+    userId: number,
+    dto: UpdateDatasetAccessDto,
+  ) {
+    return this.fileClient.send(
+      { cmd: 'dataset.update.access' },
       { datasetId, userId, dto },
     );
   }

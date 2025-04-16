@@ -23,6 +23,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { Request } from 'express';
 import { DatasetService } from './dataset.service';
+import { UpdateDatasetAccessDto } from '@common/dto/dataset/update-dataset-access.dto';
 
 @ApiTags('数据集管理模块')
 @Controller('dataset')
@@ -69,6 +70,23 @@ export class DatasetController {
     @Body() dto: UpdateDatasetDto,
   ) {
     return this.datasetService.updateDataset(datasetId, req.user.userId, dto);
+  }
+
+  @Put(':datasetId/access')
+  async updateDatasetAccess(
+    @Param(
+      'datasetId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    datasetId: number,
+    @Req() req: Request,
+    @Body() dto: UpdateDatasetAccessDto,
+  ) {
+    return this.datasetService.updateDatasetAccess(
+      datasetId,
+      req.user.userId,
+      dto,
+    );
   }
 
   @Delete(':datasetId')

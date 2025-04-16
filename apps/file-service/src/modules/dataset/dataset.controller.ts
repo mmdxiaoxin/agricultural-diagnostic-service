@@ -4,6 +4,7 @@ import { DatasetQueryDto } from '@common/dto/diagnosis/dastaset-query.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DatasetService } from './dataset.service';
+import { UpdateDatasetAccessDto } from '@common/dto/dataset/update-dataset-access.dto';
 
 @Controller()
 export class DatasetController {
@@ -64,6 +65,23 @@ export class DatasetController {
     },
   ) {
     return this.manageService.updateDataset(
+      payload.datasetId,
+      payload.userId,
+      payload.dto,
+    );
+  }
+
+  // 更新数据集权限
+  @MessagePattern({ cmd: 'dataset.update.access' })
+  async updateDatasetAccess(
+    @Payload()
+    payload: {
+      datasetId: number;
+      userId: number;
+      dto: UpdateDatasetAccessDto;
+    },
+  ) {
+    return this.manageService.updateDatasetAccess(
       payload.datasetId,
       payload.userId,
       payload.dto,
