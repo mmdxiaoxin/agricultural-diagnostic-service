@@ -1,3 +1,4 @@
+import { UpdateUserStatusDto } from '@common/dto/user/update-user-status.dto';
 import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
@@ -87,6 +88,14 @@ export class UserController {
   @MessagePattern({ cmd: 'user.update' })
   async userUpdate(@Payload() payload: { id: number; dto: UpdateUserDto }) {
     return this.userService.userUpdate(payload.id, payload.dto);
+  }
+
+  // 更新用户状态
+  @MessagePattern({ cmd: 'user.status.update' })
+  async userStatusUpdate(
+    @Payload() payload: { id: number; dto: UpdateUserStatusDto },
+  ) {
+    return this.userService.userStatusUpdate(payload.id, payload.dto);
   }
 
   @MessagePattern({ cmd: 'user.update.activate' })

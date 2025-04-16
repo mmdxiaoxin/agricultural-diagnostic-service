@@ -2,6 +2,7 @@ import { UpdatePasswordDto } from '@common/dto/user/change-pass.dto';
 import { CreateUserDto } from '@common/dto/user/create-user.dto';
 import { ResetPasswordDto } from '@common/dto/user/reset-pass.dto';
 import { UpdateProfileDto } from '@common/dto/user/update-profile.dto';
+import { UpdateUserStatusDto } from '@common/dto/user/update-user-status.dto';
 import { UpdateUserDto } from '@common/dto/user/update-user.dto';
 import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { Inject, Injectable } from '@nestjs/common';
@@ -84,6 +85,10 @@ export class UserService {
 
   updateUser(id: number, dto: UpdateUserDto) {
     return this.userClient.send({ cmd: 'user.update' }, { id, dto });
+  }
+
+  updateUserStatus(id: number, dto: UpdateUserStatusDto) {
+    return this.userClient.send({ cmd: 'user.status.update' }, { id, dto });
   }
 
   resetUserPassword(id: number, dto: ResetPasswordDto) {

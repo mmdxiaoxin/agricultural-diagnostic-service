@@ -3,6 +3,7 @@ import { UpdatePasswordDto } from '@common/dto/user/change-pass.dto';
 import { CreateUserDto } from '@common/dto/user/create-user.dto';
 import { ResetPasswordDto } from '@common/dto/user/reset-pass.dto';
 import { UpdateProfileDto } from '@common/dto/user/update-profile.dto';
+import { UpdateUserStatusDto } from '@common/dto/user/update-user-status.dto';
 import { UpdateUserDto } from '@common/dto/user/update-user.dto';
 import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
@@ -103,6 +104,8 @@ export class UserController {
   }
 
   @Put(':id')
+  @Roles(Role.Admin)
+  @UseGuards(RolesGuard)
   async userUpdate(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
@@ -110,7 +113,19 @@ export class UserController {
     return this.userService.updateUser(id, dto);
   }
 
+  @Put(':id/status')
+  @Roles(Role.Admin)
+  @UseGuards(RolesGuard)
+  async userStatusUpdate(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateUserStatusDto,
+  ) {
+    return this.userService.updateUserStatus(id, dto);
+  }
+
   @Put(':id/reset/password')
+  @Roles(Role.Admin)
+  @UseGuards(RolesGuard)
   async userReset(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: ResetPasswordDto,

@@ -1,5 +1,6 @@
 import { Profile, Role, User } from '@app/database/entities';
 import { RedisService } from '@app/redis';
+import { UpdateUserStatusDto } from '@common/dto/user/update-user-status.dto';
 import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
@@ -68,7 +69,7 @@ export class UserService {
         where: { name: 'user' },
       });
       if (!role) {
-        throw new RpcException('user角色未创建');
+        throw new RpcException('用户角色未创建');
       }
       user.roles = [role];
     }
@@ -91,14 +92,14 @@ export class UserService {
     }
     const savedUser = await this.userRepository.save(newUser);
     await this.updateUserCache(savedUser);
-    return formatResponse(201, savedUser, '创建用户成功');
+    return formatResponse(201, savedUser, '用户创建成功');
   }
 
   async userGet(id: number) {
     // 尝试从缓存中获取用户信息
     const cachedUser = await this.getUserCache(id);
     if (cachedUser) {
-      return formatResponse(200, cachedUser, '更新用户信息成功');
+      return formatResponse(200, cachedUser, '用户信息获取成功');
     }
     // 从数据库中获取用户信息
     const user = await this.userRepository.findOne({
@@ -197,13 +198,30 @@ export class UserService {
 
       await queryRunner.commitTransaction();
       await this.updateUserCache(user);
-      return formatResponse(200, null, '更新用户信息成功');
+      return formatResponse(200, null, '用户信息更新成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async userStatusUpdate(id: number, dto: UpdateUserStatusDto) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new RpcException({
+        code: 404,
+        message: '用户未找到',
+      });
+    }
+
+    user.status = dto.status;
+    await this.userRepository.save(user);
+    return formatResponse(200, null, '用户状态更新成功');
   }
 
   async userActivate(id: number) {
