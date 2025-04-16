@@ -7,6 +7,7 @@ import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { In, Repository } from 'typeorm';
+
 @Injectable()
 export class DatasetService {
   constructor(
@@ -176,6 +177,20 @@ export class DatasetService {
       },
       '获取公开数据集列表成功',
     );
+  }
+
+  async getFileMeta(datasetId: number): Promise<FileEntity[]> {
+    const dataset = await this.datasetRepository.findOne({
+      where: { id: datasetId },
+      relations: ['files'],
+    });
+    if (!dataset) {
+      throw new RpcException({
+        code: 404,
+        message: '未发现该数据集',
+      });
+    }
+    return dataset.files || [];
   }
 
   async createDataset(userId: number, dto: CreateDatasetDto) {

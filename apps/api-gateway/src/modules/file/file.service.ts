@@ -20,6 +20,7 @@ import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
 import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
 import { formatResponse } from '@shared/helpers/response.helper';
 import {
+  DOWNLOAD_SERVICE_NAME,
   FILE_SERVICE_NAME,
   UPLOAD_SERVICE_NAME,
 } from 'config/microservice.config';
@@ -39,7 +40,7 @@ export class FileService {
   constructor(
     @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
     @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
-    @Inject('DOWNLOAD_SERVICE') private readonly downloadClient: ClientGrpc,
+    @Inject(DOWNLOAD_SERVICE_NAME) private readonly downloadClient: ClientGrpc,
   ) {}
 
   onModuleInit() {

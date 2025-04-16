@@ -1,5 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
 import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
+import { UpdateDatasetAccessDto } from '@common/dto/dataset/update-dataset-access.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
 import { DatasetQueryDto } from '@common/dto/diagnosis/dastaset-query.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
@@ -17,13 +18,13 @@ import {
   Put,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { DatasetService } from './dataset.service';
-import { UpdateDatasetAccessDto } from '@common/dto/dataset/update-dataset-access.dto';
 
 @ApiTags('数据集管理模块')
 @Controller('dataset')
@@ -113,5 +114,17 @@ export class DatasetController {
     @Req() req: Request,
   ) {
     return this.datasetService.deleteDataset(datasetId, req.user.userId);
+  }
+
+  @Get(':datasetId/download')
+  async downloadDataset(
+    @Param(
+      'datasetId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    datasetId: number,
+    @Res() res: Response,
+  ) {
+    return this.datasetService.downloadDataset(datasetId, res);
   }
 }

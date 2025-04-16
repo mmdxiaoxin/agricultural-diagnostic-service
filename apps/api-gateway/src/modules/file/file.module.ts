@@ -46,14 +46,6 @@ import { join } from 'path';
       },
       {
         name: DOWNLOAD_SERVICE_NAME,
-        transport: Transport.TCP,
-        options: {
-          host: DOWNLOAD_SERVICE_HOST,
-          port: DOWNLOAD_SERVICE_TCP_PORT,
-        },
-      },
-      {
-        name: 'DOWNLOAD_SERVICE',
         transport: Transport.GRPC,
         options: {
           package: 'download',

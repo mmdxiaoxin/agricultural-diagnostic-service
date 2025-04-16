@@ -40,6 +40,12 @@ export class DatasetController {
     });
   }
 
+  // 获取数据集下所有文件的元数据
+  @MessagePattern({ cmd: 'dataset.get.file.meta' })
+  async getFileMeta(@Payload() payload: { datasetId: number }) {
+    return this.manageService.getFileMeta(payload.datasetId);
+  }
+
   // 创建数据集
   @MessagePattern({ cmd: 'dataset.create' })
   async createDataset(
