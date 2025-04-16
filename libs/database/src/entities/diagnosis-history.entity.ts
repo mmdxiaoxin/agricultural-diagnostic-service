@@ -1,6 +1,7 @@
 import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { DiagnosisLog } from './diagnosis-log.entity';
+import { DiagnosisFeedback } from './diagnosis-feedback.entity';
 
 export enum DiagnosisHistoryStatus {
   PENDING = 'pending',
@@ -35,4 +36,7 @@ export class DiagnosisHistory extends BaseEntity {
 
   @OneToMany(() => DiagnosisLog, (log) => log.diagnosis)
   logs: DiagnosisLog[];
+
+  @OneToMany(() => DiagnosisFeedback, (feedback) => feedback.diagnosis)
+  feedbacks: DiagnosisFeedback[];
 }

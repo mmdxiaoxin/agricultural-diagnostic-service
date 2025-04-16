@@ -1,5 +1,6 @@
 import { DatabaseModule } from '@app/database';
 import { DiagnosisHistory } from '@app/database/entities';
+import { DiagnosisFeedback } from '@app/database/entities/diagnosis-feedback.entity';
 import { DiagnosisLog } from '@app/database/entities/diagnosis-log.entity';
 import { FileOperationModule } from '@app/file-operation';
 import { RedisModule } from '@app/redis';
@@ -28,7 +29,11 @@ import { DiagnosisService } from './services/diagnosis.service';
   imports: [
     RedisModule,
     FileOperationModule,
-    DatabaseModule.forFeature([DiagnosisHistory, DiagnosisLog]),
+    DatabaseModule.forFeature([
+      DiagnosisHistory,
+      DiagnosisFeedback,
+      DiagnosisLog,
+    ]),
     ClientsModule.register([
       {
         name: DOWNLOAD_SERVICE_NAME,
