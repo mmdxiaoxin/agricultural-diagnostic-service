@@ -1,23 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString, Max, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class DiagnosisRuleDto {
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({ description: '逗号分隔的症状ID列表', required: true })
-  symptomIds: string;
-
-  @IsNotEmpty()
-  @IsNumber()
-  @Min(0)
-  @Max(1)
-  @ApiProperty({ description: '诊断置信度（0~1）', required: true })
-  probability: number;
-
-  @IsNotEmpty()
-  @IsString()
-  @ApiProperty({ description: '建议采取的措施', required: true })
-  recommendedAction: string;
+  @ApiProperty({
+    description: '诊断规则',
+    required: true,
+    example: 'class_name=病害名称,class_name=病害别名',
+  })
+  schema: string;
 }
 
 export class CreateDiagnosisRuleDto extends DiagnosisRuleDto {

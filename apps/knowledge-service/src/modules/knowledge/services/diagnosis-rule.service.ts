@@ -46,7 +46,8 @@ export class DiagnosisRuleService {
     const [rules, total] = await this.diagnosisRuleRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
-      where: [{ recommendedAction: Like(`%${keyword}%`) }],
+      where: [{ schema: Like(`%${keyword}%`) }],
+      relations: ['disease'],
     });
     return formatResponse(
       200,
@@ -64,7 +65,7 @@ export class DiagnosisRuleService {
     if (!rule) {
       throw new RpcException({
         code: 404,
-        message: `DiagnosisRule with ID ${id} not found`,
+        message: `诊断规则不存在`,
       });
     }
     return formatResponse(200, rule, '诊断规则获取成功');
@@ -79,7 +80,7 @@ export class DiagnosisRuleService {
     if (!rule) {
       throw new RpcException({
         code: 404,
-        message: `DiagnosisRule with ID ${id} not found`,
+        message: `诊断规则不存在`,
       });
     }
     Object.assign(rule, dto);
@@ -95,32 +96,10 @@ export class DiagnosisRuleService {
     if (!rule) {
       throw new RpcException({
         code: 404,
-        message: `DiagnosisRule with ID ${id} not found`,
+        message: `诊断规则不存在`,
       });
     }
     await this.diagnosisRuleRepository.remove(rule);
     return formatResponse(200, null, '诊断规则删除成功');
-  }
-
-  // 根据症状诊断病害
-  async diagnoseDisease(symptomIds: string[]) {
-    const rules = await this.diagnosisRuleRepository.find({
-      relations: ['disease'],
-    });
-
-    const matchedRules = rules.filter((rule) => {
-      const ruleSymptomIds = rule.symptomIds.split(',').map(Number);
-      return symptomIds.every((id) => ruleSymptomIds.includes(Number(id)));
-    });
-
-    // 按概率排序
-    matchedRules.sort((a, b) => b.probability - a.probability);
-
-    const result = matchedRules.map((rule) => ({
-      disease: rule.disease,
-      probability: rule.probability,
-      recommendedAction: rule.recommendedAction,
-    }));
-    return formatResponse(200, result, '诊断规则匹配成功');
   }
 }

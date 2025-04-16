@@ -43,10 +43,4 @@ export class DiagnosisRuleController {
   async removeDiagnosisRule(@Payload() payload: { id: number }) {
     return this.diagnosisRuleService.remove(payload.id);
   }
-
-  // 诊断相关接口
-  @MessagePattern({ cmd: 'disease.diagnose' })
-  async diagnoseDisease(@Payload() payload: { symptomIds: string[] }) {
-    return this.diagnosisRuleService.diagnoseDisease(payload.symptomIds);
-  }
 }
