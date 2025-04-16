@@ -6,6 +6,7 @@ import {
   ManyToOne,
   JoinColumn,
   ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Role } from './role.entity';
 
@@ -42,5 +43,10 @@ export class Menu {
   children: Menu[];
 
   @ManyToMany(() => Role, (role) => role.menus)
+  @JoinTable({
+    name: 'roles_menus',
+    joinColumn: { name: 'menu_id' },
+    inverseJoinColumn: { name: 'role_id' },
+  })
   roles: Role[];
 }
