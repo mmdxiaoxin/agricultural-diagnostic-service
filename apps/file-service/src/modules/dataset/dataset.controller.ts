@@ -48,6 +48,12 @@ export class DatasetController {
     return this.manageService.createDataset(payload.userId, payload.dto);
   }
 
+  // 复制数据集
+  @MessagePattern({ cmd: 'dataset.copy' })
+  async copyDataset(@Payload() payload: { datasetId: number; userId: number }) {
+    return this.manageService.copyDataset(payload.datasetId, payload.userId);
+  }
+
   // 获取数据集详情
   @MessagePattern({ cmd: 'dataset.detail' })
   async getDatasetDetail(@Payload() payload: { datasetId: number }) {

@@ -1,7 +1,7 @@
 import {
   DiagnosisHistory,
   DiagnosisHistoryStatus,
-  File as FileEntity,
+  FileEntity,
   RemoteService,
 } from '@app/database/entities';
 import { LogLevel } from '@app/database/entities/diagnosis-log.entity';

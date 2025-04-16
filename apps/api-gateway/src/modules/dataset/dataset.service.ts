@@ -24,6 +24,10 @@ export class DatasetService {
     return this.fileClient.send({ cmd: 'dataset.create' }, { userId, dto });
   }
 
+  copyDataset(datasetId: number, userId: number) {
+    return this.fileClient.send({ cmd: 'dataset.copy' }, { datasetId, userId });
+  }
+
   getDatasetDetail(datasetId: number) {
     return this.fileClient.send({ cmd: 'dataset.detail' }, { datasetId });
   }

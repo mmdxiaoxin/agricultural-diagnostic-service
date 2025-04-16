@@ -1,6 +1,6 @@
 import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { File } from './file.entity';
+import { FileEntity } from './file.entity';
 
 @Entity('dataset')
 @Index('dataset_user_id_fk', ['createdBy'])
@@ -21,11 +21,11 @@ export class Dataset extends BaseEntity {
   @Column({ type: 'int' })
   updatedBy: number;
 
-  @ManyToMany(() => File, (file) => file.datasets, { nullable: true })
+  @ManyToMany(() => FileEntity, (file) => file.datasets, { nullable: true })
   @JoinTable({
     name: 'datasets_files', // 中间表的名字
     joinColumn: { name: 'datasetId', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'fileId', referencedColumnName: 'id' },
   })
-  files: File[] | null;
+  files: FileEntity[] | null;
 }

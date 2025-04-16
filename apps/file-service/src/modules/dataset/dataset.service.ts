@@ -1,4 +1,4 @@
-import { Dataset, File } from '@app/database/entities';
+import { Dataset, FileEntity } from '@app/database/entities';
 import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
 import { UpdateDatasetAccessDto } from '@common/dto/dataset/update-dataset-access.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
@@ -12,8 +12,8 @@ export class DatasetService {
   constructor(
     @InjectRepository(Dataset)
     private datasetRepository: Repository<Dataset>,
-    @InjectRepository(File)
-    private fileRepository: Repository<File>,
+    @InjectRepository(FileEntity)
+    private fileRepository: Repository<FileEntity>,
   ) {}
 
   async datasetsListGet(
@@ -192,6 +192,65 @@ export class DatasetService {
     }
     await this.datasetRepository.save(dataset);
     return formatResponse(201, dataset, '成功创建数据集');
+  }
+
+  async copyDataset(datasetId: number, userId: number) {
+    // 使用事务来确保数据一致性
+    return await this.datasetRepository.manager.transaction(async (manager) => {
+      // 获取原始数据集
+      const originalDataset = await manager.findOne(Dataset, {
+        where: { id: datasetId },
+        relations: ['files'],
+      });
+
+      if (!originalDataset) {
+        throw new RpcException({
+          code: 404,
+          message: '未发现该数据集',
+        });
+      }
+
+      if (!originalDataset.files) {
+        throw new RpcException({
+          code: 400,
+          message: '数据集没有关联的文件',
+        });
+      }
+
+      // 复制文件元数据
+      const newFiles = await Promise.all(
+        originalDataset.files.map(async (file) => {
+          const newFile = manager.create(FileEntity, {
+            originalFileName: file.originalFileName,
+            storageFileName: file.storageFileName,
+            filePath: file.filePath,
+            fileSize: file.fileSize,
+            fileType: file.fileType,
+            fileMd5: file.fileMd5,
+            access: file.access,
+            createdBy: userId,
+            updatedBy: userId,
+            version: 1,
+          });
+          return await manager.save(newFile);
+        }),
+      );
+
+      // 创建新的数据集
+      const newDataset = manager.create(Dataset, {
+        name: `${originalDataset.name} (副本)`,
+        description: originalDataset.description,
+        access: originalDataset.access,
+        createdBy: userId,
+        updatedBy: userId,
+        files: newFiles, // 使用新复制的文件
+      });
+
+      // 保存新数据集
+      await manager.save(newDataset);
+
+      return formatResponse(201, newDataset, '成功复制数据集');
+    });
   }
 
   async getDatasetDetail(datasetId: number) {

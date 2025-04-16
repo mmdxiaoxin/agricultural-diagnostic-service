@@ -5,7 +5,7 @@ import { Dataset } from './dataset.entity';
 @Entity('file')
 @Index('file_user_id_fk', ['createdBy'])
 @Index('file_user_id_fk_2', ['updatedBy'])
-export class File extends BaseEntity {
+export class FileEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
   originalFileName: string;
 

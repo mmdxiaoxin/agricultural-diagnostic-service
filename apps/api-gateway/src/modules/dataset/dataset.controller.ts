@@ -48,6 +48,19 @@ export class DatasetController {
     return this.datasetService.createDataset(req.user.userId, dto);
   }
 
+  @Post(':datasetId/copy')
+  @HttpCode(HttpStatus.CREATED)
+  async copyDataset(
+    @Param(
+      'datasetId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    datasetId: number,
+    @Req() req: Request,
+  ) {
+    return this.datasetService.copyDataset(datasetId, req.user.userId);
+  }
+
   @Get(':datasetId')
   async getDatasetDetail(
     @Param(

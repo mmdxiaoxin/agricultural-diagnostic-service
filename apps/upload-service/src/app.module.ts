@@ -1,5 +1,5 @@
 import { DatabaseModule } from '@app/database';
-import { Dataset, File } from '@app/database/entities';
+import { Dataset, FileEntity } from '@app/database/entities';
 import { RedisModule } from '@app/redis';
 import { Module } from '@nestjs/common';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
@@ -9,7 +9,7 @@ import { UploadService } from './app.service';
 @Module({
   imports: [
     DatabaseModule.register(),
-    DatabaseModule.forFeature([File, Dataset]),
+    DatabaseModule.forFeature([FileEntity, Dataset]),
     RedisModule,
     PrometheusModule.register(),
   ],

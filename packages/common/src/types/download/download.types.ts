@@ -1,4 +1,4 @@
-import { File as FileEntity } from '@app/database/entities';
+import { FileEntity } from '@app/database/entities';
 import { Observable } from 'rxjs';
 
 // 请求类型

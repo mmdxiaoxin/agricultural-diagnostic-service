@@ -1,4 +1,4 @@
-import { File } from '@app/database/entities';
+import { FileEntity } from '@app/database/entities';
 import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 import { BaseResponse, HttpService } from '@common/services/http.service';
 import { DiagnosisConfig } from '@common/types/diagnosis';
@@ -220,7 +220,7 @@ export class DiagnosisHttpService {
     params: Record<string, any>,
     previousResults: Map<number, any>,
     path: string,
-    fileMeta?: File,
+    fileMeta?: FileEntity,
     fileData?: Buffer,
   ): ProcessedParams {
     // 深拷贝
@@ -303,7 +303,7 @@ export class DiagnosisHttpService {
       some(
         Object.values(processedParams),
         (value) =>
-          value instanceof File ||
+          value instanceof FileEntity ||
           value instanceof Blob ||
           value instanceof Buffer,
       )
@@ -446,7 +446,7 @@ export class DiagnosisHttpService {
     params: Record<string, any>,
     token: string,
     results: Map<number, any>,
-    fileMeta?: File,
+    fileMeta?: FileEntity,
     fileData?: Buffer,
     diagnosisId?: number,
   ): Promise<BaseResponse<T>> {

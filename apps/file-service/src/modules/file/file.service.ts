@@ -1,4 +1,4 @@
-import { File as FileEntity } from '@app/database/entities';
+import { FileEntity } from '@app/database/entities';
 import { FileOperationService } from '@app/file-operation/file-operation.service';
 import {
   UpdateFileDto,

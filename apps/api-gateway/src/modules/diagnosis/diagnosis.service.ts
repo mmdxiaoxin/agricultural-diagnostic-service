@@ -1,4 +1,4 @@
-import { File as FileEntity } from '@app/database/entities';
+import { FileEntity } from '@app/database/entities';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
 import { Inject, Injectable } from '@nestjs/common';

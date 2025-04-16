@@ -1,4 +1,4 @@
-import { File as FileEntity } from '@app/database/entities';
+import { FileEntity } from '@app/database/entities';
 import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
 import { CreateTaskDto } from '@common/dto/file/create-task.dto';
 import { FileQueryDto } from '@common/dto/file/file-query.dto';
