@@ -8,19 +8,19 @@ export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 
   // 获取个人路由权限
-  @MessagePattern({ cmd: 'menu.getRoutes' })
-  async getRoutes(@Payload() data: { userId: number }) {
-    return this.menuService.findAuthRoutes(data.userId);
+  @MessagePattern({ cmd: 'menu.get.routes' })
+  async getRoutes(@Payload() data: { roles: string[] }) {
+    return this.menuService.findAuthRoutes(data.roles);
   }
 
   // 获取所有菜单
-  @MessagePattern({ cmd: 'menu.findAll' })
+  @MessagePattern({ cmd: 'menu.get' })
   async findAll() {
     return this.menuService.findAll();
   }
 
   // 获取单个菜单
-  @MessagePattern({ cmd: 'menu.findOne' })
+  @MessagePattern({ cmd: 'menu.get.byId' })
   async findOne(@Payload() data: { id: number }) {
     return this.menuService.findOne(data.id);
   }

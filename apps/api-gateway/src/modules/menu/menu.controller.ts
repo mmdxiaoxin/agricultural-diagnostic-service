@@ -20,6 +20,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { AUTH_SERVICE_NAME } from 'config/microservice.config';
+import { Request } from 'express';
 import { defaultIfEmpty, lastValueFrom } from 'rxjs';
 
 @ApiTags('菜单管理')
@@ -32,11 +33,11 @@ export class MenuController {
 
   // 获取个人路由权限
   @Get('routes')
-  async getRoutes(@Req() req) {
-    const userId = req.user.id;
+  async getRoutes(@Req() req: Request) {
+    const roles = req.user.roles;
     const routes = await lastValueFrom(
       this.authClient
-        .send({ cmd: 'menu.getRoutes' }, { userId })
+        .send({ cmd: 'menu.get.routes' }, { roles })
         .pipe(defaultIfEmpty([])),
     );
     return formatResponse(200, routes, '获取个人路由权限成功');
@@ -48,9 +49,7 @@ export class MenuController {
   @UseGuards(RolesGuard)
   async findAll() {
     const list = await lastValueFrom(
-      this.authClient
-        .send({ cmd: 'menu.findAll' }, {})
-        .pipe(defaultIfEmpty([])),
+      this.authClient.send({ cmd: 'menu.get' }, {}).pipe(defaultIfEmpty([])),
     );
     return formatResponse(200, list, '获取所有菜单成功');
   }
@@ -62,7 +61,7 @@ export class MenuController {
   async findOne(@Param('id') id: number) {
     const menu = await lastValueFrom(
       this.authClient
-        .send({ cmd: 'menu.findOne' }, { id })
+        .send({ cmd: 'menu.get.byId' }, { id })
         .pipe(defaultIfEmpty({})),
     );
     return formatResponse(200, menu, '获取单个菜单成功');

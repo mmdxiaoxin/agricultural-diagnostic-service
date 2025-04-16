@@ -1,7 +1,7 @@
 import { Menu } from '@app/database/entities/menu.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 
 @Injectable()
 export class MenuService {
@@ -10,12 +10,12 @@ export class MenuService {
     private readonly menuRepository: Repository<Menu>,
   ) {}
 
-  async findAuthRoutes(roleId: number) {
+  async findAuthRoutes(roles: string[]) {
     const menus = await this.menuRepository.find({
       relations: ['parent', 'children', 'roles'],
       where: {
         roles: {
-          id: roleId,
+          name: In(roles),
         },
       },
       order: { id: 'ASC' },
