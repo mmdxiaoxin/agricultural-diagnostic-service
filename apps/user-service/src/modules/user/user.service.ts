@@ -346,7 +346,7 @@ export class UserService {
     return formatResponse(200, null, '更新个人信息成功');
   }
 
-  async updateAvatar(userId: number, fileData: Buffer, mimetype: string) {
+  async updateAvatar(userId: number, fileData: any, mimetype: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -367,15 +367,23 @@ export class UserService {
       }
       // 删除旧头像文件
       if (profile.avatar) {
-        fs.unlink(profile.avatar, (err) => {
-          if (err) console.error('删除旧头像失败:', err);
-        });
+        try {
+          await fs.promises.unlink(profile.avatar);
+        } catch (error) {
+          console.error('删除旧头像失败:', error);
+        }
       }
       // 保存头像文件
       const fileExtension = mimetype === 'image/png' ? '.png' : '.jpg';
       const fileName = `${userId}${fileExtension}`;
       const filePath = path.join(this.avatarPath, fileName);
-      fs.writeFileSync(filePath, fileData);
+
+      // 确保fileData是Buffer类型
+      const bufferData = Buffer.isBuffer(fileData)
+        ? fileData
+        : Buffer.from(fileData);
+      await fs.promises.writeFile(filePath, bufferData);
+
       profile.avatar = filePath;
 
       await queryRunner.manager.save(user);
