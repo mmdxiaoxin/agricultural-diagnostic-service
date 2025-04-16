@@ -311,15 +311,11 @@ export class UserService {
     const fileName = path.basename(avatarPath); // 获取文件名
     const mimeType = mime.lookup(avatarPath) || 'application/octet-stream'; // 获取 MIME 类型
 
-    return formatResponse(
-      200,
-      {
-        avatar: avatarBuffer,
-        fileName,
-        mimeType,
-      },
-      '头像获取成功',
-    );
+    return {
+      avatar: avatarBuffer.toString('base64'), // 将Buffer转换为base64字符串
+      fileName,
+      mimeType,
+    };
   }
 
   async profileUpdate(userId: number, profile: Partial<Profile>) {

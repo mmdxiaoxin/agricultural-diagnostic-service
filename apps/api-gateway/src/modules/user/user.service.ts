@@ -45,7 +45,7 @@ export class UserService {
 
     if (result.data) {
       const { avatar, fileName, mimeType } = result.data;
-      const avatarBuffer = avatar;
+      const avatarBuffer = Buffer.from(avatar, 'base64');
 
       res.setHeader(
         'Content-Disposition',
