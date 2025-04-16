@@ -304,23 +304,20 @@ export class UserService {
     if (!user) {
       throw new RpcException({
         code: 404,
-        message: '用户未找到',
+        message: '未找到用户',
       });
     }
 
     const profile = user.profile;
     if (!profile || !profile.avatar) {
-      throw new RpcException({
-        code: 404,
-        message: '头像文件不存在',
-      });
+      return formatResponse(200, null, '未找到头像');
     }
 
     const avatarPath = profile.avatar;
     if (!fs.existsSync(avatarPath)) {
       throw new RpcException({
         code: 404,
-        message: '头像文件不存在',
+        message: '未找到头像文件',
       });
     }
 
