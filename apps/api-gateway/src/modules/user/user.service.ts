@@ -32,7 +32,7 @@ export class UserService {
       { cmd: 'user.avatar.upload' },
       {
         userId,
-        fileData: file.buffer,
+        fileData: file.buffer.toString('base64'),
         mimetype: file.mimetype,
       },
     );

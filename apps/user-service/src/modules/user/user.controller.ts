@@ -32,11 +32,11 @@ export class UserController {
   // 上传个人头像
   @MessagePattern({ cmd: 'user.avatar.upload' })
   async uploadAvatar(
-    @Payload() payload: { userId: number; fileData: Buffer; mimetype: string },
+    @Payload() payload: { userId: number; fileData: string; mimetype: string },
   ) {
     return this.userService.updateAvatar(
       payload.userId,
-      payload.fileData,
+      Buffer.from(payload.fileData, 'base64'),
       payload.mimetype,
     );
   }

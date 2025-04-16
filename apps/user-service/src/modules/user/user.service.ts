@@ -342,7 +342,7 @@ export class UserService {
     return formatResponse(200, null, '更新个人信息成功');
   }
 
-  async updateAvatar(userId: number, fileData: any, mimetype: string) {
+  async updateAvatar(userId: number, fileData: Buffer, mimetype: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -374,11 +374,7 @@ export class UserService {
       const fileName = `${userId}${fileExtension}`;
       const filePath = path.join(this.avatarPath, fileName);
 
-      // 确保fileData是Buffer类型
-      const bufferData = Buffer.isBuffer(fileData)
-        ? fileData
-        : Buffer.from(fileData);
-      await fs.promises.writeFile(filePath, bufferData);
+      await fs.promises.writeFile(filePath, fileData);
 
       profile.avatar = filePath;
 
