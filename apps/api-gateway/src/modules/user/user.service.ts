@@ -33,7 +33,7 @@ export class UserService {
       { cmd: 'user.avatar.upload' },
       {
         userId,
-        fileData: file.buffer.toString('base64'),
+        fileData: file.buffer,
         mimetype: file.mimetype,
       },
     );
@@ -46,7 +46,7 @@ export class UserService {
 
     if (result.data) {
       const { avatar, fileName, mimeType } = result.data;
-      const avatarBuffer = Buffer.from(avatar, 'base64');
+      const avatarBuffer = avatar;
 
       res.setHeader(
         'Content-Disposition',

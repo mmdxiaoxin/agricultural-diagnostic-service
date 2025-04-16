@@ -310,15 +310,15 @@ export class UserService {
     const fileName = path.basename(avatarPath); // 获取文件名
     const mimeType = mime.lookup(avatarPath) || 'application/octet-stream'; // 获取 MIME 类型
 
-    return {
-      code: 200,
-      message: '头像获取成功',
-      data: {
-        avatar: avatarBuffer.toString('base64'),
+    return formatResponse(
+      200,
+      {
+        avatar: avatarBuffer,
         fileName,
         mimeType,
       },
-    };
+      '头像获取成功',
+    );
   }
 
   async profileUpdate(userId: number, profile: Partial<Profile>) {
