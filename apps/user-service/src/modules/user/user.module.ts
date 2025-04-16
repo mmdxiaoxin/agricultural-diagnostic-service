@@ -1,4 +1,5 @@
 import { Profile, Role, User } from '@app/database/entities';
+import { Menu } from '@app/database/entities/menu.entity';
 import { RedisModule } from '@app/redis';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,7 +10,7 @@ import { UserService } from './user.service';
  * 用户模块
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Role, Profile]), RedisModule],
+  imports: [TypeOrmModule.forFeature([Menu, User, Role, Profile]), RedisModule],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService],
