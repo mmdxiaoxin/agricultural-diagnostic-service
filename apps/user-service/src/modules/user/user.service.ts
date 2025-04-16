@@ -352,6 +352,7 @@ export class UserService {
     try {
       const user = await queryRunner.manager.findOne(User, {
         where: { id: userId },
+        relations: ['profile'],
       });
       if (!user) {
         throw new RpcException({
@@ -359,9 +360,7 @@ export class UserService {
           message: '用户未找到',
         });
       }
-      let profile = await queryRunner.manager.findOne(Profile, {
-        where: { user },
-      });
+      let profile = user.profile;
       if (!profile) {
         profile = this.profileRepository.create({ user });
       }
