@@ -1,5 +1,6 @@
 import { Profile, Role, User } from '@app/database/entities';
 import { RedisService } from '@app/redis';
+import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -403,17 +404,9 @@ export class UserService {
     return formatResponse(200, null, '修改密码成功');
   }
 
-  async userListGet(
-    page: number = 1,
-    pageSize: number = 10,
-    filters: {
-      username?: string;
-      name?: string;
-      phone?: string;
-      address?: string;
-    },
-  ) {
+  async userListGet(query: UserPageQueryDto) {
     try {
+      const { page, pageSize, ...filters } = query;
       const offset = (page - 1) * pageSize;
       // 使用 QueryBuilder 进行查询
       const queryBuilder = this.userRepository

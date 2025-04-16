@@ -1,11 +1,12 @@
+import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdatePasswordDto } from './dto/change-pass.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { ResetPasswordDto } from './dto/reset-pass.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UserService } from './user.service';
 
 /**
  * 用户模块微服务控制器
@@ -58,23 +59,9 @@ export class UserController {
   }
 
   // 获取用户列表
-  @MessagePattern({ cmd: 'user.list.get' })
-  async userListGet(
-    @Payload()
-    payload: {
-      page?: number;
-      pageSize?: number;
-      username?: string;
-      name?: string;
-      phone?: string;
-      address?: string;
-    },
-  ) {
-    return this.userService.userListGet(
-      payload.page,
-      payload.pageSize,
-      payload,
-    );
+  @MessagePattern({ cmd: 'user.get.list' })
+  async userListGet(@Payload() payload: UserPageQueryDto) {
+    return this.userService.userListGet(payload);
   }
 
   // 创建用户

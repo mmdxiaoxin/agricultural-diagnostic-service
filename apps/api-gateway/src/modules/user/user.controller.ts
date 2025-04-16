@@ -4,6 +4,7 @@ import { CreateUserDto } from '@common/dto/user/create-user.dto';
 import { ResetPasswordDto } from '@common/dto/user/reset-pass.dto';
 import { UpdateProfileDto } from '@common/dto/user/update-profile.dto';
 import { UpdateUserDto } from '@common/dto/user/update-user.dto';
+import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -76,22 +77,8 @@ export class UserController {
   @Get('list')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  async userListGet(
-    @Query('page') page?: number,
-    @Query('pageSize') pageSize?: number,
-    @Query('username') username?: string,
-    @Query('name') name?: string,
-    @Query('phone') phone?: string,
-    @Query('address') address?: string,
-  ) {
-    return this.userService.getUserList({
-      page,
-      pageSize,
-      username,
-      name,
-      phone,
-      address,
-    });
+  async userListGet(@Query() query: UserPageQueryDto) {
+    return this.userService.getUserList(query);
   }
 
   @Post('create')

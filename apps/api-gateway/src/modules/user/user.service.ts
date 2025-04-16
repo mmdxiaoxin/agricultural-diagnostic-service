@@ -3,13 +3,12 @@ import { CreateUserDto } from '@common/dto/user/create-user.dto';
 import { ResetPasswordDto } from '@common/dto/user/reset-pass.dto';
 import { UpdateProfileDto } from '@common/dto/user/update-profile.dto';
 import { UpdateUserDto } from '@common/dto/user/update-user.dto';
+import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { formatResponse } from '@shared/helpers/response.helper';
 import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { Response } from 'express';
 import { lastValueFrom } from 'rxjs';
-import { defaultIfEmpty } from 'rxjs/operators';
 
 @Injectable()
 export class UserService {
@@ -67,8 +66,8 @@ export class UserService {
     );
   }
 
-  getUserList(query: any) {
-    return this.userClient.send({ cmd: 'user.list.get' }, query);
+  getUserList(query: UserPageQueryDto) {
+    return this.userClient.send({ cmd: 'user.get.list' }, query);
   }
 
   createUser(dto: CreateUserDto) {
