@@ -1,6 +1,6 @@
+import { Menu } from '@app/database/entities/menu.entity';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { Menu } from './menu.entity';
 import { MenuService } from './menu.service';
 
 @Controller('menu')
