@@ -82,6 +82,7 @@ export class DatasetService {
         fileCount,
         datasetSize,
         files: undefined, // 不返回 files 字段
+        fileIds: dataset.files?.map((file) => file.id),
       };
     });
 
@@ -163,6 +164,7 @@ export class DatasetService {
         fileCount,
         datasetSize,
         files: undefined, // 不返回 files 字段
+        fileIds: dataset.files?.map((file) => file.id),
       };
     });
 
