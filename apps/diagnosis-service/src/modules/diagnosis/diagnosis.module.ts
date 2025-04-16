@@ -1,7 +1,9 @@
 import { DatabaseModule } from '@app/database';
-import { DiagnosisHistory } from '@app/database/entities';
-import { DiagnosisFeedback } from '@app/database/entities/diagnosis-feedback.entity';
-import { DiagnosisLog } from '@app/database/entities/diagnosis-log.entity';
+import {
+  DiagnosisFeedback,
+  DiagnosisHistory,
+  DiagnosisLog,
+} from '@app/database/entities';
 import { FileOperationModule } from '@app/file-operation';
 import { RedisModule } from '@app/redis';
 import { HttpService } from '@common/services/http.service';
@@ -20,6 +22,7 @@ import { join } from 'path';
 import { DiagnosisController } from './diagnosis.controller';
 import { DIAGNOSIS_PROCESSOR } from './processors';
 import { DiagnosisProcessor } from './processors/diagnosis.processor';
+import { DiagnosisFeedbackService } from './services/diagnosis-feedback.service';
 import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisHttpService } from './services/diagnosis-http.service';
 import { DiagnosisLogService } from './services/diagnosis-log.service';
@@ -82,6 +85,7 @@ import { DiagnosisService } from './services/diagnosis.service';
     DiagnosisLogService,
     DiagnosisHistoryService,
     DiagnosisProcessor,
+    DiagnosisFeedbackService,
   ],
   controllers: [DiagnosisController],
   exports: [DiagnosisService],

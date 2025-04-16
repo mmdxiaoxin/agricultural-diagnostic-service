@@ -15,3 +15,5 @@ export * from './diagnosis-rule.entity';
 export * from './environment-factor.entity';
 export * from './treatment.entity';
 export * from './symptom.entity';
+export * from './diagnosis-feedback.entity';
+export * from './diagnosis-log.entity';
