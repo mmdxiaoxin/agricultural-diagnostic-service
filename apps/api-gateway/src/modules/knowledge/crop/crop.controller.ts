@@ -1,6 +1,5 @@
 import { Roles } from '@common/decorator/roles.decorator';
 import { CreateCropDto } from '@common/dto/knowledge/create-crop.dto';
-import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 import { UpdateCropDto } from '@common/dto/knowledge/update-crop.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -21,6 +20,8 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { CropService } from './crop.service';
+import { PageQueryDto } from '@common/dto/page-query.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @ApiTags('作物管理')
 @Controller('crop')
@@ -45,7 +46,7 @@ export class CropController {
     return this.cropService.findList(query);
   }
 
-  @Get(':id(\\d+)')
+  @Get(':id')
   findOne(
     @Param(
       'id',
@@ -56,7 +57,7 @@ export class CropController {
     return this.cropService.findOne(id);
   }
 
-  @Patch(':id(\\d+)')
+  @Patch(':id')
   update(
     @Param(
       'id',
@@ -68,7 +69,7 @@ export class CropController {
     return this.cropService.update(id, updateCropDto);
   }
 
-  @Delete(':id(\\d+)')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(

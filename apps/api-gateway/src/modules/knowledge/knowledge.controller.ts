@@ -50,7 +50,7 @@ export class KnowledgeController {
     return this.KnowledgeService.create(createKnowledgeDto);
   }
 
-  @Put(':id(\\d+)')
+  @Put(':id')
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(RolesGuard)
   update(
@@ -64,7 +64,7 @@ export class KnowledgeController {
     return this.KnowledgeService.update(id, updateKnowledgeDto);
   }
 
-  @Delete(':id(\\d+)')
+  @Delete(':id')
   @Roles(Role.Admin, Role.Expert)
   @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)

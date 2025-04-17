@@ -47,7 +47,7 @@ export class EnvironmentFactorController {
     return this.environmentFactorService.findList(query);
   }
 
-  @Get(':id(\\d+)')
+  @Get(':id')
   findOne(
     @Param(
       'id',
@@ -58,7 +58,7 @@ export class EnvironmentFactorController {
     return this.environmentFactorService.findOne(+id);
   }
 
-  @Patch(':id(\\d+)')
+  @Patch(':id')
   update(
     @Param(
       'id',
@@ -70,7 +70,7 @@ export class EnvironmentFactorController {
     return this.environmentFactorService.update(id, updateEnvironmentFactorDto);
   }
 
-  @Delete(':id(\\d+)')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(

@@ -45,7 +45,7 @@ export class SymptomController {
     return this.symptomService.findList(query);
   }
 
-  @Get(':id(\\d+)')
+  @Get(':id')
   findOne(
     @Param(
       'id',
@@ -56,7 +56,7 @@ export class SymptomController {
     return this.symptomService.findOne(id);
   }
 
-  @Patch(':id(\\d+)')
+  @Patch(':id')
   update(
     @Param(
       'id',
@@ -68,7 +68,7 @@ export class SymptomController {
     return this.symptomService.update(id, updateSymptomDto);
   }
 
-  @Delete(':id(\\d+)')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(

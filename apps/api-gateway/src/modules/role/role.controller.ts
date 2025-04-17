@@ -50,7 +50,7 @@ export class RoleController {
     return formatResponse(200, roles, '获取角色列表成功');
   }
 
-  @Get(':id(\\d+)')
+  @Get(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async findOne(
@@ -79,7 +79,7 @@ export class RoleController {
     return formatResponse(201, null, '角色创建成功');
   }
 
-  @Put(':id(\\d+)')
+  @Put(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async update(
@@ -96,7 +96,7 @@ export class RoleController {
     return formatResponse(200, updatedRole, '角色更新成功');
   }
 
-  @Delete(':id(\\d+)')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
