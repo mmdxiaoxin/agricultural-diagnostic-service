@@ -1,3 +1,4 @@
+import { AliOssModule } from '@app/ali-oss';
 import { DatabaseModule } from '@app/database';
 import {
   Crop,
@@ -12,16 +13,16 @@ import { CropController } from './controllers/crop.controller';
 import { DiagnosisRuleController } from './controllers/diagnosis-rule.controller';
 import { DiseaseController } from './controllers/disease.controller';
 import { EnvironmentFactorController } from './controllers/environment-factor.controller';
+import { KnowledgeController } from './controllers/knowledge.controller';
 import { SymptomController } from './controllers/symptom.controller';
 import { TreatmentController } from './controllers/treatment.controller';
 import { CropService } from './services/crop.service';
 import { DiagnosisRuleService } from './services/diagnosis-rule.service';
 import { DiseaseService } from './services/disease.service';
 import { EnvironmentFactorService } from './services/environment-factor.service';
+import { KnowledgeService } from './services/knowledge.service';
 import { SymptomService } from './services/symptom.service';
 import { TreatmentService } from './services/treatment.service';
-import { KnowledgeController } from './controllers/knowledge.controller';
-import { KnowledgeService } from './services/knowledge.service';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { KnowledgeService } from './services/knowledge.service';
       EnvironmentFactor,
       DiagnosisRule,
     ]),
+    AliOssModule,
   ],
   controllers: [
     CropController,

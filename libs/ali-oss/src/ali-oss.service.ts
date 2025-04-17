@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import OSS from 'ali-oss';
+import * as OSS from 'ali-oss';
 
 // 默认请求头配置
 const defaultHeaders: OSS.PutObjectOptions['headers'] = {

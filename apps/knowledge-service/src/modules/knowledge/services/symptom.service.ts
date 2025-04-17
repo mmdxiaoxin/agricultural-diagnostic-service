@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
 import axios from 'axios';
 import { Like, Repository } from 'typeorm';
+import { AliOssService } from '@app/ali-oss';
 
 @Injectable()
 export class SymptomService {
@@ -16,6 +17,7 @@ export class SymptomService {
   constructor(
     @InjectRepository(Symptom) private symptomRepository: Repository<Symptom>,
     @InjectRepository(Disease) private diseaseRepository: Repository<Disease>,
+    private readonly aliOssService: AliOssService,
   ) {}
 
   // 创建症状
@@ -109,10 +111,18 @@ export class SymptomService {
       } else if (symptom.imageUrl.startsWith('oss://')) {
         // 处理 OSS fileKey
         const fileKey = symptom.imageUrl.replace('oss://', '');
-        throw new RpcException({
-          code: 501,
-          message: 'OSS 服务未实现',
+        // 生成临时访问 URL
+        const signedUrl = await this.aliOssService.generateSignedUrl(fileKey, 3600); // 1小时有效期
+        // 下载文件
+        const response = await axios.get(signedUrl, {
+          responseType: 'arraybuffer'
         });
+        // 将 Buffer 转换为 base64 字符串
+        const base64Data = Buffer.from(response.data).toString('base64');
+        imageData = {
+          mimeType: response.headers['content-type'] || 'application/octet-stream',
+          fileBuffer: base64Data
+        };
       } else {
         throw new RpcException({
           code: 400,
