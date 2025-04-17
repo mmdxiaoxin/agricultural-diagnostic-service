@@ -1,5 +1,6 @@
 import { Roles } from '@common/decorator/roles.decorator';
 import { CreateKnowledgeDto } from '@common/dto/knowledge/create-knowledge.dto';
+import { MatchKnowledgeDto } from '@common/dto/knowledge/match-knowledge.dto';
 import { PageQueryKnowledgeDto } from '@common/dto/knowledge/page-query-knowledge.dto';
 import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
@@ -40,6 +41,13 @@ export class KnowledgeController {
   @UseGuards(RolesGuard)
   findList(@Query() query: PageQueryKnowledgeDto) {
     return this.KnowledgeService.findList(query);
+  }
+
+  @Get('match')
+  @Roles(Role.Admin, Role.Expert, Role.User)
+  @UseGuards(RolesGuard)
+  matchKnowledge(@Query() query: MatchKnowledgeDto) {
+    return this.KnowledgeService.match(query);
   }
 
   @Post()
