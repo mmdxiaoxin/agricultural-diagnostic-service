@@ -15,12 +15,14 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { SymptomService } from './symptom.service';
 import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
+import { Response } from 'express';
 
 @ApiTags('症状管理')
 @Controller('symptom')
@@ -54,6 +56,19 @@ export class SymptomController {
     id: number,
   ) {
     return this.symptomService.findOne(id);
+  }
+
+  @Get(':id/image')
+  @Roles(Role.Admin, Role.Expert, Role.User)
+  findImage(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+    @Res() res: Response,
+  ) {
+    return this.symptomService.findImage(id, res);
   }
 
   @Patch(':id')

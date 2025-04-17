@@ -30,6 +30,11 @@ export class SymptomController {
     return this.symptomService.findById(payload.id);
   }
 
+  @MessagePattern({ cmd: 'symptom.image.get' })
+  async findImage(@Payload() payload: { id: number }) {
+    return this.symptomService.findImage(payload.id);
+  }
+
   @MessagePattern({ cmd: 'symptom.update' })
   async updateSymptom(
     @Payload() payload: { id: number; dto: UpdateSymptomDto },

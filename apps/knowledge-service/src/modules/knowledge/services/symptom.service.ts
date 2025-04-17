@@ -1,15 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
 import { Disease, Symptom } from '@app/database/entities';
 import { CreateSymptomDto } from '@common/dto/knowledge/create-symptom.dto';
-import { formatResponse } from '@shared/helpers/response.helper';
-import { RpcException } from '@nestjs/microservices';
-import { UpdateSymptomDto } from '@common/dto/knowledge/update-symptom.dto';
 import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
+import { UpdateSymptomDto } from '@common/dto/knowledge/update-symptom.dto';
+import { Injectable, Logger } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { InjectRepository } from '@nestjs/typeorm';
+import { formatResponse } from '@shared/helpers/response.helper';
+import axios from 'axios';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class SymptomService {
+  private readonly logger = new Logger(SymptomService.name);
+  
   constructor(
     @InjectRepository(Symptom) private symptomRepository: Repository<Symptom>,
     @InjectRepository(Disease) private diseaseRepository: Repository<Disease>,
@@ -67,6 +70,77 @@ export class SymptomService {
       });
     }
     return formatResponse(200, symptom, '症状获取成功');
+  }
+
+  // 根据ID获取症状图片
+  async findImage(id: number) {
+    const symptom = await this.symptomRepository.findOne({
+      where: { id },
+    });
+    
+    if (!symptom) {
+      throw new RpcException({
+        code: 404,
+        message: `症状不存在`,
+      });
+    }
+
+    if (!symptom.imageUrl) {
+      throw new RpcException({
+        code: 404,
+        message: `症状图片不存在`,
+      });
+    }
+
+    try {
+      let imageData: { mimeType: string; fileBuffer: string };
+      
+      if (symptom.imageUrl.startsWith('http://') || symptom.imageUrl.startsWith('https://')) {
+        // 处理第三方 URL
+        const response = await axios.get(symptom.imageUrl, {
+          responseType: 'arraybuffer'
+        });
+        // 将 Buffer 转换为 base64 字符串
+        const base64Data = Buffer.from(response.data).toString('base64');
+        imageData = {
+          mimeType: response.headers['content-type'] || 'application/octet-stream',
+          fileBuffer: base64Data
+        };
+      } else if (symptom.imageUrl.startsWith('oss://')) {
+        // 处理 OSS fileKey
+        const fileKey = symptom.imageUrl.replace('oss://', '');
+        throw new RpcException({
+          code: 501,
+          message: 'OSS 服务未实现',
+        });
+      } else {
+        throw new RpcException({
+          code: 400,
+          message: '无效的图片资源格式',
+        });
+      }
+
+      this.logger.log(`图片获取成功: ${symptom.imageUrl}`);
+      return imageData;
+    } catch (error) {
+      this.logger.error(`图片获取失败: ${error.message}`, error.stack);
+      
+      if (error instanceof RpcException) {
+        throw error;
+      }
+      
+      if (axios.isAxiosError(error)) {
+        throw new RpcException({
+          code: error.response?.status || 500,
+          message: `图片下载失败: ${error.message}`,
+        });
+      }
+      
+      throw new RpcException({
+        code: 500,
+        message: `图片获取失败: ${error.message}`,
+      });
+    }
   }
 
   // 更新症状
