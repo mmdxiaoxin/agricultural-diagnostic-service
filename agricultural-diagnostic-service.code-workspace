@@ -43,6 +43,10 @@
       "name": "packages/shared",
       "path": "packages/shared/src",
     },
+    {
+      "name": "libs",
+      "path": "libs",
+    },
   ],
   "settings": {
     "peacock.color": "#215732",
