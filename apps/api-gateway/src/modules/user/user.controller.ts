@@ -89,21 +89,21 @@ export class UserController {
     return this.userService.createUser(dto);
   }
 
-  @Get(':id')
+  @Get(':id(\\d+)')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async userGet(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getUser(id);
   }
 
-  @Delete(':id')
+  @Delete(':id(\\d+)')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async userDelete(@Param('id', ParseIntPipe) id: number) {
     return this.userService.deleteUser(id);
   }
 
-  @Put(':id')
+  @Put(':id(\\d+)')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async userUpdate(
@@ -113,7 +113,7 @@ export class UserController {
     return this.userService.updateUser(id, dto);
   }
 
-  @Put(':id/status')
+  @Put(':id(\\d+)/status')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async userStatusUpdate(
@@ -123,7 +123,7 @@ export class UserController {
     return this.userService.updateUserStatus(id, dto);
   }
 
-  @Put(':id/reset/password')
+  @Put(':id(\\d+)/reset/password')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async userReset(

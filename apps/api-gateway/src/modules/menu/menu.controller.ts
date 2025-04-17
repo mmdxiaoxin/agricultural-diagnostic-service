@@ -55,7 +55,7 @@ export class MenuController {
   }
 
   // 获取单个菜单
-  @Get(':id')
+  @Get(':id(\\d+)')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async findOne(@Param('id') id: number) {
@@ -82,7 +82,7 @@ export class MenuController {
   }
 
   // 更新菜单
-  @Put(':id')
+  @Put(':id(\\d+)')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   async update(@Param('id') id: number, @Body() menuData: any) {
@@ -95,7 +95,7 @@ export class MenuController {
   }
 
   // 删除菜单
-  @Delete(':id')
+  @Delete(':id(\\d+)')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)

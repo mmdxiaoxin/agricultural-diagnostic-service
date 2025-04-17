@@ -45,7 +45,7 @@ export class DiseaseController {
     return this.diseaseService.findList(query);
   }
 
-  @Get(':id')
+  @Get(':id(\\d+)')
   findOne(
     @Param(
       'id',
@@ -67,7 +67,7 @@ export class DiseaseController {
     return this.diseaseService.findSymptoms(id);
   }
 
-  @Patch(':id')
+  @Patch(':id(\\d+)')
   update(
     @Param(
       'id',
@@ -79,7 +79,7 @@ export class DiseaseController {
     return this.diseaseService.update(id, updateDiseaseDto);
   }
 
-  @Delete(':id')
+  @Delete(':id(\\d+)')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(

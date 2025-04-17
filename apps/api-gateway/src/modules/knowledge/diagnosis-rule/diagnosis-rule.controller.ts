@@ -45,7 +45,7 @@ export class DiagnosisRuleController {
     return this.diagnosisRuleService.findList(query);
   }
 
-  @Get(':id')
+  @Get(':id(\\d+)')
   findOne(
     @Param(
       'id',
@@ -56,7 +56,7 @@ export class DiagnosisRuleController {
     return this.diagnosisRuleService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(':id(\\d+)')
   update(
     @Param(
       'id',
@@ -68,7 +68,7 @@ export class DiagnosisRuleController {
     return this.diagnosisRuleService.update(id, updateDiagnosisRuleDto);
   }
 
-  @Delete(':id')
+  @Delete(':id(\\d+)')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(
