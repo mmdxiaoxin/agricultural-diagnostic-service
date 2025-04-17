@@ -1,19 +1,17 @@
+import { AliOssService } from '@app/ali-oss';
 import { Disease, Symptom } from '@app/database/entities';
 import { CreateSymptomDto } from '@common/dto/knowledge/create-symptom.dto';
 import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 import { UpdateSymptomDto } from '@common/dto/knowledge/update-symptom.dto';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
 import axios from 'axios';
 import { Like, Repository } from 'typeorm';
-import { AliOssService } from '@app/ali-oss';
 
 @Injectable()
 export class SymptomService {
-  private readonly logger = new Logger(SymptomService.name);
-  
   constructor(
     @InjectRepository(Symptom) private symptomRepository: Repository<Symptom>,
     @InjectRepository(Disease) private diseaseRepository: Repository<Disease>,
@@ -129,12 +127,9 @@ export class SymptomService {
           message: '无效的图片资源格式',
         });
       }
-
-      this.logger.log(`图片获取成功: ${symptom.imageUrl}`);
+    
       return imageData;
     } catch (error) {
-      this.logger.error(`图片获取失败: ${error.message}`, error.stack);
-      
       if (error instanceof RpcException) {
         throw error;
       }
