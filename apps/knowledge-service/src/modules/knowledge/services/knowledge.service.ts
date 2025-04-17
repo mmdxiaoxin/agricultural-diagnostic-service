@@ -194,7 +194,12 @@ export class KnowledgeService {
       // 1. 验证病害是否存在
       const disease = await this.diseaseRepository.findOne({
         where: { id },
-        relations: ['symptoms', 'treatments', 'environmentFactors'],
+        relations: [
+          'symptoms',
+          'treatments',
+          'environmentFactors',
+          'diagnosisRules',
+        ],
       });
       if (!disease) {
         throw new RpcException({
