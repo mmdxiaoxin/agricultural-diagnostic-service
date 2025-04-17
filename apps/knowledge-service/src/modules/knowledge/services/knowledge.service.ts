@@ -6,12 +6,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
+import { get, isEmpty, isObject, isString } from 'lodash-es';
 import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class KnowledgeService {
-  private readonly logger = new Logger(KnowledgeService.name);
-
+  private readonly logger = new Logger(KnowledgeService.name);0
   constructor(
     @InjectRepository(Disease)
     private diseaseRepository: Repository<Disease>,
@@ -353,5 +353,68 @@ export class KnowledgeService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  // 匹配知识
+  async match(query: string | Record<string, any>) {
+    const queryBuilder = this.diseaseRepository
+      .createQueryBuilder('disease')
+      .leftJoinAndSelect('disease.diagnosisRules', 'diagnosisRules')
+      .leftJoinAndSelect('disease.crop', 'crop');
+
+    // 如果是字符串查询，直接匹配 name 和 alias
+    if (isString(query)) {
+      queryBuilder.where([
+        { name: Like(`%${query}%`) },
+        { alias: Like(`%${query}%`) },
+      ]);
+    } else if (isObject(query)) {
+      // 如果是对象查询，先尝试匹配 name 和 alias
+      const searchText = get(query, 'searchText');
+      if (!isEmpty(searchText)) {
+        queryBuilder.where([
+          { name: Like(`%${searchText}%`) },
+          { alias: Like(`%${searchText}%`) },
+        ]);
+      }
+    }
+
+    // 获取所有可能的匹配结果
+    const diseases = await queryBuilder.getMany();
+
+    // 如果没有直接匹配的结果，尝试通过诊断规则匹配
+    if (isEmpty(diseases) && isObject(query)) {
+      const allDiseases = await this.diseaseRepository
+        .createQueryBuilder('disease')
+        .leftJoinAndSelect('disease.diagnosisRules', 'diagnosisRules')
+        .leftJoinAndSelect('disease.crop', 'crop')
+        .getMany();
+
+      // 遍历所有病害，检查其诊断规则是否匹配
+      const matchedDiseases = allDiseases.filter((disease) => {
+        const rules = get(disease, 'diagnosisRules', []);
+        return rules.some((rule) => {
+          try {
+            const schema = get(rule, 'schema', '');
+            if (isEmpty(schema)) return false;
+
+            // 解析模式串，例如 "class_name=Apple_black_rot"
+            const [key, value] = (schema as string).split('=');
+            if (isEmpty(key) || isEmpty(value)) return false;
+
+            // 检查查询对象中是否存在对应的键值对
+            const queryValue = get(query, key);
+            return !isEmpty(queryValue) && queryValue === value;
+          } catch (error) {
+            this.logger.error(`Error parsing schema: ${get(rule, 'schema')}`, error);
+            return false;
+          }
+        });
+      });
+
+      return formatResponse(200, matchedDiseases, '知识匹配成功');
+    }
+
+    return formatResponse(200, diseases, '知识匹配成功');
   }
 }

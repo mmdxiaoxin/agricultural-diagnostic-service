@@ -41,4 +41,9 @@ export class KnowledgeController {
   async removeKnowledge(@Payload() payload: { id: number }) {
     return this.knowledgeService.remove(payload.id);
   }
+
+  @MessagePattern({ cmd: 'knowledge.match' })
+  async matchKnowledge(@Payload() payload: { query: string | Record<string, any> }) {
+    return this.knowledgeService.match(payload.query);
+  }
 }
