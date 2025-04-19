@@ -1,46 +1,25 @@
-import { RemoteInterface } from '@app/database/entities/remote-interface.entity';
 import { Injectable } from '@nestjs/common';
-import { InterfaceCallContext } from './type';
-
-export type RequestConfig = {
-  id: number;
-  order: number;
-  type: 'single' | 'polling';
-  interval?: number;
-  maxAttempts?: number;
-  timeout?: number;
-  retryCount?: number;
-  retryDelay?: number;
-  delay?: number;
-  next?: number[];
-  params?: Record<string, any>;
-  data?: Record<string, any>;
-  pollingCondition?: {
-    field: string;
-    operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'exists' | 'notExists';
-    value?: any;
-  };
-}
-
-export type InterfaceConfig = Pick<RemoteInterface, 'config' | 'url' | 'type'>;
-
-@Injectable()
-export class InterfaceCallManagerFactory {
-  create(requests: Array<RequestConfig>, configs: Map<number, InterfaceConfig>): InterfaceCallManager {
-    return new InterfaceCallManager(requests, configs);
-  }
-}
+import { InterfaceCallContext, InterfaceConfig, RequestConfig } from './interface-call.type';
 
 @Injectable()
 export class InterfaceCallManager {
-  private readonly contexts: Map<number, InterfaceCallContext> = new Map();
-  private readonly dependencies: Map<number, Set<number>> = new Map();
-  private readonly callbacks: Map<number, (context: InterfaceCallContext) => Promise<void>> = new Map();
+  private contexts: Map<number, InterfaceCallContext> = new Map();
+  private dependencies: Map<number, Set<number>> = new Map();
+  private callbacks: Map<number, (context: InterfaceCallContext) => Promise<void>> = new Map();
+  
+  // 接口调用请求
+  private requests: Array<RequestConfig> = [];
+  // 接口调用配置
+  private configs: Map<number, InterfaceConfig> = new Map();
 
-  constructor(
-    private readonly requests: Array<RequestConfig>,
-    private readonly configs: Map<number, InterfaceConfig>,
-  ) {
+  // 初始化方法
+  initialize(requests: Array<RequestConfig>, configs: Map<number, InterfaceConfig>) {
+    this.requests = requests;
+    this.configs = configs;
+    this.contexts.clear();
+    this.dependencies.clear();
+    this.callbacks.clear();
+
     // 初始化上下文
     requests.forEach(request => {
       this.contexts.set(request.id, {
@@ -146,6 +125,10 @@ export class InterfaceCallManager {
           }
 
           // 准备调用接口
+          const config = this.configs.get(interfaceId);
+          if (!config) {
+            throw new Error(`未找到接口 ${interfaceId} 的配置`);
+          }
 
           await this.updateState(interfaceId, 'success', {});
         } catch (error) {
