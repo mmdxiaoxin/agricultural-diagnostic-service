@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { FileEntity, HttpMethod } from '@app/database/entities';
 import { HttpCallService } from '../http-call.service';
-import { InterfaceCallStrategy, InterfaceCallContext, InterfaceCallConfig } from '../interface-call.type';
+import { InterfaceCallStrategy, InterfaceCallContext, InterfaceCallConfig } from '../type';
 
 @Injectable()
 export class SingleCallStrategy implements InterfaceCallStrategy {

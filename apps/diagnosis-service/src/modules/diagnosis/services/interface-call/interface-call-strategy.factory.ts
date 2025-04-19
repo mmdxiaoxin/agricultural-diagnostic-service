@@ -1,7 +1,7 @@
 import { FileEntity, HttpMethod } from '@app/database/entities';
 import { Injectable } from '@nestjs/common';
 import { HttpCallService } from './http-call.service';
-import { InterfaceCallStrategy } from './interface-call.type';
+import { InterfaceCallStrategy } from './type';
 import { PollingCallStrategy } from './strategies/polling-call.strategy';
 import { SingleCallStrategy } from './strategies/single-call.strategy';
 

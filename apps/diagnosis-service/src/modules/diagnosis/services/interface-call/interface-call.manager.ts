@@ -3,7 +3,7 @@ import { FileEntity } from '@app/database/entities/file.entity';
 import { Injectable } from '@nestjs/common';
 import { DiagnosisLogService } from '../diagnosis-log.service';
 import { InterfaceCallStrategyFactory } from './interface-call-strategy.factory';
-import { InterfaceCallConfig, InterfaceCallContext } from './interface-call.type';
+import { InterfaceCallConfig, InterfaceCallContext } from './type';
 
 
 @Injectable()
