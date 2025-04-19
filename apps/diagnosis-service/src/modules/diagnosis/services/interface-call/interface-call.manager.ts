@@ -1,9 +1,9 @@
+import { BaseResponse, HttpService } from '@common/services/http.service';
 import { Injectable } from '@nestjs/common';
+import { AxiosError, AxiosRequestConfig } from 'axios';
 import { InterfaceCallContext, InterfaceConfig, RequestConfig } from './interface-call.type';
 import { InterfaceCallUtil } from './interface-call.util';
-import { HttpService, BaseResponse } from '@common/services/http.service';
-import { firstValueFrom } from 'rxjs';
-import { AxiosError, AxiosResponse } from 'axios';
+import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 
 @Injectable()
 export class InterfaceCallManager {
@@ -205,31 +205,42 @@ export class InterfaceCallManager {
   }
 
   // 发送请求的函数
-  private async sendRequest<T>(config: InterfaceConfig, processedUrl: string, processedParams: any): Promise<T> {
+  private async sendRequest<T>(method: string, processedUrl: string, processedParams: any, requestConfig: AxiosRequestConfig) {
     let response: BaseResponse<T>;
-    
-    switch (config.type.toUpperCase()) {
+    try {switch (method) {
       case 'GET':
-        response = await this.httpService.get<T>(processedUrl, { params: processedParams });
+        response = await this.httpService.get<T>(processedUrl, { params: processedParams, ...requestConfig });
         break;
       case 'POST':
-        response = await this.httpService.post<T>(processedUrl, processedParams);
+        response = await this.httpService.post<T>(processedUrl, processedParams, requestConfig);
         break;
       case 'PUT':
-        response = await this.httpService.put<T>(processedUrl, processedParams);
+        response = await this.httpService.put<T>(processedUrl, processedParams, requestConfig);
         break;
       case 'DELETE':
-        response = await this.httpService.delete<T>(processedUrl, { params: processedParams });
+        response = await this.httpService.delete<T>(processedUrl, { params: processedParams, ...requestConfig });
         break;
       default:
-        throw new Error(`不支持的HTTP方法: ${config.type}`);
+        throw new Error(`不支持的HTTP方法: ${method}`);
     }
 
-    if (response.code !== 200) {
-      throw new Error(response.message || '请求失败');
+    this.interfaceCallUtil.log(LogLevel.INFO, `接口响应状态: ${response.message || 'unknown'} || ${response.code}`, {
+      code: response.code,
+      message: response.message,
+    })
+
+    } catch (error) {
+      this.interfaceCallUtil.log(LogLevel.ERROR, `接口请求失败: ${error.message}`, {
+        error: {
+          message: error.message,
+          // 不记录完整的堆栈跟踪
+          stack: error.stack?.split('\n').slice(0, 3).join('\n'),
+        },
+      });
+      throw error;
     }
 
-    return response.data;
+    return response;
   }
 
   // 执行接口调用
@@ -250,28 +261,50 @@ export class InterfaceCallManager {
           }
 
           // 准备调用接口
-          const config = this.configs.get(interfaceId);
-          if (!config) {
+          const interfaceConfig = this.configs.get(interfaceId);
+          if (!interfaceConfig) {
             throw new Error(`未找到接口 ${interfaceId} 的配置`);
           }
+          const {url, config} = interfaceConfig;
+          const {method = 'GET', prefix, path, ...axiosConfig} = config;
 
           // 处理URL和参数
+          const fullUrl = `${url}${prefix || ''}${path || ''}`;
           const processedUrl = this.interfaceCallUtil.processUrlTemplate(
-            config.url,
+            fullUrl,
             request.params || {},
             this.getResults(),
           );
+
+          if (!processedUrl) {
+            throw new Error(`处理URL失败: ${fullUrl}`);
+          }
 
           const processedParams = this.interfaceCallUtil.processParams(
             request.params || {},
             this.getResults(),
-            config.url,
+            fullUrl,
+            environmentVariables?.fileMeta,
+            environmentVariables?.fileData,
           );
+
+           // 构建请求配置
+          const requestConfig: AxiosRequestConfig = {
+            headers: {
+              Authorization: `Bearer ${environmentVariables?.token}`,
+              'Content-Type':
+                processedParams instanceof FormData
+                  ? 'multipart/form-data'
+                  : 'application/json',
+            },  
+            ...axiosConfig,
+            timeout: request.timeout || 60000,
+          };
 
           let result;
           if (request.type === 'polling') {
             result = await this.pollWithTimeout(
-              () => this.sendRequest(config, processedUrl, processedParams),
+              () => this.sendRequest(method, processedUrl, processedParams, requestConfig),
               request.interval || 3000,
               request.maxAttempts || 20,
               request.timeout || 60000,
@@ -279,12 +312,12 @@ export class InterfaceCallManager {
             );
           } else if (request.retryCount && request.retryCount > 0) {
             result = await this.retryWithDelay(
-              () => this.sendRequest(config, processedUrl, processedParams),
+              () => this.sendRequest(method, processedUrl, processedParams, requestConfig),
               request.retryCount,
               request.retryDelay || 1000,
             );
           } else {
-            result = await this.sendRequest(config, processedUrl, processedParams);
+            result = await this.sendRequest(method, processedUrl, processedParams, requestConfig);
           }
 
           await this.updateState(interfaceId, 'success', result);
