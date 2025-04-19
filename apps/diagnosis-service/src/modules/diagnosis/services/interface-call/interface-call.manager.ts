@@ -1,6 +1,8 @@
+import { RemoteInterface } from '@app/database/entities/remote-interface.entity';
+import { Injectable } from '@nestjs/common';
 import { InterfaceCallContext } from './type';
 
-export interface RequestConfig {
+export type RequestConfig = {
   id: number;
   order: number;
   type: 'single' | 'polling';
@@ -20,6 +22,16 @@ export interface RequestConfig {
   };
 }
 
+export type InterfaceConfig = Pick<RemoteInterface, 'config' | 'url' | 'type'>;
+
+@Injectable()
+export class InterfaceCallManagerFactory {
+  create(requests: Array<RequestConfig>, configs: Map<number, InterfaceConfig>): InterfaceCallManager {
+    return new InterfaceCallManager(requests, configs);
+  }
+}
+
+@Injectable()
 export class InterfaceCallManager {
   private readonly contexts: Map<number, InterfaceCallContext> = new Map();
   private readonly dependencies: Map<number, Set<number>> = new Map();
@@ -27,6 +39,7 @@ export class InterfaceCallManager {
 
   constructor(
     private readonly requests: Array<RequestConfig>,
+    private readonly configs: Map<number, InterfaceConfig>,
   ) {
     // 初始化上下文
     requests.forEach(request => {
@@ -116,7 +129,7 @@ export class InterfaceCallManager {
   }
 
   // 执行接口调用
-  async execute(): Promise<Map<number, any>> {
+  async execute(environmentVariables?: Record<string, any>): Promise<Map<number, any>> {
     while (!this.isAllCompleted()) {
       const executableInterfaces = this.getExecutableInterfaces();
       
@@ -124,11 +137,20 @@ export class InterfaceCallManager {
         const request = this.requests.find(r => r.id === interfaceId);
         if (!request) return;
 
-        // try {
-        //   await this.updateState(interfaceId, 'success', result);
-        // } catch (error) {
-        //   await this.updateState(interfaceId, 'failed', undefined, error);
-        // }
+        try {
+          //TODO: 执行接口调用
+
+          // 检查当前接口是否有delay配置
+          if (request.delay) {
+            await new Promise((resolve) => setTimeout(resolve, request.delay));
+          }
+
+          // 准备调用接口
+
+          await this.updateState(interfaceId, 'success', {});
+        } catch (error) {
+          await this.updateState(interfaceId, 'failed', undefined, error);
+        }
       }));
     }
 

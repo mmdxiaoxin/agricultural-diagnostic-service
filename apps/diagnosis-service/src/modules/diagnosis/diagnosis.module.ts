@@ -27,6 +27,7 @@ import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisHttpService } from './services/diagnosis-http.service';
 import { DiagnosisLogService } from './services/diagnosis-log.service';
 import { DiagnosisService } from './services/diagnosis.service';
+import { InterfaceCallManagerFactory } from './services/interface-call/interface-call.manager';
 
 @Module({
   imports: [
@@ -86,8 +87,12 @@ import { DiagnosisService } from './services/diagnosis.service';
     DiagnosisHistoryService,
     DiagnosisProcessor,
     DiagnosisFeedbackService,
+    InterfaceCallManagerFactory,
   ],
   controllers: [DiagnosisController],
-  exports: [DiagnosisService],
+  exports: [
+    DiagnosisService,
+    InterfaceCallManagerFactory,
+  ],
 })
 export class DiagnosisModule {}
