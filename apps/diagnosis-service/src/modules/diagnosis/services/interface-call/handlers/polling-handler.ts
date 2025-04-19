@@ -29,6 +29,11 @@ export class PollingHandler {
 
     while (attempts < maxAttempts) {
       if (Date.now() - startTime > timeout) {
+        this.log(LogLevel.ERROR, '轮询超时', {
+          timeout,
+          maxAttempts,
+          attempts,
+        });
         throw new Error('轮询超时');
       }
 
@@ -44,6 +49,10 @@ export class PollingHandler {
       }
     }
 
+    this.log(LogLevel.ERROR, '达到最大轮询次数', {
+      maxAttempts,
+      attempts,
+    });
     throw new Error('达到最大轮询次数');
   }
 
