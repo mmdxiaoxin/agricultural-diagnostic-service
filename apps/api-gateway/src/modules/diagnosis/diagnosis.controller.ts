@@ -166,13 +166,11 @@ export class DiagnosisController {
   @Get('history/list')
   async diagnosisHistoryListGet(
     @Req() req: Request,
-    @Query('page', ParseIntPipe) page?: number,
-    @Query('pageSize', ParseIntPipe) pageSize?: number,
+    @Query() query: PageQueryDto,
   ) {
     return this.diagnosisService.diagnosisHistoryListGet(
       req.user.userId,
-      page,
-      pageSize,
+      query,
     );
   }
 }

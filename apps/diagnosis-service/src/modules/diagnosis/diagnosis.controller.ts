@@ -98,11 +98,10 @@ export class DiagnosisController {
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_LIST })
   async diagnosisHistoryListGet(
-    @Payload() data: { page?: number; pageSize?: number; userId: number },
+    @Payload() data: { query: PageQueryDto; userId: number },
   ) {
     return this.diagnosisHistoryService.diagnosisHistoryListGet(
-      data.page,
-      data.pageSize,
+      data.query,
       data.userId,
     );
   }

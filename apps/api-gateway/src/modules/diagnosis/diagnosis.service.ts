@@ -127,12 +127,11 @@ export class DiagnosisService {
     );
   }
 
-  diagnosisHistoryListGet(userId: number, page?: number, pageSize?: number) {
+  diagnosisHistoryListGet(userId: number, query: PageQueryDto) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORY_LIST },
       {
-        page,
-        pageSize,
+        query,
         userId,
       },
     );

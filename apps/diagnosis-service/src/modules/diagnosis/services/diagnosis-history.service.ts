@@ -2,6 +2,7 @@ import {
   DiagnosisHistory,
   DiagnosisHistoryStatus,
 } from '@app/database/entities';
+import { PageQueryDto } from '@common/dto/page-query.dto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -146,10 +147,10 @@ export class DiagnosisHistoryService {
 
   // 获取诊断历史记录
   async diagnosisHistoryListGet(
-    page: number = 1,
-    pageSize: number = 10,
+    query: PageQueryDto,
     userId: number,
   ) {
+    const { page, pageSize } = query;
     const [list, total] = await this.diagnosisRepository.findAndCount({
       where: { createdBy: userId },
       order: { createdAt: 'DESC' },
