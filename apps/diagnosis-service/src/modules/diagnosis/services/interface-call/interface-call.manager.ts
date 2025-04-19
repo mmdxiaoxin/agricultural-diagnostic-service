@@ -1,38 +1,32 @@
-import { HttpMethod } from '@app/database/entities';
-import { FileEntity } from '@app/database/entities/file.entity';
-import { Injectable } from '@nestjs/common';
-import { DiagnosisLogService } from '../diagnosis-log.service';
-import { InterfaceCallStrategyFactory } from './interface-call-strategy.factory';
-import { InterfaceCallConfig, InterfaceCallContext } from './type';
+import { InterfaceCallContext } from './type';
 
+export interface RequestConfig {
+  id: number;
+  order: number;
+  type: 'single' | 'polling';
+  interval?: number;
+  maxAttempts?: number;
+  timeout?: number;
+  retryCount?: number;
+  retryDelay?: number;
+  delay?: number;
+  next?: number[];
+  params?: Record<string, any>;
+  data?: Record<string, any>;
+  pollingCondition?: {
+    field: string;
+    operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'exists' | 'notExists';
+    value?: any;
+  };
+}
 
-@Injectable()
 export class InterfaceCallManager {
   private readonly contexts: Map<number, InterfaceCallContext> = new Map();
   private readonly dependencies: Map<number, Set<number>> = new Map();
   private readonly callbacks: Map<number, (context: InterfaceCallContext) => Promise<void>> = new Map();
 
   constructor(
-    private readonly strategyFactory: InterfaceCallStrategyFactory,
-    private readonly logService: DiagnosisLogService,
-    private readonly requests: Array<{
-      id: number;
-      order: number;
-      type: 'single' | 'polling';
-      interval?: number;
-      maxAttempts?: number;
-      timeout?: number;
-      retryCount?: number;
-      retryDelay?: number;
-      delay?: number;
-      next?: number[];
-      params?: Record<string, any>;
-      pollingCondition?: {
-        field: string;
-        operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'exists' | 'notExists';
-        value?: any;
-      };
-    }>,
+    private readonly requests: Array<RequestConfig>,
   ) {
     // 初始化上下文
     requests.forEach(request => {
@@ -122,16 +116,7 @@ export class InterfaceCallManager {
   }
 
   // 执行接口调用
-  async execute(
-    config: InterfaceCallConfig,
-    method: HttpMethod,
-    path: string,
-    params: any,
-    token: string,
-    fileMeta?: FileEntity,
-    fileData?: Buffer,
-    diagnosisId?: number,
-  ): Promise<Map<number, any>> {
+  async execute(): Promise<Map<number, any>> {
     while (!this.isAllCompleted()) {
       const executableInterfaces = this.getExecutableInterfaces();
       
@@ -139,27 +124,11 @@ export class InterfaceCallManager {
         const request = this.requests.find(r => r.id === interfaceId);
         if (!request) return;
 
-        try {
-          await this.updateState(interfaceId, 'processing');
-          
-          const strategy = this.strategyFactory.createStrategy(
-            request.type,
-            config,
-            method,
-            path,
-            request.params || params,
-            token,
-            fileMeta,
-            fileData,
-            diagnosisId,
-            interfaceId,
-          );
-
-          const result = await strategy.execute(this.contexts.get(interfaceId)!);
-          await this.updateState(interfaceId, 'success', result);
-        } catch (error) {
-          await this.updateState(interfaceId, 'failed', undefined, error);
-        }
+        // try {
+        //   await this.updateState(interfaceId, 'success', result);
+        // } catch (error) {
+        //   await this.updateState(interfaceId, 'failed', undefined, error);
+        // }
       }));
     }
 
