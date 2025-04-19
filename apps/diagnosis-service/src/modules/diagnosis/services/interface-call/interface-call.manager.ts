@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InterfaceCallContext, InterfaceConfig, RequestConfig } from './interface-call.type';
+import { InterfaceCallUtil } from './interface-call.util';
+import { HttpService, BaseResponse } from '@common/services/http.service';
+import { firstValueFrom } from 'rxjs';
+import { AxiosError, AxiosResponse } from 'axios';
 
 @Injectable()
 export class InterfaceCallManager {
@@ -11,6 +15,11 @@ export class InterfaceCallManager {
   private requests: Array<RequestConfig> = [];
   // 接口调用配置
   private configs: Map<number, InterfaceConfig> = new Map();
+
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly interfaceCallUtil: InterfaceCallUtil,
+  ) {}
 
   // 初始化方法
   initialize(requests: Array<RequestConfig>, configs: Map<number, InterfaceConfig>) {
@@ -107,6 +116,122 @@ export class InterfaceCallManager {
     );
   }
 
+  // 重试机制
+  private async retryWithDelay<T>(
+    operation: () => Promise<T>,
+    retryCount: number,
+    retryDelay: number,
+  ): Promise<T> {
+    let lastError: Error | undefined;
+    for (let i = 0; i < retryCount; i++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error as Error;
+        if (i < retryCount - 1) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+      }
+    }
+    throw lastError;
+  }
+
+  // 轮询机制
+  private async pollWithTimeout<T>(
+    operation: () => Promise<T>,
+    interval: number,
+    maxAttempts: number,
+    timeout: number,
+    condition?: {
+      field: string;
+      operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'exists' | 'notExists';
+      value?: any;
+    },
+  ): Promise<T> {
+    const startTime = Date.now();
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      if (Date.now() - startTime > timeout) {
+        throw new Error('轮询超时');
+      }
+
+      const result = await operation();
+      
+      if (this.checkPollingCondition(result, condition)) {
+        return result;
+      }
+
+      attempts++;
+      if (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, interval));
+      }
+    }
+
+    throw new Error('达到最大轮询次数');
+  }
+
+  // 检查轮询条件
+  private checkPollingCondition<T>(result: T, condition?: {
+    field: string;
+    operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'exists' | 'notExists';
+    value?: any;
+  }): boolean {
+    if (!condition) {
+      return true;
+    }
+
+    const { field, operator, value } = condition;
+    const fieldValue = this.interfaceCallUtil.getNestedValue(result, field);
+
+    switch (operator) {
+      case 'equals':
+        return fieldValue === value;
+      case 'notEquals':
+        return fieldValue !== value;
+      case 'contains':
+        return fieldValue?.includes?.(value) ?? false;
+      case 'greaterThan':
+        return fieldValue > value;
+      case 'lessThan':
+        return fieldValue < value;
+      case 'exists':
+        return fieldValue !== undefined;
+      case 'notExists':
+        return fieldValue === undefined;
+      default:
+        return false;
+    }
+  }
+
+  // 发送请求的函数
+  private async sendRequest<T>(config: InterfaceConfig, processedUrl: string, processedParams: any): Promise<T> {
+    let response: BaseResponse<T>;
+    
+    switch (config.type.toUpperCase()) {
+      case 'GET':
+        response = await this.httpService.get<T>(processedUrl, { params: processedParams });
+        break;
+      case 'POST':
+        response = await this.httpService.post<T>(processedUrl, processedParams);
+        break;
+      case 'PUT':
+        response = await this.httpService.put<T>(processedUrl, processedParams);
+        break;
+      case 'DELETE':
+        response = await this.httpService.delete<T>(processedUrl, { params: processedParams });
+        break;
+      default:
+        throw new Error(`不支持的HTTP方法: ${config.type}`);
+    }
+
+    if (response.code !== 200) {
+      throw new Error(response.message || '请求失败');
+    }
+
+    return response.data;
+  }
+
   // 执行接口调用
   async execute(environmentVariables?: Record<string, any>): Promise<Map<number, any>> {
     while (!this.isAllCompleted()) {
@@ -117,7 +242,7 @@ export class InterfaceCallManager {
         if (!request) return;
 
         try {
-          //TODO: 执行接口调用
+          await this.updateState(interfaceId, 'processing');
 
           // 检查当前接口是否有delay配置
           if (request.delay) {
@@ -130,9 +255,45 @@ export class InterfaceCallManager {
             throw new Error(`未找到接口 ${interfaceId} 的配置`);
           }
 
-          await this.updateState(interfaceId, 'success', {});
+          // 处理URL和参数
+          const processedUrl = this.interfaceCallUtil.processUrlTemplate(
+            config.url,
+            request.params || {},
+            this.getResults(),
+          );
+
+          const processedParams = this.interfaceCallUtil.processParams(
+            request.params || {},
+            this.getResults(),
+            config.url,
+          );
+
+          let result;
+          if (request.type === 'polling') {
+            result = await this.pollWithTimeout(
+              () => this.sendRequest(config, processedUrl, processedParams),
+              request.interval || 3000,
+              request.maxAttempts || 20,
+              request.timeout || 60000,
+              request.pollingCondition,
+            );
+          } else if (request.retryCount && request.retryCount > 0) {
+            result = await this.retryWithDelay(
+              () => this.sendRequest(config, processedUrl, processedParams),
+              request.retryCount,
+              request.retryDelay || 1000,
+            );
+          } else {
+            result = await this.sendRequest(config, processedUrl, processedParams);
+          }
+
+          await this.updateState(interfaceId, 'success', result);
         } catch (error) {
-          await this.updateState(interfaceId, 'failed', undefined, error);
+          if (error instanceof AxiosError) {
+            await this.updateState(interfaceId, 'failed', undefined, new Error(error.response?.data?.message || error.message));
+          } else {
+            await this.updateState(interfaceId, 'failed', undefined, error as Error);
+          }
         }
       }));
     }

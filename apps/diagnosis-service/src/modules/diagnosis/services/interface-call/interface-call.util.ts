@@ -242,4 +242,9 @@ export class InterfaceCallUtil {
     this.log(LogLevel.DEBUG, `处理后的URL: ${processedUrl}`);
     return processedUrl;
   }
+
+  // 获取嵌套值
+  getNestedValue(obj: any, path: string): any {
+    return get(obj, path);
+  }
 }
