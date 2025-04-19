@@ -3,7 +3,13 @@ import { AxiosRequestConfig } from 'axios';
 import { PollingHandler } from '../handlers/polling-handler';
 import { RequestHandler } from '../handlers/request-handler';
 import { RetryHandler } from '../handlers/retry-handler';
-import { EnvironmentVariables, InterfaceCallContext, InterfaceCallState, InterfaceConfig, RequestConfig } from '../types/interface-call.types';
+import {
+  EnvironmentVariables,
+  InterfaceCallContext,
+  InterfaceCallState,
+  InterfaceConfig,
+  RequestConfig,
+} from '../types/interface-call.types';
 import { ParamProcessorUtil } from '../utils/param-processor.util';
 import { UrlProcessorUtil } from '../utils/url-processor.util';
 
@@ -11,7 +17,10 @@ import { UrlProcessorUtil } from '../utils/url-processor.util';
 export class InterfaceCallManager {
   private contexts: Map<number, InterfaceCallContext> = new Map();
   private dependencies: Map<number, Set<number>> = new Map();
-  private callbacks: Map<number, (context: InterfaceCallContext) => Promise<void>> = new Map();
+  private callbacks: Map<
+    number,
+    (context: InterfaceCallContext) => Promise<void>
+  > = new Map();
   private requests: Array<RequestConfig> = [];
   private configs: Map<number, InterfaceConfig> = new Map();
 
@@ -26,7 +35,11 @@ export class InterfaceCallManager {
   /**
    * 初始化
    */
-  initialize(diagnosisId: number, requests: Array<RequestConfig>, configs: Map<number, InterfaceConfig>) {
+  initialize(
+    diagnosisId: number,
+    requests: Array<RequestConfig>,
+    configs: Map<number, InterfaceConfig>,
+  ) {
     this.requests = requests;
     this.configs = configs;
     this.contexts.clear();
@@ -41,7 +54,7 @@ export class InterfaceCallManager {
     this.retryHandler.initialize(diagnosisId);
 
     // 初始化上下文
-    requests.forEach(request => {
+    requests.forEach((request) => {
       this.contexts.set(request.id, {
         id: request.id,
         state: InterfaceCallState.PENDING,
@@ -58,7 +71,10 @@ export class InterfaceCallManager {
   /**
    * 注册回调
    */
-  registerCallback(id: number, callback: (context: InterfaceCallContext) => Promise<void>) {
+  registerCallback(
+    id: number,
+    callback: (context: InterfaceCallContext) => Promise<void>,
+  ) {
     this.callbacks.set(id, callback);
   }
 
@@ -77,7 +93,7 @@ export class InterfaceCallManager {
           return true;
         }
 
-        return Array.from(deps).every(depId => {
+        return Array.from(deps).every((depId) => {
           const depContext = this.contexts.get(depId);
           return depContext?.state === 'success';
         });
@@ -88,7 +104,12 @@ export class InterfaceCallManager {
   /**
    * 更新状态
    */
-  async updateState(id: number, state: InterfaceCallState, result?: any, error?: Error) {
+  async updateState(
+    id: number,
+    state: InterfaceCallState,
+    result?: any,
+    error?: Error,
+  ) {
     const context = this.contexts.get(id);
     if (!context) {
       throw new Error(`未找到接口 ${id} 的上下文`);
@@ -129,20 +150,23 @@ export class InterfaceCallManager {
    */
   isAllCompleted(): boolean {
     return Array.from(this.contexts.values()).every(
-      context => context.state === 'success' || context.state === 'failed',
+      (context) => context.state === 'success' || context.state === 'failed',
     );
   }
 
   /**
    * 执行接口调用
    */
-  async execute(environmentVariables?: EnvironmentVariables): Promise<Map<number, any>> {
+  async execute(
+    environmentVariables?: EnvironmentVariables,
+  ): Promise<Map<number, any>> {
     while (!this.isAllCompleted()) {
       const executableInterfaces = this.getExecutableInterfaces();
-      
-      await Promise.all(executableInterfaces.map(async (interfaceId) => {
-        const request = this.requests.find(r => r.id === interfaceId);
-        if (!request) return;
+
+      // 按顺序执行可执行的接口，而不是并行执行
+      for (const interfaceId of executableInterfaces) {
+        const request = this.requests.find((r) => r.id === interfaceId);
+        if (!request) continue;
 
         try {
           await this.updateState(interfaceId, InterfaceCallState.PROCESSING);
@@ -193,7 +217,13 @@ export class InterfaceCallManager {
           let result;
           if (request.type === 'polling') {
             result = await this.pollingHandler.pollWithTimeout(
-              () => this.requestHandler.sendRequest(method, processedUrl, processedParams, requestConfig),
+              () =>
+                this.requestHandler.sendRequest(
+                  method,
+                  processedUrl,
+                  processedParams,
+                  requestConfig,
+                ),
               request.interval || 3000,
               request.maxAttempts || 20,
               request.timeout || 60000,
@@ -201,21 +231,41 @@ export class InterfaceCallManager {
             );
           } else if (request.retryCount && request.retryCount > 0) {
             result = await this.retryHandler.retryWithDelay(
-              () => this.requestHandler.sendRequest(method, processedUrl, processedParams, requestConfig),
+              () =>
+                this.requestHandler.sendRequest(
+                  method,
+                  processedUrl,
+                  processedParams,
+                  requestConfig,
+                ),
               request.retryCount,
               request.retryDelay || 1000,
             );
           } else {
-            result = await this.requestHandler.sendRequest(method, processedUrl, processedParams, requestConfig);
+            result = await this.requestHandler.sendRequest(
+              method,
+              processedUrl,
+              processedParams,
+              requestConfig,
+            );
           }
 
-          await this.updateState(interfaceId, InterfaceCallState.SUCCESS, result);
+          await this.updateState(
+            interfaceId,
+            InterfaceCallState.SUCCESS,
+            result,
+          );
         } catch (error) {
-          await this.updateState(interfaceId, InterfaceCallState.FAILED, undefined, error as Error);
+          await this.updateState(
+            interfaceId,
+            InterfaceCallState.FAILED,
+            undefined,
+            error as Error,
+          );
         }
-      }));
+      }
     }
 
     return this.getResults();
   }
-} 
+}
