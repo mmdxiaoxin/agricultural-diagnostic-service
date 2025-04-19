@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { FileEntity, HttpMethod } from '@app/database/entities';
-import { DiagnosisHttpService } from '../../diagnosis-http.service';
+import { HttpCallService } from '../http-call.service';
 import { InterfaceCallStrategy, InterfaceCallContext, InterfaceCallConfig } from '../interface-call.type';
 
 @Injectable()
 export class SingleCallStrategy implements InterfaceCallStrategy {
   constructor(
-    private readonly diagnosisHttpService: DiagnosisHttpService,
+    private readonly httpCallService: HttpCallService,
     private readonly config: InterfaceCallConfig,
     private readonly method: HttpMethod,
     private readonly path: string,
@@ -19,15 +19,24 @@ export class SingleCallStrategy implements InterfaceCallStrategy {
 
   async execute(context: InterfaceCallContext): Promise<any> {
     try {
-      return await this.diagnosisHttpService.callInterface(
-        this.config,
+      const requestConfig = this.config.requests[0];
+      if (!requestConfig) {
+        throw new Error('未找到请求配置');
+      }
+
+      const headers = {
+        Authorization: `Bearer ${this.token}`,
+        'Content-Type': this.fileData ? 'multipart/form-data' : 'application/json',
+      };
+
+      return await this.httpCallService.call(
         this.method,
-        this.path,
+        `${this.config.baseUrl}${this.config.urlPrefix}${this.path}`,
         this.params,
-        this.token,
-        new Map(),
-        this.fileMeta,
-        this.fileData,
+        headers,
+        requestConfig.retryCount,
+        requestConfig.retryDelay,
+        undefined,
         this.diagnosisId,
       );
     } catch (error) {

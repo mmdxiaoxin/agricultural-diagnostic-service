@@ -1,13 +1,13 @@
 import { FileEntity, HttpMethod } from '@app/database/entities';
 import { Injectable } from '@nestjs/common';
-import { DiagnosisHttpService } from '../diagnosis-http.service';
+import { HttpCallService } from './http-call.service';
 import { InterfaceCallStrategy } from './interface-call.type';
 import { PollingCallStrategy } from './strategies/polling-call.strategy';
 import { SingleCallStrategy } from './strategies/single-call.strategy';
 
 @Injectable()
 export class InterfaceCallStrategyFactory {
-  constructor(private readonly diagnosisHttpService: DiagnosisHttpService) {}
+  constructor(private readonly httpCallService: HttpCallService) {}
 
   createStrategy(
     type: 'single' | 'polling',
@@ -51,7 +51,7 @@ export class InterfaceCallStrategyFactory {
     switch (type) {
       case 'single':
         return new SingleCallStrategy(
-          this.diagnosisHttpService,
+          this.httpCallService,
           config,
           method,
           path,
@@ -63,7 +63,7 @@ export class InterfaceCallStrategyFactory {
         );
       case 'polling':
         return new PollingCallStrategy(
-          this.diagnosisHttpService,
+          this.httpCallService,
           config,
           method,
           path,

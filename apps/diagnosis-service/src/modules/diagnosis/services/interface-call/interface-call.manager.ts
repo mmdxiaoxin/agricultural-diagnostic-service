@@ -5,6 +5,7 @@ import { DiagnosisLogService } from '../diagnosis-log.service';
 import { InterfaceCallStrategyFactory } from './interface-call-strategy.factory';
 import { InterfaceCallConfig, InterfaceCallContext } from './interface-call.type';
 
+
 @Injectable()
 export class InterfaceCallManager {
   private readonly contexts: Map<number, InterfaceCallContext> = new Map();
