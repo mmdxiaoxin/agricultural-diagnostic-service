@@ -1,3 +1,4 @@
+import { RequestConfig } from '@app/database/entities';
 import { Injectable } from '@nestjs/common';
 import { AxiosRequestConfig } from 'axios';
 import * as FormData from 'form-data';
@@ -9,7 +10,6 @@ import {
   InterfaceCallContext,
   InterfaceCallState,
   InterfaceConfig,
-  RequestConfig,
 } from '../types/interface-call.types';
 import { ParamProcessorUtil } from '../utils/param-processor.util';
 import { UrlProcessorUtil } from '../utils/url-processor.util';

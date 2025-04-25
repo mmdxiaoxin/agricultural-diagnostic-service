@@ -2,6 +2,46 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { RemoteService } from './remote.entity';
 
+/**
+ * 轮询条件操作符
+ */
+export enum PollingOperator {
+  EQUALS = 'equals',
+  NOT_EQUALS = 'notEquals',
+  CONTAINS = 'contains',
+  GREATER_THAN = 'greaterThan',
+  LESS_THAN = 'lessThan',
+  EXISTS = 'exists',
+  NOT_EXISTS = 'notExists',
+}
+
+/**
+ * 轮询条件配置
+ */
+export interface PollingCondition {
+  field: string;
+  operator: PollingOperator;
+  value?: any;
+}
+
+/**
+ * 请求配置
+ */
+export interface RequestConfig {
+  id: number;
+  order: number;
+  type: 'single' | 'polling';
+  interval?: number;
+  maxAttempts?: number;
+  timeout?: number;
+  retryCount?: number;
+  retryDelay?: number;
+  delay?: number;
+  next?: number[];
+  params?: Record<string, any>;
+  pollingCondition?: PollingCondition;
+}
+
 @Entity('remote_service_config')
 export class RemoteConfig extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
@@ -12,32 +52,7 @@ export class RemoteConfig extends BaseEntity {
 
   @Column({ type: 'json' })
   config: {
-    requests: Array<{
-      id: number;
-      order: number;
-      type: 'single' | 'polling';
-      interval?: number;
-      maxAttempts?: number;
-      timeout?: number;
-      retryCount?: number;
-      retryDelay?: number;
-      next?: number[];
-      params?: Record<string, any>;
-      headers?: Record<string, string>;
-      validateStatus?: (status: number) => boolean;
-      pollingCondition?: {
-        field: string;
-        operator:
-          | 'equals'
-          | 'notEquals'
-          | 'contains'
-          | 'greaterThan'
-          | 'lessThan'
-          | 'exists'
-          | 'notExists';
-        value?: any;
-      };
-    }>;
+    requests: Array<RequestConfig>;
   };
 
   @Column({

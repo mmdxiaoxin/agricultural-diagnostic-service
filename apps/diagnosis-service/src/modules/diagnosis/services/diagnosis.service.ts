@@ -2,6 +2,7 @@ import {
   DiagnosisHistory,
   DiagnosisHistoryStatus,
   FileEntity,
+  PollingOperator,
   RemoteService,
 } from '@app/database/entities';
 import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
@@ -24,7 +25,6 @@ import { DataSource, Repository } from 'typeorm';
 import { DIAGNOSIS_PROCESSOR } from '../processors';
 import { DiagnosisLogService } from './diagnosis-log.service';
 import { InterfaceCallManager } from './interface-call/core/interface-call.manager';
-import { PollingOperator } from './interface-call/types/interface-call.types';
 
 @Injectable()
 export class DiagnosisService {

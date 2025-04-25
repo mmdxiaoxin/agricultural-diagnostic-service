@@ -1,7 +1,10 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { LogLevel } from "@app/database/entities";
-import { DiagnosisLogService } from "../../diagnosis-log.service";
-import { PollingCondition, PollingOperator } from "../types/interface-call.types";
+import {
+  LogLevel,
+  PollingCondition,
+  PollingOperator,
+} from '@app/database/entities';
+import { Injectable, Logger } from '@nestjs/common';
+import { DiagnosisLogService } from '../../diagnosis-log.service';
 
 @Injectable()
 export class PollingHandler {
@@ -38,14 +41,14 @@ export class PollingHandler {
       }
 
       const result = await operation();
-      
+
       if (this.checkPollingCondition(result, condition)) {
         return result;
       }
 
       attempts++;
       if (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, interval));
+        await new Promise((resolve) => setTimeout(resolve, interval));
       }
     }
 
@@ -102,8 +105,12 @@ export class PollingHandler {
   /**
    * 记录日志
    */
-  private async log(level: LogLevel, message: string, metadata?: Record<string, any>) {
+  private async log(
+    level: LogLevel,
+    message: string,
+    metadata?: Record<string, any>,
+  ) {
     this.logger[level](message);
     await this.logService.addLog(this.diagnosisId, level, message, metadata);
   }
-} 
+}
