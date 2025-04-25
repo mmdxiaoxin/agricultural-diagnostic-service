@@ -367,8 +367,11 @@ export class KnowledgeService {
       return `disease:match:${query}`;
     }
     const searchText = get(query, 'searchText') as string;
-    if (searchText) {
-      return `disease:match:${searchText}`;
+    if (searchText && searchText.trim()) {
+      return `disease:match:${searchText.trim()}`;
+    }
+    if (query.predictions) {
+      return `disease:match:predictions:${JSON.stringify(query.predictions)}`;
     }
     return `disease:match:${JSON.stringify(query)}`;
   }
