@@ -18,7 +18,7 @@ export class DiagnosisHistory extends BaseEntity {
   fileId: number | null;
 
   @Column({ type: 'json', nullable: true })
-  diagnosisResult: object | null;
+  diagnosisResult: any | null;
 
   @Column({
     type: 'enum',

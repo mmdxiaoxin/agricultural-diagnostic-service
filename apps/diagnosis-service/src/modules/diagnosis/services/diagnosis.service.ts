@@ -1,12 +1,14 @@
 import {
   DiagnosisHistory,
   DiagnosisHistoryStatus,
+  Disease,
   FileEntity,
   PollingOperator,
   RemoteService,
 } from '@app/database/entities';
 import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
+import { PredictionData } from '@common/types/diagnosis/predict';
 import { GrpcDownloadService } from '@common/types/download/download.types';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger } from '@nestjs/common';
@@ -18,6 +20,7 @@ import { Queue } from 'bullmq';
 import {
   DOWNLOAD_SERVICE_NAME,
   FILE_SERVICE_NAME,
+  KNOWLEDGE_SERVICE_NAME,
 } from 'config/microservice.config';
 import { get } from 'lodash-es';
 import { lastValueFrom } from 'rxjs';
@@ -34,6 +37,8 @@ export class DiagnosisService {
   constructor(
     @Inject(FILE_SERVICE_NAME)
     private readonly fileClient: ClientProxy,
+    @Inject(KNOWLEDGE_SERVICE_NAME)
+    private readonly knowledgeClient: ClientProxy,
     @Inject(DOWNLOAD_SERVICE_NAME)
     private readonly downloadClient: ClientGrpc,
     @InjectRepository(RemoteService)
@@ -398,7 +403,32 @@ export class DiagnosisService {
 
       // 11. 更新诊断结果
       diagnosis.status = get(lastResult, 'data.status');
-      diagnosis.diagnosisResult = get(lastResult, 'data');
+      diagnosis.diagnosisResult = get(
+        lastResult,
+        'data',
+        null,
+      ) as PredictionData | null;
+
+      // 12. 匹配疾病
+      const predictions = get(lastResult, 'data.predictions', []);
+      const classNames = predictions.map(
+        (prediction: any) => prediction.class_name,
+      );
+
+      const response = await lastValueFrom(
+        this.knowledgeClient.send<{ data: Disease[] }>(
+          { cmd: 'knowledge.match' },
+          {
+            searchText: classNames.join(','),
+          },
+        ),
+      );
+
+      if (!diagnosis.diagnosisResult) {
+        diagnosis.diagnosisResult = {};
+      }
+      diagnosis.diagnosisResult.diseases = response.data;
+
       await queryRunner.manager.save(diagnosis);
       await this.logService.addLog(diagnosisId, LogLevel.INFO, '诊断任务完成', {
         status: diagnosis.status,

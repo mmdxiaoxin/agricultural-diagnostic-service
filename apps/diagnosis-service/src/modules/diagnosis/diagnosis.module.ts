@@ -15,8 +15,12 @@ import {
   DOWNLOAD_SERVICE_GRPC_PORT,
   DOWNLOAD_SERVICE_HOST,
   DOWNLOAD_SERVICE_NAME,
+  FILE_SERVICE_HOST,
   FILE_SERVICE_NAME,
   FILE_SERVICE_TCP_PORT,
+  KNOWLEDGE_SERVICE_HOST,
+  KNOWLEDGE_SERVICE_NAME,
+  KNOWLEDGE_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { join } from 'path';
 import { DiagnosisController } from './diagnosis.controller';
@@ -60,7 +64,16 @@ import { InterfaceCallModule } from './services/interface-call/interface-call.mo
         name: FILE_SERVICE_NAME,
         transport: Transport.TCP,
         options: {
+          host: FILE_SERVICE_HOST,
           port: FILE_SERVICE_TCP_PORT,
+        },
+      },
+      {
+        name: KNOWLEDGE_SERVICE_NAME,
+        transport: Transport.TCP,
+        options: {
+          host: KNOWLEDGE_SERVICE_HOST,
+          port: KNOWLEDGE_SERVICE_TCP_PORT,
         },
       },
     ]),
