@@ -26,6 +26,8 @@ import { DataSource, Repository } from 'typeorm';
 import { DIAGNOSIS_PROCESSOR } from '../processors';
 import { DiagnosisHttpService } from './diagnosis-http.service';
 import { DiagnosisLogService } from './diagnosis-log.service';
+import { InterfaceCallManager } from './interface-call/core/interface-call.manager';
+import { PollingOperator } from './interface-call/types/interface-call.types';
 
 @Injectable()
 export class DiagnosisService {
@@ -44,6 +46,7 @@ export class DiagnosisService {
     private readonly logService: DiagnosisLogService,
     @InjectQueue(DIAGNOSIS_PROCESSOR)
     private readonly diagnosisQueue: Queue,
+    private readonly interfaceCallManager: InterfaceCallManager,
   ) {}
 
   onModuleInit() {
@@ -127,8 +130,7 @@ export class DiagnosisService {
         throw new Error('服务配置中未指定接口调用配置');
       }
 
-      // 4. 按顺序获取接口配置
-      const sortedRequests = sortBy(requests, 'order');
+      // 4. 获取接口配置
       const remoteInterfaces = new Map(
         remoteService.interfaces.map((interf) => [interf.id, interf]),
       );
@@ -142,190 +144,58 @@ export class DiagnosisService {
         `获取文件成功: ${fileMeta.originalFileName}`,
       );
 
-      // 6. 按顺序调用接口
-      const results = new Map<number, BaseResponse<any>>();
-
-      // 递归调用接口
-      const callInterfaces = async (
-        requests: Array<{
-          id: number;
-          order: number;
-          type: 'single' | 'polling';
-          interval?: number;
-          maxAttempts?: number;
-          timeout?: number;
-          retryCount?: number;
-          retryDelay?: number;
-          delay?: number;
-          next?: number[];
-          params?: Record<string, any>;
-          pollingCondition?: {
-            field: string;
-            operator:
-              | 'equals'
-              | 'notEquals'
-              | 'contains'
-              | 'greaterThan'
-              | 'lessThan'
-              | 'exists'
-              | 'notExists';
-            value?: any;
-          };
-        }>,
-      ) => {
-        // 找出当前层级的接口（没有被其他接口依赖的接口）
-        const currentRequests = filter(requests, (request) => {
-          // 检查这个接口是否被其他接口依赖
-          const isDependent = requests.some(
-            (otherRequest) =>
-              otherRequest.next && otherRequest.next.includes(request.id),
-          );
-          return !isDependent && !results.has(request.id);
-        });
-
-        if (isEmpty(currentRequests)) {
-          return;
-        }
-
-        this.logger.debug(
-          `当前层级接口: ${JSON.stringify(currentRequests.map((r) => r.id))}`,
-        );
-
-        // 并发调用当前层级的接口
-        const promises = currentRequests.map(async (config) => {
-          // 检查是否有依赖的接口，如果有，等待依赖接口完成后再等待指定的延时
-          if (config.next && config.next.length > 0) {
-            const lastDependencyId = config.next[config.next.length - 1];
-            const lastDependency = requests.find(
-              (r) => r.id === lastDependencyId,
-            );
-
-            if (lastDependency?.delay) {
-              this.logger.debug(
-                `等待依赖接口 ${lastDependencyId} 完成后的延时 ${lastDependency.delay}ms`,
-              );
-              await new Promise((resolve) =>
-                setTimeout(resolve, lastDependency.delay),
-              );
+      // 6. 初始化接口调用管理器
+      const processedRequests = requests.map((request) => ({
+        ...request,
+        pollingCondition: request.pollingCondition
+          ? {
+              ...request.pollingCondition,
+              operator: request.pollingCondition.operator as PollingOperator,
             }
-          }
+          : undefined,
+      }));
 
-          // 检查当前接口是否有delay配置
-          if (config.delay) {
-            this.logger.debug(
-              `等待当前接口 ${config.id} 的延时 ${config.delay}ms`,
-            );
-            await new Promise((resolve) => setTimeout(resolve, config.delay));
-          }
+      this.interfaceCallManager.initialize(
+        diagnosisId,
+        processedRequests,
+        remoteInterfaces,
+      );
 
-          this.logger.debug(`准备调用接口 ${config.id}`);
-          const remoteInterface = remoteInterfaces.get(config.id);
-          if (!remoteInterface) {
-            throw new Error(`未找到ID为 ${config.id} 的接口配置`);
-          }
-
-          const interfaceConfig = remoteInterface.config;
-
-          const diagnosisConfig: DiagnosisConfig = {
-            baseUrl: remoteInterface.url,
-            urlPrefix: interfaceConfig.prefix || '',
-            requests: [
+      // 7. 注册回调函数
+      requests.forEach((request) => {
+        this.interfaceCallManager.registerCallback(
+          request.id,
+          async (context) => {
+            await this.logService.addLog(
+              diagnosisId,
+              LogLevel.INFO,
+              `接口 ${request.id} 状态更新: ${context.state}`,
               {
-                id: config.id,
-                order: config.order,
-                type: config.type,
-                interval: config.interval,
-                maxAttempts: config.maxAttempts,
-                timeout: config.timeout,
-                retryCount: config.retryCount,
-                retryDelay: config.retryDelay,
-                delay: config.delay,
-                next: config.next,
-                params: config.params,
-                pollingCondition: config.pollingCondition,
+                interfaceId: request.id,
+                state: context.state,
+                result: context.result,
+                error: context.error,
               },
-            ],
-          };
-
-          this.logger.debug(
-            `接口 ${config.id} 的配置: ${JSON.stringify({
-              path: interfaceConfig.path,
-              method: interfaceConfig.method,
-              urlPrefix: interfaceConfig.prefix,
-            })}`,
-          );
-
-          const result = await this.diagnosisHttpService.callInterface(
-            diagnosisConfig,
-            interfaceConfig.method || 'POST',
-            interfaceConfig.path || '',
-            config.params || fileData,
-            token,
-            results,
-            fileMeta,
-            fileData,
-            diagnosisId,
-          );
-
-          await this.logService.addLog(
-            diagnosisId,
-            LogLevel.INFO,
-            `接口 ${config.id} 调用完成`,
-            {
-              interfaceId: config.id,
-              status: result.data?.status,
-            },
-          );
-          results.set(config.id, result);
-          return result;
-        });
-
-        await Promise.all(promises);
-        await this.logService.addLog(
-          diagnosisId,
-          LogLevel.INFO,
-          '当前层级接口调用完成',
-          {
-            results: Object.fromEntries(results),
+            );
           },
         );
+      });
 
-        // 获取下一层级的接口
-        const nextRequests = filter(requests, (request) => {
-          // 检查这个接口的所有依赖是否都已经执行完成
-          const allDependenciesCompleted =
-            request.next?.every((id) => results.has(id)) ?? true; // 如果没有next数组，则认为依赖已完成
-          const notExecuted = !results.has(request.id);
-          this.logger.debug(
-            `检查接口 ${request.id} 的依赖: ${JSON.stringify(request.next)}, 是否完成: ${allDependenciesCompleted}, 是否未执行: ${notExecuted}`,
-          );
-          return allDependenciesCompleted && notExecuted;
-        });
+      // 8. 执行接口调用
+      const results = await this.interfaceCallManager.execute({
+        token,
+        fileMeta,
+        fileData,
+      });
 
-        this.logger.debug(
-          `下一层级接口: ${JSON.stringify(nextRequests.map((r) => r.id))}`,
-        );
-
-        // 递归调用下一层级的接口
-        if (nextRequests.length > 0) {
-          await callInterfaces(nextRequests);
-        }
-      };
-
-      // 开始递归调用
-      await callInterfaces(sortedRequests);
-
-      this.logger.debug(`接口调用结果: ${JSON.stringify(results)}`);
-
-      // 7. 获取最后一个接口的结果
-      const lastResult = results.get(
-        sortedRequests[sortedRequests.length - 1].id,
-      );
-      if (isNil(lastResult)) {
+      // 9. 获取最后一个接口的结果
+      const lastRequest = requests[requests.length - 1];
+      const lastResult = results.get(lastRequest.id);
+      if (!lastResult) {
         throw new Error('接口调用失败，未获取到结果');
       }
 
-      // 8. 更新诊断结果
+      // 10. 更新诊断结果
       diagnosis.status = get(lastResult, 'data.status');
       diagnosis.diagnosisResult = get(lastResult, 'data');
       await queryRunner.manager.save(diagnosis);
@@ -439,8 +309,7 @@ export class DiagnosisService {
         });
       }
 
-      // 4. 按顺序获取接口配置
-      const sortedRequests = sortBy(requests, 'order');
+      // 4. 获取接口配置
       const remoteInterfaces = new Map(
         remoteService.interfaces.map((interf) => [interf.id, interf]),
       );
@@ -472,189 +341,54 @@ export class DiagnosisService {
         `获取文件成功: ${fileMeta.originalFileName}`,
       );
 
-      // 7. 按顺序调用接口
-      const results = new Map<number, BaseResponse<any>>();
-
-      // 递归调用接口
-      const callInterfaces = async (
-        requests: Array<{
-          id: number;
-          order: number;
-          type: 'single' | 'polling';
-          interval?: number;
-          maxAttempts?: number;
-          timeout?: number;
-          retryCount?: number;
-          retryDelay?: number;
-          delay?: number;
-          next?: number[];
-          params?: Record<string, any>;
-          pollingCondition?: {
-            field: string;
-            operator:
-              | 'equals'
-              | 'notEquals'
-              | 'contains'
-              | 'greaterThan'
-              | 'lessThan'
-              | 'exists'
-              | 'notExists';
-            value?: any;
-          };
-        }>,
-      ) => {
-        // 找出当前层级的接口（没有被其他接口依赖的接口）
-        const currentRequests = filter(requests, (request) => {
-          // 检查这个接口是否被其他接口依赖
-          const isDependent = requests.some(
-            (otherRequest) =>
-              otherRequest.next && otherRequest.next.includes(request.id),
-          );
-          return !isDependent && !results.has(request.id);
-        });
-
-        if (isEmpty(currentRequests)) {
-          return;
-        }
-
-        this.logger.debug(
-          `当前层级接口: ${JSON.stringify(currentRequests.map((r) => r.id))}`,
-        );
-
-        // 并发调用当前层级的接口
-        const promises = currentRequests.map(async (config) => {
-          // 检查是否有依赖的接口，如果有，等待依赖接口完成后再等待指定的延时
-          if (config.next && config.next.length > 0) {
-            const lastDependencyId = config.next[config.next.length - 1];
-            const lastDependency = requests.find(
-              (r) => r.id === lastDependencyId,
-            );
-
-            if (lastDependency?.delay) {
-              this.logger.debug(
-                `等待依赖接口 ${lastDependencyId} 完成后的延时 ${lastDependency.delay}ms`,
-              );
-              await new Promise((resolve) =>
-                setTimeout(resolve, lastDependency.delay),
-              );
+      // 7. 初始化接口调用管理器
+      const processedRequests = requests.map((request) => ({
+        ...request,
+        pollingCondition: request.pollingCondition
+          ? {
+              ...request.pollingCondition,
+              operator: request.pollingCondition.operator as PollingOperator,
             }
-          }
+          : undefined,
+      }));
 
-          // 检查当前接口是否有delay配置
-          if (config.delay) {
-            this.logger.debug(
-              `等待当前接口 ${config.id} 的延时 ${config.delay}ms`,
-            );
-            await new Promise((resolve) => setTimeout(resolve, config.delay));
-          }
+      this.interfaceCallManager.initialize(
+        diagnosisId,
+        processedRequests,
+        remoteInterfaces,
+      );
 
-          this.logger.debug(`准备调用接口 ${config.id}`);
-          const remoteInterface = remoteInterfaces.get(config.id);
-          if (!remoteInterface) {
-            throw new RpcException({
-              code: 500,
-              message: `未找到ID为 ${config.id} 的接口配置`,
-            });
-          }
-
-          const interfaceConfig = remoteInterface.config;
-
-          const diagnosisConfig: DiagnosisConfig = {
-            baseUrl: remoteInterface.url,
-            urlPrefix: interfaceConfig.prefix || '',
-            requests: [
+      // 8. 注册回调函数
+      requests.forEach((request) => {
+        this.interfaceCallManager.registerCallback(
+          request.id,
+          async (context) => {
+            await this.logService.addLog(
+              diagnosisId,
+              LogLevel.INFO,
+              `接口 ${request.id} 状态更新: ${context.state}`,
               {
-                id: config.id,
-                order: config.order,
-                type: config.type,
-                interval: config.interval,
-                maxAttempts: config.maxAttempts,
-                timeout: config.timeout,
-                retryCount: config.retryCount,
-                retryDelay: config.retryDelay,
-                delay: config.delay,
-                next: config.next,
-                params: config.params,
-                pollingCondition: config.pollingCondition,
+                interfaceId: request.id,
+                state: context.state,
+                result: context.result,
+                error: context.error,
               },
-            ],
-          };
-
-          this.logger.debug(
-            `接口 ${config.id} 的配置: ${JSON.stringify({
-              path: interfaceConfig.path,
-              method: interfaceConfig.method,
-              urlPrefix: interfaceConfig.prefix,
-            })}`,
-          );
-
-          const result = await this.diagnosisHttpService.callInterface(
-            diagnosisConfig,
-            interfaceConfig.method || 'POST',
-            interfaceConfig.path || '',
-            config.params || fileData,
-            token,
-            results,
-            fileMeta,
-            fileData,
-            diagnosisId,
-          );
-
-          await this.logService.addLog(
-            diagnosisId,
-            LogLevel.INFO,
-            `接口 ${config.id} 调用完成`,
-            {
-              interfaceId: config.id,
-              status: result.data?.status,
-            },
-          );
-          results.set(config.id, result);
-          return result;
-        });
-
-        await Promise.all(promises);
-        await this.logService.addLog(
-          diagnosisId,
-          LogLevel.INFO,
-          '当前层级接口调用完成',
-          {
-            results: Object.fromEntries(results),
+            );
           },
         );
+      });
 
-        // 获取下一层级的接口
-        const nextRequests = filter(requests, (request) => {
-          // 检查这个接口的所有依赖是否都已经执行完成
-          const allDependenciesCompleted =
-            request.next?.every((id) => results.has(id)) ?? true; // 如果没有next数组，则认为依赖已完成
-          const notExecuted = !results.has(request.id);
-          this.logger.debug(
-            `检查接口 ${request.id} 的依赖: ${JSON.stringify(request.next)}, 是否完成: ${allDependenciesCompleted}, 是否未执行: ${notExecuted}`,
-          );
-          return allDependenciesCompleted && notExecuted;
-        });
+      // 9. 执行接口调用
+      const results = await this.interfaceCallManager.execute({
+        token,
+        fileMeta,
+        fileData,
+      });
 
-        this.logger.debug(
-          `下一层级接口: ${JSON.stringify(nextRequests.map((r) => r.id))}`,
-        );
-
-        // 递归调用下一层级的接口
-        if (nextRequests.length > 0) {
-          await callInterfaces(nextRequests);
-        }
-      };
-
-      // 开始递归调用
-      await callInterfaces(sortedRequests);
-
-      this.logger.debug(`接口调用结果: ${JSON.stringify(results)}`);
-
-      // 8. 获取最后一个接口的结果
-      const lastResult = results.get(
-        sortedRequests[sortedRequests.length - 1].id,
-      );
-      if (isNil(lastResult)) {
+      // 10. 获取最后一个接口的结果
+      const lastRequest = requests[requests.length - 1];
+      const lastResult = results.get(lastRequest.id);
+      if (!lastResult) {
         await this.logService.addLog(
           diagnosisId,
           LogLevel.ERROR,
@@ -666,7 +400,7 @@ export class DiagnosisService {
         });
       }
 
-      // 9. 更新诊断结果
+      // 11. 更新诊断结果
       diagnosis.status = get(lastResult, 'data.status');
       diagnosis.diagnosisResult = get(lastResult, 'data');
       await queryRunner.manager.save(diagnosis);

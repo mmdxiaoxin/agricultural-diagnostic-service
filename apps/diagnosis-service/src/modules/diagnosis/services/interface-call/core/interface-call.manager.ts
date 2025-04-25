@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AxiosRequestConfig } from 'axios';
+import * as FormData from 'form-data';
 import { PollingHandler } from '../handlers/polling-handler';
 import { RequestHandler } from '../handlers/request-handler';
 import { RetryHandler } from '../handlers/retry-handler';
@@ -156,142 +157,144 @@ export class InterfaceCallManager {
 
   /**
    * 执行接口调用
+   * @param environmentVariables 环境变量
+   * @returns 结果
    */
   async execute(
     environmentVariables?: EnvironmentVariables,
   ): Promise<Map<number, any>> {
-    // 获取所有没有next的接口作为第一级
+    // 获取所有没有依赖的接口作为第一级
     const firstLevelInterfaces = this.requests
-      .filter((request) => !request.next || request.next.length === 0)
+      .filter((request) => {
+        // 检查这个接口是否被其他接口依赖
+        const isDependent = this.requests.some(
+          (otherRequest) =>
+            otherRequest.next && otherRequest.next.includes(request.id),
+        );
+        return !isDependent;
+      })
       .map((request) => request.id);
 
-    // 按层级执行接口
-    let currentLevelInterfaces = firstLevelInterfaces;
-    while (currentLevelInterfaces.length > 0) {
-      // 并发执行当前层级的接口
-      await Promise.all(
-        currentLevelInterfaces.map(async (interfaceId) => {
-          const request = this.requests.find((r) => r.id === interfaceId);
-          if (!request) return;
-
-          try {
-            await this.updateState(interfaceId, InterfaceCallState.PROCESSING);
-
-            if (request.delay) {
-              await new Promise((resolve) =>
-                setTimeout(resolve, request.delay),
-              );
-            }
-
-            const interfaceConfig = this.configs.get(interfaceId);
-            if (!interfaceConfig) {
-              throw new Error(`未找到接口 ${interfaceId} 的配置`);
-            }
-
-            const { url, config } = interfaceConfig;
-            const { method = 'GET', prefix, path, ...axiosConfig } = config;
-
-            const fullUrl = `${url}${prefix || ''}${path || ''}`;
-            const processedUrl = this.urlProcessor.processUrlTemplate(
-              fullUrl,
-              request.params || {},
-              this.getResults(),
-            );
-
-            if (!processedUrl) {
-              throw new Error(`处理URL失败: ${fullUrl}`);
-            }
-
-            const processedParams = this.paramProcessor.processParams(
-              request.params || {},
-              this.getResults(),
-              fullUrl,
-              environmentVariables?.fileMeta,
-              environmentVariables?.fileData,
-            );
-
-            const requestConfig: AxiosRequestConfig = {
-              headers: {
-                Authorization: `Bearer ${environmentVariables?.token}`,
-                'Content-Type':
-                  processedParams instanceof FormData
-                    ? 'multipart/form-data'
-                    : 'application/json',
-              },
-              ...axiosConfig,
-              timeout: request.timeout || 60000,
-            };
-
-            let result;
-            if (request.type === 'polling') {
-              result = await this.pollingHandler.pollWithTimeout(
-                () =>
-                  this.requestHandler.sendRequest(
-                    method,
-                    processedUrl,
-                    processedParams,
-                    requestConfig,
-                  ),
-                request.interval || 3000,
-                request.maxAttempts || 20,
-                request.timeout || 60000,
-                request.pollingCondition,
-              );
-            } else if (request.retryCount && request.retryCount > 0) {
-              result = await this.retryHandler.retryWithDelay(
-                () =>
-                  this.requestHandler.sendRequest(
-                    method,
-                    processedUrl,
-                    processedParams,
-                    requestConfig,
-                  ),
-                request.retryCount,
-                request.retryDelay || 1000,
-              );
-            } else {
-              result = await this.requestHandler.sendRequest(
-                method,
-                processedUrl,
-                processedParams,
-                requestConfig,
-              );
-            }
-
-            await this.updateState(
-              interfaceId,
-              InterfaceCallState.SUCCESS,
-              result,
-            );
-          } catch (error) {
-            await this.updateState(
-              interfaceId,
-              InterfaceCallState.FAILED,
-              undefined,
-              error as Error,
-            );
-          }
-        }),
-      );
-
-      // 获取下一级要执行的接口
-      const nextLevelInterfaces = new Set<number>();
-      currentLevelInterfaces.forEach((interfaceId) => {
-        const request = this.requests.find((r) => r.id === interfaceId);
-        if (request?.next) {
-          request.next.forEach((nextId) => {
-            // 只有当当前接口执行成功时，才将next中的接口加入下一级
-            const context = this.contexts.get(interfaceId);
-            if (context?.state === InterfaceCallState.SUCCESS) {
-              nextLevelInterfaces.add(nextId);
-            }
-          });
-        }
-      });
-
-      currentLevelInterfaces = Array.from(nextLevelInterfaces);
-    }
+    // 并发执行第一级接口
+    await Promise.all(
+      firstLevelInterfaces.map((interfaceId) =>
+        this.executeInterface(interfaceId, environmentVariables),
+      ),
+    );
 
     return this.getResults();
+  }
+
+  /**
+   * 递归执行单个接口及其后续接口
+   * @param interfaceId 接口ID
+   * @param environmentVariables 环境变量
+   */
+  private async executeInterface(
+    interfaceId: number,
+    environmentVariables?: EnvironmentVariables,
+  ): Promise<void> {
+    const request = this.requests.find((r) => r.id === interfaceId);
+    if (!request) return;
+
+    try {
+      await this.updateState(interfaceId, InterfaceCallState.PROCESSING);
+
+      if (request.delay) {
+        await new Promise((resolve) => setTimeout(resolve, request.delay));
+      }
+
+      const interfaceConfig = this.configs.get(interfaceId);
+      if (!interfaceConfig) {
+        throw new Error(`未找到接口 ${interfaceId} 的配置`);
+      }
+
+      const { url, config } = interfaceConfig;
+      const { method = 'GET', prefix, path, ...axiosConfig } = config;
+
+      const fullUrl = `${url}${prefix || ''}${path || ''}`;
+      const processedUrl = this.urlProcessor.processUrlTemplate(
+        fullUrl,
+        request.params || {},
+        this.getResults(),
+      );
+
+      if (!processedUrl) {
+        throw new Error(`处理URL失败: ${fullUrl}`);
+      }
+
+      const processedParams = this.paramProcessor.processParams(
+        request.params || {},
+        this.getResults(),
+        fullUrl,
+        environmentVariables?.fileMeta,
+        environmentVariables?.fileData,
+      );
+
+      const requestConfig: AxiosRequestConfig = {
+        headers: {
+          Authorization: `Bearer ${environmentVariables?.token}`,
+          ...(processedParams instanceof FormData
+            ? processedParams.getHeaders()
+            : { 'Content-Type': 'application/json' }),
+        },
+        ...axiosConfig,
+        timeout: request.timeout || 60000,
+      };
+
+      let result;
+      if (request.type === 'polling') {
+        result = await this.pollingHandler.pollWithTimeout(
+          () =>
+            this.requestHandler.sendRequest(
+              method,
+              processedUrl,
+              processedParams,
+              requestConfig,
+            ),
+          request.interval || 3000,
+          request.maxAttempts || 20,
+          request.timeout || 60000,
+          request.pollingCondition,
+        );
+      } else if (request.retryCount && request.retryCount > 0) {
+        result = await this.retryHandler.retryWithDelay(
+          () =>
+            this.requestHandler.sendRequest(
+              method,
+              processedUrl,
+              processedParams,
+              requestConfig,
+            ),
+          request.retryCount,
+          request.retryDelay || 1000,
+        );
+      } else {
+        result = await this.requestHandler.sendRequest(
+          method,
+          processedUrl,
+          processedParams,
+          requestConfig,
+        );
+      }
+
+      await this.updateState(interfaceId, InterfaceCallState.SUCCESS, result);
+
+      // 递归执行后续接口
+      if (request.next && request.next.length > 0) {
+        await Promise.all(
+          request.next.map((nextId) =>
+            this.executeInterface(nextId, environmentVariables),
+          ),
+        );
+      }
+    } catch (error) {
+      await this.updateState(
+        interfaceId,
+        InterfaceCallState.FAILED,
+        undefined,
+        error as Error,
+      );
+    }
   }
 }
