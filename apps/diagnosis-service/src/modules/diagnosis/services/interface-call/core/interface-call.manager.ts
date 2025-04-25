@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AxiosRequestConfig } from 'axios';
+import * as FormData from 'form-data';
 import { PollingHandler } from '../handlers/polling-handler';
 import { RequestHandler } from '../handlers/request-handler';
 import { RetryHandler } from '../handlers/retry-handler';
@@ -233,10 +234,9 @@ export class InterfaceCallManager {
       const requestConfig: AxiosRequestConfig = {
         headers: {
           Authorization: `Bearer ${environmentVariables?.token}`,
-          'Content-Type':
-            processedParams instanceof FormData
-              ? 'multipart/form-data'
-              : 'application/json',
+          ...(processedParams instanceof FormData
+            ? processedParams.getHeaders()
+            : { 'Content-Type': 'application/json' }),
         },
         ...axiosConfig,
         timeout: request.timeout || 60000,
