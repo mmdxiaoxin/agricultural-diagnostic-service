@@ -415,7 +415,7 @@ export class DiagnosisService {
         this.knowledgeClient.send<{ data: MatchResult[] }>(
           { cmd: 'knowledge.match' },
           {
-            predictions,
+            query: { predictions },
           },
         ),
       );
