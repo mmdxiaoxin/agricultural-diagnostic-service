@@ -6,8 +6,6 @@ import {
 } from '@app/database/entities';
 import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
-import { BaseResponse } from '@common/services/http.service';
-import { DiagnosisConfig } from '@common/types/diagnosis';
 import { GrpcDownloadService } from '@common/types/download/download.types';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger } from '@nestjs/common';
@@ -20,11 +18,10 @@ import {
   DOWNLOAD_SERVICE_NAME,
   FILE_SERVICE_NAME,
 } from 'config/microservice.config';
-import { filter, get, isEmpty, isNil, sortBy } from 'lodash-es';
+import { get } from 'lodash-es';
 import { lastValueFrom } from 'rxjs';
 import { DataSource, Repository } from 'typeorm';
 import { DIAGNOSIS_PROCESSOR } from '../processors';
-import { DiagnosisHttpService } from './diagnosis-http.service';
 import { DiagnosisLogService } from './diagnosis-log.service';
 import { InterfaceCallManager } from './interface-call/core/interface-call.manager';
 import { PollingOperator } from './interface-call/types/interface-call.types';
@@ -42,7 +39,6 @@ export class DiagnosisService {
     @InjectRepository(RemoteService)
     private readonly remoteRepository: Repository<RemoteService>,
     private readonly dataSource: DataSource,
-    private readonly diagnosisHttpService: DiagnosisHttpService,
     private readonly logService: DiagnosisLogService,
     @InjectQueue(DIAGNOSIS_PROCESSOR)
     private readonly diagnosisQueue: Queue,
