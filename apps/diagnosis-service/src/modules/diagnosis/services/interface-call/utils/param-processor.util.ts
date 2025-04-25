@@ -1,8 +1,18 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { cloneDeep, forEach, get, isArray, isEmpty, isString, omit, set, some, startsWith } from "lodash-es";
+import { FileEntity, LogLevel } from '@app/database/entities';
+import { Injectable, Logger } from '@nestjs/common';
 import * as FormData from 'form-data';
-import { LogLevel } from "@app/database/entities";
-import { DiagnosisLogService } from "../../diagnosis-log.service";
+import {
+  cloneDeep,
+  forEach,
+  get,
+  isArray,
+  isString,
+  omit,
+  set,
+  some,
+  startsWith,
+} from 'lodash-es';
+import { DiagnosisLogService } from '../../diagnosis-log.service';
 
 type ProcessedParams = Record<string, any> | FormData;
 
@@ -23,13 +33,13 @@ export class ParamProcessorUtil {
   processParams(
     params: Record<string, any>,
     previousResults: Map<number, any>,
-    path: string,
-    fileMeta?: any,
+    url: string,
+    fileMeta?: FileEntity,
     fileData?: Buffer,
   ): ProcessedParams {
     const processedParams = cloneDeep(params);
     const formData = new FormData();
-    const urlParams = this.extractUrlParams(path);
+    const urlParams = this.extractUrlParams(url);
 
     // 处理参数引用
     this.processParamReferences(processedParams, previousResults);
@@ -38,7 +48,7 @@ export class ParamProcessorUtil {
     this.processFormData(processedParams, formData, fileMeta, fileData);
 
     // 检查是否需要返回 FormData
-    if (this.shouldReturnFormData(processedParams, fileMeta, fileData)) {
+    if (this.shouldReturnFormData(processedParams)) {
       return formData;
     }
 
@@ -83,7 +93,8 @@ export class ParamProcessorUtil {
             );
           }
 
-          const refValue = path.length > 0 ? get(result, path.join('.')) : result;
+          const refValue =
+            path.length > 0 ? get(result, path.join('.')) : result;
           if (refValue === undefined) {
             throw new Error(
               `接口 ${interfaceId} 的结果中未找到路径 ${path.join('.')}`,
@@ -104,7 +115,7 @@ export class ParamProcessorUtil {
   private processFormData(
     processedParams: Record<string, any>,
     formData: FormData,
-    fileMeta?: any,
+    fileMeta?: FileEntity,
     fileData?: Buffer,
   ): void {
     forEach(processedParams, (paramValue, key) => {
@@ -143,11 +154,7 @@ export class ParamProcessorUtil {
   /**
    * 判断是否需要返回 FormData
    */
-  private shouldReturnFormData(
-    processedParams: Record<string, any>,
-    fileMeta?: any,
-    fileData?: Buffer,
-  ): boolean {
+  private shouldReturnFormData(processedParams: Record<string, any>): boolean {
     return (
       some(Object.keys(processedParams), (key) => key === 'file') ||
       some(
@@ -163,8 +170,12 @@ export class ParamProcessorUtil {
   /**
    * 记录日志
    */
-  private async log(level: LogLevel, message: string, metadata?: Record<string, any>) {
+  private async log(
+    level: LogLevel,
+    message: string,
+    metadata?: Record<string, any>,
+  ) {
     this.logger[level](message);
     await this.logService.addLog(this.diagnosisId, level, message, metadata);
   }
-} 
+}
