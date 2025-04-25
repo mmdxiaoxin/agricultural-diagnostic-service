@@ -160,9 +160,16 @@ export class InterfaceCallManager {
   async execute(
     environmentVariables?: EnvironmentVariables,
   ): Promise<Map<number, any>> {
-    // 获取所有没有next的接口作为第一级
+    // 获取所有没有依赖的接口作为第一级
     const firstLevelInterfaces = this.requests
-      .filter((request) => !request.next || request.next.length === 0)
+      .filter((request) => {
+        // 检查这个接口是否被其他接口依赖
+        const isDependent = this.requests.some(
+          (otherRequest) =>
+            otherRequest.next && otherRequest.next.includes(request.id),
+        );
+        return !isDependent;
+      })
       .map((request) => request.id);
 
     // 并发执行第一级接口

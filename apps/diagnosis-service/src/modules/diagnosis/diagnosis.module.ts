@@ -27,11 +27,13 @@ import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisHttpService } from './services/diagnosis-http.service';
 import { DiagnosisLogService } from './services/diagnosis-log.service';
 import { DiagnosisService } from './services/diagnosis.service';
+import { InterfaceCallModule } from './services/interface-call/interface-call.module';
 
 @Module({
   imports: [
     RedisModule,
     FileOperationModule,
+    InterfaceCallModule,
     DatabaseModule.forFeature([
       DiagnosisHistory,
       DiagnosisFeedback,

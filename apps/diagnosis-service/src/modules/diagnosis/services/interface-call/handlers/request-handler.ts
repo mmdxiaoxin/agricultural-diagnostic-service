@@ -1,9 +1,8 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { AxiosError, AxiosRequestConfig } from "axios";
-import { HttpService } from "@common/services/http.service";
-import { LogLevel } from "@app/database/entities";
-import { DiagnosisLogService } from "../../diagnosis-log.service";
-import { InterfaceCallState } from "../types/interface-call.types";
+import { LogLevel } from '@app/database/entities';
+import { HttpService } from '@common/services/http.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { AxiosError, AxiosRequestConfig } from 'axios';
+import { DiagnosisLogService } from '../../diagnosis-log.service';
 
 @Injectable()
 export class RequestHandler {
@@ -41,16 +40,23 @@ export class RequestHandler {
           response = await this.httpService.put<T>(url, params, config);
           break;
         case 'DELETE':
-          response = await this.httpService.delete<T>(url, { params, ...config });
+          response = await this.httpService.delete<T>(url, {
+            params,
+            ...config,
+          });
           break;
         default:
           throw new Error(`不支持的HTTP方法: ${method}`);
       }
 
-      this.log(LogLevel.INFO, `接口响应状态: ${response.message || 'unknown'} || ${response.code}`, {
-        code: response.code,
-        message: response.message,
-      });
+      this.log(
+        LogLevel.INFO,
+        `接口响应状态: ${response.message || 'unknown'} || ${response.code}`,
+        {
+          code: response.code,
+          message: response.message,
+        },
+      );
 
       return response.data;
     } catch (error) {
@@ -84,8 +90,25 @@ export class RequestHandler {
   /**
    * 记录日志
    */
-  private async log(level: LogLevel, message: string, metadata?: Record<string, any>) {
-    this.logger[level](message);
+  private async log(
+    level: LogLevel,
+    message: string,
+    metadata?: Record<string, any>,
+  ) {
+    switch (level) {
+      case LogLevel.ERROR:
+        this.logger.error(message);
+        break;
+      case LogLevel.WARN:
+        this.logger.warn(message);
+        break;
+      case LogLevel.INFO:
+        this.logger.log(message);
+        break;
+      case LogLevel.DEBUG:
+        this.logger.debug(message);
+        break;
+    }
     await this.logService.addLog(this.diagnosisId, level, message, metadata);
   }
-} 
+}
