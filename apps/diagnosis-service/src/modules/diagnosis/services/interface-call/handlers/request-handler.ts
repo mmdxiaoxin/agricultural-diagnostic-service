@@ -58,7 +58,7 @@ export class RequestHandler {
         },
       );
 
-      return response.data;
+      return response;
     } catch (error) {
       this.handleRequestError(error);
       throw error;
