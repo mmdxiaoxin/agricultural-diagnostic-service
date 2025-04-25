@@ -1,4 +1,5 @@
-import { RemoteInterface } from "@app/database/entities/remote-interface.entity";
+import { FileEntity } from '@app/database/entities';
+import { RemoteInterface } from '@app/database/entities/remote-interface.entity';
 
 /**
  * 接口调用状态枚举
@@ -8,7 +9,7 @@ export enum InterfaceCallState {
   PROCESSING = 'processing',
   SUCCESS = 'success',
   FAILED = 'failed',
-  RETRYING = 'retrying'
+  RETRYING = 'retrying',
 }
 
 /**
@@ -34,7 +35,7 @@ export enum PollingOperator {
   GREATER_THAN = 'greaterThan',
   LESS_THAN = 'lessThan',
   EXISTS = 'exists',
-  NOT_EXISTS = 'notExists'
+  NOT_EXISTS = 'notExists',
 }
 
 /**
@@ -74,7 +75,7 @@ export type InterfaceConfig = Pick<RemoteInterface, 'config' | 'url' | 'type'>;
  */
 export interface EnvironmentVariables {
   token?: string;
-  fileMeta?: any;
+  fileMeta?: FileEntity;
   fileData?: Buffer;
   [key: string]: any;
-} 
+}

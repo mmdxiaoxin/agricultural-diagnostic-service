@@ -156,6 +156,8 @@ export class InterfaceCallManager {
 
   /**
    * 执行接口调用
+   * @param environmentVariables 环境变量
+   * @returns 结果
    */
   async execute(
     environmentVariables?: EnvironmentVariables,
@@ -184,6 +186,8 @@ export class InterfaceCallManager {
 
   /**
    * 递归执行单个接口及其后续接口
+   * @param interfaceId 接口ID
+   * @param environmentVariables 环境变量
    */
   private async executeInterface(
     interfaceId: number,
