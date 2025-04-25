@@ -1,22 +1,29 @@
 import { Crop, Disease } from '@app/database/entities';
+import { RedisService } from '@app/redis';
 import { CreateKnowledgeDto } from '@common/dto/knowledge/create-knowledge.dto';
 import { PageQueryKnowledgeDto } from '@common/dto/knowledge/page-query-knowledge.dto';
 import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
+import { Prediction } from '@common/types/diagnosis/predict';
+import { DiagnosisRuleConfig, MatchResult } from '@common/types/knowledge/rule';
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
+import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
-import { get, isEmpty, isObject, isString } from 'lodash-es';
+import { get, isObject, isString } from 'lodash-es';
 import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class KnowledgeService {
-  private readonly logger = new Logger(KnowledgeService.name);0
+  private readonly logger = new Logger(KnowledgeService.name);
+  private readonly CACHE_TTL = 3600; // 缓存时间1小时
+
   constructor(
     @InjectRepository(Disease)
     private diseaseRepository: Repository<Disease>,
     @InjectRepository(Crop)
     private cropRepository: Repository<Crop>,
+    private readonly redisService: RedisService,
   ) {}
 
   // 创建知识
@@ -355,66 +362,165 @@ export class KnowledgeService {
     }
   }
 
+  private generateCacheKey(query: string | Record<string, any>): string {
+    if (isString(query)) {
+      return `disease:match:${query}`;
+    }
+    const searchText = get(query, 'searchText') as string;
+    if (searchText) {
+      return `disease:match:${searchText}`;
+    }
+    return `disease:match:${JSON.stringify(query)}`;
+  }
+
   // 匹配知识
   async match(query: string | Record<string, any>) {
-    const queryBuilder = this.diseaseRepository
+    // 1. 尝试从缓存获取结果
+    const cacheKey = this.generateCacheKey(query);
+    const cachedResult = await this.redisService.get<MatchResult[]>(cacheKey);
+    if (cachedResult && cachedResult.length > 0) {
+      return formatResponse(200, cachedResult, '知识匹配成功（缓存）');
+    }
+
+    // 2. 处理查询条件
+    let predictions: Prediction[] = [];
+    if (isObject(query) && query.predictions) {
+      predictions = query.predictions;
+    }
+
+    // 3. 获取所有疾病及其规则
+    const diseases = await this.diseaseRepository
       .createQueryBuilder('disease')
       .leftJoinAndSelect('disease.diagnosisRules', 'diagnosisRules')
-      .leftJoinAndSelect('disease.crop', 'crop');
+      .leftJoinAndSelect('disease.crop', 'crop')
+      .getMany();
 
-    // 如果是字符串查询，直接匹配 name 和 alias
-    if (isString(query)) {
-      queryBuilder.where([
-        { name: Like(`%${query}%`) },
-        { alias: Like(`%${query}%`) },
-      ]);
-    } else if (isObject(query)) {
-      // 如果是对象查询，先尝试匹配 name 和 alias
-      const searchText = get(query, 'searchText');
-      if (!isEmpty(searchText)) {
-        queryBuilder.where([
-          { name: Like(`%${searchText}%`) },
-          { alias: Like(`%${searchText}%`) },
-        ]);
+    // 4. 执行匹配
+    const matchResults = await this.matchPredictions(diseases, predictions);
+
+    // 5. 缓存结果
+    if (matchResults.length > 0) {
+      await this.redisService.set(cacheKey, matchResults, this.CACHE_TTL);
+    }
+
+    return formatResponse(200, matchResults, '知识匹配成功');
+  }
+
+  // 匹配预测结果
+  private async matchPredictions(
+    diseases: Disease[],
+    predictions: Prediction[],
+  ): Promise<MatchResult[]> {
+    const results: MatchResult[] = [];
+
+    for (const disease of diseases) {
+      const rules = disease.diagnosisRules || [];
+      let totalScore = 0;
+      const matchedRules: DiagnosisRuleConfig[] = [];
+
+      for (const rule of rules) {
+        const score = this.calculateRuleScore(rule.config, predictions);
+        if (score > 0) {
+          totalScore += score * (rule.weight || 1);
+          matchedRules.push(rule.config);
+        }
+      }
+
+      if (totalScore > 0) {
+        results.push({
+          disease,
+          score: totalScore,
+          matchedRules,
+        });
       }
     }
 
-    // 获取所有可能的匹配结果
-    const diseases = await queryBuilder.getMany();
+    // 按分数排序
+    return results.sort((a, b) => b.score - a.score);
+  }
 
-    // 如果没有直接匹配的结果，尝试通过诊断规则匹配
-    if (isEmpty(diseases) && isObject(query)) {
-      const allDiseases = await this.diseaseRepository
-        .createQueryBuilder('disease')
-        .leftJoinAndSelect('disease.diagnosisRules', 'diagnosisRules')
-        .leftJoinAndSelect('disease.crop', 'crop')
-        .getMany();
+  // 计算规则分数
+  private calculateRuleScore(
+    rule: DiagnosisRuleConfig,
+    predictions: Prediction[],
+  ): number {
+    switch (rule.type) {
+      case 'exact':
+        return predictions.some((p) => p.class_name === rule.value) ? 1 : 0;
 
-      // 遍历所有病害，检查其诊断规则是否匹配
-      const matchedDiseases = allDiseases.filter((disease) => {
-        const rules = get(disease, 'diagnosisRules', []);
-        return rules.some((rule) => {
-          try {
-            const schema = get(rule, 'schema', '');
-            if (isEmpty(schema)) return false;
+      case 'fuzzy':
+        return predictions.some(
+          (p) => this.calculateSimilarity(p.class_name, rule.value) > 0.8,
+        )
+          ? 0.8
+          : 0;
 
-            // 解析模式串，例如 "class_name=Apple_black_rot"
-            const [key, value] = (schema as string).split('=');
-            if (isEmpty(key) || isEmpty(value)) return false;
+      case 'regex':
+        const regex = new RegExp(rule.value);
+        return predictions.some((p) => regex.test(p.class_name)) ? 0.9 : 0;
 
-            // 检查查询对象中是否存在对应的键值对
-            const queryValue = get(query, key);
-            return !isEmpty(queryValue) && queryValue === value;
-          } catch (error) {
-            this.logger.error(`Error parsing schema: ${get(rule, 'schema')}`, error);
-            return false;
-          }
-        });
-      });
+      case 'contains':
+        return predictions.some((p) =>
+          p.class_name.toLowerCase().includes(rule.value.toLowerCase()),
+        )
+          ? 0.7
+          : 0;
 
-      return formatResponse(200, matchedDiseases, '知识匹配成功');
+      default:
+        return 0;
+    }
+  }
+
+  // 计算字符串相似度
+  private calculateSimilarity(str1: string, str2: string): number {
+    // 实现字符串相似度算法，如 Levenshtein 距离
+    // 这里使用简化的实现
+    const s1 = str1.toLowerCase();
+    const s2 = str2.toLowerCase();
+    if (s1 === s2) return 1;
+    if (s1.includes(s2) || s2.includes(s1)) return 0.8;
+    return 0;
+  }
+
+  // 批量匹配方法
+  async batchMatch(queries: (string | Record<string, any>)[]) {
+    const results: MatchResult[][] = [];
+
+    for (const query of queries) {
+      const matchResult = await this.match(query);
+      results.push(matchResult.data || []);
     }
 
-    return formatResponse(200, diseases, '知识匹配成功');
+    return formatResponse(200, results, '批量知识匹配成功');
+  }
+
+  // 获取匹配统计
+  async getMatchStats() {
+    const statsKey = 'disease:match:stats';
+    const stats = (await this.redisService.get<{
+      totalMatches: number;
+      cacheHits: number;
+      ruleMatches: number;
+    }>(statsKey)) || {
+      totalMatches: 0,
+      cacheHits: 0,
+      ruleMatches: 0,
+    };
+
+    return formatResponse(200, stats, '匹配统计获取成功');
+  }
+
+  // 定期清理缓存
+  @Cron('0 0 * * *') // 每天凌晨执行
+  async cleanupCache() {
+    const pattern = 'disease:match:*';
+    const keys = await this.redisService.getClient().keys(pattern);
+    for (const key of keys) {
+      const ttl = await this.redisService.getClient().ttl(key);
+      if (ttl < 0) {
+        // 已过期的键
+        await this.redisService.del(key);
+      }
+    }
   }
 }

@@ -1,7 +1,6 @@
 import {
   DiagnosisHistory,
   DiagnosisHistoryStatus,
-  Disease,
   FileEntity,
   PollingOperator,
   RemoteService,
@@ -10,6 +9,7 @@ import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { PredictionData } from '@common/types/diagnosis/predict';
 import { GrpcDownloadService } from '@common/types/download/download.types';
+import { MatchResult } from '@common/types/knowledge/rule';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientGrpc, ClientProxy, RpcException } from '@nestjs/microservices';
@@ -411,15 +411,11 @@ export class DiagnosisService {
 
       // 12. 匹配疾病
       const predictions = get(lastResult, 'data.predictions', []);
-      const classNames = predictions.map(
-        (prediction: any) => prediction.class_name,
-      );
-
       const response = await lastValueFrom(
-        this.knowledgeClient.send<{ data: Disease[] }>(
+        this.knowledgeClient.send<{ data: MatchResult[] }>(
           { cmd: 'knowledge.match' },
           {
-            searchText: classNames.join(','),
+            predictions,
           },
         ),
       );
@@ -427,7 +423,7 @@ export class DiagnosisService {
       if (!diagnosis.diagnosisResult) {
         diagnosis.diagnosisResult = {};
       }
-      diagnosis.diagnosisResult.diseases = response.data;
+      diagnosis.diagnosisResult.matchResults = response.data;
 
       await queryRunner.manager.save(diagnosis);
       await this.logService.addLog(diagnosisId, LogLevel.INFO, '诊断任务完成', {

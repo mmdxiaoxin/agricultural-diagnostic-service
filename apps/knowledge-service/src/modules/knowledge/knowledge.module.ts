@@ -8,6 +8,7 @@ import {
   Symptom,
   Treatment,
 } from '@app/database/entities';
+import { RedisService } from '@app/redis';
 import { Module } from '@nestjs/common';
 import { CropController } from './controllers/crop.controller';
 import { DiagnosisRuleController } from './controllers/diagnosis-rule.controller';
@@ -48,6 +49,7 @@ import { TreatmentService } from './services/treatment.service';
   providers: [
     CropService,
     DiseaseService,
+    RedisService,
     SymptomService,
     TreatmentService,
     EnvironmentFactorService,

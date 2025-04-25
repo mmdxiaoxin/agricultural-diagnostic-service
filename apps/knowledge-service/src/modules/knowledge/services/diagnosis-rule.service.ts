@@ -46,7 +46,7 @@ export class DiagnosisRuleService {
     const [rules, total] = await this.diagnosisRuleRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
-      where: [{ schema: Like(`%${keyword}%`) }],
+      where: [{ config: Like(`%${keyword}%`) }],
       relations: ['disease'],
     });
     return formatResponse(
