@@ -6,7 +6,7 @@ import {
 } from '@common/types/download/download.types';
 import { Injectable, Logger } from '@nestjs/common';
 import * as archiver from 'archiver';
-import { createReadStream, existsSync } from 'fs';
+import { createReadStream, existsSync, statSync } from 'fs';
 
 @Injectable()
 export class DownloadService {
@@ -42,21 +42,37 @@ export class DownloadService {
           data: Buffer.alloc(0),
         };
       }
-      const zip = archiver('zip', { zlib: { level: 9 } });
 
-      let zipBuffer = Buffer.alloc(0);
+      const zip = archiver('zip', {
+        zlib: { level: 9 },
+        store: true, // 使用存储模式，不压缩
+      });
+
+      // 使用流式处理
+      const chunks: Buffer[] = [];
+      let totalSize = 0;
+
       zip.on('data', (chunk) => {
-        zipBuffer = Buffer.concat([zipBuffer, chunk]);
+        chunks.push(chunk);
+        totalSize += chunk.length;
       });
 
       await new Promise<void>((resolve, reject) => {
         zip.on('end', resolve);
-        zip.on('error', reject);
+        zip.on('error', (err) => {
+          this.logger.error(`打包错误: ${err.message}`);
+          reject(err);
+        });
 
         for (const fileMeta of data.filesMeta) {
           const filePath = fileMeta.filePath;
           if (existsSync(filePath)) {
-            zip.append(createReadStream(filePath), {
+            const stream = createReadStream(filePath);
+            stream.on('error', (err) => {
+              this.logger.error(`读取文件错误: ${filePath}, ${err.message}`);
+              stream.destroy();
+            });
+            zip.append(stream, {
               name: fileMeta.originalFileName,
             });
           } else {
@@ -66,6 +82,7 @@ export class DownloadService {
         zip.finalize();
       });
 
+      const zipBuffer = Buffer.concat(chunks);
       return { success: true, data: zipBuffer, message: '打包成功' };
     } catch (err) {
       this.logger.error(`打包失败: ${err.message}`);
@@ -107,20 +124,36 @@ export class DownloadService {
         };
       }
 
-      const zip = archiver('zip', { zlib: { level: 9 } });
-      let zipBuffer = Buffer.alloc(0);
+      const zip = archiver('zip', {
+        zlib: { level: 9 },
+        store: true, // 使用存储模式，不压缩
+      });
+
+      // 使用流式处理
+      const chunks: Buffer[] = [];
+      let totalSize = 0;
+
       zip.on('data', (chunk) => {
-        zipBuffer = Buffer.concat([zipBuffer, chunk]);
+        chunks.push(chunk);
+        totalSize += chunk.length;
       });
 
       await new Promise<void>((resolve, reject) => {
         zip.on('end', resolve);
-        zip.on('error', reject);
+        zip.on('error', (err) => {
+          this.logger.error(`打包错误: ${err.message}`);
+          reject(err);
+        });
 
         for (const fileMeta of data.filesMeta) {
           const filePath = fileMeta.filePath;
           if (existsSync(filePath)) {
-            zip.append(createReadStream(filePath), {
+            const stream = createReadStream(filePath);
+            stream.on('error', (err) => {
+              this.logger.error(`读取文件错误: ${filePath}, ${err.message}`);
+              stream.destroy();
+            });
+            zip.append(stream, {
               name: fileMeta.originalFileName,
             });
           } else {
@@ -130,6 +163,7 @@ export class DownloadService {
         zip.finalize();
       });
 
+      const zipBuffer = Buffer.concat(chunks);
       return { success: true, data: zipBuffer, message: '打包成功' };
     } catch (err) {
       this.logger.error(`gRPC打包失败: ${err.message}`);
