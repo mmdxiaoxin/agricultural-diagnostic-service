@@ -87,6 +87,11 @@ export class DatasetService {
           { datasetId },
         ),
       );
+
+      if (filesMeta.length === 0) {
+        throw new HttpException('数据集没有可下载的文件', HttpStatus.NOT_FOUND);
+      }
+
       const response = await lastValueFrom(
         this.downloadService.downloadFiles({ filesMeta }),
       );
@@ -102,12 +107,29 @@ export class DatasetService {
         ? response.data
         : Buffer.from(response.data);
 
+      // 设置响应头
       res.set({
         'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="dataset-${datasetId}.zip"`,
         'Content-Length': fileBuffer.length.toString(),
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
       });
 
-      res.send(fileBuffer);
+      // 使用流式传输
+      const chunkSize = 1024 * 1024; // 1MB chunks
+      let offset = 0;
+
+      while (offset < fileBuffer.length) {
+        const chunk = fileBuffer.subarray(
+          offset,
+          Math.min(offset + chunkSize, fileBuffer.length),
+        );
+        res.write(chunk);
+        offset += chunk.length;
+      }
+
+      res.end();
     } catch (err) {
       this.logger.error(`下载失败: ${err.message}`);
       throw new InternalServerErrorException('文件下载失败');
