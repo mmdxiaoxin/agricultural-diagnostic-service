@@ -18,6 +18,14 @@ export class KnowledgeService {
   private readonly logger = new Logger(KnowledgeService.name);
   private readonly CACHE_TTL = 3600; // 缓存时间1小时
 
+  // 缓存键前缀
+  private readonly CACHE_KEYS = {
+    DISEASE: 'disease',
+    DISEASE_LIST: 'disease:list',
+    DISEASE_MATCH: 'disease:match',
+    DISEASE_STATS: 'disease:match:stats',
+  } as const;
+
   constructor(
     @InjectRepository(Disease)
     private diseaseRepository: Repository<Disease>,
@@ -25,6 +33,61 @@ export class KnowledgeService {
     private cropRepository: Repository<Crop>,
     private readonly redisService: RedisService,
   ) {}
+
+  // 生成缓存键的辅助方法
+  private generateCacheKey(
+    type: keyof typeof this.CACHE_KEYS,
+    ...args: any[]
+  ): string {
+    const prefix = this.CACHE_KEYS[type];
+    switch (type) {
+      case 'DISEASE':
+        return `${prefix}:${args[0]}`; // disease:id
+      case 'DISEASE_LIST':
+        return `${prefix}:${args[0]}:${args[1]}:${args[2]}`; // disease:list:page:pageSize:keyword
+      case 'DISEASE_MATCH':
+        return this.generateMatchCacheKey(args[0]);
+      case 'DISEASE_STATS':
+        return prefix;
+      default:
+        return prefix;
+    }
+  }
+
+  // 生成匹配缓存键
+  private generateMatchCacheKey(query: string | Record<string, any>): string {
+    if (isString(query)) {
+      return `${this.CACHE_KEYS.DISEASE_MATCH}:${query}`;
+    }
+    const searchText = get(query, 'searchText') as string;
+    if (searchText && searchText.trim()) {
+      return `${this.CACHE_KEYS.DISEASE_MATCH}:${searchText.trim()}`;
+    }
+    if (query.predictions) {
+      return `${this.CACHE_KEYS.DISEASE_MATCH}:predictions:${JSON.stringify(query.predictions)}`;
+    }
+    return `${this.CACHE_KEYS.DISEASE_MATCH}:${JSON.stringify(query)}`;
+  }
+
+  // 清除相关缓存
+  private async clearRelatedCache(diseaseId?: number) {
+    const patterns = [
+      `${this.CACHE_KEYS.DISEASE_LIST}:*`,
+      this.CACHE_KEYS.DISEASE_MATCH,
+      this.CACHE_KEYS.DISEASE_STATS,
+    ];
+
+    if (diseaseId) {
+      patterns.push(`${this.CACHE_KEYS.DISEASE}:${diseaseId}`);
+    }
+
+    for (const pattern of patterns) {
+      const keys = await this.redisService.getClient().keys(pattern);
+      if (keys.length > 0) {
+        await this.redisService.getClient().del(...keys);
+      }
+    }
+  }
 
   // 创建知识
   async create(dto: CreateKnowledgeDto) {
@@ -110,6 +173,7 @@ export class KnowledgeService {
       });
 
       await queryRunner.commitTransaction();
+      await this.clearRelatedCache(savedDisease.id);
       return formatResponse(201, completeDisease, '知识创建成功');
     } catch (error) {
       this.logger.error(error);
@@ -122,6 +186,13 @@ export class KnowledgeService {
 
   // 获取所有知识
   async findAll() {
+    const cacheKey = this.generateCacheKey('DISEASE_LIST', 'all');
+    const cachedResult = await this.redisService.get<Disease[]>(cacheKey);
+
+    if (cachedResult) {
+      return formatResponse(200, cachedResult, '知识列表获取成功（缓存）');
+    }
+
     const diseases = await this.diseaseRepository.find({
       relations: [
         'crop',
@@ -131,12 +202,34 @@ export class KnowledgeService {
         'diagnosisRules',
       ],
     });
+
+    // 缓存结果
+    await this.redisService.set(cacheKey, diseases, this.CACHE_TTL);
+
     return formatResponse(200, diseases, '知识列表获取成功');
   }
 
   // 获取知识列表
   async findList(query: PageQueryKnowledgeDto) {
     const { page = 1, pageSize = 10, keyword, cropId } = query;
+    const cacheKey = this.generateCacheKey(
+      'DISEASE_LIST',
+      page,
+      pageSize,
+      keyword || '',
+      cropId || '',
+    );
+
+    const cachedResult = await this.redisService.get<{
+      list: Disease[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>(cacheKey);
+
+    if (cachedResult) {
+      return formatResponse(200, cachedResult, '知识列表获取成功（缓存）');
+    }
 
     const queryBuilder = this.diseaseRepository
       .createQueryBuilder('disease')
@@ -162,15 +255,23 @@ export class KnowledgeService {
       .take(pageSize)
       .getManyAndCount();
 
-    return formatResponse(
-      200,
-      { list: diseases, total, page, pageSize },
-      '知识列表获取成功',
-    );
+    const result = { list: diseases, total, page, pageSize };
+
+    // 缓存结果
+    await this.redisService.set(cacheKey, result, this.CACHE_TTL);
+
+    return formatResponse(200, result, '知识列表获取成功');
   }
 
   // 根据ID获取知识
   async findById(id: number) {
+    const cacheKey = this.generateCacheKey('DISEASE', id);
+    const cachedResult = await this.redisService.get<Disease>(cacheKey);
+
+    if (cachedResult) {
+      return formatResponse(200, cachedResult, '知识详情获取成功（缓存）');
+    }
+
     const disease = await this.diseaseRepository.findOne({
       where: { id },
       relations: [
@@ -181,12 +282,17 @@ export class KnowledgeService {
         'diagnosisRules',
       ],
     });
+
     if (!disease) {
       throw new RpcException({
         code: 404,
         message: `Knowledge with ID ${id} not found`,
       });
     }
+
+    // 缓存结果
+    await this.redisService.set(cacheKey, disease, this.CACHE_TTL);
+
     return formatResponse(200, disease, '知识详情获取成功');
   }
 
@@ -324,6 +430,7 @@ export class KnowledgeService {
       });
 
       await queryRunner.commitTransaction();
+      await this.clearRelatedCache(updatedDisease.id);
       return formatResponse(200, completeDisease, '知识更新成功');
     } catch (error) {
       this.logger.error(error);
@@ -353,6 +460,7 @@ export class KnowledgeService {
       await queryRunner.manager.remove(disease);
 
       await queryRunner.commitTransaction();
+      await this.clearRelatedCache(id);
       return formatResponse(204, null, '知识删除成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -362,24 +470,10 @@ export class KnowledgeService {
     }
   }
 
-  private generateCacheKey(query: string | Record<string, any>): string {
-    if (isString(query)) {
-      return `disease:match:${query}`;
-    }
-    const searchText = get(query, 'searchText') as string;
-    if (searchText && searchText.trim()) {
-      return `disease:match:${searchText.trim()}`;
-    }
-    if (query.predictions) {
-      return `disease:match:predictions:${JSON.stringify(query.predictions)}`;
-    }
-    return `disease:match:${JSON.stringify(query)}`;
-  }
-
   // 匹配知识
   async match(query: string | Record<string, any>) {
     // 1. 尝试从缓存获取结果
-    const cacheKey = this.generateCacheKey(query);
+    const cacheKey = this.generateMatchCacheKey(query);
     const cachedResult = await this.redisService.get<MatchResult[]>(cacheKey);
     if (cachedResult && cachedResult.length > 0) {
       return formatResponse(200, cachedResult, '知识匹配成功（缓存）');
@@ -499,7 +593,7 @@ export class KnowledgeService {
 
   // 获取匹配统计
   async getMatchStats() {
-    const statsKey = 'disease:match:stats';
+    const statsKey = this.generateCacheKey('DISEASE_STATS');
     const stats = (await this.redisService.get<{
       totalMatches: number;
       cacheHits: number;
