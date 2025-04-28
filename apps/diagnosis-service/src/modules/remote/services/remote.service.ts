@@ -3,44 +3,139 @@ import {
   RemoteInterface,
   RemoteConfig,
 } from '@app/database/entities';
+import { RedisService } from '@app/redis';
 import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
 import { UpdateRemoteServiceDto } from '@common/dto/remote/update-remote-service.dto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class RemoteServiceService {
+  private readonly logger = new Logger(RemoteServiceService.name);
+  private readonly CACHE_TTL = 300; // 缓存时间5分钟，考虑到远程服务配置可能经常变动
+
+  // 缓存键前缀
+  private readonly CACHE_KEYS = {
+    REMOTE_SERVICE: 'remote:service',
+    REMOTE_SERVICE_LIST: 'remote:service:list',
+  } as const;
+
   constructor(
     @InjectRepository(RemoteService)
     private remoteServiceRepository: Repository<RemoteService>,
     private dataSource: DataSource,
+    private readonly redisService: RedisService,
   ) {}
+
+  // 生成缓存键的辅助方法
+  private generateCacheKey(
+    type: keyof typeof this.CACHE_KEYS,
+    ...args: any[]
+  ): string {
+    const prefix = this.CACHE_KEYS[type];
+    switch (type) {
+      case 'REMOTE_SERVICE':
+        return `${prefix}:${args[0]}`; // remote:service:id
+      case 'REMOTE_SERVICE_LIST':
+        return `${prefix}:${args[0]}:${args[1]}`; // remote:service:list:page:pageSize
+      default:
+        return prefix;
+    }
+  }
+
+  // 清除相关缓存
+  private async clearRelatedCache(serviceId?: number) {
+    const patterns = [`${this.CACHE_KEYS.REMOTE_SERVICE_LIST}:*`];
+
+    if (serviceId) {
+      patterns.push(`${this.CACHE_KEYS.REMOTE_SERVICE}:${serviceId}`);
+    }
+
+    for (const pattern of patterns) {
+      const keys = await this.redisService.getClient().keys(pattern);
+      if (keys.length > 0) {
+        await this.redisService.getClient().del(...keys);
+      }
+    }
+  }
 
   // 获取全部远程服务
   async find(): Promise<RemoteService[]> {
-    return this.remoteServiceRepository.find({
+    const cacheKey = this.generateCacheKey('REMOTE_SERVICE_LIST', 'all');
+    const cachedResult = await this.redisService.get<RemoteService[]>(cacheKey);
+
+    if (cachedResult) {
+      this.logger.debug('从缓存获取远程服务列表');
+      return cachedResult;
+    }
+
+    const services = await this.remoteServiceRepository.find({
       relations: ['interfaces', 'configs'],
     });
+
+    // 缓存结果
+    await this.redisService.set(cacheKey, services, this.CACHE_TTL);
+
+    return services;
   }
 
   // 分页查询远程服务
   async findList(page: number, pageSize: number) {
+    const cacheKey = this.generateCacheKey(
+      'REMOTE_SERVICE_LIST',
+      page,
+      pageSize,
+    );
+    const cachedResult =
+      await this.redisService.get<[RemoteService[], number]>(cacheKey);
+
+    if (cachedResult) {
+      this.logger.debug('从缓存获取远程服务分页列表');
+      return cachedResult;
+    }
+
     const skip = (page - 1) * pageSize;
-    return await this.remoteServiceRepository.findAndCount({
+    const result = await this.remoteServiceRepository.findAndCount({
       skip,
       take: pageSize,
       relations: ['interfaces', 'configs'],
     });
+
+    // 缓存结果
+    await this.redisService.set(cacheKey, result, this.CACHE_TTL);
+
+    return result;
   }
 
   // 获取单个远程服务
   async findById(serviceId: number) {
-    return this.remoteServiceRepository.findOne({
+    const cacheKey = this.generateCacheKey('REMOTE_SERVICE', serviceId);
+    const cachedResult = await this.redisService.get<RemoteService>(cacheKey);
+
+    if (cachedResult) {
+      this.logger.debug(`从缓存获取远程服务: ${serviceId}`);
+      return cachedResult;
+    }
+
+    const service = await this.remoteServiceRepository.findOne({
       where: { id: serviceId },
       relations: ['interfaces', 'configs'],
     });
+
+    if (!service) {
+      this.logger.error(`Remote service with ID ${serviceId} not found`);
+      throw new RpcException({
+        code: 404,
+        message: '未找到当前服务',
+      });
+    }
+
+    // 缓存结果
+    await this.redisService.set(cacheKey, service, this.CACHE_TTL);
+
+    return service;
   }
 
   // 创建远程服务
@@ -74,9 +169,14 @@ export class RemoteServiceService {
       }
 
       await queryRunner.commitTransaction();
+
+      // 清除相关缓存
+      await this.clearRelatedCache();
+
       return savedService;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      this.logger.error('创建远程服务失败:', error);
       throw new RpcException({
         code: 500,
         message: '创建服务失败',
@@ -104,6 +204,7 @@ export class RemoteServiceService {
       });
 
       if (!remoteService) {
+        this.logger.error(`Remote service with ID ${serviceId} not found`);
         throw new RpcException({
           code: 404,
           message: '未找到当前服务',
@@ -142,9 +243,14 @@ export class RemoteServiceService {
       }
 
       await queryRunner.commitTransaction();
+
+      // 清除相关缓存
+      await this.clearRelatedCache(serviceId);
+
       return updatedService;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      this.logger.error('更新远程服务失败:', error);
       throw new RpcException({
         code: 500,
         message: '更新服务失败',
@@ -169,6 +275,7 @@ export class RemoteServiceService {
       });
 
       if (!remoteService) {
+        this.logger.error(`Remote service with ID ${serviceId} not found`);
         throw new RpcException({
           code: 404,
           message: '未找到当前服务',
@@ -189,8 +296,12 @@ export class RemoteServiceService {
       await queryRunner.manager.remove(remoteService);
 
       await queryRunner.commitTransaction();
+
+      // 清除相关缓存
+      await this.clearRelatedCache(serviceId);
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      this.logger.error('删除远程服务失败:', error);
       throw new RpcException({
         code: 500,
         message: '删除服务失败',
@@ -215,6 +326,7 @@ export class RemoteServiceService {
       });
 
       if (!originalService) {
+        this.logger.error(`Remote service with ID ${serviceId} not found`);
         throw new RpcException({
           code: 404,
           message: '未找到当前服务',
@@ -265,9 +377,14 @@ export class RemoteServiceService {
       }
 
       await queryRunner.commitTransaction();
+
+      // 清除相关缓存
+      await this.clearRelatedCache();
+
       return savedService;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      this.logger.error('复制远程服务失败:', error);
       throw new RpcException({
         code: 500,
         message: '复制服务失败',
