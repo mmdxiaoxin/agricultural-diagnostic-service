@@ -19,7 +19,6 @@ export class DiagnosisProcessor extends WorkerHost {
   async process(
     job: Job<{
       diagnosisId: number;
-      userId: number;
       dto: StartDiagnosisDto;
       token: string;
       fileId: number;
@@ -30,7 +29,6 @@ export class DiagnosisProcessor extends WorkerHost {
     try {
       await this.diagnosisService.executeDiagnosisAsync(
         job.data.diagnosisId,
-        job.data.userId,
         job.data.dto,
         job.data.token,
         job.data.fileId,

@@ -97,7 +97,6 @@ export class DiagnosisService {
   // 执行诊断任务
   async executeDiagnosisAsync(
     diagnosisId: number,
-    userId: number,
     dto: StartDiagnosisDto,
     token: string,
     fileId: number,
@@ -202,8 +201,29 @@ export class DiagnosisService {
       }
 
       // 10. 更新诊断结果
-      diagnosis.status = get(lastResult, 'data.status');
+      diagnosis.status = get(
+        lastResult,
+        'data.status',
+        DiagnosisHistoryStatus.SUCCESS,
+      );
       diagnosis.diagnosisResult = get(lastResult, 'data');
+
+      // 11. 匹配疾病
+      const predictions = get(lastResult, 'data.predictions', []);
+      const response = await lastValueFrom(
+        this.knowledgeClient.send<{ data: MatchResult[] }>(
+          { cmd: 'knowledge.match' },
+          {
+            query: { predictions },
+          },
+        ),
+      );
+
+      if (!diagnosis.diagnosisResult) {
+        diagnosis.diagnosisResult = {};
+      }
+      diagnosis.diagnosisResult.matchResults = response.data;
+
       await queryRunner.manager.save(diagnosis);
       await this.logService.addLog(diagnosisId, LogLevel.INFO, '诊断任务完成', {
         status: diagnosis.status,
@@ -213,6 +233,17 @@ export class DiagnosisService {
       await queryRunner.commitTransaction();
     } catch (error) {
       this.logger.error('后台诊断任务执行失败:', error);
+      // 更新诊断状态为失败
+      const failedDiagnosis = await queryRunner.manager.findOne(
+        DiagnosisHistory,
+        {
+          where: { id: diagnosisId },
+        },
+      );
+      if (failedDiagnosis) {
+        failedDiagnosis.status = DiagnosisHistoryStatus.FAILED;
+        await queryRunner.manager.save(failedDiagnosis);
+      }
       await this.logService.addLog(
         diagnosisId,
         LogLevel.ERROR,
