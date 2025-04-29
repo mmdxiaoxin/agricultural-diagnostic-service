@@ -36,14 +36,6 @@
       "path": "apps/user-service",
     },
     {
-      "name": "packages/common",
-      "path": "packages/common/src",
-    },
-    {
-      "name": "packages/shared",
-      "path": "packages/shared/src",
-    },
-    {
       "name": "libs",
       "path": "libs",
     },
