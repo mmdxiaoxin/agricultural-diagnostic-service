@@ -67,7 +67,6 @@ export class RemoteServiceService {
     const cachedResult = await this.redisService.get<RemoteService[]>(cacheKey);
 
     if (cachedResult) {
-      this.logger.debug('从缓存获取远程服务列表');
       return cachedResult;
     }
 
@@ -92,7 +91,6 @@ export class RemoteServiceService {
       await this.redisService.get<[RemoteService[], number]>(cacheKey);
 
     if (cachedResult) {
-      this.logger.debug('从缓存获取远程服务分页列表');
       return cachedResult;
     }
 
@@ -115,7 +113,6 @@ export class RemoteServiceService {
     const cachedResult = await this.redisService.get<RemoteService>(cacheKey);
 
     if (cachedResult) {
-      this.logger.debug(`从缓存获取远程服务: ${serviceId}`);
       return cachedResult;
     }
 
