@@ -28,7 +28,7 @@ import { join } from 'path';
         transport: Transport.GRPC,
         options: {
           package: 'download',
-          protoPath: join(__dirname, 'modules/dataset/proto/download.proto'),
+          protoPath: join(__dirname, 'proto/download.proto'),
           url: `${DOWNLOAD_SERVICE_HOST}:${DOWNLOAD_SERVICE_GRPC_PORT}`,
           loader: {
             keepCase: true,
