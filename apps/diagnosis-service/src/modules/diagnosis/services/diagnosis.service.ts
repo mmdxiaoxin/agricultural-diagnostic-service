@@ -29,11 +29,19 @@ import { DataSource, Repository } from 'typeorm';
 import { DIAGNOSIS_PROCESSOR } from '../processors';
 import { DiagnosisLogService } from './diagnosis-log.service';
 import { InterfaceCallManager } from './interface-call/core/interface-call.manager';
+import { RedisService } from '@app/redis';
 
 @Injectable()
 export class DiagnosisService {
   private readonly logger = new Logger(DiagnosisService.name);
   private downloadService: GrpcDownloadService;
+
+  // 缓存键前缀
+  private readonly CACHE_KEYS = {
+    DIAGNOSIS: 'diagnosis',
+    DIAGNOSIS_LIST: 'diagnosis:list',
+    DIAGNOSIS_STATUS: 'diagnosis:status',
+  } as const;
 
   constructor(
     @Inject(FILE_SERVICE_NAME)
@@ -53,6 +61,7 @@ export class DiagnosisService {
     @InjectQueue(DIAGNOSIS_PROCESSOR)
     private readonly diagnosisQueue: Queue,
     private readonly interfaceCallManager: InterfaceCallManager,
+    private readonly redisService: RedisService,
   ) {}
 
   onModuleInit() {
@@ -92,6 +101,25 @@ export class DiagnosisService {
 
     // 直接返回 Buffer 数据
     return Buffer.isBuffer(data) ? data : Buffer.from(data);
+  }
+
+  // 清除相关缓存
+  private async clearRelatedCache(userId: number, diagnosisId?: number) {
+    const patterns = [`${this.CACHE_KEYS.DIAGNOSIS_LIST}:${userId}:*`];
+
+    if (diagnosisId) {
+      patterns.push(
+        `${this.CACHE_KEYS.DIAGNOSIS}:${diagnosisId}:${userId}`,
+        `${this.CACHE_KEYS.DIAGNOSIS_STATUS}:${diagnosisId}:${userId}`,
+      );
+    }
+
+    for (const pattern of patterns) {
+      const keys = await this.redisService.getClient().keys(pattern);
+      if (keys.length > 0) {
+        await this.redisService.getClient().del(...keys);
+      }
+    }
   }
 
   // 执行诊断任务
@@ -230,6 +258,9 @@ export class DiagnosisService {
         result: get(lastResult, 'data'),
       });
 
+      // 清除相关缓存
+      await this.clearRelatedCache(diagnosis.createdBy, diagnosisId);
+
       await queryRunner.commitTransaction();
     } catch (error) {
       this.logger.error('后台诊断任务执行失败:', error);
@@ -243,6 +274,8 @@ export class DiagnosisService {
       if (failedDiagnosis) {
         failedDiagnosis.status = DiagnosisHistoryStatus.FAILED;
         await queryRunner.manager.save(failedDiagnosis);
+        // 清除相关缓存
+        await this.clearRelatedCache(failedDiagnosis.createdBy, diagnosisId);
       }
       await this.logService.addLog(
         diagnosisId,
@@ -358,6 +391,9 @@ export class DiagnosisService {
         status: DiagnosisHistoryStatus.PROCESSING,
       });
 
+      // 清除相关缓存
+      await this.clearRelatedCache(userId, diagnosisId);
+
       // 6. 获取文件
       if (!diagnosis.fileId) {
         await this.logService.addLog(
@@ -466,6 +502,9 @@ export class DiagnosisService {
         status: diagnosis.status,
         result: get(lastResult, 'data'),
       });
+
+      // 清除相关缓存
+      await this.clearRelatedCache(userId, diagnosisId);
 
       await queryRunner.commitTransaction();
       return formatResponse(

@@ -42,11 +42,11 @@ export class DiagnosisHistoryService {
     const prefix = this.CACHE_KEYS[type];
     switch (type) {
       case 'DIAGNOSIS':
-        return `${prefix}:${args[0]}`; // diagnosis:id
+        return `${prefix}:${args[0]}:${args[1]}`; // diagnosis:id:userId
       case 'DIAGNOSIS_LIST':
         return `${prefix}:${args[0]}:${args[1]}:${args[2]}`; // diagnosis:list:userId:page:pageSize
       case 'DIAGNOSIS_STATUS':
-        return `${prefix}:${args[0]}`; // diagnosis:status:id
+        return `${prefix}:${args[0]}:${args[1]}`; // diagnosis:status:id:userId
       default:
         return prefix;
     }
@@ -58,8 +58,8 @@ export class DiagnosisHistoryService {
 
     if (diagnosisId) {
       patterns.push(
-        `${this.CACHE_KEYS.DIAGNOSIS}:${diagnosisId}`,
-        `${this.CACHE_KEYS.DIAGNOSIS_STATUS}:${diagnosisId}`,
+        `${this.CACHE_KEYS.DIAGNOSIS}:${diagnosisId}:${userId}`,
+        `${this.CACHE_KEYS.DIAGNOSIS_STATUS}:${diagnosisId}:${userId}`,
       );
     }
 
@@ -99,8 +99,8 @@ export class DiagnosisHistoryService {
   }
 
   // 获取诊断服务状态
-  async diagnosisHistoryStatusGet(id: number) {
-    const cacheKey = this.generateCacheKey('DIAGNOSIS_STATUS', id);
+  async diagnosisHistoryStatusGet(id: number, userId: number) {
+    const cacheKey = this.generateCacheKey('DIAGNOSIS_STATUS', id, userId);
     const cachedResult =
       await this.redisService.get<DiagnosisHistory>(cacheKey);
 
@@ -109,7 +109,7 @@ export class DiagnosisHistoryService {
     }
 
     const diagnosis = await this.diagnosisRepository.findOne({
-      where: { id },
+      where: { id, createdBy: userId },
     });
     if (!diagnosis) {
       this.logger.error(`Diagnosis with ID ${id} not found`);
