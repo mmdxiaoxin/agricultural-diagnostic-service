@@ -1,4 +1,5 @@
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
+import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
@@ -228,7 +229,6 @@ export class DiagnosisController {
 
   @Delete('feedback/:feedbackId')
   async diagnosisHistoryFeedbackDelete(
-    @Req() req: Request,
     @Param('feedbackId', ParseIntPipe) feedbackId: number,
   ) {
     return this.diagnosisService.diagnosisHistoryFeedbackDelete(feedbackId);
@@ -240,15 +240,7 @@ export class DiagnosisController {
   }
 
   @Post('support')
-  async createDiagnosisSupport(
-    @Req() req: Request,
-    @Body()
-    data: {
-      key: string;
-      value: { serviceId: number; configId: number };
-      description: string;
-    },
-  ) {
+  async createDiagnosisSupport(@Body() data: DiagnosisSupportDto) {
     return this.diagnosisService.createDiagnosisSupport(data);
   }
 
@@ -265,12 +257,7 @@ export class DiagnosisController {
   @Put('support/:id')
   async updateDiagnosisSupport(
     @Param('id', ParseIntPipe) id: number,
-    @Body()
-    data: {
-      key: string;
-      value: { serviceId: number; configId: number };
-      description: string;
-    },
+    @Body() data: DiagnosisSupportDto,
   ) {
     return this.diagnosisService.updateDiagnosisSupport(id, data);
   }

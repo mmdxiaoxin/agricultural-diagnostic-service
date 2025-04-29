@@ -1,5 +1,6 @@
 import { FileEntity } from '@app/database/entities';
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
+import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
@@ -189,11 +190,7 @@ export class DiagnosisService {
     );
   }
 
-  createDiagnosisSupport(data: {
-    key: string;
-    value: { serviceId: number; configId: number };
-    description: string;
-  }) {
+  createDiagnosisSupport(data: DiagnosisSupportDto) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_CREATE },
       data,
@@ -214,14 +211,7 @@ export class DiagnosisService {
     );
   }
 
-  updateDiagnosisSupport(
-    id: number,
-    data: {
-      key: string;
-      value: { serviceId: number; configId: number };
-      description: string;
-    },
-  ) {
+  updateDiagnosisSupport(id: number, data: DiagnosisSupportDto) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_UPDATE },
       { id, ...data },
