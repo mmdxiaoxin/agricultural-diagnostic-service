@@ -11,6 +11,11 @@ export const DIAGNOSIS_MESSAGE_PATTERNS = {
   HISTORIES_DELETE: 'diagnosis.histories.delete',
   LOG: 'diagnosis.log',
   LOG_LIST: 'diagnosis.log.list',
+  FEEDBACK_LIST: 'diagnosis.feedback.list',
+  FEEDBACK_CREATE: 'diagnosis.feedback.create',
+  FEEDBACK_UPDATE: 'diagnosis.feedback.update',
+  FEEDBACK_DELETE: 'diagnosis.feedback.delete',
+  FEEDBACK_DETAIL: 'diagnosis.feedback.detail',
 } as const;
 
 export type DiagnosisMessagePattern =

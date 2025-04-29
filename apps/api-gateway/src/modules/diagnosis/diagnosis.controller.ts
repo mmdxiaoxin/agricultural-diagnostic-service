@@ -1,3 +1,4 @@
+import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
@@ -12,6 +13,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Query,
   Req,
   UnauthorizedException,
@@ -26,6 +28,7 @@ import { Request } from 'express';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { DiagnosisService } from './diagnosis.service';
+import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 
 @ApiTags('病害诊断模块')
 @Controller('diagnosis')
@@ -168,6 +171,19 @@ export class DiagnosisController {
     return this.diagnosisService.diagnosisHistoryDelete(id, req.user.userId);
   }
 
+  @Post('history/:id/feedback')
+  async diagnosisHistoryFeedbackCreate(
+    @Req() req: Request,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateFeedbackDto,
+  ) {
+    return this.diagnosisService.diagnosisHistoryFeedbackCreate(
+      req.user.userId,
+      id,
+      dto,
+    );
+  }
+
   @Get('history/list')
   async diagnosisHistoryListGet(
     @Req() req: Request,
@@ -177,5 +193,48 @@ export class DiagnosisController {
       req.user.userId,
       query,
     );
+  }
+
+  @Get('feedback/:feedbackId')
+  async diagnosisHistoryFeedbackDetailGet(
+    @Req() req: Request,
+    @Param('feedbackId', ParseIntPipe) feedbackId: number,
+  ) {
+    return this.diagnosisService.diagnosisHistoryFeedbackDetailGet(
+      req.user.userId,
+      feedbackId,
+    );
+  }
+
+  @Get('feedback/list')
+  async diagnosisHistoryFeedbackListGet(
+    @Req() req: Request,
+    @Query() query: PageQueryDto,
+  ) {
+    return this.diagnosisService.diagnosisHistoryFeedbackListGet(
+      req.user.userId,
+      query,
+    );
+  }
+
+  @Put('feedback/:feedbackId')
+  async diagnosisHistoryFeedbackUpdate(
+    @Req() req: Request,
+    @Param('feedbackId', ParseIntPipe) feedbackId: number,
+    @Body() dto: UpdateFeedbackDto,
+  ) {
+    return this.diagnosisService.diagnosisHistoryFeedbackUpdate(
+      req.user.userId,
+      feedbackId,
+      dto,
+    );
+  }
+
+  @Delete('feedback/:feedbackId')
+  async diagnosisHistoryFeedbackDelete(
+    @Req() req: Request,
+    @Param('feedbackId', ParseIntPipe) feedbackId: number,
+  ) {
+    return this.diagnosisService.diagnosisHistoryFeedbackDelete(feedbackId);
   }
 }

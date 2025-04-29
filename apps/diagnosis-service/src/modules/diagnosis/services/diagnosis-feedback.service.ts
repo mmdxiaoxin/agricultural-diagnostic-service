@@ -23,7 +23,7 @@ export class DiagnosisFeedbackService {
   ) {}
 
   // 创建反馈
-  async createFeedback(userId: number, dto: CreateFeedbackDto) {
+  async createFeedback(userId: number, id: number, dto: CreateFeedbackDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -31,7 +31,7 @@ export class DiagnosisFeedbackService {
     try {
       // 检查诊断记录是否存在
       const diagnosis = await queryRunner.manager.findOne(DiagnosisHistory, {
-        where: { id: dto.diagnosisId },
+        where: { id },
       });
 
       if (!diagnosis) {
@@ -40,7 +40,7 @@ export class DiagnosisFeedbackService {
 
       // 创建反馈记录
       const feedback = queryRunner.manager.create(DiagnosisFeedback, {
-        diagnosisId: dto.diagnosisId,
+        diagnosis,
         feedbackContent: dto.feedbackContent,
         additionalInfo: dto.additionalInfo,
         status: FeedbackStatus.PENDING,
@@ -197,5 +197,12 @@ export class DiagnosisFeedbackService {
         data: error,
       });
     }
+  }
+
+  // 删除反馈
+  async deleteFeedback(id: number) {
+    await this.feedbackRepository.delete(id);
+
+    return formatResponse(200, null, '反馈删除成功');
   }
 }

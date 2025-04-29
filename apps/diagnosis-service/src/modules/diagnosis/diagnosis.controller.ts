@@ -1,8 +1,11 @@
+import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
+import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { DIAGNOSIS_MESSAGE_PATTERNS } from '@shared/constants/diagnosis-message-patterns';
+import { DiagnosisFeedbackService } from './services/diagnosis-feedback.service';
 import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisLogService } from './services/diagnosis-log.service';
 import { DiagnosisService } from './services/diagnosis.service';
@@ -13,6 +16,7 @@ export class DiagnosisController {
     private readonly diagnosisService: DiagnosisService,
     private readonly diagnosisHistoryService: DiagnosisHistoryService,
     private readonly diagnosisLogService: DiagnosisLogService,
+    private readonly diagnosisFeedbackService: DiagnosisFeedbackService,
   ) {}
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.CREATE })
@@ -124,5 +128,57 @@ export class DiagnosisController {
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.LOG })
   async diagnosisLogGet(@Payload() payload: { diagnosisId: number }) {
     return this.diagnosisLogService.getDiagnosisLogs(payload.diagnosisId);
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_LIST })
+  async diagnosisFeedbackListGet(
+    @Payload() payload: { userId: number; query: PageQueryDto },
+  ) {
+    return this.diagnosisFeedbackService.getFeedbackList(
+      payload.userId,
+      payload.query,
+    );
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_DETAIL })
+  async diagnosisFeedbackDetailGet(
+    @Payload() payload: { feedbackId: number; userId: number },
+  ) {
+    return this.diagnosisFeedbackService.getFeedbackDetail(
+      payload.feedbackId,
+      payload.userId,
+    );
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_CREATE })
+  async diagnosisFeedbackCreate(
+    @Payload() payload: { userId: number; id: number; dto: CreateFeedbackDto },
+  ) {
+    return this.diagnosisFeedbackService.createFeedback(
+      payload.userId,
+      payload.id,
+      payload.dto,
+    );
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_UPDATE })
+  async diagnosisFeedbackUpdate(
+    @Payload()
+    payload: {
+      id: number;
+      expertId: number;
+      dto: UpdateFeedbackDto;
+    },
+  ) {
+    return this.diagnosisFeedbackService.updateFeedback(
+      payload.id,
+      payload.expertId,
+      payload.dto,
+    );
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_DELETE })
+  async diagnosisFeedbackDelete(@Payload() payload: { id: number }) {
+    return this.diagnosisFeedbackService.deleteFeedback(payload.id);
   }
 }

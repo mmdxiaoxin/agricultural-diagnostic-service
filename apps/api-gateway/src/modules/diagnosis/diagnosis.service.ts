@@ -1,5 +1,7 @@
 import { FileEntity } from '@app/database/entities';
+import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
+import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -127,6 +129,17 @@ export class DiagnosisService {
     );
   }
 
+  diagnosisHistoryFeedbackCreate(
+    userId: number,
+    id: number,
+    dto: CreateFeedbackDto,
+  ) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_CREATE },
+      { userId, id, dto },
+    );
+  }
+
   diagnosisHistoriesDelete(userId: number, diagnosisIds: number[]) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.HISTORIES_DELETE },
@@ -141,6 +154,38 @@ export class DiagnosisService {
         query,
         userId,
       },
+    );
+  }
+
+  diagnosisHistoryFeedbackDetailGet(userId: number, feedbackId: number) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_DETAIL },
+      { userId, feedbackId },
+    );
+  }
+
+  diagnosisHistoryFeedbackListGet(userId: number, query: PageQueryDto) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_LIST },
+      { userId, query },
+    );
+  }
+
+  diagnosisHistoryFeedbackUpdate(
+    expertId: number,
+    feedbackId: number,
+    dto: UpdateFeedbackDto,
+  ) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_UPDATE },
+      { expertId, id: feedbackId, dto },
+    );
+  }
+
+  diagnosisHistoryFeedbackDelete(feedbackId: number) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_DELETE },
+      { id: feedbackId },
     );
   }
 }
