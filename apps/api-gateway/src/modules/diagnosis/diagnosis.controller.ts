@@ -234,17 +234,12 @@ export class DiagnosisController {
     return this.diagnosisService.diagnosisHistoryFeedbackDelete(feedbackId);
   }
 
-  @Get('support')
-  async diagnosisSupportGet() {
-    return this.diagnosisService.diagnosisSupportGet();
-  }
-
   @Post('support')
   async createDiagnosisSupport(@Body() data: DiagnosisSupportDto) {
     return this.diagnosisService.createDiagnosisSupport(data);
   }
 
-  @Get('support/list')
+  @Get('support')
   async getDiagnosisSupportList() {
     return this.diagnosisService.getDiagnosisSupportList();
   }

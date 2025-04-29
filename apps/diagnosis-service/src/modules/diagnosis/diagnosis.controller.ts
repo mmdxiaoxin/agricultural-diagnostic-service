@@ -77,11 +77,6 @@ export class DiagnosisController {
     );
   }
 
-  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT })
-  async diagnosisSupportGet() {
-    return this.diagnosisService.diagnosisSupportGet();
-  }
-
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATISTICS })
   async diagnosisStatisticsGet(@Payload() payload: { userId: number }) {
     return this.diagnosisService.diagnosisStatisticsGet(payload.userId);
