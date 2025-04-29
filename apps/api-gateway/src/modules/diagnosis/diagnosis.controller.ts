@@ -1,5 +1,6 @@
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
+import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
@@ -28,7 +29,6 @@ import { Request } from 'express';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { DiagnosisService } from './diagnosis.service';
-import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 
 @ApiTags('病害诊断模块')
 @Controller('diagnosis')
@@ -132,11 +132,6 @@ export class DiagnosisController {
     return this.diagnosisService.getDiagnosisLogList(id, query);
   }
 
-  @Get('support')
-  async diagnosisSupportGet() {
-    return this.diagnosisService.diagnosisSupportGet();
-  }
-
   @Get('statistics')
   async diagnosisStatisticsGet(@Req() req: Request) {
     return this.diagnosisService.diagnosisStatisticsGet(req.user.userId);
@@ -237,5 +232,52 @@ export class DiagnosisController {
     @Param('feedbackId', ParseIntPipe) feedbackId: number,
   ) {
     return this.diagnosisService.diagnosisHistoryFeedbackDelete(feedbackId);
+  }
+
+  @Get('support')
+  async diagnosisSupportGet() {
+    return this.diagnosisService.diagnosisSupportGet();
+  }
+
+  @Post('support')
+  async createDiagnosisSupport(
+    @Req() req: Request,
+    @Body()
+    data: {
+      key: string;
+      value: { serviceId: number; configId: number };
+      description: string;
+    },
+  ) {
+    return this.diagnosisService.createDiagnosisSupport(data);
+  }
+
+  @Get('support/list')
+  async getDiagnosisSupportList() {
+    return this.diagnosisService.getDiagnosisSupportList();
+  }
+
+  @Get('support/:id')
+  async getDiagnosisSupport(@Param('id', ParseIntPipe) id: number) {
+    return this.diagnosisService.getDiagnosisSupport(id);
+  }
+
+  @Put('support/:id')
+  async updateDiagnosisSupport(
+    @Param('id', ParseIntPipe) id: number,
+    @Body()
+    data: {
+      key: string;
+      value: { serviceId: number; configId: number };
+      description: string;
+    },
+  ) {
+    return this.diagnosisService.updateDiagnosisSupport(id, data);
+  }
+
+  @Delete('support/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteDiagnosisSupport(@Param('id', ParseIntPipe) id: number) {
+    return this.diagnosisService.deleteDiagnosisSupport(id);
   }
 }

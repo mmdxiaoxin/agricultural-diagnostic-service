@@ -4,6 +4,7 @@ import {
   DiagnosisHistory,
   DiagnosisLog,
 } from '@app/database/entities';
+import { DiagnosisSupport } from '@app/database/entities/diagnosis-support.entity';
 import { FileOperationModule } from '@app/file-operation';
 import { RedisModule } from '@app/redis';
 import { HttpService } from '@common/services/http.service';
@@ -29,6 +30,7 @@ import { DiagnosisProcessor } from './processors/diagnosis.processor';
 import { DiagnosisFeedbackService } from './services/diagnosis-feedback.service';
 import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisLogService } from './services/diagnosis-log.service';
+import { DiagnosisSupportService } from './services/diagnosis-support.service';
 import { DiagnosisService } from './services/diagnosis.service';
 import { InterfaceCallModule } from './services/interface-call/interface-call.module';
 
@@ -38,6 +40,7 @@ import { InterfaceCallModule } from './services/interface-call/interface-call.mo
     FileOperationModule,
     InterfaceCallModule,
     DatabaseModule.forFeature([
+      DiagnosisSupport,
       DiagnosisHistory,
       DiagnosisFeedback,
       DiagnosisLog,
@@ -99,8 +102,9 @@ import { InterfaceCallModule } from './services/interface-call/interface-call.mo
     DiagnosisHistoryService,
     DiagnosisProcessor,
     DiagnosisFeedbackService,
+    DiagnosisSupportService,
   ],
   controllers: [DiagnosisController],
-  exports: [DiagnosisService],
+  exports: [DiagnosisService, DiagnosisSupportService],
 })
 export class DiagnosisModule {}

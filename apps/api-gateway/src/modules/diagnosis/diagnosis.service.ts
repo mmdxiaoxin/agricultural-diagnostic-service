@@ -188,4 +188,50 @@ export class DiagnosisService {
       { id: feedbackId },
     );
   }
+
+  createDiagnosisSupport(data: {
+    key: string;
+    value: { serviceId: number; configId: number };
+    description: string;
+  }) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_CREATE },
+      data,
+    );
+  }
+
+  getDiagnosisSupportList() {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_LIST },
+      {},
+    );
+  }
+
+  getDiagnosisSupport(id: number) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_GET },
+      { id },
+    );
+  }
+
+  updateDiagnosisSupport(
+    id: number,
+    data: {
+      key: string;
+      value: { serviceId: number; configId: number };
+      description: string;
+    },
+  ) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_UPDATE },
+      { id, ...data },
+    );
+  }
+
+  deleteDiagnosisSupport(id: number) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_DELETE },
+      { id },
+    );
+  }
 }

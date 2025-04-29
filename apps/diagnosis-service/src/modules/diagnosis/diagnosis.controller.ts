@@ -9,6 +9,7 @@ import { DiagnosisFeedbackService } from './services/diagnosis-feedback.service'
 import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisLogService } from './services/diagnosis-log.service';
 import { DiagnosisService } from './services/diagnosis.service';
+import { DiagnosisSupportService } from './services/diagnosis-support.service';
 
 @Controller()
 export class DiagnosisController {
@@ -17,6 +18,7 @@ export class DiagnosisController {
     private readonly diagnosisHistoryService: DiagnosisHistoryService,
     private readonly diagnosisLogService: DiagnosisLogService,
     private readonly diagnosisFeedbackService: DiagnosisFeedbackService,
+    private readonly diagnosisSupportService: DiagnosisSupportService,
   ) {}
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.CREATE })
@@ -183,5 +185,54 @@ export class DiagnosisController {
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_DELETE })
   async diagnosisFeedbackDelete(@Payload() payload: { id: number }) {
     return this.diagnosisFeedbackService.deleteFeedback(payload.id);
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_CREATE })
+  async createDiagnosisSupport(
+    @Payload()
+    data: {
+      key: string;
+      value: { serviceId: number; configId: number };
+      description: string;
+    },
+  ) {
+    return this.diagnosisSupportService.create(
+      data.key,
+      data.value,
+      data.description,
+    );
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_LIST })
+  async getDiagnosisSupportList() {
+    return this.diagnosisSupportService.findAll();
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_GET })
+  async getDiagnosisSupport(@Payload() data: { id: number }) {
+    return this.diagnosisSupportService.findOne(data.id);
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_UPDATE })
+  async updateDiagnosisSupport(
+    @Payload()
+    data: {
+      id: number;
+      key: string;
+      value: { serviceId: number; configId: number };
+      description: string;
+    },
+  ) {
+    return this.diagnosisSupportService.update(
+      data.id,
+      data.key,
+      data.value,
+      data.description,
+    );
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_DELETE })
+  async deleteDiagnosisSupport(@Payload() data: { id: number }) {
+    return this.diagnosisSupportService.remove(data.id);
   }
 }
