@@ -16,6 +16,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
 import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -24,7 +25,7 @@ import {
   FILE_SERVICE_NAME,
   UPLOAD_SERVICE_NAME,
 } from 'config/microservice.config';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import {
   defaultIfEmpty,
   firstValueFrom,
@@ -41,6 +42,7 @@ export class FileService {
     @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
     @Inject(FILE_SERVICE_NAME) private readonly fileClient: ClientProxy,
     @Inject(DOWNLOAD_SERVICE_NAME) private readonly downloadClient: ClientGrpc,
+    private readonly jwtService: JwtService,
   ) {}
 
   onModuleInit() {
@@ -263,5 +265,48 @@ export class FileService {
         },
       )
       .pipe(defaultIfEmpty(null));
+  }
+
+  async generateAccessToken(req: Request) {
+    try {
+      if (!req.fileMeta) {
+        throw new HttpException('文件不存在', HttpStatus.NOT_FOUND);
+      }
+
+      // 生成JWT token，包含文件元数据
+      const token = this.jwtService.sign({
+        fileMeta: req.fileMeta,
+      });
+
+      return formatResponse(
+        200,
+        { token, expiresIn: 3600 },
+        '临时访问token生成成功',
+      );
+    } catch (err) {
+      this.logger.error(`生成临时访问token失败: ${err.message}`);
+      throw new InternalServerErrorException('生成临时访问token失败');
+    }
+  }
+
+  async getAccessLink(token: string, req: Request, res: Response) {
+    try {
+      // 验证并解码JWT token
+      const decoded = this.jwtService.verify(token) as {
+        fileMeta: FileEntity;
+      };
+
+      // 使用token中的fileMeta
+      return this.downloadFile(decoded.fileMeta, res);
+    } catch (err) {
+      if (err.name === 'JsonWebTokenError') {
+        throw new HttpException('无效的访问token', HttpStatus.FORBIDDEN);
+      }
+      if (err.name === 'TokenExpiredError') {
+        throw new HttpException('访问token已过期', HttpStatus.FORBIDDEN);
+      }
+      this.logger.error(`获取访问链接失败: ${err.message}`);
+      throw new InternalServerErrorException('获取访问链接失败');
+    }
   }
 }

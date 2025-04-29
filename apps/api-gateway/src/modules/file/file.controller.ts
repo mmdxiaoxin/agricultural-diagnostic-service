@@ -1,6 +1,5 @@
 import { Roles } from '@common/decorator/roles.decorator';
 import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
-import { CreateTempLinkDto } from '@common/dto/file/create-link.dto';
 import { CreateTaskDto } from '@common/dto/file/create-task.dto';
 import { DownloadFilesDto } from '@common/dto/file/download-file.dto';
 import { FileQueryDto } from '@common/dto/file/file-query.dto';
@@ -192,20 +191,19 @@ export class FileController {
     return this.fileService.deleteFiles(fileIds, req.user.userId);
   }
 
-  // 生成临时访问链接
-  @Post('generate-link/:fileId')
-  @Roles(Role.Admin, Role.Expert)
-  @UseGuards(AuthGuard, RolesGuard)
-  async generateAccessLink(
+  // 获取临时访问token
+  @Get('download-token/:fileId')
+  @Roles(Role.Admin, Role.Expert, Role.User)
+  @UseGuards(AuthGuard, RolesGuard, FileGuard)
+  async generateAccessToken(
+    @Req() req: Request,
     @Param(
       'fileId',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
-    fileId: number,
-    @Req() req: Request,
-    @Body() dto: CreateTempLinkDto,
+    _: number,
   ) {
-    // return this.downloadService.generateAccessLink(fileId, req, dto);
+    return this.fileService.generateAccessToken(req);
   }
 
   // 获取临时访问链接
@@ -215,8 +213,6 @@ export class FileController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    // const fileId = this.downloadService.verifyAccessLink(token);
-    // const fileMeta = await this.commonService.findById(fileId);
-    // return this.downloadService.downloadFile(fileMeta, req, res);
+    return this.fileService.getAccessLink(token, req, res);
   }
 }

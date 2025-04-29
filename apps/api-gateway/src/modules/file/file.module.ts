@@ -4,33 +4,28 @@ import { JwtModule } from '@nestjs/jwt';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigEnum } from '@shared/enum/config.enum';
 import {
+  DOWNLOAD_SERVICE_GRPC_PORT,
   DOWNLOAD_SERVICE_HOST,
   DOWNLOAD_SERVICE_NAME,
-  DOWNLOAD_SERVICE_TCP_PORT,
   FILE_SERVICE_HOST,
   FILE_SERVICE_NAME,
   FILE_SERVICE_TCP_PORT,
   UPLOAD_SERVICE_HOST,
   UPLOAD_SERVICE_NAME,
   UPLOAD_SERVICE_TCP_PORT,
-  DOWNLOAD_SERVICE_GRPC_PORT,
 } from 'config/microservice.config';
+import { join } from 'path';
 import { FileController } from './file.controller';
 import { FileService } from './file.service';
-import { join } from 'path';
 
 @Module({
   imports: [
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => {
-        return {
-          secret: configService.get<string>(ConfigEnum.SECRET),
-          signOptions: {
-            expiresIn: '1h', // 默认一小时
-          },
-        };
-      },
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>(ConfigEnum.SECRET),
+        signOptions: { expiresIn: '1h' },
+      }),
       inject: [ConfigService],
     }),
     ClientsModule.register([
