@@ -8,6 +8,8 @@ service DownloadService {
   rpc DownloadFile (DownloadFileRequest) returns (DownloadFileResponse) {}
   // 下载多个文件（打包为zip）
   rpc DownloadFiles (DownloadFilesRequest) returns (DownloadFilesResponse) {}
+  // 流式下载单个文件
+  rpc DownloadFileStream (DownloadFileRequest) returns (stream DownloadFileChunk) {}
 }
 
 // 文件元数据
@@ -30,6 +32,13 @@ message DownloadFileRequest {
 message DownloadFileResponse {
   bool success = 1;
   bytes data = 2;
+  string message = 3;
+}
+
+// 下载文件分片
+message DownloadFileChunk {
+  bytes chunk = 1;
+  bool success = 2;
   string message = 3;
 }
 

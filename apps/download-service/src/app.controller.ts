@@ -1,16 +1,25 @@
 import {
+  DownloadFileChunk,
   DownloadFileRequest,
   DownloadFileResponse,
   DownloadFilesRequest,
   DownloadFilesResponse,
 } from '@common/types/download/download.types';
-import { Controller } from '@nestjs/common';
-import { GrpcMethod, MessagePattern, Payload } from '@nestjs/microservices';
+import { Controller, Logger } from '@nestjs/common';
+import {
+  GrpcMethod,
+  GrpcStreamMethod,
+  MessagePattern,
+  Payload,
+} from '@nestjs/microservices';
 import { DOWNLOAD_MESSAGE_PATTERNS } from '@shared/constants/download-message-patterns';
+import { Observable } from 'rxjs';
 import { DownloadService } from './app.service';
 
 @Controller()
 export class DownloadController {
+  private readonly logger = new Logger(DownloadController.name);
+
   constructor(private readonly downloadService: DownloadService) {}
 
   @MessagePattern({ cmd: DOWNLOAD_MESSAGE_PATTERNS.FILE_DOWNLOAD })
@@ -32,6 +41,25 @@ export class DownloadController {
     data: DownloadFileRequest,
   ): Promise<DownloadFileResponse> {
     return this.downloadService.downloadFileGrpc(data);
+  }
+
+  @GrpcMethod('DownloadService', 'DownloadFileStream')
+  downloadFileStream(data: DownloadFileRequest): Observable<DownloadFileChunk> {
+    return new Observable<DownloadFileChunk>((subscriber) => {
+      const process = async () => {
+        try {
+          for await (const chunk of this.downloadService.downloadFileStreamGrpc(
+            data,
+          )) {
+            subscriber.next(chunk);
+          }
+          subscriber.complete();
+        } catch (error) {
+          subscriber.error(error);
+        }
+      };
+      process();
+    });
   }
 
   @GrpcMethod('DownloadService', 'DownloadFiles')

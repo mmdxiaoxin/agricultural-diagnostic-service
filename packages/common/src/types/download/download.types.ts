@@ -29,4 +29,14 @@ export interface GrpcDownloadService {
   downloadFiles(
     request: DownloadFilesRequest,
   ): Observable<DownloadFilesResponse>;
+  downloadFileStream(
+    request: DownloadFileRequest,
+  ): Observable<DownloadFileChunk>;
+}
+
+// 下载文件分片
+export interface DownloadFileChunk {
+  chunk: Buffer;
+  success: boolean;
+  message: string;
 }

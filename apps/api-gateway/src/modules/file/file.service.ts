@@ -157,30 +157,46 @@ export class FileService {
 
   async downloadFile(fileMeta: FileEntity, res: Response) {
     try {
-      const response = await lastValueFrom(
-        this.downloadService.downloadFile({ fileMeta }),
-      );
-
-      if (!response.success || !response.data) {
-        throw new HttpException(
-          response.message || '文件获取失败',
-          HttpStatus.NOT_FOUND,
-        );
+      if (!fileMeta) {
+        throw new HttpException('文件不存在', HttpStatus.NOT_FOUND);
       }
 
-      const fileBuffer = Buffer.isBuffer(response.data)
-        ? response.data
-        : Buffer.from(response.data);
-
+      // 设置响应头
       res.set({
         'Content-Disposition': `attachment; filename="${encodeURIComponent(fileMeta.originalFileName)}"`,
         'Content-Type': fileMeta.fileType || 'application/octet-stream',
-        'Content-Length': fileBuffer.length.toString(),
       });
 
-      res.send(fileBuffer);
+      // 使用流式下载
+      try {
+        const stream$ = this.downloadService.downloadFileStream({ fileMeta });
+
+        return new Promise((resolve, reject) => {
+          const subscription = stream$.subscribe({
+            next: (chunk) => {
+              if (chunk.success) {
+                res.write(chunk.chunk);
+              } else {
+                subscription.unsubscribe();
+                reject(new HttpException(chunk.message, HttpStatus.NOT_FOUND));
+              }
+            },
+            error: (err) => {
+              reject(new InternalServerErrorException('文件下载失败'));
+            },
+            complete: () => {
+              res.end();
+              resolve(null);
+            },
+          });
+        });
+      } catch (grpcError) {
+        throw new InternalServerErrorException('gRPC 服务调用失败');
+      }
     } catch (err) {
-      this.logger.error(`下载失败: ${err.message}`);
+      if (err instanceof HttpException) {
+        throw err;
+      }
       throw new InternalServerErrorException('文件下载失败');
     }
   }
