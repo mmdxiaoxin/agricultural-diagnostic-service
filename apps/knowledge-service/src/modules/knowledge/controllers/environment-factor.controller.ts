@@ -1,9 +1,9 @@
-import { UpdateEnvironmentFactorDto } from './../../../../../../packages/common/src/dto/knowledge/update-environmentFactor.dto';
 import { CreateEnvironmentFactorDto } from '@common/dto/knowledge/create-environmentFactor.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
+import { UpdateEnvironmentFactorDto } from '@common/dto/knowledge/update-environmentFactor.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { EnvironmentFactorService } from '../services/environment-factor.service';
-import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @Controller()
 export class EnvironmentFactorController {
