@@ -133,6 +133,11 @@ export class DiagnosisController {
     return this.diagnosisService.diagnosisSupportGet();
   }
 
+  @Get('statistics')
+  async diagnosisStatisticsGet(@Req() req: Request) {
+    return this.diagnosisService.diagnosisStatisticsGet(req.user.userId);
+  }
+
   @Get('history')
   async diagnosisHistoryGet(@Req() req: Request) {
     return this.diagnosisService.diagnosisHistoryGet(req.user.userId);

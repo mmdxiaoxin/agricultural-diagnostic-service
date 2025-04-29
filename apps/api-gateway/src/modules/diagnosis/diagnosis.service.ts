@@ -106,6 +106,13 @@ export class DiagnosisService {
     );
   }
 
+  diagnosisStatisticsGet(userId: number) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATISTICS },
+      { userId },
+    );
+  }
+
   diagnosisSupportGet() {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT },

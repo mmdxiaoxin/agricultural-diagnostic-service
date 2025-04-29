@@ -1,4 +1,5 @@
 import {
+  DiagnosisFeedback,
   DiagnosisHistory,
   DiagnosisHistoryStatus,
   FileEntity,
@@ -43,6 +44,10 @@ export class DiagnosisService {
     private readonly downloadClient: ClientGrpc,
     @InjectRepository(RemoteService)
     private readonly remoteRepository: Repository<RemoteService>,
+    @InjectRepository(DiagnosisHistory)
+    private readonly diagnosisHistoryRepository: Repository<DiagnosisHistory>,
+    @InjectRepository(DiagnosisFeedback)
+    private readonly diagnosisFeedbackRepository: Repository<DiagnosisFeedback>,
     private readonly dataSource: DataSource,
     private readonly logService: DiagnosisLogService,
     @InjectQueue(DIAGNOSIS_PROCESSOR)
@@ -643,5 +648,25 @@ export class DiagnosisService {
     }));
 
     return formatResponse(200, filteredRemoteList, '获取诊断支持成功');
+  }
+
+  async diagnosisStatisticsGet(userId: number) {
+    const [historyCount, feedbackCount] = await Promise.all([
+      this.diagnosisHistoryRepository.count({
+        where: { createdBy: userId },
+      }),
+      this.diagnosisFeedbackRepository.count({
+        where: { createdBy: userId },
+      }),
+    ]);
+
+    return formatResponse(
+      200,
+      {
+        history: historyCount,
+        feedback: feedbackCount,
+      },
+      '获取诊断统计成功',
+    );
   }
 }

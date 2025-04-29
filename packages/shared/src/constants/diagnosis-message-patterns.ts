@@ -4,6 +4,7 @@ export const DIAGNOSIS_MESSAGE_PATTERNS = {
   START_ASYNC: 'diagnosis.start.async',
   STATUS: 'diagnosis.status',
   SUPPORT: 'diagnosis.support',
+  STATISTICS: 'diagnosis.statistics',
   HISTORY: 'diagnosis.history',
   HISTORY_LIST: 'diagnosis.history.list',
   HISTORY_DELETE: 'diagnosis.history.delete',
