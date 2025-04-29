@@ -44,7 +44,7 @@ export class KnowledgeService {
       case 'DISEASE':
         return `${prefix}:${args[0]}`; // disease:id
       case 'DISEASE_LIST':
-        return `${prefix}:${args[0]}:${args[1]}:${args[2]}`; // disease:list:page:pageSize:keyword
+        return `${prefix}:${args[0]}:${args[1]}:${args[2]}:${args[3]}`; // disease:list:page:pageSize:keyword:cropId
       case 'DISEASE_MATCH':
         return this.generateMatchCacheKey(args[0]);
       case 'DISEASE_STATS':
