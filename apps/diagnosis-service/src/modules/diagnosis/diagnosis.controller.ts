@@ -66,9 +66,12 @@ export class DiagnosisController {
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATUS })
-  async diagnosisHistoryStatusGet(@Payload() data: { diagnosisId: number }) {
+  async diagnosisHistoryStatusGet(
+    @Payload() data: { diagnosisId: number; userId: number },
+  ) {
     return this.diagnosisHistoryService.diagnosisHistoryStatusGet(
       data.diagnosisId,
+      data.userId,
     );
   }
 

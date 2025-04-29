@@ -99,13 +99,14 @@ export class DiagnosisController {
 
   @Get(':id/status')
   async getDiagnosisStatus(
+    @Req() req: Request,
     @Param(
       'id',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     id: number,
   ) {
-    return this.diagnosisService.getDiagnosisStatus(id);
+    return this.diagnosisService.getDiagnosisStatus(req.user.userId, id);
   }
 
   @Get(':id/log')

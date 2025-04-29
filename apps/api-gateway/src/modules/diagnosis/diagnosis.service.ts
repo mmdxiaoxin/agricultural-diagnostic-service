@@ -80,10 +80,10 @@ export class DiagnosisService {
     );
   }
 
-  getDiagnosisStatus(id: number) {
+  getDiagnosisStatus(userId: number, id: number) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.STATUS },
-      { diagnosisId: id },
+      { userId, diagnosisId: id },
     );
   }
 
