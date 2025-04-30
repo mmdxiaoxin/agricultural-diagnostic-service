@@ -1,6 +1,7 @@
 import { Roles } from '@common/decorator/roles.decorator';
 import { CreateDiseaseDto } from '@common/dto/knowledge/create-disease.dto';
 import { UpdateDiseaseDto } from '@common/dto/knowledge/update-disease.dto';
+import { PageQueryDateDto } from '@common/dto/page-query-date.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -20,32 +21,34 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { DiseaseService } from './disease.service';
-import { PageQueryDateDto } from '@common/dto/page-query-date.dto';
 
 @ApiTags('疾病管理')
 @Controller('disease')
-@Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
 export class DiseaseController {
   constructor(private readonly diseaseService: DiseaseService) {}
 
   @Post()
+  @Roles(Role.Admin, Role.Expert)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createDiseaseDto: CreateDiseaseDto) {
     return this.diseaseService.create(createDiseaseDto);
   }
 
   @Get()
+  @Roles(Role.Admin, Role.Expert, Role.User)
   findAll() {
     return this.diseaseService.findAll();
   }
 
   @Get('list')
+  @Roles(Role.Admin, Role.Expert, Role.User)
   findList(@Query() query: PageQueryDateDto) {
     return this.diseaseService.findList(query);
   }
 
   @Get(':id')
+  @Roles(Role.Admin, Role.Expert, Role.User)
   findOne(
     @Param(
       'id',
@@ -57,6 +60,7 @@ export class DiseaseController {
   }
 
   @Get(':id/symptoms')
+  @Roles(Role.Admin, Role.Expert, Role.User)
   findSymptoms(
     @Param(
       'id',
@@ -68,6 +72,7 @@ export class DiseaseController {
   }
 
   @Patch(':id')
+  @Roles(Role.Admin, Role.Expert)
   update(
     @Param(
       'id',
@@ -80,6 +85,7 @@ export class DiseaseController {
   }
 
   @Delete(':id')
+  @Roles(Role.Admin, Role.Expert)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(

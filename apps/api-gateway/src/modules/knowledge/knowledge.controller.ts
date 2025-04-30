@@ -25,34 +25,30 @@ import { KnowledgeService } from './knowledge.service';
 
 @ApiTags('病害知识库管理')
 @Controller('knowledge')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
 export class KnowledgeController {
   constructor(private readonly KnowledgeService: KnowledgeService) {}
 
   @Get()
   @Roles(Role.Admin, Role.Expert, Role.User)
-  @UseGuards(RolesGuard)
   findAll() {
     return this.KnowledgeService.findAll();
   }
 
   @Get('list')
   @Roles(Role.Admin, Role.Expert, Role.User)
-  @UseGuards(RolesGuard)
   findList(@Query() query: PageQueryKnowledgeDto) {
     return this.KnowledgeService.findList(query);
   }
 
   @Get('match')
   @Roles(Role.Admin, Role.Expert, Role.User)
-  @UseGuards(RolesGuard)
   matchKnowledge(@Query() query: MatchKnowledgeDto) {
     return this.KnowledgeService.match(query);
   }
 
   @Post()
   @Roles(Role.Admin, Role.Expert)
-  @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createKnowledgeDto: CreateKnowledgeDto) {
     return this.KnowledgeService.create(createKnowledgeDto);
@@ -60,7 +56,6 @@ export class KnowledgeController {
 
   @Put(':id')
   @Roles(Role.Admin, Role.Expert)
-  @UseGuards(RolesGuard)
   update(
     @Param(
       'id',
@@ -74,7 +69,6 @@ export class KnowledgeController {
 
   @Delete(':id')
   @Roles(Role.Admin, Role.Expert)
-  @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param(
