@@ -14,13 +14,16 @@ async function bootstrap() {
   // 配置CORS
   app.enableCors({
     origin: [
-      'http://localhost:3000', // 开发环境
-      'http://localhost:5173', // Vite开发服务器
-      `http://${subnetIp}`, // 子网IP
-      `https://${subnetIp}`, // 子网IP HTTPS
-      'http://www.binghai-zhenduan.com', // 生产环境域名
-      'https://www.binghai-zhenduan.com', // 生产环境HTTPS域名
-      /\.binghai-zhenduan\.com$/, // 允许所有子域名
+      'http://localhost:3000',
+      'http://localhost:5173',
+      `http://${subnetIp}`,
+      `https://${subnetIp}`,
+      'http://www.binghai-zhenduan.com',
+      'https://www.binghai-zhenduan.com',
+      'http://www.mmdxiaoxin.top',
+      'https://www.mmdxiaoxin.top',
+      /\.binghai-zhenduan\.com$/,
+      /\.mmdxiaoxin\.top$/,
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true, // 允许发送cookies
