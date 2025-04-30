@@ -1,8 +1,8 @@
+import { CreateRoleDto } from '@common/dto/role/create-role.dto';
+import { UpdateRoleDto } from '@common/dto/role/update-role.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { RoleService } from './role.service';
-import { CreateRoleDto } from './dto/create-role.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Controller()
 export class RoleController {
