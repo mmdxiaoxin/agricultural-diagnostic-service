@@ -1,4 +1,5 @@
 import { RemoteConfig, RemoteService } from '@app/database/entities';
+import { RedisService } from '@app/redis';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,13 +7,32 @@ import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class RemoteConfigService {
+  private readonly CACHE_KEYS = {
+    REMOTE_SERVICE: 'remote:service',
+    REMOTE_SERVICE_LIST: 'remote:service:list',
+  } as const;
+
   constructor(
     @InjectRepository(RemoteConfig)
     private remoteConfigRepository: Repository<RemoteConfig>,
-    @InjectRepository(RemoteService)
-    private remoteServiceRepository: Repository<RemoteService>,
     private dataSource: DataSource,
+    private readonly redisService: RedisService,
   ) {}
+
+  // 清除相关缓存
+  private async clearRelatedCache(serviceId: number) {
+    const patterns = [
+      `${this.CACHE_KEYS.REMOTE_SERVICE_LIST}:*`,
+      `${this.CACHE_KEYS.REMOTE_SERVICE}:${serviceId}`,
+    ];
+
+    for (const pattern of patterns) {
+      const keys = await this.redisService.getClient().keys(pattern);
+      if (keys.length > 0) {
+        await this.redisService.getClient().del(...keys);
+      }
+    }
+  }
 
   // 获取服务的所有配置
   async findByServiceId(serviceId: number): Promise<RemoteConfig[]> {
@@ -81,6 +101,10 @@ export class RemoteConfigService {
 
       const savedConfig = await queryRunner.manager.save(newConfig);
       await queryRunner.commitTransaction();
+
+      // 清除相关缓存
+      await this.clearRelatedCache(serviceId);
+
       return savedConfig;
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -106,6 +130,7 @@ export class RemoteConfigService {
     try {
       const existingConfig = await queryRunner.manager.findOne(RemoteConfig, {
         where: { id: configId },
+        relations: ['service'],
       });
 
       if (!existingConfig) {
@@ -118,6 +143,10 @@ export class RemoteConfigService {
       Object.assign(existingConfig, config);
       const updatedConfig = await queryRunner.manager.save(existingConfig);
       await queryRunner.commitTransaction();
+
+      // 清除相关缓存
+      await this.clearRelatedCache(existingConfig.service.id);
+
       return updatedConfig;
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -140,6 +169,7 @@ export class RemoteConfigService {
     try {
       const config = await queryRunner.manager.findOne(RemoteConfig, {
         where: { id: configId },
+        relations: ['service'],
       });
 
       if (!config) {
@@ -149,8 +179,12 @@ export class RemoteConfigService {
         });
       }
 
+      const serviceId = config.service.id;
       await queryRunner.manager.remove(config);
       await queryRunner.commitTransaction();
+
+      // 清除相关缓存
+      await this.clearRelatedCache(serviceId);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new RpcException({
@@ -191,6 +225,10 @@ export class RemoteConfigService {
 
       const savedConfig = await queryRunner.manager.save(newConfig);
       await queryRunner.commitTransaction();
+
+      // 清除相关缓存
+      await this.clearRelatedCache(config.service.id);
+
       return savedConfig;
     } catch (error) {
       await queryRunner.rollbackTransaction();

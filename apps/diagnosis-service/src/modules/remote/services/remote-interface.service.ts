@@ -7,9 +7,15 @@ import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import { RedisService } from '@app/redis';
 
 @Injectable()
 export class RemoteInterfaceService {
+  private readonly CACHE_KEYS = {
+    REMOTE_SERVICE: 'remote:service',
+    REMOTE_SERVICE_LIST: 'remote:service:list',
+  } as const;
+
   constructor(
     @InjectRepository(RemoteService)
     private serviceRepository: Repository<RemoteService>,
@@ -17,7 +23,23 @@ export class RemoteInterfaceService {
     private interfaceRepository: Repository<RemoteInterface>,
     private dataSource: DataSource,
     private httpService: HttpService,
+    private readonly redisService: RedisService,
   ) {}
+
+  // 清除相关缓存
+  private async clearRelatedCache(serviceId: number) {
+    const patterns = [
+      `${this.CACHE_KEYS.REMOTE_SERVICE_LIST}:*`,
+      `${this.CACHE_KEYS.REMOTE_SERVICE}:${serviceId}`,
+    ];
+
+    for (const pattern of patterns) {
+      const keys = await this.redisService.getClient().keys(pattern);
+      if (keys.length > 0) {
+        await this.redisService.getClient().del(...keys);
+      }
+    }
+  }
 
   async getInterfaces(serviceId: number) {
     const service = await this.serviceRepository.findOne({
@@ -57,12 +79,18 @@ export class RemoteInterfaceService {
       ...dto,
       service,
     });
-    return this.interfaceRepository.save(interface_);
+    const savedInterface = await this.interfaceRepository.save(interface_);
+
+    // 清除相关缓存
+    await this.clearRelatedCache(serviceId);
+
+    return savedInterface;
   }
 
   async updateInterface(interfaceId: number, dto: UpdateRemoteInterfaceDto) {
     const interface_ = await this.interfaceRepository.findOne({
       where: { id: interfaceId },
+      relations: ['service'],
     });
     if (!interface_) {
       throw new RpcException({
@@ -71,12 +99,18 @@ export class RemoteInterfaceService {
       });
     }
     Object.assign(interface_, dto);
-    return this.interfaceRepository.save(interface_);
+    const updatedInterface = await this.interfaceRepository.save(interface_);
+
+    // 清除相关缓存
+    await this.clearRelatedCache(interface_.service.id);
+
+    return updatedInterface;
   }
 
   async removeInterface(interfaceId: number) {
     const interface_ = await this.interfaceRepository.findOne({
       where: { id: interfaceId },
+      relations: ['service'],
     });
     if (!interface_) {
       throw new RpcException({
@@ -84,7 +118,11 @@ export class RemoteInterfaceService {
         message: '未找到当前接口',
       });
     }
-    return this.interfaceRepository.delete(interfaceId);
+    const serviceId = interface_.service.id;
+    await this.interfaceRepository.delete(interfaceId);
+
+    // 清除相关缓存
+    await this.clearRelatedCache(serviceId);
   }
 
   async copy(interfaceId: number): Promise<RemoteInterface> {
@@ -113,6 +151,10 @@ export class RemoteInterfaceService {
 
       const savedInterface = await queryRunner.manager.save(newInterface);
       await queryRunner.commitTransaction();
+
+      // 清除相关缓存
+      await this.clearRelatedCache(interface_.service.id);
+
       return savedInterface;
     } catch (error) {
       await queryRunner.rollbackTransaction();
