@@ -264,7 +264,7 @@ export class UserService {
     // 尝试从缓存中获取用户信息
     const cachedUser = await this.getUserCache(id);
     if (cachedUser) {
-      return cachedUser;
+      return formatResponse(200, cachedUser, '获取用户信息成功');
     }
 
     // 从数据库中获取用户信息
