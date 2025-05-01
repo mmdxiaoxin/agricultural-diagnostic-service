@@ -226,6 +226,8 @@ export class DiagnosisController {
   }
 
   @Put('feedback/:feedbackId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin, Role.Expert)
   async diagnosisHistoryFeedbackUpdate(
     @Req() req: Request,
     @Param('feedbackId', ParseIntPipe) feedbackId: number,
