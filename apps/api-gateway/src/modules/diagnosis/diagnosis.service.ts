@@ -173,6 +173,13 @@ export class DiagnosisService {
     );
   }
 
+  diagnosisHistoryFeedbackListAllGet(query: FeedbackQueryDto) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_LIST_ALL },
+      { query },
+    );
+  }
+
   diagnosisHistoryFeedbackUpdate(
     expertId: number,
     feedbackId: number,

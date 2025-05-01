@@ -143,6 +143,39 @@ export class DiagnosisFeedbackService {
     }
   }
 
+  // 获取反馈列表（分页）（所有）
+  async getFeedbackListAll(query: FeedbackQueryDto) {
+    try {
+      const [list, total] = await this.feedbackRepository.findAndCount({
+        where: {
+          ...(query.status && { status: query.status }),
+        },
+        relations: ['diagnosis'],
+        order: { createdAt: 'DESC' },
+        take: query.pageSize,
+        skip: (query.page - 1) * query.pageSize,
+      });
+
+      return formatResponse(
+        200,
+        {
+          list,
+          total,
+          page: query.page,
+          pageSize: query.pageSize,
+        },
+        '获取反馈列表成功',
+      );
+    } catch (error) {
+      this.logger.error(error);
+      throw new RpcException({
+        code: 500,
+        message: '获取反馈列表失败',
+        data: error,
+      });
+    }
+  }
+
   // 获取反馈详情
   async getFeedbackDetail(feedbackId: number, userId: number) {
     try {

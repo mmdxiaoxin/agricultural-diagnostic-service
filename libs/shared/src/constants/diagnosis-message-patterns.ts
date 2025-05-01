@@ -17,6 +17,7 @@ export const DIAGNOSIS_MESSAGE_PATTERNS = {
   LOG: 'diagnosis.log',
   LOG_LIST: 'diagnosis.log.list',
   FEEDBACK_LIST: 'diagnosis.feedback.list',
+  FEEDBACK_LIST_ALL: 'diagnosis.feedback.list.all',
   FEEDBACK_CREATE: 'diagnosis.feedback.create',
   FEEDBACK_UPDATE: 'diagnosis.feedback.update',
   FEEDBACK_DELETE: 'diagnosis.feedback.delete',

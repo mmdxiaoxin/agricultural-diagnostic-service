@@ -141,6 +141,13 @@ export class DiagnosisController {
     );
   }
 
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_LIST_ALL })
+  async diagnosisFeedbackListAllGet(
+    @Payload() payload: { query: FeedbackQueryDto },
+  ) {
+    return this.diagnosisFeedbackService.getFeedbackListAll(payload.query);
+  }
+
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_DETAIL })
   async diagnosisFeedbackDetailGet(
     @Payload() payload: { feedbackId: number; userId: number },

@@ -1,3 +1,4 @@
+import { Roles } from '@common/decorator/roles.decorator';
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
 import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
@@ -5,6 +6,7 @@ import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
+import { RolesGuard } from '@common/guards/roles.guard';
 import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
 import {
   Body,
@@ -27,6 +29,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { MIME_TYPE } from '@shared/enum/mime.enum';
+import { Role } from '@shared/enum/role.enum';
 import { Request } from 'express';
 import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
@@ -202,6 +205,13 @@ export class DiagnosisController {
       req.user.userId,
       query,
     );
+  }
+
+  @Get('feedback/list/all')
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin, Role.Expert)
+  async diagnosisHistoryFeedbackListAllGet(@Query() query: FeedbackQueryDto) {
+    return this.diagnosisService.diagnosisHistoryFeedbackListAllGet(query);
   }
 
   @Get('feedback/:feedbackId')
