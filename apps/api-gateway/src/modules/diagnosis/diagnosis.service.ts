@@ -1,6 +1,7 @@
 import { FileEntity } from '@app/database/entities';
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
+import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
@@ -165,7 +166,7 @@ export class DiagnosisService {
     );
   }
 
-  diagnosisHistoryFeedbackListGet(userId: number, query: PageQueryDto) {
+  diagnosisHistoryFeedbackListGet(userId: number, query: FeedbackQueryDto) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_LIST },
       { userId, query },

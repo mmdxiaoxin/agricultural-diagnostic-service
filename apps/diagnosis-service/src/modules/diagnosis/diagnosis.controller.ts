@@ -1,4 +1,5 @@
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
+import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
@@ -8,8 +9,8 @@ import { DIAGNOSIS_MESSAGE_PATTERNS } from '@shared/constants/diagnosis-message-
 import { DiagnosisFeedbackService } from './services/diagnosis-feedback.service';
 import { DiagnosisHistoryService } from './services/diagnosis-history.service';
 import { DiagnosisLogService } from './services/diagnosis-log.service';
-import { DiagnosisService } from './services/diagnosis.service';
 import { DiagnosisSupportService } from './services/diagnosis-support.service';
+import { DiagnosisService } from './services/diagnosis.service';
 
 @Controller()
 export class DiagnosisController {
@@ -132,7 +133,7 @@ export class DiagnosisController {
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_LIST })
   async diagnosisFeedbackListGet(
-    @Payload() payload: { userId: number; query: PageQueryDto },
+    @Payload() payload: { userId: number; query: FeedbackQueryDto },
   ) {
     return this.diagnosisFeedbackService.getFeedbackList(
       payload.userId,

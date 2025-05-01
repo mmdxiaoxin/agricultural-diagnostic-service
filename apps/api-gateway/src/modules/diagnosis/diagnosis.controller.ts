@@ -1,5 +1,6 @@
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
+import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
@@ -206,7 +207,7 @@ export class DiagnosisController {
   @Get('feedback/list')
   async diagnosisHistoryFeedbackListGet(
     @Req() req: Request,
-    @Query() query: PageQueryDto,
+    @Query() query: FeedbackQueryDto,
   ) {
     return this.diagnosisService.diagnosisHistoryFeedbackListGet(
       req.user.userId,
@@ -228,6 +229,7 @@ export class DiagnosisController {
   }
 
   @Delete('feedback/:feedbackId')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async diagnosisHistoryFeedbackDelete(
     @Param('feedbackId', ParseIntPipe) feedbackId: number,
   ) {
