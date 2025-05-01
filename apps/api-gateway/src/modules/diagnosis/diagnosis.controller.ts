@@ -193,17 +193,6 @@ export class DiagnosisController {
     );
   }
 
-  @Get('feedback/:feedbackId')
-  async diagnosisHistoryFeedbackDetailGet(
-    @Req() req: Request,
-    @Param('feedbackId', ParseIntPipe) feedbackId: number,
-  ) {
-    return this.diagnosisService.diagnosisHistoryFeedbackDetailGet(
-      req.user.userId,
-      feedbackId,
-    );
-  }
-
   @Get('feedback/list')
   async diagnosisHistoryFeedbackListGet(
     @Req() req: Request,
@@ -212,6 +201,17 @@ export class DiagnosisController {
     return this.diagnosisService.diagnosisHistoryFeedbackListGet(
       req.user.userId,
       query,
+    );
+  }
+
+  @Get('feedback/:feedbackId')
+  async diagnosisHistoryFeedbackDetailGet(
+    @Req() req: Request,
+    @Param('feedbackId', ParseIntPipe) feedbackId: number,
+  ) {
+    return this.diagnosisService.diagnosisHistoryFeedbackDetailGet(
+      req.user.userId,
+      feedbackId,
     );
   }
 
