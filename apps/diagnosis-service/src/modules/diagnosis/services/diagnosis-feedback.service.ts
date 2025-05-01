@@ -117,7 +117,6 @@ export class DiagnosisFeedbackService {
           createdBy: userId,
           ...(query.status && { status: query.status }),
         },
-        relations: ['diagnosis'],
         order: { createdAt: 'DESC' },
         take: query.pageSize,
         skip: (query.page - 1) * query.pageSize,
@@ -150,7 +149,6 @@ export class DiagnosisFeedbackService {
         where: {
           ...(query.status && { status: query.status }),
         },
-        relations: ['diagnosis'],
         order: { createdAt: 'DESC' },
         take: query.pageSize,
         skip: (query.page - 1) * query.pageSize,
