@@ -179,8 +179,23 @@ export class DiagnosisController {
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_DELETE })
-  async diagnosisFeedbackDelete(@Payload() payload: { id: number }) {
-    return this.diagnosisFeedbackService.deleteFeedback(payload.id);
+  async diagnosisFeedbackDelete(
+    @Payload() payload: { userId: number; id: number },
+  ) {
+    return this.diagnosisFeedbackService.deleteFeedback(
+      payload.userId,
+      payload.id,
+    );
+  }
+
+  @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_DELETE_BATCH })
+  async diagnosisFeedbackDeleteBatch(
+    @Payload() payload: { userId: number; ids: number[] },
+  ) {
+    return this.diagnosisFeedbackService.deleteFeedbackBatch(
+      payload.userId,
+      payload.ids,
+    );
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_CREATE })

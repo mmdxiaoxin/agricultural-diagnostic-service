@@ -231,9 +231,25 @@ export class DiagnosisController {
   @Delete('feedback/:feedbackId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async diagnosisHistoryFeedbackDelete(
+    @Req() req: Request,
     @Param('feedbackId', ParseIntPipe) feedbackId: number,
   ) {
-    return this.diagnosisService.diagnosisHistoryFeedbackDelete(feedbackId);
+    return this.diagnosisService.diagnosisHistoryFeedbackDelete(
+      req.user.userId,
+      feedbackId,
+    );
+  }
+
+  @Delete('feedback')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async diagnosisHistoryFeedbackDeleteBatch(
+    @Req() req: Request,
+    @Query('feedbackIds', ParseNumberArrayPipe) feedbackIds: number[],
+  ) {
+    return this.diagnosisService.diagnosisHistoryFeedbackDeleteBatch(
+      req.user.userId,
+      feedbackIds,
+    );
   }
 
   @Post('support')

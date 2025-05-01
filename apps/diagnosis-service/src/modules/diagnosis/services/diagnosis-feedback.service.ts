@@ -10,7 +10,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 @Injectable()
 export class DiagnosisFeedbackService {
@@ -167,9 +167,68 @@ export class DiagnosisFeedbackService {
   }
 
   // 删除反馈
-  async deleteFeedback(id: number) {
-    await this.feedbackRepository.delete(id);
+  async deleteFeedback(userId: number, id: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    return formatResponse(200, null, '反馈删除成功');
+    try {
+      const feedback = await queryRunner.manager.findOne(DiagnosisFeedback, {
+        where: { id, createdBy: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!feedback) {
+        throw new RpcException('未找到反馈记录或无权删除');
+      }
+
+      await queryRunner.manager.remove(feedback);
+      await queryRunner.commitTransaction();
+
+      return formatResponse(200, null, '反馈删除成功');
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(error);
+      throw new RpcException({
+        code: 500,
+        message: '反馈删除失败',
+        data: error,
+      });
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // 批量删除反馈
+  async deleteFeedbackBatch(userId: number, ids: number[]) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const feedbacks = await queryRunner.manager.find(DiagnosisFeedback, {
+        where: { id: In(ids), createdBy: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (feedbacks.length === 0) {
+        throw new RpcException('未找到反馈记录或无权删除');
+      }
+
+      await queryRunner.manager.remove(feedbacks);
+      await queryRunner.commitTransaction();
+
+      return formatResponse(200, null, '反馈批量删除成功');
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(error);
+      throw new RpcException({
+        code: 500,
+        message: '反馈批量删除失败',
+        data: error,
+      });
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

@@ -184,10 +184,17 @@ export class DiagnosisService {
     );
   }
 
-  diagnosisHistoryFeedbackDelete(feedbackId: number) {
+  diagnosisHistoryFeedbackDelete(userId: number, feedbackId: number) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_DELETE },
-      { id: feedbackId },
+      { userId, id: feedbackId },
+    );
+  }
+
+  diagnosisHistoryFeedbackDeleteBatch(userId: number, feedbackIds: number[]) {
+    return this.diagnosisClient.send(
+      { cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_DELETE_BATCH },
+      { userId, ids: feedbackIds },
     );
   }
 

@@ -21,6 +21,7 @@ export const DIAGNOSIS_MESSAGE_PATTERNS = {
   FEEDBACK_UPDATE: 'diagnosis.feedback.update',
   FEEDBACK_DELETE: 'diagnosis.feedback.delete',
   FEEDBACK_DETAIL: 'diagnosis.feedback.detail',
+  FEEDBACK_DELETE_BATCH: 'diagnosis.feedback.delete.batch',
 } as const;
 
 export type DiagnosisMessagePattern =
