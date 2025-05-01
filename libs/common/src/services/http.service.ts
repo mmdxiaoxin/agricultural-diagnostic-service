@@ -1,5 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from 'axios';
 
 export interface BaseResponse<T = any> {
   code: number;
@@ -22,7 +27,7 @@ export class HttpService {
 
     // 响应拦截器
     this.axiosInstance.interceptors.response.use(
-      (response) => {
+      (response: AxiosResponse) => {
         // 检查响应数据是否有效
         if (!response.data) {
           return {
@@ -38,21 +43,22 @@ export class HttpService {
 
         // 处理不同类型的错误
         if (error instanceof AxiosError) {
-          const status = error.response?.status;
-          const data = error.response?.data;
+          const { response } = error;
+          const status = response?.status;
+          const data = response?.data;
 
-          return {
+          return Promise.reject({
             code: status || 500,
             message: data?.message || error.message || '请求失败',
             data: data || null,
-          };
+          });
         }
 
-        return {
+        return Promise.reject({
           code: 500,
           message: error.message || '请求失败',
           data: null,
-        };
+        });
       },
     );
   }

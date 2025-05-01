@@ -289,12 +289,16 @@ export class InterfaceCallManager {
         );
       }
     } catch (error) {
+      // 更新状态为失败
       await this.updateState(
         interfaceId,
         InterfaceCallState.FAILED,
         undefined,
         error as Error,
       );
+
+      // 不再执行后续接口
+      return;
     }
   }
 }
