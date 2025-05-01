@@ -166,39 +166,6 @@ export class DiagnosisFeedbackService {
     }
   }
 
-  // 获取待处理的反馈列表（专家用）
-  async getPendingFeedbackList(expertId: number, query: FeedbackQueryDto) {
-    try {
-      const [list, total] = await this.feedbackRepository.findAndCount({
-        where: {
-          status: FeedbackStatus.PENDING,
-        },
-        relations: ['diagnosis'],
-        order: { createdAt: 'ASC' },
-        take: query.pageSize,
-        skip: (query.page - 1) * query.pageSize,
-      });
-
-      return formatResponse(
-        200,
-        {
-          list,
-          total,
-          page: query.page,
-          pageSize: query.pageSize,
-        },
-        '获取待处理反馈列表成功',
-      );
-    } catch (error) {
-      this.logger.error(error);
-      throw new RpcException({
-        code: 500,
-        message: '获取待处理反馈列表失败',
-        data: error,
-      });
-    }
-  }
-
   // 删除反馈
   async deleteFeedback(id: number) {
     await this.feedbackRepository.delete(id);
