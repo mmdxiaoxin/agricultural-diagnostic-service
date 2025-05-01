@@ -207,12 +207,19 @@ export class DiagnosisFeedbackService {
 
     try {
       const feedback = await queryRunner.manager.findOne(DiagnosisFeedback, {
-        where: { id, createdBy: userId },
+        where: {
+          id,
+          createdBy: userId,
+          status: FeedbackStatus.PENDING,
+        },
         lock: { mode: 'pessimistic_write' },
       });
 
       if (!feedback) {
-        throw new RpcException('未找到反馈记录或无权删除');
+        throw new RpcException({
+          code: 400,
+          message: '未找到待处理的反馈记录或无权删除',
+        });
       }
 
       await queryRunner.manager.remove(feedback);
@@ -240,12 +247,19 @@ export class DiagnosisFeedbackService {
 
     try {
       const feedbacks = await queryRunner.manager.find(DiagnosisFeedback, {
-        where: { id: In(ids), createdBy: userId },
+        where: {
+          id: In(ids),
+          createdBy: userId,
+          status: FeedbackStatus.PENDING,
+        },
         lock: { mode: 'pessimistic_write' },
       });
 
       if (feedbacks.length === 0) {
-        throw new RpcException('未找到反馈记录或无权删除');
+        throw new RpcException({
+          code: 400,
+          message: '未找到待处理的反馈记录或无权删除',
+        });
       }
 
       await queryRunner.manager.remove(feedbacks);
