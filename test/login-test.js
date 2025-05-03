@@ -1,13 +1,13 @@
-import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { SharedArray } from 'k6/data';
+import http from 'k6/http';
 
 // 测试配置
 export const options = {
   // 定义测试阶段
   stages: [
-    { duration: '30s', target: 10 }, // 30秒内逐渐增加到10个并发用户
-    { duration: '1m', target: 10 }, // 保持10个并发用户1分钟
+    { duration: '30s', target: 1000 }, // 30秒内逐渐增加到10个并发用户
+    { duration: '1m', target: 100 }, // 保持10个并发用户1分钟
     { duration: '30s', target: 0 }, // 30秒内逐渐减少到0个并发用户
   ],
   // 定义性能指标阈值
@@ -23,16 +23,12 @@ export const options = {
 const testData = new SharedArray('test data', function () {
   return [
     {
-      username: 'test1@example.com',
-      password: 'password123',
+      login: 'admin',
+      password: '123456',
     },
     {
-      username: 'test2@example.com',
-      password: 'password123',
-    },
-    {
-      username: 'test3@example.com',
-      password: 'password123',
+      login: 'mmdxiaoxin',
+      password: '123456',
     },
   ];
 });
@@ -43,9 +39,9 @@ export default function () {
   const account = testData[Math.floor(Math.random() * testData.length)];
 
   // 测试登录接口
-  const url = 'http://localhost:3000/auth/login';
+  const url = 'https://www.mmdxiaoxin.top/api/auth/login';
   const payload = JSON.stringify({
-    username: account.username,
+    login: account.login,
     password: account.password,
   });
 
@@ -64,7 +60,7 @@ export default function () {
     响应时间小于500ms: (r) => r.timings.duration < 500,
     响应包含token: (r) => {
       const body = JSON.parse(r.body);
-      return body.data && body.data.token;
+      return body.data && body.data.access_token;
     },
   });
 
