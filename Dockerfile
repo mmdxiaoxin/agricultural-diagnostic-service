@@ -7,7 +7,6 @@ WORKDIR /app
 # 复制 package.json 和 package-lock.json
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
-COPY pnpm-workspace.yaml ./
 
 # 安装 pnpm
 RUN npm install -g pnpm
