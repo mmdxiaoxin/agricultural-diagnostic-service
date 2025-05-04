@@ -1,0 +1,218 @@
+[
+  {
+    "id": 1,
+    "icon": "HomeOutlined",
+    "title": "首页",
+    "path": "/home/index",
+    "parentId": null,
+    "isLink": null,
+    "sort": 1
+  },
+  {
+    "id": 2,
+    "icon": "TeamOutlined",
+    "title": "用户模块",
+    "path": "/user",
+    "parentId": null,
+    "isLink": null,
+    "sort": 2
+  },
+  {
+    "id": 3,
+    "icon": "DatabaseOutlined",
+    "title": "数据采集",
+    "path": "/capture",
+    "parentId": null,
+    "isLink": null,
+    "sort": 3
+  },
+  {
+    "id": 4,
+    "icon": "DashboardOutlined",
+    "title": "数据一览",
+    "path": "/capture/dashboard",
+    "parentId": 3,
+    "isLink": null,
+    "sort": 0
+  },
+  {
+    "id": 5,
+    "icon": "FileZipOutlined",
+    "title": "数据管理",
+    "path": "/capture/manage",
+    "parentId": 3,
+    "isLink": null,
+    "sort": 0
+  },
+  {
+    "id": 6,
+    "icon": "BugOutlined",
+    "title": "病害诊断",
+    "path": "/diagnosis",
+    "parentId": null,
+    "isLink": null,
+    "sort": 4
+  },
+  {
+    "id": 7,
+    "icon": "FileImageOutlined",
+    "title": "图片诊断",
+    "path": "/diagnosis/image",
+    "parentId": 6,
+    "isLink": null,
+    "sort": 1
+  },
+  {
+    "id": 8,
+    "icon": "FolderOpenOutlined",
+    "title": "数据集管理",
+    "path": "/capture/dataset",
+    "parentId": 3,
+    "isLink": null,
+    "sort": 0
+  },
+  {
+    "id": 9,
+    "icon": "RobotOutlined",
+    "title": "模型预览",
+    "path": "/service/models",
+    "parentId": 14,
+    "isLink": null,
+    "sort": 2
+  },
+  {
+    "id": 10,
+    "icon": "ReadOutlined",
+    "title": "病害知识库",
+    "path": "/knowledge",
+    "parentId": null,
+    "isLink": null,
+    "sort": 6
+  },
+  {
+    "id": 11,
+    "icon": "DiseaseIcon",
+    "title": "病害管理",
+    "path": "/knowledge/disease",
+    "parentId": 10,
+    "isLink": null,
+    "sort": 4
+  },
+  {
+    "id": 12,
+    "icon": "SettingOutlined",
+    "title": "系统配置",
+    "path": "/setting/index",
+    "parentId": null,
+    "isLink": null,
+    "sort": 7
+  },
+  {
+    "id": 13,
+    "icon": "ContainerOutlined",
+    "title": "知识库预览",
+    "path": "/knowledge/preview",
+    "parentId": 10,
+    "isLink": null,
+    "sort": 5
+  },
+  {
+    "id": 14,
+    "icon": "AntCloudOutlined",
+    "title": "诊断服务",
+    "path": "/service",
+    "parentId": null,
+    "isLink": null,
+    "sort": 5
+  },
+  {
+    "id": 15,
+    "icon": "UnorderedListOutlined",
+    "title": "服务管理",
+    "path": "/service/manage",
+    "parentId": 14,
+    "isLink": null,
+    "sort": 0
+  },
+  {
+    "id": 16,
+    "icon": "UnorderedListOutlined",
+    "title": "用户管理",
+    "path": "/user/manage",
+    "parentId": 2,
+    "isLink": null,
+    "sort": 1
+  },
+  {
+    "id": 17,
+    "icon": "ClusterOutlined",
+    "title": "第三方来源",
+    "path": "/knowledge/external",
+    "parentId": 10,
+    "isLink": null,
+    "sort": 6
+  },
+  {
+    "id": 18,
+    "icon": "CodeSandboxOutlined",
+    "title": "服务配置",
+    "path": "/service/config",
+    "parentId": 14,
+    "isLink": null,
+    "sort": 2
+  },
+  {
+    "id": 19,
+    "icon": "HistoryOutlined",
+    "title": "诊断历史",
+    "path": "/diagnosis/history",
+    "parentId": 6,
+    "isLink": null,
+    "sort": 3
+  },
+  {
+    "id": 20,
+    "icon": "PlantIcon",
+    "title": "作物管理",
+    "path": "/knowledge/crop",
+    "parentId": 10,
+    "isLink": null,
+    "sort": 1
+  },
+  {
+    "id": 22,
+    "icon": "SettingOutlined",
+    "title": "诊断配置",
+    "path": "/diagnosis/setting",
+    "parentId": 6,
+    "isLink": null,
+    "sort": 6
+  },
+  {
+    "id": 23,
+    "icon": "ExperimentOutlined",
+    "title": "诊断测试",
+    "path": "/diagnosis/test",
+    "parentId": 6,
+    "isLink": null,
+    "sort": 2
+  },
+  {
+    "id": 24,
+    "icon": "MessageOutlined",
+    "title": "反馈历史",
+    "path": "/diagnosis/feedback",
+    "parentId": 6,
+    "isLink": null,
+    "sort": 4
+  },
+  {
+    "id": 25,
+    "icon": "ExceptionOutlined",
+    "title": "反馈处理",
+    "path": "/diagnosis/feedback/handle",
+    "parentId": 6,
+    "isLink": null,
+    "sort": 5
+  }
+]

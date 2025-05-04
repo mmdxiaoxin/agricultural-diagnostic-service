@@ -3,6 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
 import { ConfigEnum } from '@shared/enum/config.enum';
+import { InitService } from './init.service';
+import { Menu } from './entities/menu.entity';
+import { Role } from './entities/role.entity';
 
 @Global()
 @Module({})
@@ -36,7 +39,9 @@ export class DatabaseModule {
               entities,
             }) as TypeOrmModuleOptions,
         }),
+        TypeOrmModule.forFeature([Menu, Role]),
       ],
+      providers: [InitService],
       exports: [TypeOrmModule],
     };
   }
