@@ -30,7 +30,6 @@
       "@app/redis/*": ["libs/redis/src/*"],
       "@common/*": ["libs/common/src/*"],
       "@shared/*": ["libs/shared/src/*"]
-    },
-    "resolveJsonModule": true
+    }
   }
 }
