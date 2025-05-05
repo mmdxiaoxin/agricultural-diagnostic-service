@@ -29,11 +29,7 @@ export class AuthService {
     const result = await lastValueFrom(
       this.authClient.send({ cmd: 'auth.login' }, { dto }),
     );
-    return formatResponse(
-      200,
-      { access_token: result.access_token },
-      '登录成功',
-    );
+    return formatResponse(200, result, '登录成功');
   }
 
   async logout() {
