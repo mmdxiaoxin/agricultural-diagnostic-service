@@ -115,7 +115,7 @@ export class FileController {
         file: {
           type: 'string',
           format: 'binary',
-          description: '文件（最大10MB）',
+          description: '文件（最大5MB）',
         },
       },
     },
@@ -126,7 +126,7 @@ export class FileController {
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async uploadSingle(
     @Req() req: Request,
-    @UploadedFile(new FileSizeValidationPipe('10MB')) file: Express.Multer.File,
+    @UploadedFile(new FileSizeValidationPipe('5MB')) file: Express.Multer.File,
   ) {
     return this.fileService.uploadSingle(file, req.user.userId);
   }
