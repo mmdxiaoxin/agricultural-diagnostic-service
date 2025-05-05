@@ -1,4 +1,9 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import {
+  ApiErrorResponse,
+  ApiResponse,
+  ApiNullResponse,
+} from '@common/decorator/api-response.decorator';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -19,7 +24,6 @@ import { ClientProxy } from '@nestjs/microservices';
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
@@ -43,8 +47,8 @@ export class MenuController {
     summary: '获取个人路由权限',
     description: '获取当前登录用户的路由权限列表',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async getRoutes(@Req() req: Request) {
     const roles = req.user.roles;
     const routes = await lastValueFrom(
@@ -62,9 +66,9 @@ export class MenuController {
     summary: '获取所有菜单',
     description: '获取系统中所有的菜单列表（仅管理员可访问）',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async findAll() {
     const list = await lastValueFrom(
       this.authClient.send({ cmd: 'menu.get' }, {}).pipe(defaultIfEmpty([])),
@@ -80,10 +84,10 @@ export class MenuController {
     description: '获取指定菜单的详细信息（仅管理员可访问）',
   })
   @ApiParam({ name: 'id', description: '菜单ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '菜单不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '菜单不存在')
   async findOne(@Param('id') id: number) {
     const menu = await lastValueFrom(
       this.authClient
@@ -101,10 +105,10 @@ export class MenuController {
     summary: '创建新菜单',
     description: '创建新的菜单项（仅管理员可访问）',
   })
-  @ApiResponse({ status: 201, description: '创建成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.CREATED, '创建成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async create(@Body() menuData: any) {
     await lastValueFrom(
       this.authClient
@@ -122,11 +126,11 @@ export class MenuController {
     description: '更新指定菜单的信息（仅管理员可访问）',
   })
   @ApiParam({ name: 'id', description: '菜单ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '菜单不存在' })
+  @ApiResponse(HttpStatus.OK, '更新成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '菜单不存在')
   async update(@Param('id') id: number, @Body() menuData: any) {
     await lastValueFrom(
       this.authClient
@@ -145,10 +149,10 @@ export class MenuController {
     description: '删除指定的菜单（仅管理员可访问）',
   })
   @ApiParam({ name: 'id', description: '菜单ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '菜单不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '菜单不存在')
   async remove(@Param('id') id: number) {
     await lastValueFrom(
       this.authClient
