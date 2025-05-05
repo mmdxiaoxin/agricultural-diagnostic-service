@@ -6,6 +6,7 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import {
   KNOWLEDGE_SERVICE_HOST,
+  KNOWLEDGE_SERVICE_HTTP_PORT,
   KNOWLEDGE_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { AppModule } from './app.module';
@@ -39,5 +40,6 @@ async function bootstrap() {
     new CustomRpcExceptionFilter(),
   );
   await app.startAllMicroservices();
+  await app.listen(KNOWLEDGE_SERVICE_HTTP_PORT);
 }
 bootstrap();

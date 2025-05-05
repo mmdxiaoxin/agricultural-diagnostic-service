@@ -6,6 +6,7 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import {
   USER_SERVICE_HOST,
+  USER_SERVICE_HTTP_PORT,
   USER_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { AppModule } from './app.module';
@@ -39,5 +40,6 @@ async function bootstrap() {
     new CustomRpcExceptionFilter(),
   );
   await app.startAllMicroservices();
+  await app.listen(USER_SERVICE_HTTP_PORT);
 }
 bootstrap();
