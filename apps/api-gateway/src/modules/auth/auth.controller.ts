@@ -41,8 +41,6 @@ class ButtonResponse {
   code: string;
 }
 
-class EmptyResponse {}
-
 @ApiTags('权限认证模块')
 @Controller('auth')
 export class AuthController {
