@@ -21,7 +21,14 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { Request, Response } from 'express';
 import { DatasetService } from './dataset.service';
@@ -30,27 +37,48 @@ import { DatasetService } from './dataset.service';
 @Controller('dataset')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
+@ApiBearerAuth()
 export class DatasetController {
   constructor(private readonly datasetService: DatasetService) {}
 
   @Get('list')
+  @ApiOperation({
+    summary: '获取数据集列表',
+    description: '获取当前用户的数据集列表',
+  })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
   async datasetsListGet(@Req() req: Request, @Query() query: DatasetQueryDto) {
     return this.datasetService.getDatasetList(query, req.user.userId);
   }
 
   @Get('public/list')
+  @ApiOperation({
+    summary: '获取公共数据集列表',
+    description: '获取所有公开的数据集列表',
+  })
+  @ApiResponse({ status: 200, description: '获取成功' })
   async publicDatasetsListGet(@Query() query: DatasetQueryDto) {
     return this.datasetService.getPublicDatasetList(query);
   }
 
   @Post('create')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: '创建数据集', description: '创建新的数据集' })
+  @ApiResponse({ status: 201, description: '创建成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
   async createDataset(@Req() req: Request, @Body() dto: CreateDatasetDto) {
     return this.datasetService.createDataset(req.user.userId, dto);
   }
 
   @Post(':datasetId/copy')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: '复制数据集', description: '复制指定的数据集' })
+  @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
+  @ApiResponse({ status: 201, description: '复制成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 404, description: '数据集不存在' })
   async copyDataset(
     @Param(
       'datasetId',
@@ -63,6 +91,14 @@ export class DatasetController {
   }
 
   @Get(':datasetId')
+  @ApiOperation({
+    summary: '获取数据集详情',
+    description: '获取指定数据集的详细信息',
+  })
+  @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 404, description: '数据集不存在' })
   async getDatasetDetail(
     @Param(
       'datasetId',
@@ -74,6 +110,12 @@ export class DatasetController {
   }
 
   @Put(':datasetId')
+  @ApiOperation({ summary: '更新数据集', description: '更新指定数据集的信息' })
+  @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 404, description: '数据集不存在' })
   async updateDataset(
     @Param(
       'datasetId',
@@ -87,6 +129,15 @@ export class DatasetController {
   }
 
   @Put(':datasetId/access')
+  @ApiOperation({
+    summary: '更新数据集访问权限',
+    description: '更新指定数据集的访问权限设置',
+  })
+  @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 404, description: '数据集不存在' })
   async updateDatasetAccess(
     @Param(
       'datasetId',
@@ -105,6 +156,11 @@ export class DatasetController {
 
   @Delete(':datasetId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: '删除数据集', description: '删除指定的数据集' })
+  @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
+  @ApiResponse({ status: 204, description: '删除成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 404, description: '数据集不存在' })
   async deleteDataset(
     @Param(
       'datasetId',
@@ -117,6 +173,11 @@ export class DatasetController {
   }
 
   @Get(':datasetId/download')
+  @ApiOperation({ summary: '下载数据集', description: '下载指定数据集的内容' })
+  @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '下载成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 404, description: '数据集不存在' })
   async downloadDataset(
     @Param(
       'datasetId',
