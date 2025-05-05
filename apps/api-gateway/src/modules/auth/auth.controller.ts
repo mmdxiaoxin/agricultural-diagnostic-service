@@ -4,6 +4,7 @@ import {
   ApiNullResponse,
 } from '@common/decorator/api-response.decorator';
 import { LoginDto } from '@common/dto/auth/login.dto';
+import { LoginResponse } from '@common/dto/auth/login-response.dto';
 import { RegisterDto } from '@common/dto/auth/register.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import {
@@ -17,7 +18,12 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiTags,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 
@@ -28,13 +34,6 @@ class UserResponse {
   email: string;
   roles: string[];
   createdAt?: string;
-}
-
-class LoginResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  sessionId: string;
 }
 
 class ButtonResponse {

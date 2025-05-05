@@ -25,29 +25,26 @@ export const ApiResponse = <TModel extends Type<any>>(
       content: {
         'application/json': {
           schema: {
-            allOf: [
-              { $ref: getSchemaPath(ApiResponseDto) },
-              {
-                properties: {
-                  code: {
-                    type: 'number',
-                    example: status,
-                  },
-                  message: {
-                    type: 'string',
-                    example: description,
-                  },
-                  data: isArray
-                    ? {
-                        type: 'array',
-                        items: { $ref: getSchemaPath(model) },
-                      }
-                    : {
-                        $ref: getSchemaPath(model),
-                      },
-                },
+            type: 'object',
+            properties: {
+              code: {
+                type: 'number',
+                example: status,
               },
-            ],
+              message: {
+                type: 'string',
+                example: description,
+              },
+              data: isArray
+                ? {
+                    type: 'array',
+                    items: { $ref: getSchemaPath(model) },
+                  }
+                : {
+                    $ref: getSchemaPath(model),
+                  },
+            },
+            required: ['code', 'message', 'data'],
           },
         },
       },
@@ -100,9 +97,9 @@ export const ApiErrorResponse = (status: number, description: string) => {
               type: 'string',
               example: description,
             },
-            error: {
-              type: 'string',
-              example: 'Error message',
+            data: {
+              type: 'null',
+              example: null,
             },
           },
         },
