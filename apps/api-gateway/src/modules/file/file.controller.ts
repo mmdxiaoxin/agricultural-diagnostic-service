@@ -1,4 +1,9 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import {
+  ApiErrorResponse,
+  ApiResponse,
+  ApiNullResponse,
+} from '@common/decorator/api-response.decorator';
 import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
 import { CreateTaskDto } from '@common/dto/file/create-task.dto';
 import { DownloadFilesDto } from '@common/dto/file/download-file.dto';
@@ -33,7 +38,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
   ApiParam,
   ApiConsumes,
@@ -60,9 +64,9 @@ export class FileController {
     summary: '获取磁盘使用情况',
     description: '获取系统磁盘使用情况（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async diskUsageGet(@Req() req: Request) {
     return this.fileService.findDisk(req.user.userId);
   }
@@ -74,9 +78,9 @@ export class FileController {
     summary: '获取所有文件',
     description: '获取系统中的所有文件列表（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async filesGet(@Req() req: Request) {
     return this.fileService.findAll(req.user.userId);
   }
@@ -88,9 +92,9 @@ export class FileController {
     summary: '获取文件列表',
     description: '分页获取系统中的文件列表（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async fileListGet(@Req() req: Request, @Query() query: FileQueryDto) {
     return this.fileService.findList(req.user.userId, query);
   }
@@ -116,10 +120,10 @@ export class FileController {
       },
     },
   })
-  @ApiResponse({ status: 201, description: '上传成功' })
-  @ApiResponse({ status: 400, description: '文件大小超出限制' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.CREATED, '上传成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '文件大小超出限制')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async uploadSingle(
     @Req() req: Request,
     @UploadedFile(new FileSizeValidationPipe('10MB')) file: Express.Multer.File,
@@ -135,10 +139,10 @@ export class FileController {
     summary: '创建上传任务',
     description: '创建大文件分片上传任务（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 201, description: '创建成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateTaskDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async createUploadTask(@Req() req: Request, @Body() dto: CreateTaskDto) {
     return this.fileService.createUploadTask(dto, req.user.userId);
   }
@@ -151,10 +155,10 @@ export class FileController {
     description: '获取文件上传任务的状态（仅管理员和专家可访问）',
   })
   @ApiParam({ name: 'taskId', description: '上传任务ID', type: 'string' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '任务不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '任务不存在')
   async getUploadTaskStatus(@Param('taskId') taskId: string) {
     return this.fileService.getUploadTaskStatus(taskId);
   }
@@ -166,10 +170,10 @@ export class FileController {
     summary: '完成分片上传',
     description: '合并所有分片完成文件上传（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 200, description: '合并成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '合并成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async completeUpload(@Body() dto: CompleteChunkDto) {
     return this.fileService.completeUpload(dto);
   }
@@ -195,10 +199,10 @@ export class FileController {
       },
     },
   })
-  @ApiResponse({ status: 201, description: '上传成功' })
-  @ApiResponse({ status: 400, description: '分片大小超出限制' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.CREATED, '上传成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '分片大小超出限制')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async uploadChunk(
     @UploadedFile(new FileSizeValidationPipe('10MB')) file: Express.Multer.File,
     @Body() dto: UploadChunkDto,
@@ -211,10 +215,10 @@ export class FileController {
   @UseGuards(AuthGuard, RolesGuard, FileGuard)
   @ApiOperation({ summary: '下载文件', description: '下载指定文件' })
   @ApiParam({ name: 'fileId', description: '文件ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '下载成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '文件不存在' })
+  @ApiResponse(HttpStatus.OK, '下载成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '文件不存在')
   async downloadFile(
     @Param(
       'fileId',
@@ -231,10 +235,10 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert, Role.User)
   @UseGuards(AuthGuard, RolesGuard, FilesGuard)
   @ApiOperation({ summary: '批量下载文件', description: '批量下载多个文件' })
-  @ApiResponse({ status: 200, description: '下载成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '下载成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async downloadFiles(
     @Body() _: DownloadFilesDto,
     @Req() req: Request,
@@ -250,11 +254,11 @@ export class FileController {
     summary: '更新文件信息',
     description: '更新文件的基本信息（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '文件不存在' })
+  @ApiResponse(HttpStatus.OK, '更新成功', UpdateFileDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '文件不存在')
   async updateFile(@Req() req: Request, @Body() dto: UpdateFileDto) {
     return this.fileService.updateFile(dto, req.user.userId);
   }
@@ -266,10 +270,10 @@ export class FileController {
     summary: '批量更新文件权限',
     description: '批量更新多个文件的访问权限（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '更新成功', UpdateFilesAccessDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async updateFilesAccess(
     @Req() req: Request,
     @Body() dto: UpdateFilesAccessDto,
@@ -286,10 +290,10 @@ export class FileController {
     description: '删除指定的文件（仅管理员和专家可访问）',
   })
   @ApiParam({ name: 'fileId', description: '文件ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '文件不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '文件不存在')
   async deleteFile(
     @Param(
       'fileId',
@@ -310,10 +314,10 @@ export class FileController {
     description: '批量删除多个文件（仅管理员和专家可访问）',
   })
   @ApiQuery({ name: 'fileIds', description: '文件ID列表', type: [Number] })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async deleteFiles(
     @Query('fileIds', ParseNumberArrayPipe) fileIds: number[],
     @Req() req: Request,
@@ -329,10 +333,10 @@ export class FileController {
     description: '获取文件的临时下载令牌',
   })
   @ApiParam({ name: 'fileId', description: '文件ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '文件不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '文件不存在')
   async generateAccessToken(
     @Req() req: Request,
     @Param(
@@ -350,9 +354,9 @@ export class FileController {
     description: '使用临时令牌获取文件访问链接',
   })
   @ApiParam({ name: 'token', description: '临时访问令牌', type: 'string' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 400, description: '令牌无效' })
-  @ApiResponse({ status: 404, description: '文件不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '令牌无效')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '文件不存在')
   async getAccessLink(
     @Param('token') token: string,
     @Req() req: Request,
