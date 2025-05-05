@@ -94,6 +94,8 @@ export class AuthService {
         username: user.username,
         roles: user.roles.map((role) => role.name),
       }),
+      token_type: 'Bearer',
+      expires_in: 3600 * 24,
       sessionId,
     };
   }
