@@ -5,6 +5,7 @@ import {
 } from '@common/decorator/api-response.decorator';
 import { Roles } from '@common/decorator/roles.decorator';
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
+import { DiagnosisHistoryDto } from '@common/dto/diagnosis/diagnosis-history.dto';
 import { DiagnosisSupportResponseDto } from '@common/dto/diagnosis/diagnosis-support-response.dto';
 import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
 import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
@@ -74,7 +75,7 @@ export class DiagnosisController {
       },
     },
   })
-  @ApiResponse(HttpStatus.CREATED, '上传成功')
+  @ApiResponse(HttpStatus.CREATED, '上传成功', DiagnosisHistoryDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '文件格式或大小不符合要求')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async uploadData(
@@ -158,7 +159,7 @@ export class DiagnosisController {
     description: '获取指定诊断记录的当前状态',
   })
   @ApiParam({ name: 'id', description: '诊断记录ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DiagnosisHistoryDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断记录不存在')
   async getDiagnosisStatus(
@@ -227,7 +228,7 @@ export class DiagnosisController {
     summary: '获取诊断历史',
     description: '获取当前用户的诊断历史记录',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DiagnosisHistoryDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async diagnosisHistoryGet(@Req() req: Request) {
     return this.diagnosisService.diagnosisHistoryGet(req.user.userId);
