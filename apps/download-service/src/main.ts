@@ -7,7 +7,6 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import {
   DOWNLOAD_SERVICE_GRPC_PORT,
   DOWNLOAD_SERVICE_HOST,
-  DOWNLOAD_SERVICE_HTTP_PORT,
   DOWNLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { join } from 'path';
@@ -71,7 +70,5 @@ async function bootstrap() {
 
   // 启动所有微服务
   await app.startAllMicroservices();
-  // 启动 HTTP 服务
-  await app.listen(DOWNLOAD_SERVICE_HTTP_PORT);
 }
 bootstrap();
