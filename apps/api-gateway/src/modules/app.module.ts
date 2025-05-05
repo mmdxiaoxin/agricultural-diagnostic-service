@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { RouterModule } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import {
@@ -7,23 +8,21 @@ import {
   FILE_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { DatasetModule } from './dataset/dataset.module';
 import { DiagnosisModule } from './diagnosis/diagnosis.module';
 import { FileModule } from './file/file.module';
+import { CropModule } from './knowledge/crop/crop.module';
+import { DiagnosisRuleModule } from './knowledge/diagnosis-rule/diagnosis-rule.module';
+import { DiseaseModule } from './knowledge/disease/disease.module';
+import { EnvironmentFactorModule } from './knowledge/environment-factor/environment-factor.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
+import { SymptomModule } from './knowledge/symptom/symptom.module';
+import { TreatmentModule } from './knowledge/treatment/treatment.module';
 import { MenuModule } from './menu/menu.module';
 import { RemoteModule } from './remote/remote.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
-import { RouterModule } from '@nestjs/core';
-import { CropModule } from './knowledge/crop/crop.module';
-import { DiseaseModule } from './knowledge/disease/disease.module';
-import { EnvironmentFactorModule } from './knowledge/environment-factor/environment-factor.module';
-import { SymptomModule } from './knowledge/symptom/symptom.module';
-import { DiagnosisRuleModule } from './knowledge/diagnosis-rule/diagnosis-rule.module';
-import { TreatmentModule } from './knowledge/treatment/treatment.module';
 
 /**
  * 根模块
@@ -82,6 +81,5 @@ import { TreatmentModule } from './knowledge/treatment/treatment.module';
     RemoteModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
