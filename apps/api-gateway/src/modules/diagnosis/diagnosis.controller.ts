@@ -1,4 +1,9 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import {
+  ApiErrorResponse,
+  ApiResponse,
+  ApiNullResponse,
+} from '@common/decorator/api-response.decorator';
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
 import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
@@ -30,7 +35,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
   ApiParam,
   ApiConsumes,
@@ -69,9 +73,9 @@ export class DiagnosisController {
       },
     },
   })
-  @ApiResponse({ status: 201, description: '上传成功' })
-  @ApiResponse({ status: 400, description: '文件格式或大小不符合要求' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse(HttpStatus.CREATED, '上传成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '文件格式或大小不符合要求')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async uploadData(
     @Req() req: Request,
     @UploadedFile(
@@ -89,9 +93,9 @@ export class DiagnosisController {
     description: '开始对指定图片进行病害诊断',
   })
   @ApiParam({ name: 'id', description: '诊断记录ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '诊断开始' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '诊断记录不存在' })
+  @ApiResponse(HttpStatus.OK, '诊断开始')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断记录不存在')
   async startDiagnosis(
     @Req() req: Request,
     @Param(
@@ -121,9 +125,9 @@ export class DiagnosisController {
     description: '异步开始对指定图片进行病害诊断',
   })
   @ApiParam({ name: 'id', description: '诊断记录ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '诊断任务已提交' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '诊断记录不存在' })
+  @ApiResponse(HttpStatus.OK, '诊断任务已提交')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断记录不存在')
   async startDiagnosisAsync(
     @Req() req: Request,
     @Param(
@@ -153,9 +157,9 @@ export class DiagnosisController {
     description: '获取指定诊断记录的当前状态',
   })
   @ApiParam({ name: 'id', description: '诊断记录ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '诊断记录不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断记录不存在')
   async getDiagnosisStatus(
     @Req() req: Request,
     @Param(
@@ -173,9 +177,9 @@ export class DiagnosisController {
     description: '获取指定诊断记录的详细日志',
   })
   @ApiParam({ name: 'id', description: '诊断记录ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '诊断记录不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断记录不存在')
   async getDiagnosisLog(
     @Param(
       'id',
@@ -192,9 +196,9 @@ export class DiagnosisController {
     description: '获取指定诊断记录的日志列表',
   })
   @ApiParam({ name: 'id', description: '诊断记录ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '诊断记录不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断记录不存在')
   async getDiagnosisLogList(
     @Param(
       'id',
@@ -211,8 +215,8 @@ export class DiagnosisController {
     summary: '获取诊断统计',
     description: '获取当前用户的诊断统计数据',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async diagnosisStatisticsGet(@Req() req: Request) {
     return this.diagnosisService.diagnosisStatisticsGet(req.user.userId);
   }
@@ -222,8 +226,8 @@ export class DiagnosisController {
     summary: '获取诊断历史',
     description: '获取当前用户的诊断历史记录',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async diagnosisHistoryGet(@Req() req: Request) {
     return this.diagnosisService.diagnosisHistoryGet(req.user.userId);
   }
@@ -234,8 +238,8 @@ export class DiagnosisController {
     summary: '批量删除诊断历史',
     description: '批量删除指定的诊断历史记录',
   })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async diagnosisHistoriesDelete(
     @Req() req: Request,
     @Query('diagnosisIds', ParseNumberArrayPipe) diagnosisIds: number[],
@@ -253,9 +257,9 @@ export class DiagnosisController {
     description: '删除指定的诊断历史记录',
   })
   @ApiParam({ name: 'id', description: '诊断历史记录ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '诊断历史记录不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断历史记录不存在')
   async diagnosisHistoryDelete(
     @Req() req: Request,
     @Param(
@@ -273,10 +277,10 @@ export class DiagnosisController {
     description: '为指定的诊断记录创建反馈',
   })
   @ApiParam({ name: 'id', description: '诊断历史记录ID', type: 'number' })
-  @ApiResponse({ status: 201, description: '创建成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '诊断历史记录不存在' })
+  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateFeedbackDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断历史记录不存在')
   async diagnosisHistoryFeedbackCreate(
     @Req() req: Request,
     @Param('id', ParseIntPipe) id: number,
@@ -294,8 +298,8 @@ export class DiagnosisController {
     summary: '获取诊断历史列表',
     description: '获取当前用户的诊断历史记录列表',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async diagnosisHistoryListGet(
     @Req() req: Request,
     @Query() query: PageQueryDto,
@@ -311,8 +315,8 @@ export class DiagnosisController {
     summary: '获取反馈列表',
     description: '获取当前用户的诊断反馈列表',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async diagnosisHistoryFeedbackListGet(
     @Req() req: Request,
     @Query() query: FeedbackQueryDto,
@@ -330,9 +334,9 @@ export class DiagnosisController {
     summary: '获取所有反馈列表',
     description: '获取所有用户的诊断反馈列表（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async diagnosisHistoryFeedbackListAllGet(@Query() query: FeedbackQueryDto) {
     return this.diagnosisService.diagnosisHistoryFeedbackListAllGet(query);
   }
@@ -343,9 +347,9 @@ export class DiagnosisController {
     description: '获取指定诊断反馈的详细信息',
   })
   @ApiParam({ name: 'feedbackId', description: '反馈ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '反馈不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '反馈不存在')
   async diagnosisHistoryFeedbackDetailGet(
     @Req() req: Request,
     @Param('feedbackId', ParseIntPipe) feedbackId: number,
@@ -364,11 +368,11 @@ export class DiagnosisController {
     description: '更新指定的诊断反馈（仅管理员和专家可操作）',
   })
   @ApiParam({ name: 'feedbackId', description: '反馈ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '反馈不存在' })
+  @ApiResponse(HttpStatus.OK, '更新成功', UpdateFeedbackDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '反馈不存在')
   async diagnosisHistoryFeedbackUpdate(
     @Req() req: Request,
     @Param('feedbackId', ParseIntPipe) feedbackId: number,
@@ -385,9 +389,9 @@ export class DiagnosisController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: '删除反馈', description: '删除指定的诊断反馈' })
   @ApiParam({ name: 'feedbackId', description: '反馈ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '反馈不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '反馈不存在')
   async diagnosisHistoryFeedbackDelete(
     @Req() req: Request,
     @Param('feedbackId', ParseIntPipe) feedbackId: number,
@@ -404,8 +408,8 @@ export class DiagnosisController {
     summary: '批量删除反馈',
     description: '批量删除指定的诊断反馈',
   })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async diagnosisHistoryFeedbackDeleteBatch(
     @Req() req: Request,
     @Query('feedbackIds', ParseNumberArrayPipe) feedbackIds: number[],
@@ -421,9 +425,9 @@ export class DiagnosisController {
     summary: '创建诊断支持',
     description: '创建新的诊断支持信息',
   })
-  @ApiResponse({ status: 201, description: '创建成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse(HttpStatus.CREATED, '创建成功', DiagnosisSupportDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async createDiagnosisSupport(@Body() data: DiagnosisSupportDto) {
     return this.diagnosisService.createDiagnosisSupport(data);
   }
@@ -433,8 +437,8 @@ export class DiagnosisController {
     summary: '获取诊断支持列表',
     description: '获取所有诊断支持信息列表',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async getDiagnosisSupportList() {
     return this.diagnosisService.getDiagnosisSupportList();
   }
@@ -445,9 +449,9 @@ export class DiagnosisController {
     description: '获取指定诊断支持的详细信息',
   })
   @ApiParam({ name: 'id', description: '诊断支持ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '诊断支持不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断支持不存在')
   async getDiagnosisSupport(@Param('id', ParseIntPipe) id: number) {
     return this.diagnosisService.getDiagnosisSupport(id);
   }
@@ -458,10 +462,10 @@ export class DiagnosisController {
     description: '更新指定的诊断支持信息',
   })
   @ApiParam({ name: 'id', description: '诊断支持ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '诊断支持不存在' })
+  @ApiResponse(HttpStatus.OK, '更新成功', DiagnosisSupportDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断支持不存在')
   async updateDiagnosisSupport(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: DiagnosisSupportDto,
@@ -476,9 +480,9 @@ export class DiagnosisController {
     description: '删除指定的诊断支持信息',
   })
   @ApiParam({ name: 'id', description: '诊断支持ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 404, description: '诊断支持不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断支持不存在')
   async deleteDiagnosisSupport(@Param('id', ParseIntPipe) id: number) {
     return this.diagnosisService.deleteDiagnosisSupport(id);
   }
