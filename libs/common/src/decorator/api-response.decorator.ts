@@ -1,4 +1,4 @@
-import { applyDecorators, Type } from '@nestjs/common';
+import { applyDecorators, Type, HttpStatus } from '@nestjs/common';
 import {
   ApiExtraModels,
   ApiProperty,
@@ -32,6 +32,13 @@ export const ApiResponse = <TModel extends Type<any> = any>(
   model?: TModel,
   isArray = false,
 ) => {
+  if (status === HttpStatus.NO_CONTENT) {
+    return SwaggerApiResponse({
+      status,
+      description,
+    });
+  }
+
   return applyDecorators(
     ApiExtraModels(ApiResponseDto, model || Object),
     SwaggerApiResponse({
@@ -73,6 +80,13 @@ export const ApiResponse = <TModel extends Type<any> = any>(
 };
 
 export const ApiNullResponse = (status: number, description: string) => {
+  if (status === HttpStatus.NO_CONTENT) {
+    return SwaggerApiResponse({
+      status,
+      description,
+    });
+  }
+
   return SwaggerApiResponse({
     status,
     description,
