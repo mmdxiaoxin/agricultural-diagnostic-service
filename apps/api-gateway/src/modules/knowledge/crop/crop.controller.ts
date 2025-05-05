@@ -18,7 +18,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { CropService } from './crop.service';
 
@@ -26,29 +32,61 @@ import { CropService } from './crop.service';
 @Controller('crop')
 @Roles(Role.Admin, Role.Expert)
 @UseGuards(AuthGuard, RolesGuard)
+@ApiBearerAuth()
 export class CropController {
   constructor(private readonly cropService: CropService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: '创建作物',
+    description: '创建新的作物信息（仅管理员和专家可访问）',
+  })
+  @ApiResponse({ status: 201, description: '创建成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
   create(@Body() createCropDto: CreateCropDto) {
     return this.cropService.create(createCropDto);
   }
 
   @Get()
   @Roles(Role.Admin, Role.Expert, Role.User)
+  @ApiOperation({
+    summary: '获取所有作物',
+    description: '获取所有作物列表（所有角色可访问）',
+  })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
   findAll() {
     return this.cropService.findAll();
   }
 
   @Get('list')
   @Roles(Role.Admin, Role.Expert, Role.User)
+  @ApiOperation({
+    summary: '分页获取作物列表',
+    description: '分页获取作物列表（所有角色可访问）',
+  })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
   findList(@Query() query: PageQueryKeywordsDto) {
     return this.cropService.findList(query);
   }
 
   @Get(':id')
   @Roles(Role.Admin, Role.Expert, Role.User)
+  @ApiOperation({
+    summary: '获取单个作物',
+    description: '获取指定作物的详细信息（所有角色可访问）',
+  })
+  @ApiParam({ name: 'id', description: '作物ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '作物不存在' })
   findOne(
     @Param(
       'id',
@@ -60,6 +98,16 @@ export class CropController {
   }
 
   @Patch(':id')
+  @ApiOperation({
+    summary: '更新作物',
+    description: '更新指定作物的信息（仅管理员和专家可访问）',
+  })
+  @ApiParam({ name: 'id', description: '作物ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '作物不存在' })
   update(
     @Param(
       'id',
@@ -73,6 +121,15 @@ export class CropController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: '删除作物',
+    description: '删除指定的作物（仅管理员和专家可访问）',
+  })
+  @ApiParam({ name: 'id', description: '作物ID', type: 'number' })
+  @ApiResponse({ status: 204, description: '删除成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '作物不存在' })
   remove(
     @Param(
       'id',
