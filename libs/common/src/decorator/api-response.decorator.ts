@@ -141,3 +141,22 @@ export const ApiErrorResponse = (status: number, description: string) => {
     },
   });
 };
+
+export const ApiBinaryResponse = (
+  status: number,
+  description: string,
+  mimeType: string = 'application/octet-stream',
+) => {
+  return SwaggerApiResponse({
+    status,
+    description,
+    content: {
+      [mimeType]: {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  });
+};

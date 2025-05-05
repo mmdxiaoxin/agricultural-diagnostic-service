@@ -3,6 +3,7 @@ import {
   ApiErrorResponse,
   ApiResponse,
   ApiNullResponse,
+  ApiBinaryResponse,
 } from '@common/decorator/api-response.decorator';
 import { UpdatePasswordDto } from '@common/dto/user/change-pass.dto';
 import { CreateUserDto } from '@common/dto/user/create-user.dto';
@@ -110,7 +111,7 @@ export class UserController {
 
   @Get('avatar')
   @ApiOperation({ summary: '获取头像', description: '获取当前登录用户的头像' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiBinaryResponse(HttpStatus.OK, '获取成功', 'image/*')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '头像不存在')
   async getAvatar(@Req() req: Request, @Res() res: Response) {
