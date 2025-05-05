@@ -12,6 +12,7 @@ import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
+import { createPageResponseDto } from '@common/dto/page-response.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
@@ -300,7 +301,11 @@ export class DiagnosisController {
     summary: '获取诊断历史列表',
     description: '获取当前用户的诊断历史记录列表',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(
+    HttpStatus.OK,
+    '获取成功',
+    createPageResponseDto(DiagnosisHistoryDto),
+  )
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async diagnosisHistoryListGet(
     @Req() req: Request,
