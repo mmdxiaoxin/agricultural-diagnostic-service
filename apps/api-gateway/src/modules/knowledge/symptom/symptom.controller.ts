@@ -1,4 +1,9 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import {
+  ApiErrorResponse,
+  ApiResponse,
+  ApiNullResponse,
+} from '@common/decorator/api-response.decorator';
 import { CreateSymptomDto } from '@common/dto/knowledge/create-symptom.dto';
 import { UpdateSymptomDto } from '@common/dto/knowledge/update-symptom.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
@@ -21,7 +26,6 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
@@ -44,19 +48,19 @@ export class SymptomController {
     summary: '创建症状',
     description: '创建新的症状信息（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 201, description: '创建成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateSymptomDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   create(@Body() createSymptomDto: CreateSymptomDto) {
     return this.symptomService.create(createSymptomDto);
   }
 
   @Get()
   @ApiOperation({ summary: '获取所有症状', description: '获取所有症状列表' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findAll() {
     return this.symptomService.findAll();
   }
@@ -66,9 +70,9 @@ export class SymptomController {
     summary: '分页获取症状列表',
     description: '分页获取症状列表',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findList(@Query() query: PageQueryKeywordsDto) {
     return this.symptomService.findList(query);
   }
@@ -79,10 +83,10 @@ export class SymptomController {
     description: '获取指定症状的详细信息',
   })
   @ApiParam({ name: 'id', description: '症状ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '症状不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '症状不存在')
   findOne(
     @Param(
       'id',
@@ -100,10 +104,10 @@ export class SymptomController {
     description: '获取指定症状的图片（所有角色可访问）',
   })
   @ApiParam({ name: 'id', description: '症状ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功', type: 'image/*' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '症状图片不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '症状图片不存在')
   findImage(
     @Param(
       'id',
@@ -118,11 +122,11 @@ export class SymptomController {
   @Patch(':id')
   @ApiOperation({ summary: '更新症状', description: '更新指定症状的信息' })
   @ApiParam({ name: 'id', description: '症状ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '症状不存在' })
+  @ApiResponse(HttpStatus.OK, '更新成功', UpdateSymptomDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '症状不存在')
   update(
     @Param(
       'id',
@@ -138,10 +142,10 @@ export class SymptomController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: '删除症状', description: '删除指定的症状' })
   @ApiParam({ name: 'id', description: '症状ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '症状不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '症状不存在')
   remove(
     @Param(
       'id',
