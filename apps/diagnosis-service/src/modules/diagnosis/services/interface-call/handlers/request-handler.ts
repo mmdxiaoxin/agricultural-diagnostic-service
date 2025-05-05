@@ -6,7 +6,6 @@ import { DiagnosisLogService } from '../../diagnosis-log.service';
 
 @Injectable()
 export class RequestHandler {
-  private readonly logger = new Logger(RequestHandler.name);
   private diagnosisId: number;
 
   constructor(
@@ -95,20 +94,6 @@ export class RequestHandler {
     message: string,
     metadata?: Record<string, any>,
   ) {
-    switch (level) {
-      case LogLevel.ERROR:
-        this.logger.error(message);
-        break;
-      case LogLevel.WARN:
-        this.logger.warn(message);
-        break;
-      case LogLevel.INFO:
-        this.logger.log(message);
-        break;
-      case LogLevel.DEBUG:
-        this.logger.debug(message);
-        break;
-    }
     await this.logService.addLog(this.diagnosisId, level, message, metadata);
   }
 }

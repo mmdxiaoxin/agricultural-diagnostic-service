@@ -5,21 +5,14 @@ import {
   DownloadFilesRequest,
   DownloadFilesResponse,
 } from '@common/types/download/download.types';
-import { Controller, Logger } from '@nestjs/common';
-import {
-  GrpcMethod,
-  GrpcStreamMethod,
-  MessagePattern,
-  Payload,
-} from '@nestjs/microservices';
+import { Controller } from '@nestjs/common';
+import { GrpcMethod, MessagePattern, Payload } from '@nestjs/microservices';
 import { DOWNLOAD_MESSAGE_PATTERNS } from '@shared/constants/download-message-patterns';
 import { Observable } from 'rxjs';
 import { DownloadService } from './app.service';
 
 @Controller()
 export class DownloadController {
-  private readonly logger = new Logger(DownloadController.name);
-
   constructor(private readonly downloadService: DownloadService) {}
 
   @MessagePattern({ cmd: DOWNLOAD_MESSAGE_PATTERNS.FILE_DOWNLOAD })

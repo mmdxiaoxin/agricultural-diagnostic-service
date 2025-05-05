@@ -18,7 +18,6 @@ type ProcessedParams = Record<string, any> | FormData;
 
 @Injectable()
 export class ParamProcessorUtil {
-  private readonly logger = new Logger(ParamProcessorUtil.name);
   private diagnosisId: number;
 
   constructor(private readonly logService: DiagnosisLogService) {}
@@ -175,7 +174,6 @@ export class ParamProcessorUtil {
     message: string,
     metadata?: Record<string, any>,
   ) {
-    this.logger[level](message);
     await this.logService.addLog(this.diagnosisId, level, message, metadata);
   }
 }

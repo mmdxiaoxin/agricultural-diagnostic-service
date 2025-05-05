@@ -1,11 +1,17 @@
-import { LogLevel } from "@app/database/entities";
-import { Injectable, Logger } from "@nestjs/common";
-import { get, isEmpty, isString, replace, startsWith, toString } from "lodash-es";
-import { DiagnosisLogService } from "../../diagnosis-log.service";
+import { LogLevel } from '@app/database/entities';
+import { Injectable, Logger } from '@nestjs/common';
+import {
+  get,
+  isEmpty,
+  isString,
+  replace,
+  startsWith,
+  toString,
+} from 'lodash-es';
+import { DiagnosisLogService } from '../../diagnosis-log.service';
 
 @Injectable()
 export class UrlProcessorUtil {
-  private readonly logger = new Logger(UrlProcessorUtil.name);
   private diagnosisId: number;
 
   constructor(private readonly logService: DiagnosisLogService) {}
@@ -33,7 +39,8 @@ export class UrlProcessorUtil {
 
     this.log(LogLevel.DEBUG, `开始处理URL模板: ${url}`);
     this.log(LogLevel.DEBUG, `可用参数: ${JSON.stringify(params)}`);
-    this.log(LogLevel.DEBUG,
+    this.log(
+      LogLevel.DEBUG,
       `可用结果: ${JSON.stringify(Array.from(previousResults.entries()))}`,
     );
 
@@ -133,8 +140,11 @@ export class UrlProcessorUtil {
   /**
    * 记录日志
    */
-  private async log(level: LogLevel, message: string, metadata?: Record<string, any>) {
-    this.logger[level](message);
+  private async log(
+    level: LogLevel,
+    message: string,
+    metadata?: Record<string, any>,
+  ) {
     await this.logService.addLog(this.diagnosisId, level, message, metadata);
   }
-} 
+}

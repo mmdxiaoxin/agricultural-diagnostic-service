@@ -8,7 +8,6 @@ import { DiagnosisLogService } from '../../diagnosis-log.service';
 
 @Injectable()
 export class PollingHandler {
-  private readonly logger = new Logger(PollingHandler.name);
   private diagnosisId: number;
 
   constructor(private readonly logService: DiagnosisLogService) {}
@@ -110,7 +109,6 @@ export class PollingHandler {
     message: string,
     metadata?: Record<string, any>,
   ) {
-    this.logger[level](message);
     await this.logService.addLog(this.diagnosisId, level, message, metadata);
   }
 }
