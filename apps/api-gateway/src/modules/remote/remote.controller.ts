@@ -1,4 +1,9 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import {
+  ApiErrorResponse,
+  ApiResponse,
+  ApiNullResponse,
+} from '@common/decorator/api-response.decorator';
 import { CallRemoteInterfaceDto } from '@common/dto/remote/call-remote-interface.dto';
 import { CreateRemoteInterfaceDto } from '@common/dto/remote/create-remote-interface.dto';
 import { CreateRemoteServiceDto } from '@common/dto/remote/create-remote-service.dto';
@@ -25,7 +30,6 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
@@ -47,9 +51,9 @@ export class RemoteController {
     summary: '获取全部远程服务',
     description: '获取系统中所有的远程服务列表',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async getRemote() {
     return this.remoteService.getRemote();
   }
@@ -61,9 +65,9 @@ export class RemoteController {
   })
   @ApiQuery({ name: 'page', description: '页码', type: 'number' })
   @ApiQuery({ name: 'pageSize', description: '每页数量', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async getRemoteList(
     @Query('page') page: number,
     @Query('pageSize') pageSize: number,
@@ -77,10 +81,10 @@ export class RemoteController {
     description: '获取指定远程服务的详细信息',
   })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '服务不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '服务不存在')
   async getRemoteById(
     @Param(
       'serviceId',
@@ -94,10 +98,10 @@ export class RemoteController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: '创建远程服务', description: '创建新的远程服务' })
-  @ApiResponse({ status: 201, description: '创建成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateRemoteServiceDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async createRemote(@Body() dto: CreateRemoteServiceDto) {
     return this.remoteService.createRemote(dto);
   }
@@ -108,11 +112,11 @@ export class RemoteController {
     description: '更新指定远程服务的信息',
   })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '服务不存在' })
+  @ApiResponse(HttpStatus.OK, '更新成功', UpdateRemoteServiceDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '服务不存在')
   async updateRemote(
     @Param(
       'serviceId',
@@ -128,10 +132,10 @@ export class RemoteController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: '删除远程服务', description: '删除指定的远程服务' })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '服务不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '服务不存在')
   async removeRemote(
     @Param(
       'serviceId',
@@ -146,10 +150,10 @@ export class RemoteController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: '复制远程服务', description: '复制指定的远程服务' })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
-  @ApiResponse({ status: 201, description: '复制成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '服务不存在' })
+  @ApiResponse(HttpStatus.CREATED, '复制成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '服务不存在')
   async copyRemote(
     @Param(
       'serviceId',
@@ -167,11 +171,11 @@ export class RemoteController {
     description: '为指定服务创建新的接口',
   })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
-  @ApiResponse({ status: 201, description: '创建成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '服务不存在' })
+  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateRemoteInterfaceDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '服务不存在')
   async createRemoteInterface(
     @Param(
       'serviceId',
@@ -189,10 +193,10 @@ export class RemoteController {
     description: '获取指定服务的所有接口',
   })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '服务不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '服务不存在')
   async getRemoteInterfaces(
     @Param(
       'serviceId',
@@ -211,10 +215,10 @@ export class RemoteController {
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiQuery({ name: 'page', description: '页码', type: 'number' })
   @ApiQuery({ name: 'pageSize', description: '每页数量', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '服务不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '服务不存在')
   async getRemoteInterfaceList(
     @Param(
       'serviceId',
@@ -234,10 +238,10 @@ export class RemoteController {
   })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiParam({ name: 'interfaceId', description: '接口ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '接口不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '接口不存在')
   async getRemoteInterfaceById(
     @Param(
       'interfaceId',
@@ -255,11 +259,11 @@ export class RemoteController {
   })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiParam({ name: 'interfaceId', description: '接口ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '接口不存在' })
+  @ApiResponse(HttpStatus.OK, '更新成功', UpdateRemoteInterfaceDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '接口不存在')
   async updateRemoteInterface(
     @Param(
       'interfaceId',
@@ -276,10 +280,10 @@ export class RemoteController {
   @ApiOperation({ summary: '删除远程服务接口', description: '删除指定的接口' })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiParam({ name: 'interfaceId', description: '接口ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '接口不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '接口不存在')
   async removeRemoteInterface(
     @Param(
       'interfaceId',
@@ -296,10 +300,10 @@ export class RemoteController {
     description: '获取指定服务的所有配置信息',
   })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '服务不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '服务不存在')
   async getRemoteConfigs(
     @Param(
       'serviceId',
@@ -318,10 +322,10 @@ export class RemoteController {
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiQuery({ name: 'page', description: '页码', type: 'number' })
   @ApiQuery({ name: 'pageSize', description: '每页数量', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '服务不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '服务不存在')
   async getRemoteConfigList(
     @Param(
       'serviceId',
@@ -341,10 +345,10 @@ export class RemoteController {
   })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiParam({ name: 'configId', description: '配置ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '配置不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '配置不存在')
   async getRemoteConfigById(
     @Param(
       'configId',
@@ -359,11 +363,11 @@ export class RemoteController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: '创建配置', description: '为指定服务创建新的配置' })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
-  @ApiResponse({ status: 201, description: '创建成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '服务不存在' })
+  @ApiResponse(HttpStatus.CREATED, '创建成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '服务不存在')
   async createRemoteConfig(
     @Param(
       'serviceId',
@@ -379,11 +383,11 @@ export class RemoteController {
   @ApiOperation({ summary: '更新配置', description: '更新指定配置的信息' })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiParam({ name: 'configId', description: '配置ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '配置不存在' })
+  @ApiResponse(HttpStatus.OK, '更新成功')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '配置不存在')
   async updateRemoteConfig(
     @Param(
       'configId',
@@ -400,10 +404,10 @@ export class RemoteController {
   @ApiOperation({ summary: '删除配置', description: '删除指定的配置' })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiParam({ name: 'configId', description: '配置ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '配置不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '配置不存在')
   async removeRemoteConfig(
     @Param(
       'configId',
@@ -419,10 +423,10 @@ export class RemoteController {
   @ApiOperation({ summary: '复制配置', description: '复制指定的配置' })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiParam({ name: 'configId', description: '配置ID', type: 'number' })
-  @ApiResponse({ status: 201, description: '复制成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '配置不存在' })
+  @ApiResponse(HttpStatus.CREATED, '复制成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '配置不存在')
   async copyRemoteConfig(
     @Param(
       'configId',
@@ -438,10 +442,10 @@ export class RemoteController {
   @ApiOperation({ summary: '复制接口', description: '复制指定的接口' })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiParam({ name: 'interfaceId', description: '接口ID', type: 'number' })
-  @ApiResponse({ status: 201, description: '复制成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '接口不存在' })
+  @ApiResponse(HttpStatus.CREATED, '复制成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '接口不存在')
   async copyRemoteInterface(
     @Param(
       'interfaceId',
@@ -459,11 +463,11 @@ export class RemoteController {
   })
   @ApiParam({ name: 'serviceId', description: '服务ID', type: 'number' })
   @ApiParam({ name: 'interfaceId', description: '接口ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '调用成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '接口不存在' })
+  @ApiResponse(HttpStatus.OK, '调用成功', CallRemoteInterfaceDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '接口不存在')
   async callRemoteInterface(
     @Param(
       'interfaceId',
