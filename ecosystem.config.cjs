@@ -79,6 +79,11 @@ const commonConfig = {
   log_rotate: true,
   max_logs: '10d',
   merge_logs: true,
+  log_type: 'json',
+  log_rotate_interval: '1', // 每1分钟
+  log_rotate_interval_unit: 'm', // 单位：分钟
+  log_rotate_max_size: '10M',
+  log_rotate_keep: 10,
 };
 
 module.exports = {
@@ -89,8 +94,8 @@ module.exports = {
       instances: serviceConfig.apiGateway.instances,
       ...commonConfig,
       max_memory_restart: `${serviceConfig.apiGateway.memory}G`,
-      error_file: 'logs/api-gateway-error.log',
-      out_file: 'logs/api-gateway-out.log',
+      error_file: 'logs/api-gateway/error.log',
+      out_file: 'logs/api-gateway/out.log',
       node_args: '--trace-warnings',
     },
     {
@@ -99,8 +104,8 @@ module.exports = {
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
-      error_file: 'logs/auth-service-error.log',
-      out_file: 'logs/auth-service-out.log',
+      error_file: 'logs/auth-service/error.log',
+      out_file: 'logs/auth-service/out.log',
     },
     {
       name: 'download-service',
@@ -108,8 +113,8 @@ module.exports = {
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
-      error_file: 'logs/download-service-error.log',
-      out_file: 'logs/download-service-out.log',
+      error_file: 'logs/download-service/error.log',
+      out_file: 'logs/download-service/out.log',
     },
     {
       name: 'file-service',
@@ -117,8 +122,8 @@ module.exports = {
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
-      error_file: 'logs/file-service-error.log',
-      out_file: 'logs/file-service-out.log',
+      error_file: 'logs/file-service/error.log',
+      out_file: 'logs/file-service/out.log',
     },
     {
       name: 'upload-service',
@@ -126,8 +131,8 @@ module.exports = {
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
-      error_file: 'logs/upload-service-error.log',
-      out_file: 'logs/upload-service-out.log',
+      error_file: 'logs/upload-service/error.log',
+      out_file: 'logs/upload-service/out.log',
     },
     {
       name: 'user-service',
@@ -135,8 +140,8 @@ module.exports = {
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
-      error_file: 'logs/user-service-error.log',
-      out_file: 'logs/user-service-out.log',
+      error_file: 'logs/user-service/error.log',
+      out_file: 'logs/user-service/out.log',
     },
     {
       name: 'knowledge-service',
@@ -144,8 +149,8 @@ module.exports = {
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
-      error_file: 'logs/knowledge-service-error.log',
-      out_file: 'logs/knowledge-service-out.log',
+      error_file: 'logs/knowledge-service/error.log',
+      out_file: 'logs/knowledge-service/out.log',
     },
     {
       name: 'diagnosis-service',
@@ -153,8 +158,8 @@ module.exports = {
       instances: serviceConfig.diagnosis.instances,
       ...commonConfig,
       max_memory_restart: `${serviceConfig.diagnosis.memory}G`,
-      error_file: 'logs/diagnosis-service-error.log',
-      out_file: 'logs/diagnosis-service-out.log',
+      error_file: 'logs/diagnosis-service/error.log',
+      out_file: 'logs/diagnosis-service/out.log',
       node_args: `--trace-warnings --max-old-space-size=${serviceConfig.diagnosis.memory * 1024}`,
     },
   ],
