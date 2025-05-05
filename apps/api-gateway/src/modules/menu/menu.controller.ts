@@ -16,7 +16,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { AUTH_SERVICE_NAME } from 'config/microservice.config';
@@ -26,13 +32,19 @@ import { defaultIfEmpty, lastValueFrom } from 'rxjs';
 @ApiTags('菜单管理')
 @UseGuards(AuthGuard)
 @Controller('menu')
+@ApiBearerAuth()
 export class MenuController {
   constructor(
     @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientProxy,
   ) {}
 
-  // 获取个人路由权限
   @Get('routes')
+  @ApiOperation({
+    summary: '获取个人路由权限',
+    description: '获取当前登录用户的路由权限列表',
+  })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
   async getRoutes(@Req() req: Request) {
     const roles = req.user.roles;
     const routes = await lastValueFrom(
@@ -43,10 +55,16 @@ export class MenuController {
     return formatResponse(200, routes, '获取个人路由权限成功');
   }
 
-  // 获取所有菜单
   @Get()
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '获取所有菜单',
+    description: '获取系统中所有的菜单列表（仅管理员可访问）',
+  })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
   async findAll() {
     const list = await lastValueFrom(
       this.authClient.send({ cmd: 'menu.get' }, {}).pipe(defaultIfEmpty([])),
@@ -54,10 +72,18 @@ export class MenuController {
     return formatResponse(200, list, '获取所有菜单成功');
   }
 
-  // 获取单个菜单
   @Get(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '获取单个菜单',
+    description: '获取指定菜单的详细信息（仅管理员可访问）',
+  })
+  @ApiParam({ name: 'id', description: '菜单ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '菜单不存在' })
   async findOne(@Param('id') id: number) {
     const menu = await lastValueFrom(
       this.authClient
@@ -67,11 +93,18 @@ export class MenuController {
     return formatResponse(200, menu, '获取单个菜单成功');
   }
 
-  // 创建新菜单
   @Post()
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: '创建新菜单',
+    description: '创建新的菜单项（仅管理员可访问）',
+  })
+  @ApiResponse({ status: 201, description: '创建成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
   async create(@Body() menuData: any) {
     await lastValueFrom(
       this.authClient
@@ -81,10 +114,19 @@ export class MenuController {
     return formatResponse(201, {}, '创建成功');
   }
 
-  // 更新菜单
   @Put(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '更新菜单',
+    description: '更新指定菜单的信息（仅管理员可访问）',
+  })
+  @ApiParam({ name: 'id', description: '菜单ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '菜单不存在' })
   async update(@Param('id') id: number, @Body() menuData: any) {
     await lastValueFrom(
       this.authClient
@@ -94,11 +136,19 @@ export class MenuController {
     return formatResponse(200, {}, '更新菜单成功');
   }
 
-  // 删除菜单
   @Delete(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: '删除菜单',
+    description: '删除指定的菜单（仅管理员可访问）',
+  })
+  @ApiParam({ name: 'id', description: '菜单ID', type: 'number' })
+  @ApiResponse({ status: 204, description: '删除成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '菜单不存在' })
   async remove(@Param('id') id: number) {
     await lastValueFrom(
       this.authClient
