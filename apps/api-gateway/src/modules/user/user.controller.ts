@@ -27,7 +27,15 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { MIME_TYPE } from '@shared/enum/mime.enum';
 import { Role } from '@shared/enum/role.enum';
 import { Request, Response } from 'express';
@@ -38,15 +46,29 @@ import { UserService } from './user.service';
 @ApiTags('用户模块')
 @Controller('user')
 @UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('profile')
+  @ApiOperation({
+    summary: '获取用户资料',
+    description: '获取当前登录用户的个人资料',
+  })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
   async profileGet(@Req() req: Request) {
     return this.userService.getProfile(req.user.userId);
   }
 
   @Put('profile')
+  @ApiOperation({
+    summary: '更新用户资料',
+    description: '更新当前登录用户的个人资料',
+  })
+  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
   async profileUpdate(@Req() req: Request, @Body() dto: UpdateProfileDto) {
     return this.userService.updateProfile(req.user.userId, dto);
   }
@@ -54,6 +76,23 @@ export class UserController {
   @Post('avatar')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: '上传头像', description: '上传当前登录用户的头像' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: '头像图片（支持PNG、JPEG格式，最大1MB）',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: '上传成功' })
+  @ApiResponse({ status: 400, description: '文件格式或大小不符合要求' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
   async uploadAvatar(
     @Req() req: Request,
     @UploadedFile(
@@ -66,11 +105,19 @@ export class UserController {
   }
 
   @Get('avatar')
+  @ApiOperation({ summary: '获取头像', description: '获取当前登录用户的头像' })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 404, description: '头像不存在' })
   async getAvatar(@Req() req: Request, @Res() res: Response) {
     return this.userService.getAvatar(req.user.userId, res);
   }
 
   @Put('reset/password')
+  @ApiOperation({ summary: '修改密码', description: '修改当前登录用户的密码' })
+  @ApiResponse({ status: 200, description: '修改成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
   async updatePassword(@Req() req: Request, @Body() dto: UpdatePasswordDto) {
     return this.userService.updatePassword(req.user.userId, dto);
   }
@@ -78,6 +125,13 @@ export class UserController {
   @Get('list')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '获取用户列表',
+    description: '分页获取系统中的用户列表（仅管理员可访问）',
+  })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
   async userListGet(@Query() query: UserPageQueryDto) {
     return this.userService.getUserList(query);
   }
@@ -85,6 +139,14 @@ export class UserController {
   @Post('create')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '创建用户',
+    description: '创建新用户（仅管理员可访问）',
+  })
+  @ApiResponse({ status: 201, description: '创建成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
   async userCreate(@Body() dto: CreateUserDto) {
     return this.userService.createUser(dto);
   }
@@ -92,6 +154,15 @@ export class UserController {
   @Get(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '获取用户信息',
+    description: '获取指定用户的详细信息（仅管理员可访问）',
+  })
+  @ApiParam({ name: 'id', description: '用户ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '用户不存在' })
   async userGet(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getUser(id);
   }
@@ -99,6 +170,15 @@ export class UserController {
   @Delete(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '删除用户',
+    description: '删除指定的用户（仅管理员可访问）',
+  })
+  @ApiParam({ name: 'id', description: '用户ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '删除成功' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '用户不存在' })
   async userDelete(@Param('id', ParseIntPipe) id: number) {
     return this.userService.deleteUser(id);
   }
@@ -106,6 +186,16 @@ export class UserController {
   @Put(':id')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '更新用户信息',
+    description: '更新指定用户的信息（仅管理员可访问）',
+  })
+  @ApiParam({ name: 'id', description: '用户ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '用户不存在' })
   async userUpdate(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
@@ -116,6 +206,16 @@ export class UserController {
   @Put(':id/status')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '更新用户状态',
+    description: '更新指定用户的状态（仅管理员可访问）',
+  })
+  @ApiParam({ name: 'id', description: '用户ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '用户不存在' })
   async userStatusUpdate(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserStatusDto,
@@ -126,6 +226,16 @@ export class UserController {
   @Put(':id/reset/password')
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '重置用户密码',
+    description: '重置指定用户的密码（仅管理员可访问）',
+  })
+  @ApiParam({ name: 'id', description: '用户ID', type: 'number' })
+  @ApiResponse({ status: 200, description: '重置成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权访问' })
+  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse({ status: 404, description: '用户不存在' })
   async userReset(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: ResetPasswordDto,
