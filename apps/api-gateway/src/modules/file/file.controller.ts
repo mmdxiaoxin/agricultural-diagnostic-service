@@ -1,9 +1,10 @@
-import { Roles } from '@common/decorator/roles.decorator';
 import {
+  ApiBinaryResponse,
   ApiErrorResponse,
-  ApiResponse,
   ApiNullResponse,
+  ApiResponse,
 } from '@common/decorator/api-response.decorator';
+import { Roles } from '@common/decorator/roles.decorator';
 import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
 import { CreateTaskDto } from '@common/dto/file/create-task.dto';
 import { DownloadFilesDto } from '@common/dto/file/download-file.dto';
@@ -36,13 +37,13 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-  ApiTags,
-  ApiOperation,
   ApiBearerAuth,
-  ApiParam,
-  ApiConsumes,
   ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
   ApiQuery,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { Request, Response } from 'express';
@@ -215,7 +216,7 @@ export class FileController {
   @UseGuards(AuthGuard, RolesGuard, FileGuard)
   @ApiOperation({ summary: '下载文件', description: '下载指定文件' })
   @ApiParam({ name: 'fileId', description: '文件ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '下载成功')
+  @ApiBinaryResponse(HttpStatus.OK, '获取成功')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '文件不存在')
@@ -235,7 +236,7 @@ export class FileController {
   @Roles(Role.Admin, Role.Expert, Role.User)
   @UseGuards(AuthGuard, RolesGuard, FilesGuard)
   @ApiOperation({ summary: '批量下载文件', description: '批量下载多个文件' })
-  @ApiResponse(HttpStatus.OK, '下载成功')
+  @ApiBinaryResponse(HttpStatus.OK, '获取成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -354,7 +355,7 @@ export class FileController {
     description: '使用临时令牌获取文件访问链接',
   })
   @ApiParam({ name: 'token', description: '临时访问令牌', type: 'string' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiBinaryResponse(HttpStatus.OK, '获取成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '令牌无效')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '文件不存在')
   async getAccessLink(
