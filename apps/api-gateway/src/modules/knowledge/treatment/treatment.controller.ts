@@ -1,4 +1,9 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import {
+  ApiErrorResponse,
+  ApiResponse,
+  ApiNullResponse,
+} from '@common/decorator/api-response.decorator';
 import { CreateTreatmentDto } from '@common/dto/knowledge/create-treatment.dto';
 import { UpdateTreatmentDto } from '@common/dto/knowledge/update-treatment.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
@@ -20,7 +25,6 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
@@ -42,10 +46,10 @@ export class TreatmentController {
     summary: '创建治疗方式',
     description: '创建新的治疗方式（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 201, description: '创建成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateTreatmentDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   create(@Body() createTreatmentDto: CreateTreatmentDto) {
     return this.treatmentService.create(createTreatmentDto);
   }
@@ -55,9 +59,9 @@ export class TreatmentController {
     summary: '获取所有治疗方式',
     description: '获取所有治疗方式列表',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findAll() {
     return this.treatmentService.findAll();
   }
@@ -67,9 +71,9 @@ export class TreatmentController {
     summary: '分页获取治疗方式列表',
     description: '分页获取治疗方式列表',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findList(@Query() query: PageQueryKeywordsDto) {
     return this.treatmentService.findList(query);
   }
@@ -80,10 +84,10 @@ export class TreatmentController {
     description: '获取指定治疗方式的详细信息',
   })
   @ApiParam({ name: 'id', description: '治疗方式ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '治疗方式不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '治疗方式不存在')
   findOne(
     @Param(
       'id',
@@ -100,11 +104,11 @@ export class TreatmentController {
     description: '更新指定治疗方式的信息',
   })
   @ApiParam({ name: 'id', description: '治疗方式ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '治疗方式不存在' })
+  @ApiResponse(HttpStatus.OK, '更新成功', UpdateTreatmentDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '治疗方式不存在')
   update(
     @Param(
       'id',
@@ -120,10 +124,10 @@ export class TreatmentController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: '删除治疗方式', description: '删除指定的治疗方式' })
   @ApiParam({ name: 'id', description: '治疗方式ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '治疗方式不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '治疗方式不存在')
   remove(
     @Param(
       'id',
