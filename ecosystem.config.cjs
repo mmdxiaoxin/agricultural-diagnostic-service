@@ -79,7 +79,6 @@ const commonConfig = {
   log_rotate: true,
   max_logs: '10d',
   merge_logs: true,
-  log_type: 'json',
   log_rotate_interval: '1', // 每1分钟
   log_rotate_interval_unit: 'm', // 单位：分钟
   log_rotate_max_size: '10M',
