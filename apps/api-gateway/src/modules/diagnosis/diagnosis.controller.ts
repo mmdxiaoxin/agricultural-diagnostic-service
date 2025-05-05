@@ -1,10 +1,11 @@
-import { Roles } from '@common/decorator/roles.decorator';
 import {
   ApiErrorResponse,
-  ApiResponse,
   ApiNullResponse,
+  ApiResponse,
 } from '@common/decorator/api-response.decorator';
+import { Roles } from '@common/decorator/roles.decorator';
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
+import { DiagnosisSupportResponseDto } from '@common/dto/diagnosis/diagnosis-support-response.dto';
 import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
 import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
@@ -33,12 +34,12 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-  ApiTags,
-  ApiOperation,
   ApiBearerAuth,
-  ApiParam,
-  ApiConsumes,
   ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
 } from '@nestjs/swagger';
 import { MIME_TYPE } from '@shared/enum/mime.enum';
 import { Role } from '@shared/enum/role.enum';
@@ -437,7 +438,7 @@ export class DiagnosisController {
     summary: '获取诊断支持列表',
     description: '获取所有诊断支持信息列表',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DiagnosisSupportResponseDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async getDiagnosisSupportList() {
     return this.diagnosisService.getDiagnosisSupportList();
