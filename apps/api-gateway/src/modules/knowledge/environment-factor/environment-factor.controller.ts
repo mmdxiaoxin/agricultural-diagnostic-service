@@ -1,4 +1,9 @@
 import { Roles } from '@common/decorator/roles.decorator';
+import {
+  ApiErrorResponse,
+  ApiResponse,
+  ApiNullResponse,
+} from '@common/decorator/api-response.decorator';
 import { CreateEnvironmentFactorDto } from '@common/dto/knowledge/create-environmentFactor.dto';
 import { UpdateEnvironmentFactorDto } from '@common/dto/knowledge/update-environmentFactor.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
@@ -20,7 +25,6 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
@@ -44,10 +48,10 @@ export class EnvironmentFactorController {
     summary: '创建环境因素',
     description: '创建新的环境因素信息（仅管理员和专家可访问）',
   })
-  @ApiResponse({ status: 201, description: '创建成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateEnvironmentFactorDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   create(@Body() createEnvironmentFactorDto: CreateEnvironmentFactorDto) {
     return this.environmentFactorService.create(createEnvironmentFactorDto);
   }
@@ -57,9 +61,9 @@ export class EnvironmentFactorController {
     summary: '获取所有环境因素',
     description: '获取所有环境因素列表',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findAll() {
     return this.environmentFactorService.findAll();
   }
@@ -69,9 +73,9 @@ export class EnvironmentFactorController {
     summary: '分页获取环境因素列表',
     description: '分页获取环境因素列表',
   })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findList(@Query() query: PageQueryKeywordsDto) {
     return this.environmentFactorService.findList(query);
   }
@@ -82,10 +86,10 @@ export class EnvironmentFactorController {
     description: '获取指定环境因素的详细信息',
   })
   @ApiParam({ name: 'id', description: '环境因素ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '环境因素不存在' })
+  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '环境因素不存在')
   findOne(
     @Param(
       'id',
@@ -102,11 +106,11 @@ export class EnvironmentFactorController {
     description: '更新指定环境因素的信息',
   })
   @ApiParam({ name: 'id', description: '环境因素ID', type: 'number' })
-  @ApiResponse({ status: 200, description: '更新成功' })
-  @ApiResponse({ status: 400, description: '请求参数错误' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '环境因素不存在' })
+  @ApiResponse(HttpStatus.OK, '更新成功', UpdateEnvironmentFactorDto)
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '环境因素不存在')
   update(
     @Param(
       'id',
@@ -122,10 +126,10 @@ export class EnvironmentFactorController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: '删除环境因素', description: '删除指定的环境因素' })
   @ApiParam({ name: 'id', description: '环境因素ID', type: 'number' })
-  @ApiResponse({ status: 204, description: '删除成功' })
-  @ApiResponse({ status: 401, description: '未授权访问' })
-  @ApiResponse({ status: 403, description: '权限不足' })
-  @ApiResponse({ status: 404, description: '环境因素不存在' })
+  @ApiNullResponse(HttpStatus.NO_CONTENT, '删除成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, '环境因素不存在')
   remove(
     @Param(
       'id',
