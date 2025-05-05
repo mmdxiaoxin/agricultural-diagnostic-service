@@ -50,7 +50,7 @@ export class DatasetController {
     summary: '获取数据集列表',
     description: '获取当前用户的数据集列表',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功', DatasetQueryDto)
+  @ApiResponse(HttpStatus.OK, '获取成功')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async datasetsListGet(@Req() req: Request, @Query() query: DatasetQueryDto) {
     return this.datasetService.getDatasetList(query, req.user.userId);
@@ -61,7 +61,7 @@ export class DatasetController {
     summary: '获取公共数据集列表',
     description: '获取所有公开的数据集列表',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功', DatasetQueryDto)
+  @ApiResponse(HttpStatus.OK, '获取成功')
   async publicDatasetsListGet(@Query() query: DatasetQueryDto) {
     return this.datasetService.getPublicDatasetList(query);
   }
@@ -100,7 +100,7 @@ export class DatasetController {
     description: '获取指定数据集的详细信息',
   })
   @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功', CreateDatasetDto)
+  @ApiResponse(HttpStatus.OK, '获取成功')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '数据集不存在')
   async getDatasetDetail(
@@ -116,7 +116,7 @@ export class DatasetController {
   @Put(':datasetId')
   @ApiOperation({ summary: '更新数据集', description: '更新指定数据集的信息' })
   @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '更新成功', UpdateDatasetDto)
+  @ApiResponse(HttpStatus.OK, '更新成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '数据集不存在')
@@ -138,7 +138,7 @@ export class DatasetController {
     description: '更新指定数据集的访问权限设置',
   })
   @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '更新成功', UpdateDatasetAccessDto)
+  @ApiResponse(HttpStatus.OK, '更新成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '数据集不存在')

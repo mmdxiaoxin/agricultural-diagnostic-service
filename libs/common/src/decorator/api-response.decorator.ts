@@ -1,24 +1,39 @@
 import { applyDecorators, Type } from '@nestjs/common';
 import {
   ApiExtraModels,
+  ApiProperty,
   ApiResponse as SwaggerApiResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
 
 export class ApiResponseDto<T> {
+  @ApiProperty({
+    description: '状态码',
+    example: 200,
+  })
   code: number;
+
+  @ApiProperty({
+    description: '响应消息',
+    example: '操作成功',
+  })
   message: string;
+
+  @ApiProperty({
+    description: '响应数据',
+    nullable: true,
+  })
   data: T | null;
 }
 
-export const ApiResponse = <TModel extends Type<any>>(
+export const ApiResponse = <TModel extends Type<any> = any>(
   status: number,
   description: string,
-  model: TModel,
+  model?: TModel,
   isArray = false,
 ) => {
   return applyDecorators(
-    ApiExtraModels(ApiResponseDto, model),
+    ApiExtraModels(ApiResponseDto, model || Object),
     SwaggerApiResponse({
       status,
       description,
@@ -35,13 +50,18 @@ export const ApiResponse = <TModel extends Type<any>>(
                 type: 'string',
                 example: description,
               },
-              data: isArray
-                ? {
-                    type: 'array',
-                    items: { $ref: getSchemaPath(model) },
-                  }
+              data: model
+                ? isArray
+                  ? {
+                      type: 'array',
+                      items: { $ref: getSchemaPath(model) },
+                    }
+                  : {
+                      $ref: getSchemaPath(model),
+                    }
                 : {
-                    $ref: getSchemaPath(model),
+                    type: 'object',
+                    additionalProperties: true,
                   },
             },
             required: ['code', 'message', 'data'],
