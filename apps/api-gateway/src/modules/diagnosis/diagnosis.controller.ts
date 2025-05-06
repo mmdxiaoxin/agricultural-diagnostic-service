@@ -7,6 +7,8 @@ import { Roles } from '@common/decorator/roles.decorator';
 import { CreateDiagnosisSupportDto } from '@common/dto/diagnosis/create-diagnosis-support.dto';
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { DiagnosisHistoryDto } from '@common/dto/diagnosis/diagnosis-history.dto';
+import { DiagnosisLogDto } from '@common/dto/diagnosis/diagnosis-log.dto';
+import { DiagnosisStatisticsDto } from '@common/dto/diagnosis/diagnosis-statistics.dto';
 import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
 import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
@@ -180,7 +182,7 @@ export class DiagnosisController {
     description: '获取指定诊断记录的详细日志',
   })
   @ApiParam({ name: 'id', description: '诊断记录ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DiagnosisLogDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断记录不存在')
   async getDiagnosisLog(
@@ -199,7 +201,11 @@ export class DiagnosisController {
     description: '获取指定诊断记录的日志列表',
   })
   @ApiParam({ name: 'id', description: '诊断记录ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(
+    HttpStatus.OK,
+    '获取成功',
+    createPageResponseDto(DiagnosisLogDto),
+  )
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断记录不存在')
   async getDiagnosisLogList(
@@ -218,7 +224,7 @@ export class DiagnosisController {
     summary: '获取诊断统计',
     description: '获取当前用户的诊断统计数据',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DiagnosisStatisticsDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async diagnosisStatisticsGet(@Req() req: Request) {
     return this.diagnosisService.diagnosisStatisticsGet(req.user.userId);
