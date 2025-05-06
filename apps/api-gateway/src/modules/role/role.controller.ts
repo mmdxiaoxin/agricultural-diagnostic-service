@@ -1,10 +1,12 @@
-import { Roles } from '@common/decorator/roles.decorator';
 import {
   ApiErrorResponse,
-  ApiResponse,
   ApiNullResponse,
+  ApiResponse,
 } from '@common/decorator/api-response.decorator';
+import { Roles } from '@common/decorator/roles.decorator';
+import { DictDto } from '@common/dto/dict.dto';
 import { CreateRoleDto } from '@common/dto/role/create-role.dto';
+import { RoleDto } from '@common/dto/role/role.dto';
 import { UpdateRoleDto } from '@common/dto/role/update-role.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -24,10 +26,10 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
-  ApiTags,
-  ApiOperation,
   ApiBearerAuth,
+  ApiOperation,
   ApiParam,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -48,7 +50,7 @@ export class RoleController {
     summary: '获取角色字典',
     description: '获取系统中所有角色的字典数据',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DictDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async dict() {
     const dict = await lastValueFrom(
@@ -64,7 +66,7 @@ export class RoleController {
     summary: '获取角色列表',
     description: '获取系统中所有角色的列表（仅管理员可访问）',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', RoleDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async findAll() {
@@ -82,7 +84,7 @@ export class RoleController {
     description: '获取指定角色的详细信息（仅管理员可访问）',
   })
   @ApiParam({ name: 'id', description: '角色ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', RoleDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '角色不存在')
@@ -107,7 +109,7 @@ export class RoleController {
     summary: '创建角色',
     description: '创建新的角色（仅管理员可访问）',
   })
-  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateRoleDto)
+  @ApiResponse(HttpStatus.CREATED, '创建成功', RoleDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -128,7 +130,7 @@ export class RoleController {
     description: '更新指定角色的信息（仅管理员可访问）',
   })
   @ApiParam({ name: 'id', description: '角色ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '更新成功', UpdateRoleDto)
+  @ApiResponse(HttpStatus.OK, '更新成功', RoleDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
