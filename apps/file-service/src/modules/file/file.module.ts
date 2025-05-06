@@ -1,12 +1,10 @@
+import { FileEntity } from '@app/database/entities';
+import { FileOperationService } from '@app/file-operation/file-operation.service';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { FileEntity } from '@app/database/entities';
-import { FileOperationService } from '@app/file-operation/file-operation.service';
 import { FileController } from './file.controller';
-import { FileService } from './services/file.service';
-import { FileQueueService } from './services/file-queue.service';
-import { FileQueueProcessor } from './processors/file-queue.processor';
+import { FileService } from './file.service';
 
 @Module({
   imports: [
@@ -25,12 +23,7 @@ import { FileQueueProcessor } from './processors/file-queue.processor';
     }),
   ],
   controllers: [FileController],
-  providers: [
-    FileService,
-    FileOperationService,
-    FileQueueService,
-    FileQueueProcessor,
-  ],
+  providers: [FileService, FileOperationService],
   exports: [FileService],
 })
 export class FileModule {}

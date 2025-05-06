@@ -1,3 +1,4 @@
+import { FileQueryDto } from '@common/dto/file/file-query.dto';
 import {
   UpdateFileDto,
   UpdateFilesAccessDto,
@@ -5,8 +6,7 @@ import {
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
-import { FileService } from './services/file.service';
-import { FileQueryDto } from '@common/dto/file/file-query.dto';
+import { FileService } from './file.service';
 
 @Controller()
 export class FileController {
