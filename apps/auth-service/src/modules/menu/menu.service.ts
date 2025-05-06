@@ -25,7 +25,7 @@ export class MenuService {
       // 尝试从缓存获取
       const cachedRoutes = await this.redisService.get<any[]>(cacheKey);
       if (cachedRoutes) {
-        return cachedRoutes;
+        return formatResponse(200, cachedRoutes, '获取个人路由权限成功');
       }
     } catch (error) {
       this.logger.warn(`从缓存获取菜单路由失败: ${error.message}`);
