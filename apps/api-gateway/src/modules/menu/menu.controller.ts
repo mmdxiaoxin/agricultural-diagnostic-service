@@ -14,12 +14,14 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Post,
   Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -28,15 +30,18 @@ import {
 } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
+import { AUTH_SERVICE_NAME } from 'config/microservice.config';
 import { Request } from 'express';
-import { MenuService } from './menu.service';
+import { defaultIfEmpty, lastValueFrom } from 'rxjs';
 
 @ApiTags('菜单管理')
 @UseGuards(AuthGuard)
 @Controller('menu')
 @ApiBearerAuth()
 export class MenuController {
-  constructor(private readonly menuService: MenuService) {}
+  constructor(
+    @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientProxy,
+  ) {}
 
   @Get('routes')
   @ApiOperation({
@@ -46,7 +51,12 @@ export class MenuController {
   @ApiResponse(HttpStatus.OK, '获取成功', RouteItemDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async getRoutes(@Req() req: Request) {
-    const routes = await this.menuService.getRoutes(req);
+    const roles = req.user.roles;
+    const routes = await lastValueFrom(
+      this.authClient
+        .send({ cmd: 'menu.get.routes' }, { roles })
+        .pipe(defaultIfEmpty([])),
+    );
     return formatResponse(200, routes, '获取个人路由权限成功');
   }
 
@@ -61,7 +71,9 @@ export class MenuController {
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async findAll() {
-    const list = await this.menuService.findAll();
+    const list = await lastValueFrom(
+      this.authClient.send({ cmd: 'menu.get' }, {}).pipe(defaultIfEmpty([])),
+    );
     return formatResponse(200, list, '获取所有菜单成功');
   }
 
@@ -78,7 +90,11 @@ export class MenuController {
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '菜单不存在')
   async findOne(@Param('id') id: number) {
-    const menu = await this.menuService.findOne(id);
+    const menu = await lastValueFrom(
+      this.authClient
+        .send({ cmd: 'menu.get.byId' }, { id })
+        .pipe(defaultIfEmpty({})),
+    );
     return formatResponse(200, menu, '获取单个菜单成功');
   }
 
@@ -95,7 +111,11 @@ export class MenuController {
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async create(@Body() menuData: any) {
-    await this.menuService.create(menuData);
+    await lastValueFrom(
+      this.authClient
+        .send({ cmd: 'menu.create' }, { menuData })
+        .pipe(defaultIfEmpty({})),
+    );
     return formatResponse(201, {}, '创建成功');
   }
 
@@ -113,7 +133,11 @@ export class MenuController {
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '菜单不存在')
   async update(@Param('id') id: number, @Body() menuData: any) {
-    await this.menuService.update(id, menuData);
+    await lastValueFrom(
+      this.authClient
+        .send({ cmd: 'menu.update' }, { menuData: { id, ...menuData } })
+        .pipe(defaultIfEmpty({})),
+    );
     return formatResponse(200, {}, '更新菜单成功');
   }
 
@@ -131,6 +155,10 @@ export class MenuController {
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '菜单不存在')
   async remove(@Param('id') id: number) {
-    await this.menuService.remove(id);
+    await lastValueFrom(
+      this.authClient
+        .send({ cmd: 'menu.remove' }, { id })
+        .pipe(defaultIfEmpty({})),
+    );
   }
 }
