@@ -5,7 +5,7 @@ import {
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { FILE_MESSAGE_PATTERNS } from '@shared/constants/file-message-patterns';
-import { FileService } from './file.service';
+import { FileService } from './services/file.service';
 import { FileQueryDto } from '@common/dto/file/file-query.dto';
 
 @Controller()

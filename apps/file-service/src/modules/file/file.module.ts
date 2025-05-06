@@ -1,16 +1,36 @@
-import { DatabaseModule } from '@app/database';
-import { Dataset, FileEntity } from '@app/database/entities';
-import { FileOperationModule } from '@app/file-operation';
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { FileEntity } from '@app/database/entities';
+import { FileOperationService } from '@app/file-operation/file-operation.service';
 import { FileController } from './file.controller';
-import { FileService } from './file.service';
+import { FileService } from './services/file.service';
+import { FileQueueService } from './services/file-queue.service';
+import { FileQueueProcessor } from './processors/file-queue.processor';
 
 @Module({
   imports: [
-    DatabaseModule.forFeature([FileEntity, Dataset]),
-    FileOperationModule,
+    TypeOrmModule.forFeature([FileEntity]),
+    BullModule.registerQueue({
+      name: 'file-delete',
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 1000,
+        },
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    }),
   ],
   controllers: [FileController],
-  providers: [FileService],
+  providers: [
+    FileService,
+    FileOperationService,
+    FileQueueService,
+    FileQueueProcessor,
+  ],
+  exports: [FileService],
 })
 export class FileModule {}

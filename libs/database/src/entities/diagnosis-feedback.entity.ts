@@ -13,12 +13,12 @@ export enum FeedbackStatus {
 @Index('diagnosis_feedback_diagnosis_id_idx', ['diagnosisId'])
 @Index('diagnosis_feedback_created_by_idx', ['createdBy'])
 export class DiagnosisFeedback extends BaseEntity {
-  @Column({ type: 'int', comment: '诊断历史ID' })
-  diagnosisId: number;
+  @Column({ type: 'int', nullable: true, comment: '诊断历史ID' })
+  diagnosisId: number | null;
 
-  @ManyToOne(() => DiagnosisHistory)
+  @ManyToOne(() => DiagnosisHistory, { nullable: true })
   @JoinColumn({ name: 'diagnosisId' })
-  diagnosis: DiagnosisHistory;
+  diagnosis: DiagnosisHistory | null;
 
   @Column({ type: 'text', comment: '用户反馈内容' })
   feedbackContent: string;
