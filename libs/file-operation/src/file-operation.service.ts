@@ -73,16 +73,30 @@ export class FileOperationService {
         // 检查文件权限
         await this.checkFilePermissions(filePath);
 
-        // 检查文件是否被占用
-        try {
-          const fd = await fs.promises.open(filePath, 'r+');
-          await fd.close();
-        } catch (error) {
-          if (error.code === 'EBUSY') {
-            throw new RpcException({
-              code: HttpStatus.CONFLICT,
-              message: `文件正在被使用: ${filePath}`,
-            });
+        // 检查文件是否被占用，如果被占用则等待1秒后重试
+        let retryCount = 0;
+        const maxRetries = 3;
+        while (retryCount < maxRetries) {
+          try {
+            const fd = await fs.promises.open(filePath, 'r+');
+            await fd.close();
+            break; // 文件未被占用，跳出循环
+          } catch (error) {
+            if (error.code === 'EBUSY') {
+              retryCount++;
+              if (retryCount === maxRetries) {
+                throw new RpcException({
+                  code: HttpStatus.CONFLICT,
+                  message: `文件正在被使用，多次重试后仍无法删除: ${filePath}`,
+                });
+              }
+              this.logger.warn(
+                `文件正在被使用，等待1秒后重试(${retryCount}/${maxRetries}): ${filePath}`,
+              );
+              await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待1秒
+              continue;
+            }
+            throw error; // 其他错误直接抛出
           }
         }
 
