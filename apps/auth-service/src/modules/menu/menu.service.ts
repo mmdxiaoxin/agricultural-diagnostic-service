@@ -2,6 +2,7 @@ import { Menu } from '@app/database/entities/menu.entity';
 import { RedisService } from '@app/redis';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { formatResponse } from '@shared/helpers/response.helper';
 import { In, Repository } from 'typeorm';
 
 @Injectable()
@@ -70,22 +71,24 @@ export class MenuService {
       // 缓存错误不影响主流程，继续返回数据
     }
 
-    return menuTree;
+    return formatResponse(200, menuTree, '获取个人路由权限成功');
   }
 
   // 获取所有菜单
-  async findAll(): Promise<Menu[]> {
-    return this.menuRepository.find({
+  async findAll() {
+    const list = await this.menuRepository.find({
       relations: ['parent', 'children'],
     });
+    return formatResponse(200, list, '获取所有菜单成功');
   }
 
   // 根据ID获取单个菜单
-  async findOne(id: number): Promise<Menu | null> {
-    return this.menuRepository.findOne({
+  async findOne(id: number) {
+    const menu = await this.menuRepository.findOne({
       where: { id },
       relations: ['parent', 'children'],
     });
+    return formatResponse(200, menu, '获取单个菜单成功');
   }
 
   // 清除所有菜单相关的缓存
@@ -104,14 +107,14 @@ export class MenuService {
   }
 
   // 创建新菜单
-  async create(menuData: Partial<Menu>): Promise<Menu> {
+  async create(menuData: Partial<Menu>) {
     const menu = this.menuRepository.create(menuData);
     const result = await this.menuRepository.save(menu);
     // 清除缓存
     await this.clearMenuCache().catch((error) => {
       this.logger.warn(`创建菜单后清除缓存失败: ${error.message}`);
     });
-    return result;
+    return formatResponse(201, result, '创建菜单成功');
   }
 
   // 更新菜单
@@ -121,15 +124,16 @@ export class MenuService {
     await this.clearMenuCache().catch((error) => {
       this.logger.warn(`更新菜单后清除缓存失败: ${error.message}`);
     });
-    return this.findOne(id);
+    return formatResponse(200, {}, '更新菜单成功');
   }
 
   // 删除菜单
-  async remove(id: number): Promise<void> {
+  async remove(id: number) {
     await this.menuRepository.delete(id);
     // 清除缓存
     await this.clearMenuCache().catch((error) => {
       this.logger.warn(`删除菜单后清除缓存失败: ${error.message}`);
     });
+    return formatResponse(204, {}, '删除菜单成功');
   }
 }
