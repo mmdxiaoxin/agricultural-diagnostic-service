@@ -64,7 +64,9 @@ export class DiagnosisLogService implements OnModuleDestroy {
     for (let i = 0; i < maxRetries; i++) {
       try {
         // 检查 Stream 是否存在
-        const streamInfo = await this.redisService.xinfo(this.STREAM_KEY);
+        const streamInfo = await this.redisService
+          .xinfo(this.STREAM_KEY)
+          .catch(() => null);
 
         if (!streamInfo) {
           // Stream 不存在，创建新的 Stream 和消费者组
@@ -82,12 +84,17 @@ export class DiagnosisLogService implements OnModuleDestroy {
               this.CONSUMER_GROUP,
             );
           } catch (error) {
-            // 消费者组不存在，创建新的消费者组
-            await this.redisService.xgroupCreate(
-              this.STREAM_KEY,
-              this.CONSUMER_GROUP,
-              '0',
-            );
+            // 如果错误是 BUSYGROUP，说明消费者组已经存在，这是正常的
+            if (error.message.includes('BUSYGROUP')) {
+              console.log('消费者组已存在，继续执行');
+            } else {
+              // 其他错误，尝试创建新的消费者组
+              await this.redisService.xgroupCreate(
+                this.STREAM_KEY,
+                this.CONSUMER_GROUP,
+                '0',
+              );
+            }
           }
         }
 
@@ -96,9 +103,11 @@ export class DiagnosisLogService implements OnModuleDestroy {
         return;
       } catch (error) {
         lastError = error as Error;
+        console.warn(`Stream 初始化失败，第 ${i + 1} 次尝试:`, error.message);
+
         if (i < maxRetries - 1) {
           const delay = retryDelay * Math.pow(2, i);
-          console.warn(`Stream 初始化失败，${delay}ms 后重试:`, error.message);
+          console.warn(`等待 ${delay}ms 后重试...`);
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
