@@ -90,7 +90,7 @@ export class FileService {
           },
         ),
       );
-      return formatResponse(200, rpcResponse, '上传成功');
+      return formatResponse(200, rpcResponse.result, '上传成功');
     } catch (error) {
       throw error;
     }

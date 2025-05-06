@@ -9,11 +9,13 @@ import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
 import { CreateTaskDto } from '@common/dto/file/create-task.dto';
 import { DownloadFilesDto } from '@common/dto/file/download-file.dto';
 import { FileQueryDto } from '@common/dto/file/file-query.dto';
+import { FileDto } from '@common/dto/file/file.dto';
 import {
   UpdateFileDto,
   UpdateFilesAccessDto,
 } from '@common/dto/file/update-file.dto';
 import { UploadChunkDto } from '@common/dto/file/upload-chunk.dto';
+import { createPageResponseDto } from '@common/dto/page-response.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
@@ -79,7 +81,7 @@ export class FileController {
     summary: '获取所有文件',
     description: '获取系统中的所有文件列表（仅管理员和专家可访问）',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', FileDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async filesGet(@Req() req: Request) {
@@ -93,7 +95,7 @@ export class FileController {
     summary: '获取文件列表',
     description: '分页获取系统中的文件列表（仅管理员和专家可访问）',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', createPageResponseDto(FileDto))
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async fileListGet(@Req() req: Request, @Query() query: FileQueryDto) {
@@ -121,7 +123,7 @@ export class FileController {
       },
     },
   })
-  @ApiResponse(HttpStatus.CREATED, '上传成功')
+  @ApiResponse(HttpStatus.CREATED, '上传成功', FileDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '文件大小超出限制')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
