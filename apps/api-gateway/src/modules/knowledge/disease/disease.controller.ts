@@ -1,12 +1,14 @@
-import { Roles } from '@common/decorator/roles.decorator';
 import {
   ApiErrorResponse,
-  ApiResponse,
   ApiNullResponse,
+  ApiResponse,
 } from '@common/decorator/api-response.decorator';
+import { Roles } from '@common/decorator/roles.decorator';
 import { CreateDiseaseDto } from '@common/dto/knowledge/create-disease.dto';
+import { DiseaseDto } from '@common/dto/knowledge/disease.dto';
 import { UpdateDiseaseDto } from '@common/dto/knowledge/update-disease.dto';
 import { PageQueryDateDto } from '@common/dto/page-query-date.dto';
+import { createPageResponseDto } from '@common/dto/page-response.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -24,10 +26,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
   ApiBearerAuth,
+  ApiOperation,
   ApiParam,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { DiseaseService } from './disease.service';
@@ -46,7 +48,7 @@ export class DiseaseController {
     summary: '创建疾病',
     description: '创建新的疾病信息（仅管理员和专家可访问）',
   })
-  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateDiseaseDto)
+  @ApiResponse(HttpStatus.CREATED, '创建成功', DiseaseDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -60,7 +62,7 @@ export class DiseaseController {
     summary: '获取所有疾病',
     description: '获取所有疾病列表（所有角色可访问）',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DiseaseDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findAll() {
@@ -73,7 +75,7 @@ export class DiseaseController {
     summary: '分页获取疾病列表',
     description: '分页获取疾病列表（所有角色可访问）',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', createPageResponseDto(DiseaseDto))
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findList(@Query() query: PageQueryDateDto) {
@@ -87,7 +89,7 @@ export class DiseaseController {
     description: '获取指定疾病的详细信息（所有角色可访问）',
   })
   @ApiParam({ name: 'id', description: '疾病ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DiseaseDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '疾病不存在')
@@ -129,7 +131,7 @@ export class DiseaseController {
     description: '更新指定疾病的信息（仅管理员和专家可访问）',
   })
   @ApiParam({ name: 'id', description: '疾病ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '更新成功', UpdateDiseaseDto)
+  @ApiResponse(HttpStatus.OK, '更新成功', DiseaseDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
