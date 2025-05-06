@@ -18,10 +18,4 @@ export class LoginResponse {
     example: 86400,
   })
   expires_in: number;
-
-  @ApiProperty({
-    description: '会话ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  sessionId: string;
 }

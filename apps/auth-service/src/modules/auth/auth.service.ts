@@ -7,7 +7,6 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { compare } from 'bcryptjs';
 import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -85,9 +84,6 @@ export class AuthService {
     // 登录成功，清除登录尝试次数
     await this.clearLoginAttempts(login);
 
-    const sessionId = uuidv4();
-    await this.storeSession(user.id.toString(), sessionId, 3600);
-
     return {
       access_token: this.jwt.sign({
         userId: user.id,
@@ -96,39 +92,7 @@ export class AuthService {
       }),
       token_type: 'Bearer',
       expires_in: 3600 * 24,
-      sessionId,
     };
-  }
-
-  /**
-   * 存储用户会话信息
-   * @param userId 用户ID
-   * @param sessionId 会话ID
-   * @param ttl 会话有效期，单位秒
-   */
-  private async storeSession(
-    userId: string,
-    sessionId: string,
-    ttl: number,
-  ): Promise<void> {
-    await this.redis.set(`session:${sessionId}`, userId, ttl);
-  }
-
-  /**
-   * 获取用户会话信息
-   * @param sessionId 会话ID
-   * @returns 返回用户ID或null
-   */
-  async getSession(sessionId: string): Promise<string | null> {
-    return await this.redis.get(`session:${sessionId}`);
-  }
-
-  /**
-   * 删除用户会话
-   * @param sessionId 会话ID
-   */
-  async deleteSession(sessionId: string): Promise<void> {
-    await this.redis.del(`session:${sessionId}`);
   }
 
   /**
@@ -136,7 +100,7 @@ export class AuthService {
    * @param login 用户名或邮箱
    */
   private async checkLoginAttempts(login: string) {
-    const attempts = await this.getSession(`login_attempts:${login}`);
+    const attempts = await this.redis.get<string>(`login_attempts:${login}`);
     if (attempts && parseInt(attempts) >= 5) {
       throw new RpcException({
         code: 400,
