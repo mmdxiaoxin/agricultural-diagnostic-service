@@ -149,14 +149,17 @@ export class DiagnosisHistoryService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+      // 先获取诊断记录，不锁定
       const diagnosis = await queryRunner.manager.findOne(DiagnosisHistory, {
-        where: { id },
-        lock: { mode: 'pessimistic_write' },
+        where: { id, createdBy: userId },
       });
+
       if (!diagnosis) {
         this.logger.error(`Diagnosis with ID ${id} not found`);
         throw new RpcException('未找到诊断记录');
       }
+
+      // 先删除文件
       try {
         await firstValueFrom(
           this.fileClient.send<{ success: boolean }>(
@@ -168,9 +171,16 @@ export class DiagnosisHistoryService {
           ),
         );
       } catch (error) {
-        this.logger.error(error);
+        this.logger.error(`Failed to delete file: ${error.message}`);
+        throw new RpcException({
+          code: 500,
+          message: '删除文件失败',
+          data: error,
+        });
       }
-      await queryRunner.manager.remove(DiagnosisHistory, diagnosis);
+
+      // 删除诊断记录
+      await queryRunner.manager.delete(DiagnosisHistory, id);
       await queryRunner.commitTransaction();
 
       // 清除相关缓存
@@ -195,16 +205,19 @@ export class DiagnosisHistoryService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+      // 先获取诊断记录列表，不锁定
       const diagnosisList = await queryRunner.manager.find(DiagnosisHistory, {
         where: { id: In(diagnosisIds), createdBy: userId },
-        lock: { mode: 'pessimistic_write' },
       });
+
       if (diagnosisList.length !== diagnosisIds.length) {
         this.logger.error(
           `Some diagnoses not found: ${diagnosisIds.join(',')}`,
         );
         throw new RpcException('未找到诊断记录');
       }
+
+      // 先删除文件
       try {
         await firstValueFrom(
           this.fileClient.send<{ success: boolean }>(
@@ -216,9 +229,12 @@ export class DiagnosisHistoryService {
           ),
         );
       } catch (error) {
-        this.logger.error(error);
+        this.logger.error(`Failed to delete files: ${error.message}`);
+        throw new RpcException('删除文件失败');
       }
-      await queryRunner.manager.remove(DiagnosisHistory, diagnosisList);
+
+      // 删除诊断记录
+      await queryRunner.manager.delete(DiagnosisHistory, diagnosisIds);
       await queryRunner.commitTransaction();
 
       // 清除相关缓存

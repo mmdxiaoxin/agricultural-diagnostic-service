@@ -4,7 +4,7 @@ import {
   UpdateFileDto,
   UpdateFilesAccessDto,
 } from '@common/dto/file/update-file.dto';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -13,6 +13,7 @@ import { DataSource, In, Not, Repository } from 'typeorm';
 
 @Injectable()
 export class FileService {
+  private readonly logger = new Logger(FileService.name);
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
@@ -237,9 +238,9 @@ export class FileService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+      // 先获取文件信息，不锁定
       const file = await queryRunner.manager.findOne(FileEntity, {
         where: { id: fileId },
-        lock: { mode: 'pessimistic_write' },
       });
 
       if (!file) {
@@ -260,13 +261,18 @@ export class FileService {
       const references = await queryRunner.manager.find(FileEntity, {
         where: {
           fileMd5: file.fileMd5,
-          id: Not(fileId), // 排除当前文件
+          id: Not(fileId),
         },
       });
 
       // 如果没有其他引用，则删除实际文件
       if (references.length === 0) {
-        await this.fileOperationService.deleteFile(file.filePath);
+        try {
+          await this.fileOperationService.deleteFile(file.filePath);
+        } catch (error) {
+          this.logger.error(`Failed to delete physical file: ${error.message}`);
+          throw new RpcException('删除物理文件失败');
+        }
       }
 
       // 删除文件元数据
@@ -291,10 +297,9 @@ export class FileService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      // 使用悲观锁获取文件信息
+      // 获取文件信息，不锁定
       const files = await queryRunner.manager.find(FileEntity, {
         where: { id: In(fileIds) },
-        lock: { mode: 'pessimistic_write' },
       });
 
       if (files.length === 0) {
@@ -322,13 +327,12 @@ export class FileService {
       // 获取所有需要检查引用的文件MD5
       const md5sToCheck = Array.from(filesByMd5.keys());
 
-      // 一次性查询所有引用
+      // 查询所有引用
       const allReferences = await queryRunner.manager.find(FileEntity, {
         where: {
           fileMd5: In(md5sToCheck),
           id: Not(In(fileIds)),
         },
-        lock: { mode: 'pessimistic_write' },
       });
 
       // 按MD5分组引用
@@ -344,16 +348,20 @@ export class FileService {
       for (const [md5, files] of filesByMd5) {
         const references = referencesByMd5.get(md5) || [];
         if (references.length === 0) {
-          // 只取第一个文件进行物理删除，因为相同MD5的文件内容相同
           filesToDelete.push(files[0]);
         }
       }
 
-      // 并行删除实际文件
-      const deletionPromises = filesToDelete.map((file) =>
-        this.fileOperationService.deleteFile(file.filePath),
-      );
-      await Promise.all(deletionPromises);
+      // 删除实际文件
+      try {
+        const deletionPromises = filesToDelete.map((file) =>
+          this.fileOperationService.deleteFile(file.filePath),
+        );
+        await Promise.all(deletionPromises);
+      } catch (error) {
+        this.logger.error(`Failed to delete physical files: ${error.message}`);
+        throw new RpcException('删除物理文件失败');
+      }
 
       // 删除文件元数据
       await queryRunner.manager.delete(FileEntity, fileIds);
