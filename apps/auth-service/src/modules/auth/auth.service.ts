@@ -1,7 +1,7 @@
 import { User } from '@app/database/entities';
 import { MailService } from '@app/mail';
 import { RedisService } from '@app/redis';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { compare } from 'bcryptjs';
@@ -10,6 +10,11 @@ import { firstValueFrom, lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+  private readonly MAX_LOGIN_ATTEMPTS = 10;
+  private readonly LOCK_TIME = 1800; // 30分钟
+  private readonly CACHE_TTL = 3600; // 1小时
+
   constructor(
     private readonly jwt: JwtService,
     private readonly mail: MailService,
@@ -52,74 +57,140 @@ export class AuthService {
    * @param password 用户密码
    */
   async login(login: string, password: string) {
-    // 限制频繁登录
-    await this.checkLoginAttempts(login);
+    try {
+      // 检查登录限制
+      await this.checkLoginAttempts(login);
+
+      // 并行执行用户查询和密码验证
+      const [user, cachedToken] = await Promise.all([
+        this.getUserWithCache(login),
+        this.redis.get<string>(`token:${login}`),
+      ]);
+
+      // 如果存在有效token，直接返回
+      if (cachedToken) {
+        return JSON.parse(cachedToken);
+      }
+
+      if (!user) {
+        await this.handleLoginFailure(login, '账号不存在');
+        throw new RpcException({
+          code: 400,
+          message: '账号或密码错误',
+        });
+      }
+
+      if (user.status === 0) {
+        await this.handleLoginFailure(login, '账号未激活或已被禁用');
+        throw new RpcException({
+          code: 400,
+          message: '账号未激活或已经被禁用',
+        });
+      }
+
+      const isValid = await compare(password, user.password);
+      if (!isValid) {
+        await this.handleLoginFailure(login, '密码错误');
+        throw new RpcException({
+          code: 400,
+          message: '账号或密码错误',
+        });
+      }
+
+      // 登录成功，生成token并缓存
+      const token = this.generateToken(user);
+      await this.cacheToken(login, token);
+      await this.clearLoginAttempts(login);
+
+      return token;
+    } catch (error) {
+      this.logger.error(`登录失败: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取用户信息（带缓存）
+   */
+  private async getUserWithCache(login: string): Promise<User | null> {
+    const cacheKey = `user:login:${login}`;
+    const cachedUser = await this.redis.get<User>(cacheKey);
+
+    if (cachedUser) {
+      return cachedUser;
+    }
 
     const user = await firstValueFrom(
       this.userClient.send({ cmd: 'user.find.byLogin' }, { login }),
     );
-    if (!user) {
-      throw new RpcException({
-        code: 400,
-        message: '账号或密码错误',
-      });
-    }
-    if (user.status === 0) {
-      throw new RpcException({
-        code: 400,
-        message: '账号未激活或已经被禁用',
-      });
+
+    if (user) {
+      await this.redis.set(cacheKey, user, this.CACHE_TTL);
     }
 
-    const isValid = await compare(password, user.password);
-    if (!isValid) {
-      // 密码错误，增加登录尝试次数
-      await this.incrementLoginAttempts(login);
-      throw new RpcException({
-        code: 400,
-        message: '账号或密码错误',
-      });
-    }
+    return user;
+  }
 
-    // 登录成功，清除登录尝试次数
-    await this.clearLoginAttempts(login);
+  /**
+   * 生成访问令牌
+   */
+  private generateToken(user: User) {
+    const payload = {
+      userId: user.id,
+      username: user.username,
+      roles: user.roles.map((role) => role.name),
+    };
 
     return {
-      access_token: this.jwt.sign({
-        userId: user.id,
-        username: user.username,
-        roles: user.roles.map((role) => role.name),
-      }),
+      access_token: this.jwt.sign(payload),
       token_type: 'Bearer',
       expires_in: 3600 * 24,
     };
   }
 
   /**
+   * 缓存令牌
+   */
+  private async cacheToken(login: string, token: any) {
+    const cacheKey = `token:${login}`;
+    await this.redis.set(cacheKey, JSON.stringify(token), 3600 * 24);
+  }
+
+  /**
+   * 处理登录失败
+   */
+  private async handleLoginFailure(login: string, reason: string) {
+    await this.incrementLoginAttempts(login);
+    this.logger.warn(`登录失败 - 用户: ${login}, 原因: ${reason}`);
+  }
+
+  /**
    * 限制登录尝试次数
-   * @param login 用户名或邮箱
    */
   private async checkLoginAttempts(login: string) {
     const attempts = await this.redis.get<string>(`login_attempts:${login}`);
-    if (attempts && parseInt(attempts) >= 5) {
+    if (attempts && parseInt(attempts) >= this.MAX_LOGIN_ATTEMPTS) {
       throw new RpcException({
         code: 400,
-        message: '登录失败次数过多，请稍后再试',
+        message: `登录失败次数过多，请${this.LOCK_TIME / 60}分钟后再试`,
       });
     }
   }
 
   /**
    * 增加登录尝试次数
-   * @param login 用户名或邮箱
    */
   private async incrementLoginAttempts(login: string) {
-    await this.redis.increment(`login_attempts:${login}`);
+    const key = `login_attempts:${login}`;
+    const attempts = await this.redis.increment(key);
+
+    if (attempts === 1) {
+      await this.redis.set(key, attempts, this.LOCK_TIME);
+    }
   }
 
   /**
    * 清除登录尝试次数
-   * @param login 用户名或邮箱
    */
   private async clearLoginAttempts(login: string) {
     await this.redis.del(`login_attempts:${login}`);
