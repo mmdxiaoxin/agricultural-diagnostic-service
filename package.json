@@ -20,7 +20,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/agricultural-diagnostic-service/test/jest-e2e.json",
-    "generate:proto": "protoc --plugin=protoc-gen-ts_proto=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./libs/common/src/types ./apps/api-gateway/src/proto/*.proto --ts_proto_opt=outputEncodeMethods=false,outputServices=false,outputClientImpl=false,env=browser,useOptionals=messages,exportCommonSymbols=false,esModuleInterop=true"
+    "generate:proto": "chmod +x ./scripts/generate-proto.sh && ./scripts/generate-proto.sh"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.13.0",
