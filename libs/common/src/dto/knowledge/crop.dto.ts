@@ -1,13 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-
+import { BaseDto } from '../base.dto';
 // 作物信息
-export class CropDto {
-  @ApiProperty({
-    description: '作物ID',
-    example: 4,
-  })
-  id: number;
-
+export class CropDto extends BaseDto {
   @ApiProperty({
     description: '作物名称',
     example: '大豆',
@@ -67,16 +61,4 @@ export class CropDto {
     nullable: true,
   })
   suitableSeason: string | null;
-
-  @ApiProperty({
-    description: '创建时间',
-    example: '2025-03-31T06:39:15.169Z',
-  })
-  createdAt: Date;
-
-  @ApiProperty({
-    description: '更新时间',
-    example: '2025-03-31T06:39:15.169Z',
-  })
-  updatedAt: Date;
 }

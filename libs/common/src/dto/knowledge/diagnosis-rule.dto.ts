@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { BaseDto } from '../base.dto';
 
 // 诊断规则配置
 export class DiagnosisRuleConfigDto {
@@ -28,13 +29,7 @@ export class DiagnosisRuleConfigDto {
 }
 
 // 诊断规则
-export class DiagnosisRuleDto {
-  @ApiProperty({
-    description: '规则ID',
-    example: 7,
-  })
-  id: number;
-
+export class DiagnosisRuleDto extends BaseDto {
   @ApiProperty({
     description: '规则配置',
     type: DiagnosisRuleConfigDto,
@@ -48,20 +43,8 @@ export class DiagnosisRuleDto {
   weight: number;
 
   @ApiProperty({
-    description: '创建时间',
-    example: '2025-04-28T05:16:50.845Z',
-  })
-  createdAt: Date;
-
-  @ApiProperty({
     description: '疾病ID',
     example: 13,
   })
   diseaseId: number;
-
-  @ApiProperty({
-    description: '更新时间',
-    example: '2025-04-28T05:16:50.845Z',
-  })
-  updatedAt: Date;
 }

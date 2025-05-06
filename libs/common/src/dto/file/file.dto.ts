@@ -1,24 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { BaseDto } from '../base.dto';
 
-export class FileDto {
-  @ApiProperty({
-    description: '文件ID',
-    example: 2787,
-  })
-  id: number;
-
-  @ApiProperty({
-    description: '创建时间',
-    example: '2025-04-29T14:22:23.426Z',
-  })
-  createdAt: Date;
-
-  @ApiProperty({
-    description: '更新时间',
-    example: '2025-04-29T14:22:23.426Z',
-  })
-  updatedAt: Date;
-
+export class FileDto extends BaseDto {
   @ApiProperty({
     description: '原始文件名',
     example: '(XQ6K888TDWJ}4V{GOQ{ZXC.jpg',

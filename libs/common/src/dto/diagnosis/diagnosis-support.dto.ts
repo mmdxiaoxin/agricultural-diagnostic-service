@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-
+import { BaseDto } from '../base.dto';
 class SupportValueDto {
   @ApiProperty({ description: '诊断支持配置ID' })
   configId: number;
@@ -8,22 +8,19 @@ class SupportValueDto {
   serviceId: number;
 }
 
-export class DiagnosisSupportDto {
-  @ApiProperty({ description: '诊断支持ID' })
-  id: number;
-
-  @ApiProperty({ description: '诊断支持名称' })
+export class DiagnosisSupportDto extends BaseDto {
+  @ApiProperty({ description: '诊断支持名称', example: '大豆锈病' })
   key: string;
 
-  @ApiProperty({ description: '诊断支持描述' })
+  @ApiProperty({ description: '诊断支持描述', example: '大豆锈病诊断配置' })
   description: string;
 
-  @ApiProperty({ description: '诊断支持值' })
+  @ApiProperty({
+    description: '诊断支持值',
+    example: {
+      configId: 5,
+      serviceId: 107,
+    },
+  })
   value: SupportValueDto;
-
-  @ApiProperty({ description: '诊断支持创建时间' })
-  createdAt: Date;
-
-  @ApiProperty({ description: '诊断支持更新时间' })
-  updatedAt: Date;
 }

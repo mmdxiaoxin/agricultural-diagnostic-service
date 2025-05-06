@@ -1,13 +1,16 @@
-import { Roles } from '@common/decorator/roles.decorator';
 import {
   ApiErrorResponse,
-  ApiResponse,
   ApiNullResponse,
+  ApiResponse,
 } from '@common/decorator/api-response.decorator';
+import { Roles } from '@common/decorator/roles.decorator';
+import { MatchResultDto } from '@common/dto/diagnosis/match-result.dto';
 import { CreateKnowledgeDto } from '@common/dto/knowledge/create-knowledge.dto';
+import { DiseaseDto } from '@common/dto/knowledge/disease.dto';
 import { MatchKnowledgeDto } from '@common/dto/knowledge/match-knowledge.dto';
 import { PageQueryKnowledgeDto } from '@common/dto/knowledge/page-query-knowledge.dto';
 import { UpdateKnowledgeDto } from '@common/dto/knowledge/update-knowledge.dto';
+import { createPageResponseDto } from '@common/dto/page-response.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -46,7 +49,7 @@ export class KnowledgeController {
     summary: '获取所有知识',
     description: '获取病害知识库中的所有知识条目',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DiseaseDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findAll() {
@@ -59,7 +62,7 @@ export class KnowledgeController {
     summary: '分页获取知识列表',
     description: '分页获取病害知识库中的知识条目',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', createPageResponseDto(DiseaseDto))
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findList(@Query() query: PageQueryKnowledgeDto) {
@@ -72,7 +75,7 @@ export class KnowledgeController {
     summary: '匹配知识',
     description: '根据查询条件匹配相关的病害知识',
   })
-  @ApiResponse(HttpStatus.OK, '匹配成功')
+  @ApiResponse(HttpStatus.OK, '匹配成功', MatchResultDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -87,7 +90,7 @@ export class KnowledgeController {
     summary: '创建知识',
     description: '创建新的病害知识条目（仅管理员和专家可访问）',
   })
-  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateKnowledgeDto)
+  @ApiResponse(HttpStatus.CREATED, '创建成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -102,7 +105,7 @@ export class KnowledgeController {
     description: '更新指定病害知识条目的信息（仅管理员和专家可访问）',
   })
   @ApiParam({ name: 'id', description: '知识条目ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '更新成功', UpdateKnowledgeDto)
+  @ApiResponse(HttpStatus.OK, '更新成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')

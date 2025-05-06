@@ -1,25 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { FileDto } from '../file/file.dto';
+import { BaseDto } from '../base.dto';
 
-export class DatasetDto {
-  @ApiProperty({
-    description: '数据集ID',
-    example: 47,
-  })
-  id: number;
-
-  @ApiProperty({
-    description: '创建时间',
-    example: '2025-04-16T09:56:53.280Z',
-  })
-  createdAt: Date;
-
-  @ApiProperty({
-    description: '更新时间',
-    example: '2025-04-16T13:19:45.000Z',
-  })
-  updatedAt: Date;
-
+export class DatasetDto extends BaseDto {
   @ApiProperty({
     description: '数据集名称',
     example: '测试数据集555',

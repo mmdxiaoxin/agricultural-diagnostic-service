@@ -6,6 +6,7 @@ import {
 import { Roles } from '@common/decorator/roles.decorator';
 import { CreateDiseaseDto } from '@common/dto/knowledge/create-disease.dto';
 import { DiseaseDto } from '@common/dto/knowledge/disease.dto';
+import { SymptomDto } from '@common/dto/knowledge/symptom.dto';
 import { UpdateDiseaseDto } from '@common/dto/knowledge/update-disease.dto';
 import { PageQueryDateDto } from '@common/dto/page-query-date.dto';
 import { createPageResponseDto } from '@common/dto/page-response.dto';
@@ -48,7 +49,7 @@ export class DiseaseController {
     summary: '创建疾病',
     description: '创建新的疾病信息（仅管理员和专家可访问）',
   })
-  @ApiResponse(HttpStatus.CREATED, '创建成功', DiseaseDto)
+  @ApiResponse(HttpStatus.CREATED, '创建成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -62,7 +63,7 @@ export class DiseaseController {
     summary: '获取所有疾病',
     description: '获取所有疾病列表（所有角色可访问）',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功', DiseaseDto)
+  @ApiResponse(HttpStatus.OK, '获取成功', DiseaseDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   findAll() {
@@ -110,7 +111,7 @@ export class DiseaseController {
     description: '获取指定疾病的所有症状（所有角色可访问）',
   })
   @ApiParam({ name: 'id', description: '疾病ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', SymptomDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '疾病不存在')
@@ -131,7 +132,7 @@ export class DiseaseController {
     description: '更新指定疾病的信息（仅管理员和专家可访问）',
   })
   @ApiParam({ name: 'id', description: '疾病ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '更新成功', DiseaseDto)
+  @ApiResponse(HttpStatus.OK, '更新成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
