@@ -93,6 +93,7 @@ export class DiagnosisController {
   }
 
   @Post(':id/start')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: '开始诊断',
     description: '开始对指定图片进行病害诊断',
@@ -125,6 +126,7 @@ export class DiagnosisController {
   }
 
   @Post(':id/start/async')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: '异步开始诊断',
     description: '异步开始对指定图片进行病害诊断',
