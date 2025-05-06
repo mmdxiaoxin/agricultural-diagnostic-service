@@ -293,6 +293,7 @@ export class FileService {
     try {
       const files = await queryRunner.manager.find(FileEntity, {
         where: { id: In(fileIds) },
+        lock: { mode: 'pessimistic_write' },
       });
 
       if (files.length === 0) {
@@ -320,6 +321,7 @@ export class FileService {
             fileMd5: file.fileMd5,
             id: Not(file.id), // 排除当前文件
           },
+          lock: { mode: 'pessimistic_write' },
         });
 
         if (referenceCount === 0) {
@@ -336,6 +338,7 @@ export class FileService {
       // 删除文件元数据
       await queryRunner.manager.delete(FileEntity, fileIds);
       await queryRunner.commitTransaction();
+      return formatResponse(204, null, '成功批量删除文件');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
