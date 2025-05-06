@@ -230,7 +230,11 @@ export class DiagnosisHistoryService {
         );
       } catch (error) {
         this.logger.error(`Failed to delete files: ${error.message}`);
-        throw new RpcException('删除文件失败');
+        throw new RpcException({
+          code: 500,
+          message: '删除文件失败',
+          data: error,
+        });
       }
 
       // 删除诊断记录
