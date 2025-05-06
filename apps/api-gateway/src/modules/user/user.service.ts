@@ -45,7 +45,8 @@ export class UserService {
     );
 
     if (result.data) {
-      const { stream, fileName, mimeType } = result.data;
+      const { avatar, fileName, mimeType } = result.data;
+      const avatarBuffer = Buffer.from(avatar, 'base64');
 
       res.setHeader(
         'Content-Disposition',
@@ -53,8 +54,7 @@ export class UserService {
       );
       res.setHeader('Content-Type', mimeType);
 
-      // 将流直接传输到响应
-      stream.pipe(res);
+      res.send(avatarBuffer);
     } else {
       return result;
     }
