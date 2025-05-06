@@ -8,6 +8,7 @@ import { Roles } from '@common/decorator/roles.decorator';
 import { CompleteChunkDto } from '@common/dto/file/complete-chunk.dto';
 import { CreateTaskDto } from '@common/dto/file/create-task.dto';
 import { DownloadFilesDto } from '@common/dto/file/download-file.dto';
+import { DownloadTokenDto } from '@common/dto/file/download-token.dto';
 import { FileQueryDto } from '@common/dto/file/file-query.dto';
 import { FileDto } from '@common/dto/file/file.dto';
 import {
@@ -15,6 +16,7 @@ import {
   UpdateFilesAccessDto,
 } from '@common/dto/file/update-file.dto';
 import { UploadChunkDto } from '@common/dto/file/upload-chunk.dto';
+import { UploadTaskDto } from '@common/dto/file/upload-task.dto';
 import { createPageResponseDto } from '@common/dto/page-response.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -142,7 +144,7 @@ export class FileController {
     summary: '创建上传任务',
     description: '创建大文件分片上传任务（仅管理员和专家可访问）',
   })
-  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateTaskDto)
+  @ApiResponse(HttpStatus.CREATED, '创建成功', UploadTaskDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -158,7 +160,7 @@ export class FileController {
     description: '获取文件上传任务的状态（仅管理员和专家可访问）',
   })
   @ApiParam({ name: 'taskId', description: '上传任务ID', type: 'string' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', UploadTaskDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '任务不存在')
@@ -173,7 +175,7 @@ export class FileController {
     summary: '完成分片上传',
     description: '合并所有分片完成文件上传（仅管理员和专家可访问）',
   })
-  @ApiResponse(HttpStatus.OK, '合并成功')
+  @ApiNullResponse(HttpStatus.OK, '合并成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -194,6 +196,18 @@ export class FileController {
     schema: {
       type: 'object',
       properties: {
+        taskId: {
+          type: 'string',
+          description: '任务ID',
+        },
+        chunkIndex: {
+          type: 'number',
+          description: '分片序号',
+        },
+        fileMd5: {
+          type: 'string',
+          description: '文件MD5',
+        },
         chunk: {
           type: 'string',
           format: 'binary',
@@ -202,7 +216,7 @@ export class FileController {
       },
     },
   })
-  @ApiResponse(HttpStatus.CREATED, '上传成功')
+  @ApiNullResponse(HttpStatus.CREATED, '上传成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '分片大小超出限制')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -257,7 +271,7 @@ export class FileController {
     summary: '更新文件信息',
     description: '更新文件的基本信息（仅管理员和专家可访问）',
   })
-  @ApiResponse(HttpStatus.OK, '更新成功', UpdateFileDto)
+  @ApiResponse(HttpStatus.OK, '更新成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -273,7 +287,7 @@ export class FileController {
     summary: '批量更新文件权限',
     description: '批量更新多个文件的访问权限（仅管理员和专家可访问）',
   })
-  @ApiResponse(HttpStatus.OK, '更新成功', UpdateFilesAccessDto)
+  @ApiResponse(HttpStatus.OK, '更新成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
@@ -336,7 +350,7 @@ export class FileController {
     description: '获取文件的临时下载令牌',
   })
   @ApiParam({ name: 'fileId', description: '文件ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DownloadTokenDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '文件不存在')
