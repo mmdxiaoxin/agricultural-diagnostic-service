@@ -5,7 +5,6 @@ export class PageResponseDto<T> {
   @ApiProperty({
     description: '数据列表',
     isArray: true,
-    type: () => Object,
   })
   list: T[];
 
@@ -40,6 +39,10 @@ export function createPageResponseDto<T>(
     })
     declare list: T[];
   }
+
+  Object.defineProperty(PageResponseDtoClass, 'name', {
+    value: `PageResponseDto<${classRef.name}>`,
+  });
 
   return PageResponseDtoClass;
 }

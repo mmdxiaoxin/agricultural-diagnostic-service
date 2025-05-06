@@ -47,31 +47,26 @@ export const ApiResponse = <TModel extends Type<any> = any>(
       content: {
         'application/json': {
           schema: {
-            type: 'object',
-            properties: {
-              code: {
-                type: 'number',
-                example: status,
+            allOf: [
+              { $ref: getSchemaPath(ApiResponseDto) },
+              {
+                properties: {
+                  data: model
+                    ? isArray
+                      ? {
+                          type: 'array',
+                          items: { $ref: getSchemaPath(model) },
+                        }
+                      : {
+                          $ref: getSchemaPath(model),
+                        }
+                    : {
+                        type: 'object',
+                        additionalProperties: true,
+                      },
+                },
               },
-              message: {
-                type: 'string',
-                example: description,
-              },
-              data: model
-                ? isArray
-                  ? {
-                      type: 'array',
-                      items: { $ref: getSchemaPath(model) },
-                    }
-                  : {
-                      $ref: getSchemaPath(model),
-                    }
-                : {
-                    type: 'object',
-                    additionalProperties: true,
-                  },
-            },
-            required: ['code', 'message', 'data'],
+            ],
           },
         },
       },

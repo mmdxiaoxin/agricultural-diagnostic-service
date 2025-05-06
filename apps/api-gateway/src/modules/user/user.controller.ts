@@ -1,10 +1,11 @@
-import { Roles } from '@common/decorator/roles.decorator';
 import {
-  ApiErrorResponse,
-  ApiResponse,
-  ApiNullResponse,
   ApiBinaryResponse,
+  ApiErrorResponse,
+  ApiNullResponse,
+  ApiResponse,
 } from '@common/decorator/api-response.decorator';
+import { Roles } from '@common/decorator/roles.decorator';
+import { createPageResponseDto } from '@common/dto/page-response.dto';
 import { UpdatePasswordDto } from '@common/dto/user/change-pass.dto';
 import { CreateUserDto } from '@common/dto/user/create-user.dto';
 import { ResetPasswordDto } from '@common/dto/user/reset-pass.dto';
@@ -12,6 +13,7 @@ import { UpdateProfileDto } from '@common/dto/user/update-profile.dto';
 import { UpdateUserStatusDto } from '@common/dto/user/update-user-status.dto';
 import { UpdateUserDto } from '@common/dto/user/update-user.dto';
 import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
+import { UserDto } from '@common/dto/user/user.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -34,12 +36,12 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-  ApiTags,
-  ApiOperation,
   ApiBearerAuth,
-  ApiParam,
-  ApiConsumes,
   ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
 } from '@nestjs/swagger';
 import { MIME_TYPE } from '@shared/enum/mime.enum';
 import { Role } from '@shared/enum/role.enum';
@@ -60,7 +62,7 @@ export class UserController {
     summary: '获取用户资料',
     description: '获取当前登录用户的个人资料',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', UserDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async profileGet(@Req() req: Request) {
     return this.userService.getProfile(req.user.userId);
@@ -134,7 +136,7 @@ export class UserController {
     summary: '获取用户列表',
     description: '分页获取系统中的用户列表（仅管理员可访问）',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', createPageResponseDto(UserDto))
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   async userListGet(@Query() query: UserPageQueryDto) {
@@ -164,7 +166,7 @@ export class UserController {
     description: '获取指定用户的详细信息（仅管理员可访问）',
   })
   @ApiParam({ name: 'id', description: '用户ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', UserDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '用户不存在')
