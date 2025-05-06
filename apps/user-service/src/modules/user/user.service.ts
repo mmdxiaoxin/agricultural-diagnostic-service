@@ -106,17 +106,42 @@ export class UserService {
   }
 
   async userCreate(user: Partial<User>, profile?: Partial<Profile>) {
-    await this.validateUserParams(user);
-    await this.setRoles(user);
-    await this.setDefaultPassword(user);
-    const newUser = this.userRepository.create(user);
-    if (profile) {
-      const newProfile = this.profileRepository.create(profile);
-      newUser.profile = newProfile;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await this.validateUserParams(user);
+      await this.setRoles(user);
+      await this.setDefaultPassword(user);
+
+      const newUser = this.userRepository.create(user);
+      if (profile) {
+        const newProfile = this.profileRepository.create(profile);
+        newUser.profile = newProfile;
+      }
+
+      const savedUser = await queryRunner.manager.save(newUser);
+      if (profile) {
+        await queryRunner.manager.save(newUser.profile);
+      }
+
+      await queryRunner.commitTransaction();
+
+      // 更新缓存
+      await this.updateUserCache(savedUser);
+
+      return formatResponse(201, savedUser, '用户创建成功');
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(`创建用户失败: ${error.message}`, error.stack);
+      throw new RpcException({
+        code: 500,
+        message: '创建用户失败',
+      });
+    } finally {
+      await queryRunner.release();
     }
-    const savedUser = await this.userRepository.save(newUser);
-    await this.updateUserCache(savedUser);
-    return formatResponse(201, savedUser, '用户创建成功');
   }
 
   async userGet(id: number) {
@@ -149,6 +174,8 @@ export class UserService {
     try {
       const user = await queryRunner.manager.findOne(User, {
         where: { id },
+        relations: ['profile'],
+        select: ['id', 'profile'],
       });
 
       if (!user) {
@@ -158,34 +185,43 @@ export class UserService {
         });
       }
 
-      // 删除用户
-      await queryRunner.manager.delete(Profile, { user });
-      await queryRunner.manager.remove(User, user);
-      await this.deleteUserCache(id);
+      // 删除用户相关数据
+      if (user.profile) {
+        await queryRunner.manager.delete(Profile, { id: user.profile.id });
+      }
+      await queryRunner.manager.delete(User, { id });
 
       await queryRunner.commitTransaction();
+
+      // 清理缓存
+      await this.deleteUserCache(id);
+
       return formatResponse(204, null, '删除用户成功');
     } catch (error) {
-      // 回滚事务
       await queryRunner.rollbackTransaction();
-      throw new RpcException('删除用户失败');
+      this.logger.error(`删除用户失败: ${error.message}`, error.stack);
+      throw new RpcException({
+        code: 500,
+        message: '删除用户失败',
+      });
     } finally {
-      // 释放 queryRunner
       await queryRunner.release();
     }
   }
 
   async userUpdate(id: number, updateUserDto: UpdateUserDto) {
-    const queryRunner =
-      this.userRepository.manager.connection.createQueryRunner();
+    const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    const { profile, roles, ...userData } = updateUserDto;
+
     try {
+      const { profile, roles, ...userData } = updateUserDto;
+
       // 查找用户
       const user = await queryRunner.manager.findOne(User, {
         where: { id },
         relations: ['profile', 'roles'],
+        select: ['id', 'username', 'email', 'status', 'profile', 'roles'],
       });
 
       if (!user) {
@@ -206,26 +242,33 @@ export class UserService {
       if (roles) {
         const newRoles = await queryRunner.manager.find(Role, {
           where: { id: In(roles) },
+          select: ['id', 'name'],
         });
         user.roles = newRoles;
       }
 
+      // 更新用户信息
       Object.assign(user, userData);
 
+      // 保存更新
       await queryRunner.manager.save(user);
       if (profile) {
         await queryRunner.manager.save(user.profile);
       }
-      if (roles) {
-        await queryRunner.manager.save(user.roles);
-      }
 
       await queryRunner.commitTransaction();
+
+      // 更新缓存
       await this.updateUserCache(user);
+
       return formatResponse(200, null, '用户信息更新成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw error;
+      this.logger.error(`更新用户失败: ${error.message}`, error.stack);
+      throw new RpcException({
+        code: 500,
+        message: '更新用户失败',
+      });
     } finally {
       await queryRunner.release();
     }
@@ -494,12 +537,39 @@ export class UserService {
     try {
       const { page, pageSize, ...filters } = query;
       const offset = (page - 1) * pageSize;
-      // 使用 QueryBuilder 进行查询
+      const cacheKey = `user:list:${JSON.stringify(query)}`;
+
+      // 尝试从缓存获取
+      const cachedResult = await this.redisService.get<{
+        list: any[];
+        total: number;
+        page: number;
+        pageSize: number;
+      }>(cacheKey);
+
+      if (cachedResult) {
+        return formatResponse(200, cachedResult, '获取用户列表成功(缓存)');
+      }
+
+      // 构建查询
       const queryBuilder = this.userRepository
         .createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
-        .leftJoinAndSelect('user.roles', 'role');
+        .leftJoinAndSelect('user.roles', 'role')
+        .select([
+          'user.id',
+          'user.username',
+          'user.email',
+          'user.status',
+          'profile.id',
+          'profile.name',
+          'profile.phone',
+          'profile.address',
+          'role.id',
+          'role.name',
+        ]);
 
+      // 添加过滤条件
       if (filters.username) {
         queryBuilder.andWhere('user.username LIKE :username', {
           username: `%${filters.username}%`,
@@ -521,10 +591,16 @@ export class UserService {
         });
       }
 
+      // 添加排序
+      queryBuilder.orderBy('user.id', 'DESC');
+
       // 获取总数和分页数据
-      const total = await queryBuilder.getCount();
-      const users = await queryBuilder.skip(offset).take(pageSize).getMany();
-      // 过滤敏感信息，例如 password
+      const [total, users] = await Promise.all([
+        queryBuilder.getCount(),
+        queryBuilder.skip(offset).take(pageSize).getMany(),
+      ]);
+
+      // 过滤敏感信息
       const list = users.map(({ password, ...user }) => user);
       const result = {
         list,
@@ -533,8 +609,12 @@ export class UserService {
         pageSize,
       };
 
-      return formatResponse(200, result, '退出登录成功');
+      // 缓存结果（5分钟）
+      await this.redisService.set(cacheKey, result, 300);
+
+      return formatResponse(200, result, '获取用户列表成功');
     } catch (error) {
+      this.logger.error(`获取用户列表失败: ${error.message}`, error.stack);
       throw new RpcException({
         code: 500,
         message: '获取用户列表失败',
