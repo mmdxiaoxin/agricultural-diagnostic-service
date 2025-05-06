@@ -1,4 +1,5 @@
 import {
+  ApiBinaryResponse,
   ApiErrorResponse,
   ApiNullResponse,
   ApiResponse,
@@ -129,7 +130,7 @@ export class DatasetController {
   @Put(':datasetId')
   @ApiOperation({ summary: '更新数据集', description: '更新指定数据集的信息' })
   @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '更新成功')
+  @ApiResponse(HttpStatus.OK, '更新成功', DatasetWithFiletDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '数据集不存在')
@@ -151,7 +152,7 @@ export class DatasetController {
     description: '更新指定数据集的访问权限设置',
   })
   @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '更新成功')
+  @ApiResponse(HttpStatus.OK, '更新成功', DatasetDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '数据集不存在')
@@ -192,7 +193,7 @@ export class DatasetController {
   @Get(':datasetId/download')
   @ApiOperation({ summary: '下载数据集', description: '下载指定数据集的内容' })
   @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
-  @ApiNullResponse(HttpStatus.OK, '下载成功')
+  @ApiBinaryResponse(HttpStatus.OK, '下载成功', 'application/zip')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '数据集不存在')
   async downloadDataset(
