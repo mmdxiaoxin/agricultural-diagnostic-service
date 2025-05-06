@@ -1,10 +1,11 @@
 import {
   ApiErrorResponse,
-  ApiResponse,
+  ApiHtmlResponse,
   ApiNullResponse,
+  ApiResponse,
 } from '@common/decorator/api-response.decorator';
-import { LoginDto } from '@common/dto/auth/login.dto';
 import { LoginResponse } from '@common/dto/auth/login-response.dto';
+import { LoginDto } from '@common/dto/auth/login.dto';
 import { RegisterDto } from '@common/dto/auth/register.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import {
@@ -18,12 +19,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiTags,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 
@@ -81,7 +77,7 @@ export class AuthController {
   @Get('verify/:token')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '验证令牌', description: '验证用户令牌的有效性' })
-  @ApiResponse(HttpStatus.OK, '令牌有效', UserResponse)
+  @ApiHtmlResponse(HttpStatus.OK, '令牌有效')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '令牌无效或已过期')
   async verify(@Param('token') token: string) {
     return this.authService.verify(token);

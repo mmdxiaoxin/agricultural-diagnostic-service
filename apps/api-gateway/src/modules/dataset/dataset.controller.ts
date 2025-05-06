@@ -1,13 +1,19 @@
-import { Roles } from '@common/decorator/roles.decorator';
 import {
   ApiErrorResponse,
-  ApiResponse,
   ApiNullResponse,
+  ApiResponse,
 } from '@common/decorator/api-response.decorator';
+import { Roles } from '@common/decorator/roles.decorator';
 import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
+import {
+  DatasetDto,
+  DatasetWithCountDto,
+  DatasetWithFiletDto,
+} from '@common/dto/dataset/dataset.dto';
 import { UpdateDatasetAccessDto } from '@common/dto/dataset/update-dataset-access.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
 import { DatasetQueryDto } from '@common/dto/diagnosis/dastaset-query.dto';
+import { createPageResponseDto } from '@common/dto/page-response.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -27,11 +33,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
   ApiBearerAuth,
+  ApiOperation,
   ApiParam,
-  ApiQuery,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { Request, Response } from 'express';
@@ -50,7 +55,11 @@ export class DatasetController {
     summary: '获取数据集列表',
     description: '获取当前用户的数据集列表',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(
+    HttpStatus.OK,
+    '获取成功',
+    createPageResponseDto(DatasetWithCountDto),
+  )
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async datasetsListGet(@Req() req: Request, @Query() query: DatasetQueryDto) {
     return this.datasetService.getDatasetList(query, req.user.userId);
@@ -61,7 +70,11 @@ export class DatasetController {
     summary: '获取公共数据集列表',
     description: '获取所有公开的数据集列表',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(
+    HttpStatus.OK,
+    '获取成功',
+    createPageResponseDto(DatasetWithCountDto),
+  )
   async publicDatasetsListGet(@Query() query: DatasetQueryDto) {
     return this.datasetService.getPublicDatasetList(query);
   }
@@ -69,7 +82,7 @@ export class DatasetController {
   @Post('create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: '创建数据集', description: '创建新的数据集' })
-  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateDatasetDto)
+  @ApiResponse(HttpStatus.CREATED, '创建成功', DatasetDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async createDataset(@Req() req: Request, @Body() dto: CreateDatasetDto) {
@@ -80,7 +93,7 @@ export class DatasetController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: '复制数据集', description: '复制指定的数据集' })
   @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
-  @ApiResponse(HttpStatus.CREATED, '复制成功', CreateDatasetDto)
+  @ApiResponse(HttpStatus.CREATED, '复制成功', DatasetDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '数据集不存在')
   async copyDataset(
@@ -100,7 +113,7 @@ export class DatasetController {
     description: '获取指定数据集的详细信息',
   })
   @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', DatasetWithFiletDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '数据集不存在')
   async getDatasetDetail(

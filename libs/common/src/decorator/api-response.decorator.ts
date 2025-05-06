@@ -79,6 +79,71 @@ export const ApiResponse = <TModel extends Type<any> = any>(
   );
 };
 
+// 添加网页响应装饰器
+export const ApiHtmlResponse = (
+  status: number,
+  description: string,
+  contentType: string = 'text/html',
+) => {
+  return SwaggerApiResponse({
+    status,
+    description,
+    content: {
+      [contentType]: {
+        schema: {
+          type: 'string',
+          format: 'html',
+        },
+      },
+    },
+  });
+};
+
+// 添加联合类型响应装饰器
+export const ApiUnionResponse = <TModels extends Type<any>[]>(
+  status: number,
+  description: string,
+  models: TModels,
+) => {
+  if (status === HttpStatus.NO_CONTENT) {
+    return SwaggerApiResponse({
+      status,
+      description,
+    });
+  }
+
+  return applyDecorators(
+    ApiExtraModels(ApiResponseDto, ...models),
+    SwaggerApiResponse({
+      status,
+      description,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              code: {
+                type: 'number',
+                example: status,
+              },
+              message: {
+                type: 'string',
+                example: description,
+              },
+              data: {
+                oneOf: models.map((model) => ({
+                  $ref: getSchemaPath(model),
+                })),
+              },
+            },
+            required: ['code', 'message', 'data'],
+          },
+        },
+      },
+    }),
+  );
+};
+
 export const ApiNullResponse = (status: number, description: string) => {
   if (status === HttpStatus.NO_CONTENT) {
     return SwaggerApiResponse({
