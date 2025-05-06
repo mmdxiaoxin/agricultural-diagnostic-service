@@ -1,6 +1,6 @@
 import { FileEntity } from '@app/database/entities';
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
-import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
+import { CreateDiagnosisSupportDto } from '@common/dto/diagnosis/create-diagnosis-support.dto';
 import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
@@ -205,7 +205,7 @@ export class DiagnosisService {
     );
   }
 
-  createDiagnosisSupport(data: DiagnosisSupportDto) {
+  createDiagnosisSupport(data: CreateDiagnosisSupportDto) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_CREATE },
       data,
@@ -226,7 +226,7 @@ export class DiagnosisService {
     );
   }
 
-  updateDiagnosisSupport(id: number, data: DiagnosisSupportDto) {
+  updateDiagnosisSupport(id: number, data: CreateDiagnosisSupportDto) {
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.SUPPORT_UPDATE },
       { id, ...data },

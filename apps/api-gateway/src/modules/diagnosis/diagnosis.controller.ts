@@ -6,8 +6,8 @@ import {
 import { Roles } from '@common/decorator/roles.decorator';
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { DiagnosisHistoryDto } from '@common/dto/diagnosis/diagnosis-history.dto';
-import { DiagnosisSupportResponseDto } from '@common/dto/diagnosis/diagnosis-support-response.dto';
 import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
+import { CreateDiagnosisSupportDto } from '@common/dto/diagnosis/create-diagnosis-support.dto';
 import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
@@ -432,10 +432,10 @@ export class DiagnosisController {
     summary: '创建诊断支持',
     description: '创建新的诊断支持信息',
   })
-  @ApiResponse(HttpStatus.CREATED, '创建成功', DiagnosisSupportDto)
+  @ApiResponse(HttpStatus.CREATED, '创建成功', CreateDiagnosisSupportDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
-  async createDiagnosisSupport(@Body() data: DiagnosisSupportDto) {
+  async createDiagnosisSupport(@Body() data: CreateDiagnosisSupportDto) {
     return this.diagnosisService.createDiagnosisSupport(data);
   }
 
@@ -444,7 +444,7 @@ export class DiagnosisController {
     summary: '获取诊断支持列表',
     description: '获取所有诊断支持信息列表',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功', DiagnosisSupportResponseDto, true)
+  @ApiResponse(HttpStatus.OK, '获取成功', DiagnosisSupportDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async getDiagnosisSupportList() {
     return this.diagnosisService.getDiagnosisSupportList();
@@ -469,13 +469,13 @@ export class DiagnosisController {
     description: '更新指定的诊断支持信息',
   })
   @ApiParam({ name: 'id', description: '诊断支持ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '更新成功', DiagnosisSupportDto)
+  @ApiResponse(HttpStatus.OK, '更新成功', CreateDiagnosisSupportDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '诊断支持不存在')
   async updateDiagnosisSupport(
     @Param('id', ParseIntPipe) id: number,
-    @Body() data: DiagnosisSupportDto,
+    @Body() data: CreateDiagnosisSupportDto,
   ) {
     return this.diagnosisService.updateDiagnosisSupport(id, data);
   }
