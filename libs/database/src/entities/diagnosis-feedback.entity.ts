@@ -16,7 +16,7 @@ export class DiagnosisFeedback extends BaseEntity {
   @Column({ type: 'int', nullable: true, comment: '诊断历史ID' })
   diagnosisId: number | null;
 
-  @ManyToOne(() => DiagnosisHistory, { nullable: true })
+  @ManyToOne(() => DiagnosisHistory, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'diagnosisId' })
   diagnosis: DiagnosisHistory | null;
 
