@@ -5,7 +5,13 @@ import { UpdateProfileDto } from '@common/dto/user/update-profile.dto';
 import { UpdateUserStatusDto } from '@common/dto/user/update-user-status.dto';
 import { UpdateUserDto } from '@common/dto/user/update-user.dto';
 import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { Response } from 'express';
@@ -13,6 +19,7 @@ import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   constructor(
     @Inject(USER_SERVICE_NAME) private readonly userClient: ClientProxy,
   ) {}
@@ -40,23 +47,27 @@ export class UserService {
   }
 
   async getAvatar(userId: number, res: Response) {
-    const result = await lastValueFrom(
-      this.userClient.send({ cmd: 'user.avatar.get' }, { userId }),
-    );
-
-    if (result.data) {
-      const { avatar, fileName, mimeType } = result.data;
-      const avatarBuffer = Buffer.from(avatar, 'base64');
-
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${fileName}"`,
+    try {
+      const result = await lastValueFrom(
+        this.userClient.send({ cmd: 'user.avatar.get' }, { userId }),
       );
-      res.setHeader('Content-Type', mimeType);
 
-      res.send(avatarBuffer);
-    } else {
-      return result;
+      if (!result.data) {
+        return result;
+      }
+
+      const { avatar, fileName, mimeType } = result.data;
+
+      // 设置响应头
+      res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 24小时缓存
+
+      // 直接发送 base64 解码后的 buffer
+      res.send(Buffer.from(avatar, 'base64'));
+    } catch (error) {
+      this.logger.error(`获取头像失败: ${error.message}`, error.stack);
+      throw new HttpException('获取头像失败', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

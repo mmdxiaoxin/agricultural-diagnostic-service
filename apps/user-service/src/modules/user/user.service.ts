@@ -20,6 +20,15 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UserService {
   private readonly logger = new Logger(UserService.name);
   private avatarPath = path.join(__dirname, '..', '..', 'avatar');
+  private readonly avatarCache = new Map<
+    string,
+    {
+      data: { avatar: string; fileName: string; mimeType: string };
+      timestamp: number;
+    }
+  >();
+  private readonly CACHE_TTL = 3600000; // 1小时缓存
+  private readonly MAX_CACHE_SIZE = 1000; // 最大缓存数量
 
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
@@ -363,47 +372,56 @@ export class UserService {
   }
 
   async getAvatar(userId: number) {
-    // 尝试从缓存获取头像
-    const cacheKey = `avatar:${userId}`;
-    const cachedAvatar = await this.redisService.get<{
-      avatar: string;
-      fileName: string;
-      mimeType: string;
-    }>(cacheKey);
-
-    if (cachedAvatar) {
-      return formatResponse(200, cachedAvatar, '头像获取成功(缓存)');
-    }
-
-    // 从数据库获取用户信息
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-      relations: ['profile'],
-      select: ['id', 'profile'],
-    });
-
-    if (!user) {
-      throw new RpcException({
-        code: 404,
-        message: '未找到用户',
-      });
-    }
-
-    const profile = user.profile;
-    if (!profile || !profile.avatar) {
-      return formatResponse(200, null, '未找到头像');
-    }
-
-    const avatarPath = profile.avatar;
-    if (!fs.existsSync(avatarPath)) {
-      throw new RpcException({
-        code: 404,
-        message: '未找到头像文件',
-      });
-    }
-
     try {
-      // 读取文件
+      const cacheKey = `avatar:${userId}`;
+
+      // 1. 检查内存缓存
+      const cachedData = this.avatarCache.get(cacheKey);
+      if (cachedData && Date.now() - cachedData.timestamp < this.CACHE_TTL) {
+        return formatResponse(200, cachedData.data, '头像获取成功(内存缓存)');
+      }
+
+      // 2. 检查 Redis 缓存
+      const cachedAvatar = await this.redisService.get<{
+        avatar: string;
+        fileName: string;
+        mimeType: string;
+      }>(cacheKey);
+
+      if (cachedAvatar) {
+        // 更新内存缓存
+        this.updateMemoryCache(cacheKey, cachedAvatar);
+        return formatResponse(200, cachedAvatar, '头像获取成功(Redis缓存)');
+      }
+
+      // 3. 从数据库获取用户信息
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['profile'],
+        select: ['id', 'profile'],
+      });
+
+      if (!user || !user.profile) {
+        throw new RpcException({
+          code: 404,
+          message: '未找到用户或用户头像',
+        });
+      }
+
+      const profile = user.profile;
+      if (!profile.avatar) {
+        return formatResponse(200, null, '未找到头像');
+      }
+
+      const avatarPath = profile.avatar;
+      if (!fs.existsSync(avatarPath)) {
+        throw new RpcException({
+          code: 404,
+          message: '未找到头像文件',
+        });
+      }
+
+      // 4. 读取文件并处理
       const avatarBuffer = await fs.promises.readFile(avatarPath);
       const fileName = path.basename(avatarPath);
       const mimeType = mime.lookup(avatarPath) || 'application/octet-stream';
@@ -414,17 +432,40 @@ export class UserService {
         mimeType,
       };
 
-      // 缓存头像数据（1小时）
-      await this.redisService.set(cacheKey, avatarData, 3600);
+      // 5. 更新缓存
+      await this.updateCaches(cacheKey, avatarData);
 
       return formatResponse(200, avatarData, '头像获取成功');
     } catch (error) {
-      this.logger.error(`读取头像文件失败: ${error.message}`, error.stack);
+      this.logger.error(`获取头像失败: ${error.message}`, error.stack);
       throw new RpcException({
         code: 500,
-        message: '读取头像文件失败',
+        message: '获取头像失败',
       });
     }
+  }
+
+  private updateMemoryCache(key: string, data: any) {
+    // 如果缓存已满，删除最旧的项
+    if (this.avatarCache.size >= this.MAX_CACHE_SIZE) {
+      const oldestKey = Array.from(this.avatarCache.entries()).sort(
+        ([, a], [, b]) => a.timestamp - b.timestamp,
+      )[0][0];
+      this.avatarCache.delete(oldestKey);
+    }
+
+    this.avatarCache.set(key, {
+      data,
+      timestamp: Date.now(),
+    });
+  }
+
+  private async updateCaches(key: string, data: any) {
+    // 更新内存缓存
+    this.updateMemoryCache(key, data);
+
+    // 更新 Redis 缓存
+    await this.redisService.set(key, data, 3600);
   }
 
   async profileUpdate(userId: number, profile: Partial<Profile>) {
