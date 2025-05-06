@@ -1,7 +1,15 @@
-import { Column, Entity, Index, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { DiagnosisLog } from './diagnosis-log.entity';
 import { DiagnosisFeedback } from './diagnosis-feedback.entity';
+import { FileEntity } from './file.entity';
 
 export enum DiagnosisHistoryStatus {
   PENDING = 'pending',
@@ -16,6 +24,10 @@ export enum DiagnosisHistoryStatus {
 export class DiagnosisHistory extends BaseEntity {
   @Column({ type: 'int', nullable: true })
   fileId: number | null;
+
+  @OneToOne(() => FileEntity, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'fileId' })
+  file: FileEntity | null;
 
   @Column({ type: 'json', nullable: true })
   diagnosisResult: any | null;

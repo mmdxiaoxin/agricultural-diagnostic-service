@@ -3,6 +3,27 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
 import { ConfigEnum } from '@shared/enum/config.enum';
+import {
+  Crop,
+  Dataset,
+  DiagnosisFeedback,
+  DiagnosisHistory,
+  DiagnosisLog,
+  DiagnosisRule,
+  DiagnosisSupport,
+  Disease,
+  EnvironmentFactor,
+  FileEntity,
+  Menu,
+  Profile,
+  RemoteConfig,
+  RemoteInterface,
+  RemoteService,
+  Role,
+  Symptom,
+  Treatment,
+  User,
+} from './entities';
 
 @Global()
 @Module({})
@@ -33,7 +54,28 @@ export class DatabaseModule {
               autoLoadEntities: true, // 自动加载实体
               synchronize: configService.get<boolean>(ConfigEnum.DB_SYNC),
               logging: process.env.NODE_ENV === 'development',
-              entities,
+              entities: [
+                Crop,
+                Dataset,
+                DiagnosisFeedback,
+                DiagnosisHistory,
+                DiagnosisLog,
+                DiagnosisRule,
+                DiagnosisSupport,
+                Disease,
+                EnvironmentFactor,
+                FileEntity,
+                Menu,
+                Profile,
+                RemoteConfig,
+                RemoteInterface,
+                RemoteService,
+                Role,
+                Symptom,
+                Treatment,
+                User,
+                ...entities,
+              ],
             }) as TypeOrmModuleOptions,
         }),
       ],

@@ -1,6 +1,7 @@
-import { Column, Entity, Index, ManyToMany } from 'typeorm';
+import { Column, Entity, Index, ManyToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Dataset } from './dataset.entity';
+import { DiagnosisHistory } from './diagnosis-history.entity';
 
 @Entity('file')
 @Index('file_user_id_fk', ['createdBy'])
@@ -35,6 +36,12 @@ export class FileEntity extends BaseEntity {
 
   @Column({ type: 'int', default: 1 })
   version: number;
+
+  @OneToOne(() => DiagnosisHistory, (diagnosis) => diagnosis.file, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  diagnosis: DiagnosisHistory | null;
 
   @ManyToMany(() => Dataset, (dataset) => dataset.files, {
     nullable: true,
