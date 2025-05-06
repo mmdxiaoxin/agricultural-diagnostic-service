@@ -9,6 +9,8 @@ export class MenuService {
   private readonly CACHE_PREFIX = 'menu:routes:';
   private readonly CACHE_TTL = 3600; // 缓存1小时
   private readonly logger = new Logger(MenuService.name);
+  private readonly MAX_RETRIES = 3;
+  private readonly RETRY_DELAY = 1000; // 1秒
 
   constructor(
     @InjectRepository(Menu)
@@ -16,19 +18,52 @@ export class MenuService {
     private readonly redisService: RedisService,
   ) {}
 
+  private async withRetry<T>(
+    operation: () => Promise<T>,
+    operationName: string,
+  ): Promise<T | null> {
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < this.MAX_RETRIES; i++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error as Error;
+        const isConnectionError =
+          error.message.includes('Connection closed') ||
+          error.message.includes('ECONNREFUSED') ||
+          error.message.includes('ECONNRESET');
+
+        if (isConnectionError && i < this.MAX_RETRIES - 1) {
+          const delay = this.RETRY_DELAY * Math.pow(2, i);
+          this.logger.warn(
+            `${operationName} 失败，Redis 连接错误，${delay}ms 后重试: ${error.message}`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        this.logger.error(`${operationName} 失败: ${error.message}`);
+        return null;
+      }
+    }
+
+    this.logger.error(`${operationName} 最终失败: ${lastError?.message}`);
+    return null;
+  }
+
   async findAuthRoutes(roles: string[]) {
     // 生成缓存key
     const cacheKey = this.CACHE_PREFIX + roles.sort().join(':');
 
-    try {
-      // 尝试从缓存获取
-      const cachedRoutes = await this.redisService.get<any[]>(cacheKey);
-      if (cachedRoutes) {
-        return cachedRoutes;
-      }
-    } catch (error) {
-      this.logger.warn(`从缓存获取菜单路由失败: ${error.message}`);
-      // 缓存错误不影响主流程，继续从数据库获取
+    // 尝试从缓存获取
+    const cachedRoutes = await this.withRetry(
+      () => this.redisService.get<any[]>(cacheKey),
+      '从缓存获取菜单路由',
+    );
+
+    if (cachedRoutes) {
+      return cachedRoutes;
     }
 
     // 缓存未命中或出错，从数据库获取
@@ -62,13 +97,11 @@ export class MenuService {
     // 生成菜单树
     const menuTree = buildMenuTree(null);
 
-    try {
-      // 存入缓存
-      await this.redisService.set(cacheKey, menuTree, this.CACHE_TTL);
-    } catch (error) {
-      this.logger.warn(`缓存菜单路由失败: ${error.message}`);
-      // 缓存错误不影响主流程，继续返回数据
-    }
+    // 尝试存入缓存
+    await this.withRetry(
+      () => this.redisService.set(cacheKey, menuTree, this.CACHE_TTL),
+      '缓存菜单路由',
+    );
 
     return menuTree;
   }
@@ -90,17 +123,14 @@ export class MenuService {
 
   // 清除所有菜单相关的缓存
   private async clearMenuCache() {
-    try {
+    await this.withRetry(async () => {
       const keys = await this.redisService
         .getClient()
         .keys(`${this.CACHE_PREFIX}*`);
       if (keys.length > 0) {
         await this.redisService.getClient().del(...keys);
       }
-    } catch (error) {
-      this.logger.error(`清除菜单缓存失败: ${error.message}`);
-      // 缓存清除失败不影响主流程
-    }
+    }, '清除菜单缓存');
   }
 
   // 创建新菜单
@@ -108,9 +138,7 @@ export class MenuService {
     const menu = this.menuRepository.create(menuData);
     const result = await this.menuRepository.save(menu);
     // 清除缓存
-    await this.clearMenuCache().catch((error) => {
-      this.logger.warn(`创建菜单后清除缓存失败: ${error.message}`);
-    });
+    await this.clearMenuCache();
     return result;
   }
 
@@ -118,9 +146,7 @@ export class MenuService {
   async update(id: number, menuData: Partial<Menu>) {
     await this.menuRepository.update(id, menuData);
     // 清除缓存
-    await this.clearMenuCache().catch((error) => {
-      this.logger.warn(`更新菜单后清除缓存失败: ${error.message}`);
-    });
+    await this.clearMenuCache();
     return this.findOne(id);
   }
 
@@ -128,8 +154,6 @@ export class MenuService {
   async remove(id: number): Promise<void> {
     await this.menuRepository.delete(id);
     // 清除缓存
-    await this.clearMenuCache().catch((error) => {
-      this.logger.warn(`删除菜单后清除缓存失败: ${error.message}`);
-    });
+    await this.clearMenuCache();
   }
 }
