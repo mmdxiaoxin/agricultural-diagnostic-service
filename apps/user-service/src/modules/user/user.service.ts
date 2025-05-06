@@ -54,13 +54,36 @@ export class UserService {
 
   private async updateUserCache(user: User) {
     const { password, ...userData } = user;
-    const cacheKey = `user:${user.id}`;
-    await this.redisService.set(cacheKey, userData, 300);
+    const cacheKeys = [
+      `user:${user.id}`,
+      `user:email:${user.email}`,
+      `user:username:${user.username}`,
+      `user:login:${user.email}`,
+      `user:login:${user.username}`,
+    ];
+
+    await Promise.all(
+      cacheKeys.map((key) => this.redisService.set(key, userData, 300)),
+    );
   }
 
   private async deleteUserCache(id: number) {
-    const cacheKey = `user:${id}`;
-    await this.redisService.del(cacheKey);
+    const user = await this.userRepository.findOne({
+      where: { id },
+      select: ['id', 'email', 'username'],
+    });
+
+    if (user) {
+      const cacheKeys = [
+        `user:${user.id}`,
+        `user:email:${user.email}`,
+        `user:username:${user.username}`,
+        `user:login:${user.email}`,
+        `user:login:${user.username}`,
+      ];
+
+      await Promise.all(cacheKeys.map((key) => this.redisService.del(key)));
+    }
   }
 
   async setRoles(user: Partial<User>) {
@@ -477,20 +500,39 @@ export class UserService {
 
   async findByLogin(login: string): Promise<User | null> {
     const cacheKey = `user:login:${login}`;
-    const cachedUser = await this.redisService.get(cacheKey);
+    const cachedUser = await this.redisService.get<User>(cacheKey);
     if (cachedUser) {
-      return cachedUser as User;
+      return cachedUser;
     }
 
+    // 使用更高效的查询方式
     const user = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'role')
+      .select([
+        'user.id',
+        'user.username',
+        'user.email',
+        'user.password',
+        'user.status',
+        'role.id',
+        'role.name',
+      ])
       .where('user.email = :login', { login })
       .orWhere('user.username = :login', { login })
+      .cache(true) // 启用 TypeORM 查询缓存
       .getOne();
 
     if (user) {
-      await this.redisService.set(cacheKey, user, 60); // 缓存 60 秒
+      // 增加缓存时间到5分钟
+      await this.redisService.set(cacheKey, user, 300);
+
+      // 同时更新其他相关缓存
+      await Promise.all([
+        this.redisService.set(`user:email:${user.email}`, user, 300),
+        this.redisService.set(`user:username:${user.username}`, user, 300),
+        this.redisService.set(`user:id:${user.id}`, user, 300),
+      ]);
     }
 
     return user;
