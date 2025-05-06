@@ -16,10 +16,12 @@ import {
   unlink,
 } from 'fs/promises';
 import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class FileOperationService {
   private readonly logger = new Logger(FileOperationService.name);
+  private readonly fileLocks = new Map<string, Promise<void>>();
 
   /**
    * 确保目录存在
@@ -53,44 +55,73 @@ export class FileOperationService {
    * @param filePath 目标文件路径
    */
   async deleteFile(filePath: string): Promise<void> {
-    try {
-      // 验证路径安全性
-      this.validatePath(filePath);
-      // 检查文件是否存在
-      await this.checkFileExists(filePath);
-      // 检查文件权限
-      await this.checkFilePermissions(filePath);
-      // 尝试删除文件
-      await unlink(filePath);
-    } catch (error) {
-      this.logger.error(`文件删除失败: ${filePath}`, error);
-
-      if (error instanceof NotFoundException) {
-        throw new RpcException({
-          code: HttpStatus.NOT_FOUND,
-          message: `文件不存在: ${filePath}`,
-        });
-      }
-
-      if (error.code === 'EACCES') {
-        throw new RpcException({
-          code: HttpStatus.FORBIDDEN,
-          message: `没有权限删除文件: ${filePath}`,
-        });
-      }
-
-      if (error.code === 'EBUSY') {
-        throw new RpcException({
-          code: HttpStatus.CONFLICT,
-          message: `文件正在被使用: ${filePath}`,
-        });
-      }
-
-      throw new RpcException({
-        code: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: `删除文件失败: ${error.message}`,
-      });
+    // 获取或创建文件锁
+    let fileLock = this.fileLocks.get(filePath);
+    if (!fileLock) {
+      fileLock = Promise.resolve();
     }
+
+    // 使用文件锁确保同一文件的删除操作串行执行
+    const newLock = fileLock.then(async () => {
+      try {
+        // 验证路径安全性
+        this.validatePath(filePath);
+
+        // 检查文件是否存在
+        await this.checkFileExists(filePath);
+
+        // 检查文件权限
+        await this.checkFilePermissions(filePath);
+
+        // 检查文件是否被占用
+        try {
+          const fd = await fs.promises.open(filePath, 'r+');
+          await fd.close();
+        } catch (error) {
+          if (error.code === 'EBUSY') {
+            throw new RpcException({
+              code: HttpStatus.CONFLICT,
+              message: `文件正在被使用: ${filePath}`,
+            });
+          }
+        }
+
+        // 尝试删除文件
+        await unlink(filePath);
+        this.logger.log(`文件删除成功: ${filePath}`);
+      } catch (error) {
+        this.logger.error(`文件删除失败: ${filePath}`, error);
+
+        if (error instanceof NotFoundException) {
+          throw new RpcException({
+            code: HttpStatus.NOT_FOUND,
+            message: `文件不存在: ${filePath}`,
+          });
+        }
+
+        if (error instanceof RpcException) {
+          throw error;
+        }
+
+        if (error.code === 'EACCES') {
+          throw new RpcException({
+            code: HttpStatus.FORBIDDEN,
+            message: `没有权限删除文件: ${filePath}`,
+          });
+        }
+
+        throw new RpcException({
+          code: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: `删除文件失败: ${error.message}`,
+        });
+      } finally {
+        // 清理文件锁
+        this.fileLocks.delete(filePath);
+      }
+    });
+
+    this.fileLocks.set(filePath, newLock);
+    return newLock;
   }
 
   /**

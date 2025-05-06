@@ -291,6 +291,7 @@ export class FileService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+      // 使用悲观锁获取文件信息
       const files = await queryRunner.manager.find(FileEntity, {
         where: { id: In(fileIds) },
         lock: { mode: 'pessimistic_write' },
@@ -303,7 +304,8 @@ export class FileService {
         });
       }
 
-      // 检查权限
+      // 检查权限并分组文件
+      const filesByMd5 = new Map<string, FileEntity[]>();
       for (const file of files) {
         if (file.createdBy !== userId) {
           throw new RpcException({
@@ -311,25 +313,43 @@ export class FileService {
             message: '无权删除他人文件',
           });
         }
+
+        const filesWithSameMd5 = filesByMd5.get(file.fileMd5) || [];
+        filesWithSameMd5.push(file);
+        filesByMd5.set(file.fileMd5, filesWithSameMd5);
       }
 
-      // 检查每个文件的引用（排除当前文件）
-      const filesToDelete: FileEntity[] = [];
-      for (const file of files) {
-        const referenceCount = await queryRunner.manager.count(FileEntity, {
-          where: {
-            fileMd5: file.fileMd5,
-            id: Not(file.id), // 排除当前文件
-          },
-          lock: { mode: 'pessimistic_write' },
-        });
+      // 获取所有需要检查引用的文件MD5
+      const md5sToCheck = Array.from(filesByMd5.keys());
 
-        if (referenceCount === 0) {
-          filesToDelete.push(file);
+      // 一次性查询所有引用
+      const allReferences = await queryRunner.manager.find(FileEntity, {
+        where: {
+          fileMd5: In(md5sToCheck),
+          id: Not(In(fileIds)),
+        },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      // 按MD5分组引用
+      const referencesByMd5 = new Map<string, FileEntity[]>();
+      for (const ref of allReferences) {
+        const refs = referencesByMd5.get(ref.fileMd5) || [];
+        refs.push(ref);
+        referencesByMd5.set(ref.fileMd5, refs);
+      }
+
+      // 确定需要删除的实际文件
+      const filesToDelete: FileEntity[] = [];
+      for (const [md5, files] of filesByMd5) {
+        const references = referencesByMd5.get(md5) || [];
+        if (references.length === 0) {
+          // 只取第一个文件进行物理删除，因为相同MD5的文件内容相同
+          filesToDelete.push(files[0]);
         }
       }
 
-      // 删除实际文件
+      // 并行删除实际文件
       const deletionPromises = filesToDelete.map((file) =>
         this.fileOperationService.deleteFile(file.filePath),
       );
