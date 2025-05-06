@@ -113,7 +113,7 @@ export class UserController {
 
   @Get('avatar')
   @ApiOperation({ summary: '获取头像', description: '获取当前登录用户的头像' })
-  @ApiBinaryResponse(HttpStatus.OK, '获取成功', 'image/*')
+  @ApiBinaryResponse(HttpStatus.OK, '获取成功')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '头像不存在')
   async getAvatar(@Req() req: Request, @Res() res: Response) {
