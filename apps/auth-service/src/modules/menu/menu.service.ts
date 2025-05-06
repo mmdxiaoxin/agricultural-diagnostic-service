@@ -1,6 +1,6 @@
 import { Menu } from '@app/database/entities/menu.entity';
 import { RedisService } from '@app/redis';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -8,6 +8,7 @@ import { In, Repository } from 'typeorm';
 export class MenuService {
   private readonly CACHE_PREFIX = 'menu:routes:';
   private readonly CACHE_TTL = 3600; // 缓存1小时
+  private readonly logger = new Logger(MenuService.name);
 
   constructor(
     @InjectRepository(Menu)
@@ -19,13 +20,18 @@ export class MenuService {
     // 生成缓存key
     const cacheKey = this.CACHE_PREFIX + roles.sort().join(':');
 
-    // 尝试从缓存获取
-    const cachedRoutes = await this.redisService.get<any[]>(cacheKey);
-    if (cachedRoutes) {
-      return cachedRoutes;
+    try {
+      // 尝试从缓存获取
+      const cachedRoutes = await this.redisService.get<any[]>(cacheKey);
+      if (cachedRoutes) {
+        return cachedRoutes;
+      }
+    } catch (error) {
+      this.logger.warn(`从缓存获取菜单路由失败: ${error.message}`);
+      // 缓存错误不影响主流程，继续从数据库获取
     }
 
-    // 缓存未命中，从数据库获取
+    // 缓存未命中或出错，从数据库获取
     const menus = await this.menuRepository.find({
       relations: ['parent', 'children', 'roles'],
       where: {
@@ -56,8 +62,13 @@ export class MenuService {
     // 生成菜单树
     const menuTree = buildMenuTree(null);
 
-    // 存入缓存
-    await this.redisService.set(cacheKey, menuTree, this.CACHE_TTL);
+    try {
+      // 存入缓存
+      await this.redisService.set(cacheKey, menuTree, this.CACHE_TTL);
+    } catch (error) {
+      this.logger.warn(`缓存菜单路由失败: ${error.message}`);
+      // 缓存错误不影响主流程，继续返回数据
+    }
 
     return menuTree;
   }
@@ -79,11 +90,16 @@ export class MenuService {
 
   // 清除所有菜单相关的缓存
   private async clearMenuCache() {
-    const keys = await this.redisService
-      .getClient()
-      .keys(`${this.CACHE_PREFIX}*`);
-    if (keys.length > 0) {
-      await this.redisService.getClient().del(...keys);
+    try {
+      const keys = await this.redisService
+        .getClient()
+        .keys(`${this.CACHE_PREFIX}*`);
+      if (keys.length > 0) {
+        await this.redisService.getClient().del(...keys);
+      }
+    } catch (error) {
+      this.logger.error(`清除菜单缓存失败: ${error.message}`);
+      // 缓存清除失败不影响主流程
     }
   }
 
@@ -92,7 +108,9 @@ export class MenuService {
     const menu = this.menuRepository.create(menuData);
     const result = await this.menuRepository.save(menu);
     // 清除缓存
-    await this.clearMenuCache();
+    await this.clearMenuCache().catch((error) => {
+      this.logger.warn(`创建菜单后清除缓存失败: ${error.message}`);
+    });
     return result;
   }
 
@@ -100,7 +118,9 @@ export class MenuService {
   async update(id: number, menuData: Partial<Menu>) {
     await this.menuRepository.update(id, menuData);
     // 清除缓存
-    await this.clearMenuCache();
+    await this.clearMenuCache().catch((error) => {
+      this.logger.warn(`更新菜单后清除缓存失败: ${error.message}`);
+    });
     return this.findOne(id);
   }
 
@@ -108,6 +128,8 @@ export class MenuService {
   async remove(id: number): Promise<void> {
     await this.menuRepository.delete(id);
     // 清除缓存
-    await this.clearMenuCache();
+    await this.clearMenuCache().catch((error) => {
+      this.logger.warn(`删除菜单后清除缓存失败: ${error.message}`);
+    });
   }
 }
