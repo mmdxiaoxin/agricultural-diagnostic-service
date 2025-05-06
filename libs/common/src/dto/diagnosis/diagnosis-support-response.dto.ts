@@ -26,7 +26,4 @@ export class DiagnosisSupportResponseDto {
 
   @ApiProperty({ description: '诊断支持更新时间' })
   updatedAt: Date;
-
-  @ApiProperty({ description: '诊断支持状态' })
-  status: string;
 }
