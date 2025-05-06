@@ -2,7 +2,7 @@ import { Profile, Role, User } from '@app/database/entities';
 import { RedisService } from '@app/redis';
 import { UpdateUserStatusDto } from '@common/dto/user/update-user-status.dto';
 import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -18,6 +18,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
  */
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   private avatarPath = path.join(__dirname, '..', '..', 'avatar');
 
   constructor(
@@ -319,9 +320,23 @@ export class UserService {
   }
 
   async getAvatar(userId: number) {
+    // 尝试从缓存获取头像
+    const cacheKey = `avatar:${userId}`;
+    const cachedAvatar = await this.redisService.get<{
+      avatar: string;
+      fileName: string;
+      mimeType: string;
+    }>(cacheKey);
+
+    if (cachedAvatar) {
+      return formatResponse(200, cachedAvatar, '头像获取成功(缓存)');
+    }
+
+    // 从数据库获取用户信息
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['profile'],
+      select: ['id', 'profile'],
     });
 
     if (!user) {
@@ -344,20 +359,29 @@ export class UserService {
       });
     }
 
-    // 读取文件
-    const avatarBuffer = await fs.promises.readFile(avatarPath);
-    const fileName = path.basename(avatarPath); // 获取文件名
-    const mimeType = mime.lookup(avatarPath) || 'application/octet-stream'; // 获取 MIME 类型
+    try {
+      // 读取文件
+      const avatarBuffer = await fs.promises.readFile(avatarPath);
+      const fileName = path.basename(avatarPath);
+      const mimeType = mime.lookup(avatarPath) || 'application/octet-stream';
 
-    return formatResponse(
-      200,
-      {
+      const avatarData = {
         avatar: avatarBuffer.toString('base64'),
         fileName,
         mimeType,
-      },
-      '头像获取成功',
-    );
+      };
+
+      // 缓存头像数据（1小时）
+      await this.redisService.set(cacheKey, avatarData, 3600);
+
+      return formatResponse(200, avatarData, '头像获取成功');
+    } catch (error) {
+      this.logger.error(`读取头像文件失败: ${error.message}`, error.stack);
+      throw new RpcException({
+        code: 500,
+        message: '读取头像文件失败',
+      });
+    }
   }
 
   async profileUpdate(userId: number, profile: Partial<Profile>) {
@@ -388,46 +412,66 @@ export class UserService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
     try {
+      // 获取用户信息
       const user = await queryRunner.manager.findOne(User, {
         where: { id: userId },
         relations: ['profile'],
+        select: ['id', 'profile'],
       });
+
       if (!user) {
         throw new RpcException({
           code: 404,
           message: '用户未找到',
         });
       }
+
       let profile = user.profile;
       if (!profile) {
         profile = this.profileRepository.create({ user });
       }
-      // 删除旧头像文件
+
+      // 删除旧头像文件和缓存
       if (profile.avatar) {
         try {
           await fs.promises.unlink(profile.avatar);
+          await this.redisService.del(`avatar:${userId}`);
         } catch (error) {
-          console.error('删除旧头像失败:', error);
+          this.logger.warn(`删除旧头像失败: ${error.message}`);
         }
       }
-      // 保存头像文件
+
+      // 生成新的文件名和路径
       const fileExtension = mimetype === 'image/png' ? '.png' : '.jpg';
-      const fileName = `${userId}${fileExtension}`;
+      const fileName = `${userId}_${Date.now()}${fileExtension}`;
       const filePath = path.join(this.avatarPath, fileName);
 
+      // 保存新头像
       await fs.promises.writeFile(filePath, fileData);
 
+      // 更新数据库
       profile.avatar = filePath;
-
-      await queryRunner.manager.save(user);
       await queryRunner.manager.save(profile);
+
+      // 更新缓存
+      const avatarData = {
+        avatar: fileData.toString('base64'),
+        fileName,
+        mimeType: mimetype,
+      };
+      await this.redisService.set(`avatar:${userId}`, avatarData, 3600);
+
       await queryRunner.commitTransaction();
       return formatResponse(200, null, '上传头像成功');
     } catch (error) {
-      // 发生错误时回滚
       await queryRunner.rollbackTransaction();
-      throw error;
+      this.logger.error(`上传头像失败: ${error.message}`, error.stack);
+      throw new RpcException({
+        code: 500,
+        message: '上传头像失败',
+      });
     } finally {
       await queryRunner.release();
     }
