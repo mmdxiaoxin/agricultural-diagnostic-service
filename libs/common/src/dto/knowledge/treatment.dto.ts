@@ -12,9 +12,18 @@ export class TreatmentDto extends BaseDto {
   })
   type: TreatmentType;
 
-  @ApiProperty({ description: '治疗方式方法', required: true })
+  @ApiProperty({
+    description: '治疗方式方法',
+    required: true,
+    example: '使用三唑酮、戊唑醇等杀菌剂进行防治',
+  })
   method: string;
 
-  @ApiProperty({ description: '推荐产品', required: false })
-  recommendedProducts?: string;
+  @ApiProperty({
+    description: '推荐产品',
+    required: false,
+    nullable: true,
+    example: "'三唑酮', '戊唑醇'",
+  })
+  recommendedProducts?: string | null;
 }
