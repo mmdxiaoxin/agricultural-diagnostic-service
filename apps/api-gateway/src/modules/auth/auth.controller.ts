@@ -23,22 +23,6 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 
-// 定义响应模型
-class UserResponse {
-  id: number;
-  username: string;
-  email: string;
-  roles: string[];
-  createdAt?: string;
-}
-
-class ButtonResponse {
-  id: number;
-  name: string;
-  description: string;
-  code: string;
-}
-
 @ApiTags('权限认证模块')
 @Controller('auth')
 export class AuthController {
@@ -47,7 +31,7 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: '用户注册', description: '创建新用户账号' })
-  @ApiResponse(HttpStatus.CREATED, '注册成功', UserResponse)
+  @ApiResponse(HttpStatus.CREATED, '注册成功')
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   async register(@Req() req: Request, @Body() dto: RegisterDto) {
     return this.authService.register(req, dto);
@@ -90,7 +74,7 @@ export class AuthController {
     summary: '获取按钮权限',
     description: '获取当前用户的按钮权限列表',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功', ButtonResponse, true)
+  @ApiResponse(HttpStatus.OK, '获取成功')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiBearerAuth()
   async buttonsGet() {
