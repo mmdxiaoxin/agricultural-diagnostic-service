@@ -37,6 +37,9 @@ export class DiagnosisHistory extends BaseEntity {
   @OneToMany(() => DiagnosisLog, (log) => log.diagnosis)
   logs: DiagnosisLog[];
 
-  @OneToMany(() => DiagnosisFeedback, (feedback) => feedback.diagnosis)
+  @OneToMany(() => DiagnosisFeedback, (feedback) => feedback.diagnosis, {
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+  })
   feedbacks: DiagnosisFeedback[];
 }
