@@ -149,20 +149,24 @@ export class DiagnosisHistoryService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      // 先获取诊断记录，不锁定
+      // 使用乐观锁获取诊断记录
       const diagnosis = await queryRunner.manager.findOne(DiagnosisHistory, {
         where: { id, createdBy: userId },
+        select: ['id', 'fileId', 'version'],
       });
 
       if (!diagnosis) {
         this.logger.error(`Diagnosis with ID ${id} not found`);
-        throw new RpcException('未找到诊断记录');
+        throw new RpcException({
+          code: 404,
+          message: '未找到诊断记录',
+        });
       }
 
       // 先删除文件
       try {
         await firstValueFrom(
-          this.fileClient.send<{ success: boolean }>(
+          this.fileClient.send(
             { cmd: FILE_MESSAGE_PATTERNS.FILE_DELETE },
             {
               fileId: diagnosis.fileId,
@@ -179,8 +183,19 @@ export class DiagnosisHistoryService {
         });
       }
 
-      // 删除诊断记录
-      await queryRunner.manager.delete(DiagnosisHistory, id);
+      // 使用乐观锁删除诊断记录
+      const deleteResult = await queryRunner.manager.delete(DiagnosisHistory, {
+        id,
+        version: diagnosis.version,
+      });
+
+      if (deleteResult.affected === 0) {
+        throw new RpcException({
+          code: 409,
+          message: '诊断记录已被其他操作修改，请重试',
+        });
+      }
+
       await queryRunner.commitTransaction();
 
       // 清除相关缓存
@@ -189,6 +204,9 @@ export class DiagnosisHistoryService {
       return formatResponse(204, null, '删除诊断记录成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      if (error instanceof RpcException) {
+        throw error;
+      }
       throw new RpcException({
         code: 500,
         message: '删除诊断记录失败',
@@ -205,16 +223,20 @@ export class DiagnosisHistoryService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      // 先获取诊断记录列表，不锁定
+      // 使用乐观锁获取诊断记录列表
       const diagnosisList = await queryRunner.manager.find(DiagnosisHistory, {
         where: { id: In(diagnosisIds), createdBy: userId },
+        select: ['id', 'fileId', 'version'],
       });
 
       if (diagnosisList.length !== diagnosisIds.length) {
         this.logger.error(
           `Some diagnoses not found: ${diagnosisIds.join(',')}`,
         );
-        throw new RpcException('未找到诊断记录');
+        throw new RpcException({
+          code: 404,
+          message: '未找到诊断记录',
+        });
       }
 
       // 先删除文件
@@ -237,8 +259,24 @@ export class DiagnosisHistoryService {
         });
       }
 
-      // 删除诊断记录
-      await queryRunner.manager.delete(DiagnosisHistory, diagnosisIds);
+      // 使用乐观锁批量删除诊断记录
+      const deletePromises = diagnosisList.map((diagnosis) =>
+        queryRunner.manager.delete(DiagnosisHistory, {
+          id: diagnosis.id,
+          version: diagnosis.version,
+        }),
+      );
+
+      const deleteResults = await Promise.all(deletePromises);
+      const hasConflict = deleteResults.some((result) => result.affected === 0);
+
+      if (hasConflict) {
+        throw new RpcException({
+          code: 409,
+          message: '部分诊断记录已被其他操作修改，请重试',
+        });
+      }
+
       await queryRunner.commitTransaction();
 
       // 清除相关缓存
@@ -247,6 +285,9 @@ export class DiagnosisHistoryService {
       return formatResponse(204, null, '删除诊断记录成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      if (error instanceof RpcException) {
+        throw error;
+      }
       throw new RpcException({
         code: 500,
         message: '删除诊断记录失败',

@@ -238,9 +238,10 @@ export class FileService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      // 先获取文件信息，不锁定
+      // 使用乐观锁获取文件信息
       const file = await queryRunner.manager.findOne(FileEntity, {
         where: { id: fileId },
+        select: ['id', 'fileMd5', 'filePath', 'createdBy', 'version'],
       });
 
       if (!file) {
@@ -263,6 +264,7 @@ export class FileService {
           fileMd5: file.fileMd5,
           id: Not(fileId),
         },
+        select: ['id'],
       });
 
       // 如果没有其他引用，则删除实际文件
@@ -271,17 +273,39 @@ export class FileService {
           await this.fileOperationService.deleteFile(file.filePath);
         } catch (error) {
           this.logger.error(`Failed to delete physical file: ${error.message}`);
-          throw new RpcException('删除物理文件失败');
+          throw new RpcException({
+            code: HttpStatus.INTERNAL_SERVER_ERROR,
+            message: '删除物理文件失败',
+            data: error,
+          });
         }
       }
 
-      // 删除文件元数据
-      await queryRunner.manager.delete(FileEntity, fileId);
+      // 使用乐观锁删除文件元数据
+      const deleteResult = await queryRunner.manager.delete(FileEntity, {
+        id: fileId,
+        version: file.version, // 乐观锁
+      });
+
+      if (deleteResult.affected === 0) {
+        throw new RpcException({
+          code: HttpStatus.CONFLICT,
+          message: '文件已被其他操作修改，请重试',
+        });
+      }
+
       await queryRunner.commitTransaction();
       return formatResponse(204, null, '成功删除文件');
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw error;
+      if (error instanceof RpcException) {
+        throw error;
+      }
+      throw new RpcException({
+        code: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: '删除文件失败',
+        data: error,
+      });
     } finally {
       await queryRunner.release();
     }
@@ -297,9 +321,10 @@ export class FileService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      // 获取文件信息，不锁定
+      // 获取文件信息，包含版本号
       const files = await queryRunner.manager.find(FileEntity, {
         where: { id: In(fileIds) },
+        select: ['id', 'fileMd5', 'filePath', 'createdBy', 'version'],
       });
 
       if (files.length === 0) {
@@ -333,6 +358,7 @@ export class FileService {
           fileMd5: In(md5sToCheck),
           id: Not(In(fileIds)),
         },
+        select: ['id', 'fileMd5'],
       });
 
       // 按MD5分组引用
@@ -360,16 +386,43 @@ export class FileService {
         await Promise.all(deletionPromises);
       } catch (error) {
         this.logger.error(`Failed to delete physical files: ${error.message}`);
-        throw new RpcException('删除物理文件失败');
+        throw new RpcException({
+          code: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: '删除物理文件失败',
+          data: error,
+        });
       }
 
-      // 删除文件元数据
-      await queryRunner.manager.delete(FileEntity, fileIds);
+      // 使用乐观锁批量删除文件元数据
+      const deletePromises = files.map((file) =>
+        queryRunner.manager.delete(FileEntity, {
+          id: file.id,
+          version: file.version,
+        }),
+      );
+
+      const deleteResults = await Promise.all(deletePromises);
+      const hasConflict = deleteResults.some((result) => result.affected === 0);
+
+      if (hasConflict) {
+        throw new RpcException({
+          code: HttpStatus.CONFLICT,
+          message: '部分文件已被其他操作修改，请重试',
+        });
+      }
+
       await queryRunner.commitTransaction();
       return formatResponse(204, null, '成功批量删除文件');
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw error;
+      if (error instanceof RpcException) {
+        throw error;
+      }
+      throw new RpcException({
+        code: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: '批量删除文件失败',
+        data: error,
+      });
     } finally {
       await queryRunner.release();
     }

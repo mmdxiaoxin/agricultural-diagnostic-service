@@ -5,6 +5,7 @@ import {
   OneToMany,
   OneToOne,
   JoinColumn,
+  VersionColumn,
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { DiagnosisLog } from './diagnosis-log.entity';
@@ -45,6 +46,9 @@ export class DiagnosisHistory extends BaseEntity {
 
   @Column({ type: 'int', comment: '更新者' })
   updatedBy: number; // 更新者
+
+  @VersionColumn({ comment: '版本号' })
+  version: number;
 
   @OneToMany(() => DiagnosisLog, (log) => log.diagnosis)
   logs: DiagnosisLog[];
