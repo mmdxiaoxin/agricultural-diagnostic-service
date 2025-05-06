@@ -220,7 +220,7 @@ export class DiagnosisHistoryService {
       // 先删除文件
       try {
         await firstValueFrom(
-          this.fileClient.send<{ success: boolean }>(
+          this.fileClient.send(
             { cmd: FILE_MESSAGE_PATTERNS.FILE_DELETE_BATCH },
             {
               fileIds: diagnosisList.map((diagnosis) => diagnosis.fileId),
