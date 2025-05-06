@@ -4,7 +4,7 @@ import {
   ApiResponse,
 } from '@common/decorator/api-response.decorator';
 import { Roles } from '@common/decorator/roles.decorator';
-import { DictDto } from '@common/dto/dict.dto';
+import { NumberDictDto } from '@common/dto/dict.dto';
 import { CreateRoleDto } from '@common/dto/role/create-role.dto';
 import { RoleDto } from '@common/dto/role/role.dto';
 import { UpdateRoleDto } from '@common/dto/role/update-role.dto';
@@ -50,7 +50,7 @@ export class RoleController {
     summary: '获取角色字典',
     description: '获取系统中所有角色的字典数据',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功', DictDto, true)
+  @ApiResponse(HttpStatus.OK, '获取成功', NumberDictDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async dict() {
     const dict = await lastValueFrom(
