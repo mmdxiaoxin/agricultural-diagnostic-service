@@ -8,35 +8,94 @@ const getServerInfo = () => {
   const freeMemory = os.freemem();
   const cpus = os.cpus();
   const cpuCores = cpus.length;
+  const platform = os.platform();
+  const release = os.release();
+  const hostname = os.hostname();
+  const uptime = os.uptime();
+  const loadAvg = os.loadavg();
+
+  // 计算CPU使用率
+  const cpuUsage = cpus.map((cpu) => {
+    const total = Object.values(cpu.times).reduce((acc, tv) => acc + tv, 0);
+    const idle = cpu.times.idle;
+    return (((total - idle) / total) * 100).toFixed(2);
+  });
+
+  // 格式化运行时间
+  const formatUptime = (seconds) => {
+    const days = Math.floor(seconds / (3600 * 24));
+    const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${days}天 ${hours}小时 ${minutes}分钟`;
+  };
 
   return {
-    totalMemory: Math.floor(totalMemory / (1024 * 1024 * 1024)), // 转换为GB
-    freeMemory: Math.floor(freeMemory / (1024 * 1024 * 1024)), // 转换为GB
-    cpuCores,
+    system: {
+      platform,
+      release,
+      hostname,
+      uptime: formatUptime(uptime),
+    },
+    cpu: {
+      cores: cpuCores,
+      model: cpus[0].model,
+      speed: `${cpus[0].speed}MHz`,
+      usage: cpuUsage,
+      loadAverage: loadAvg.map((load) => load.toFixed(2)),
+    },
+    memory: {
+      total: Math.floor(totalMemory / (1024 * 1024 * 1024)), // 转换为GB
+      free: Math.floor(freeMemory / (1024 * 1024 * 1024)), // 转换为GB
+      used: Math.floor((totalMemory - freeMemory) / (1024 * 1024 * 1024)), // 转换为GB
+      usage: Math.floor(((totalMemory - freeMemory) / totalMemory) * 100), // 使用率百分比
+    },
   };
 };
 
 // 计算服务配置
 const calculateServiceConfig = (serverInfo) => {
-  const { totalMemory, cpuCores } = serverInfo;
+  const { memory, cpu } = serverInfo;
+  const totalCores = cpu.cores;
 
   // 预留系统内存（20%）
-  const availableMemory = Math.floor(totalMemory * 0.8);
+  const availableMemory = Math.floor(memory.total * 0.8);
 
   // 计算每个服务的配置
+  const diagnosis = {
+    instances: Math.max(1, Math.floor(totalCores * 0.3)), // 使用30%的CPU核心
+    memory: Math.min(4, Math.floor(availableMemory * 0.3)), // 使用30%的可用内存，最大4GB
+  };
+
+  const gateway = {
+    instances: Math.max(1, Math.floor(totalCores * 0.2)), // 使用20%的CPU核心
+    memory: Math.min(2, Math.floor(availableMemory * 0.15)), // 使用15%的可用内存，最大2GB
+  };
+
+  const other = {
+    instances: Math.max(1, Math.floor(totalCores * 0.1)), // 使用10%的CPU核心
+    memory: Math.min(1, Math.floor(availableMemory * 0.1)), // 使用10%的可用内存，最大1GB
+  };
+
+  // 确保总实例数不超过CPU核心数
+  const totalInstances =
+    diagnosis.instances + gateway.instances + other.instances * 6; // 6个其他服务
+  if (totalInstances > totalCores) {
+    const scaleFactor = totalCores / totalInstances;
+    diagnosis.instances = Math.max(
+      1,
+      Math.floor(diagnosis.instances * scaleFactor),
+    );
+    gateway.instances = Math.max(
+      1,
+      Math.floor(gateway.instances * scaleFactor),
+    );
+    other.instances = Math.max(1, Math.floor(other.instances * scaleFactor));
+  }
+
   return {
-    diagnosis: {
-      instances: Math.max(4, Math.floor(cpuCores * 0.5)), // 至少4个实例，最多使用50%的CPU核心
-      memory: Math.min(4, Math.floor(availableMemory * 0.3)), // 使用30%的可用内存，最大4GB
-    },
-    apiGateway: {
-      instances: Math.max(2, Math.floor(cpuCores * 0.25)), // 至少2个实例，最多使用25%的CPU核心
-      memory: Math.min(2, Math.floor(availableMemory * 0.15)), // 使用15%的可用内存，最大2GB
-    },
-    otherServices: {
-      instances: Math.max(1, Math.floor(cpuCores * 0.125)), // 至少1个实例，最多使用12.5%的CPU核心
-      memory: Math.min(1, Math.floor(availableMemory * 0.1)), // 使用10%的可用内存，最大1GB
-    },
+    diagnosis,
+    apiGateway: gateway,
+    otherServices: other,
   };
 };
 
@@ -54,8 +113,28 @@ const productionEnv = loadEnv('.env.production.local');
 const serverInfo = getServerInfo();
 const serviceConfig = calculateServiceConfig(serverInfo);
 
-console.log('服务器信息:', serverInfo);
-console.log('服务配置:', serviceConfig);
+console.log('\n=== 服务器系统信息 ===');
+console.log(
+  `系统平台: ${serverInfo.system.platform} ${serverInfo.system.release}`,
+);
+console.log(`主机名: ${serverInfo.system.hostname}`);
+console.log(`运行时间: ${serverInfo.system.uptime}`);
+
+console.log('\n=== CPU信息 ===');
+console.log(`CPU型号: ${serverInfo.cpu.model}`);
+console.log(`CPU核心数: ${serverInfo.cpu.cores}`);
+console.log(`CPU频率: ${serverInfo.cpu.speed}`);
+console.log(`CPU使用率: ${serverInfo.cpu.usage.join('% ')}%`);
+console.log(`系统负载: ${serverInfo.cpu.loadAverage.join(', ')}`);
+
+console.log('\n=== 内存信息 ===');
+console.log(`总内存: ${serverInfo.memory.total}GB`);
+console.log(`已用内存: ${serverInfo.memory.used}GB`);
+console.log(`空闲内存: ${serverInfo.memory.free}GB`);
+console.log(`内存使用率: ${serverInfo.memory.usage}%`);
+
+console.log('\n=== 服务配置 ===');
+console.log(JSON.stringify(serviceConfig, null, 2));
 
 // 通用配置
 const commonConfig = {
