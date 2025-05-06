@@ -4,10 +4,10 @@ import {
   ApiResponse,
 } from '@common/decorator/api-response.decorator';
 import { Roles } from '@common/decorator/roles.decorator';
+import { CreateDiagnosisSupportDto } from '@common/dto/diagnosis/create-diagnosis-support.dto';
 import { CreateFeedbackDto } from '@common/dto/diagnosis/create-feedback.dto';
 import { DiagnosisHistoryDto } from '@common/dto/diagnosis/diagnosis-history.dto';
 import { DiagnosisSupportDto } from '@common/dto/diagnosis/diagnosis-support.dto';
-import { CreateDiagnosisSupportDto } from '@common/dto/diagnosis/create-diagnosis-support.dto';
 import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
@@ -16,6 +16,8 @@ import { createPageResponseDto } from '@common/dto/page-response.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
+import { FileSizeValidationPipe } from '@common/pipe/file-size.pipe';
+import { FileTypeValidationPipe } from '@common/pipe/file-type.pipe';
 import {
   Body,
   Controller,
@@ -46,8 +48,6 @@ import {
 import { MIME_TYPE } from '@shared/enum/mime.enum';
 import { Role } from '@shared/enum/role.enum';
 import { Request } from 'express';
-import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
-import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { DiagnosisService } from './diagnosis.service';
 
 @ApiTags('病害诊断模块')

@@ -17,6 +17,7 @@ import { UploadChunkDto } from '@common/dto/file/upload-chunk.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
+import { FileSizeValidationPipe } from '@common/pipe/file-size.pipe';
 import {
   Body,
   Controller,
@@ -50,7 +51,6 @@ import { Request, Response } from 'express';
 import { FileGuard } from '../file/guards/file.guard';
 import { FileService } from './file.service';
 import { FilesGuard } from './guards/files.guard';
-import { FileSizeValidationPipe } from './pipe/file-size.pipe';
 
 @ApiTags('文件模块')
 @Controller('file')

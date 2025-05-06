@@ -16,6 +16,8 @@ import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { UserDto } from '@common/dto/user/user.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
+import { FileSizeValidationPipe } from '@common/pipe/file-size.pipe';
+import { FileTypeValidationPipe } from '@common/pipe/file-type.pipe';
 import {
   Body,
   Controller,
@@ -46,8 +48,6 @@ import {
 import { MIME_TYPE } from '@shared/enum/mime.enum';
 import { Role } from '@shared/enum/role.enum';
 import { Request, Response } from 'express';
-import { FileSizeValidationPipe } from '../file/pipe/file-size.pipe';
-import { FileTypeValidationPipe } from '../file/pipe/file-type.pipe';
 import { UserService } from './user.service';
 
 @ApiTags('用户模块')
