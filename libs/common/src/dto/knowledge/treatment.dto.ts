@@ -23,6 +23,7 @@ export class TreatmentDto extends BaseDto {
     description: '推荐产品',
     required: false,
     nullable: true,
+    type: String,
     example: "'三唑酮', '戊唑醇'",
   })
   recommendedProducts?: string | null;
