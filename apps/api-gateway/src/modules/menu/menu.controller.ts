@@ -1,9 +1,10 @@
-import { Roles } from '@common/decorator/roles.decorator';
 import {
   ApiErrorResponse,
-  ApiResponse,
   ApiNullResponse,
+  ApiResponse,
 } from '@common/decorator/api-response.decorator';
+import { Roles } from '@common/decorator/roles.decorator';
+import { RouteItemDto } from '@common/dto/menu/route.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import {
@@ -22,10 +23,10 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
-  ApiTags,
-  ApiOperation,
   ApiBearerAuth,
+  ApiOperation,
   ApiParam,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@shared/enum/role.enum';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -47,7 +48,7 @@ export class MenuController {
     summary: '获取个人路由权限',
     description: '获取当前登录用户的路由权限列表',
   })
-  @ApiResponse(HttpStatus.OK, '获取成功')
+  @ApiResponse(HttpStatus.OK, '获取成功', RouteItemDto, true)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   async getRoutes(@Req() req: Request) {
     const roles = req.user.roles;
