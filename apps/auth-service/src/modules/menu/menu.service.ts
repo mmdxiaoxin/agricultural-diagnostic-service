@@ -1,16 +1,31 @@
 import { Menu } from '@app/database/entities/menu.entity';
+import { RedisService } from '@app/redis';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class MenuService {
+  private readonly CACHE_PREFIX = 'menu:routes:';
+  private readonly CACHE_TTL = 3600; // 缓存1小时
+
   constructor(
     @InjectRepository(Menu)
     private readonly menuRepository: Repository<Menu>,
+    private readonly redisService: RedisService,
   ) {}
 
   async findAuthRoutes(roles: string[]) {
+    // 生成缓存key
+    const cacheKey = this.CACHE_PREFIX + roles.sort().join(':');
+
+    // 尝试从缓存获取
+    const cachedRoutes = await this.redisService.get<any[]>(cacheKey);
+    if (cachedRoutes) {
+      return cachedRoutes;
+    }
+
+    // 缓存未命中，从数据库获取
     const menus = await this.menuRepository.find({
       relations: ['parent', 'children', 'roles'],
       where: {
@@ -22,24 +37,29 @@ export class MenuService {
     });
 
     // 按照 sort 属性对菜单进行排序
-    menus.sort((a, b) => a.sort - b.sort); // 升序排序，如果是降序则改为 b.sort - a.sort
+    menus.sort((a, b) => a.sort - b.sort);
 
     // 构建菜单树
     const buildMenuTree = (parentId: number | null): any[] => {
       return menus
         .filter((menu) => menu.parentId === parentId)
-        .sort((a, b) => a.sort - b.sort) // 对每一层级的菜单进行排序
+        .sort((a, b) => a.sort - b.sort)
         .map((menu) => ({
           icon: menu.icon,
           title: menu.title,
           path: menu.path,
           isLink: menu.isLink,
-          children: buildMenuTree(menu.id), // 递归构建子菜单
+          children: buildMenuTree(menu.id),
         }));
     };
 
-    // 返回顶层菜单
-    return buildMenuTree(null);
+    // 生成菜单树
+    const menuTree = buildMenuTree(null);
+
+    // 存入缓存
+    await this.redisService.set(cacheKey, menuTree, this.CACHE_TTL);
+
+    return menuTree;
   }
 
   // 获取所有菜单
@@ -57,20 +77,37 @@ export class MenuService {
     });
   }
 
+  // 清除所有菜单相关的缓存
+  private async clearMenuCache() {
+    const keys = await this.redisService
+      .getClient()
+      .keys(`${this.CACHE_PREFIX}*`);
+    if (keys.length > 0) {
+      await this.redisService.getClient().del(...keys);
+    }
+  }
+
   // 创建新菜单
   async create(menuData: Partial<Menu>): Promise<Menu> {
     const menu = this.menuRepository.create(menuData);
-    return this.menuRepository.save(menu);
+    const result = await this.menuRepository.save(menu);
+    // 清除缓存
+    await this.clearMenuCache();
+    return result;
   }
 
   // 更新菜单
   async update(id: number, menuData: Partial<Menu>) {
     await this.menuRepository.update(id, menuData);
+    // 清除缓存
+    await this.clearMenuCache();
     return this.findOne(id);
   }
 
   // 删除菜单
   async remove(id: number): Promise<void> {
     await this.menuRepository.delete(id);
+    // 清除缓存
+    await this.clearMenuCache();
   }
 }
