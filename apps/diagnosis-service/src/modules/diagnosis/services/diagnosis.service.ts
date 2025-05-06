@@ -9,7 +9,7 @@ import {
 import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { PredictionData } from '@common/types/diagnosis/predict';
-import { GrpcDownloadService } from '@common/types/download/download.type';
+import { GrpcDownloadService } from '@common/types/download/download.types';
 import { MatchResult } from '@common/types/knowledge/rule';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger } from '@nestjs/common';

@@ -3,7 +3,7 @@ import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
 import { UpdateDatasetAccessDto } from '@common/dto/dataset/update-dataset-access.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
 import { DatasetQueryDto } from '@common/dto/diagnosis/dastaset-query.dto';
-import { GrpcDownloadService } from '@common/types/download/download.type';
+import { GrpcDownloadService } from '@common/types/download/download.types';
 import {
   HttpException,
   HttpStatus,

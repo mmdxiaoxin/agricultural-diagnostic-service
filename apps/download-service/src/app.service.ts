@@ -4,7 +4,7 @@ import {
   DownloadFileResponse,
   DownloadFilesRequest,
   DownloadFilesResponse,
-} from '@common/types/download/download.type';
+} from '@common/types/download/download.types';
 import { Injectable, Logger } from '@nestjs/common';
 import * as archiver from 'archiver';
 import { createReadStream, existsSync } from 'fs';

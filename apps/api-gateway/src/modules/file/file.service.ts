@@ -7,7 +7,7 @@ import {
   UpdateFilesAccessDto,
 } from '@common/dto/file/update-file.dto';
 import { UploadChunkDto } from '@common/dto/file/upload-chunk.dto';
-import { GrpcDownloadService } from '@common/types/download/download.type';
+import { GrpcDownloadService } from '@common/types/download/download.types';
 import {
   HttpException,
   HttpStatus,
