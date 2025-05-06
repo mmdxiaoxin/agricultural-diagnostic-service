@@ -363,16 +363,21 @@ export class UserService {
   }
 
   async getAvatar(userId: number) {
-    // 尝试从缓存获取头像
+    // 尝试从缓存获取头像路径
     const cacheKey = `avatar:${userId}`;
-    const cachedAvatar = await this.redisService.get<{
-      avatar: string;
-      fileName: string;
-      mimeType: string;
-    }>(cacheKey);
+    const cachedAvatarPath = await this.redisService.get<string>(cacheKey);
 
-    if (cachedAvatar) {
-      return formatResponse(200, cachedAvatar, '头像获取成功(缓存)');
+    if (cachedAvatarPath) {
+      const fileName = path.basename(cachedAvatarPath);
+      const mimeType =
+        mime.lookup(cachedAvatarPath) || 'application/octet-stream';
+      const stream = fs.createReadStream(cachedAvatarPath);
+
+      return formatResponse(
+        200,
+        { stream, fileName, mimeType },
+        '头像获取成功(缓存)',
+      );
     }
 
     // 从数据库获取用户信息
@@ -403,21 +408,18 @@ export class UserService {
     }
 
     try {
-      // 读取文件
-      const avatarBuffer = await fs.promises.readFile(avatarPath);
       const fileName = path.basename(avatarPath);
       const mimeType = mime.lookup(avatarPath) || 'application/octet-stream';
+      const stream = fs.createReadStream(avatarPath);
 
-      const avatarData = {
-        avatar: avatarBuffer.toString('base64'),
-        fileName,
-        mimeType,
-      };
+      // 缓存头像路径（1小时）
+      await this.redisService.set(cacheKey, avatarPath, 3600);
 
-      // 缓存头像数据（1小时）
-      await this.redisService.set(cacheKey, avatarData, 3600);
-
-      return formatResponse(200, avatarData, '头像获取成功');
+      return formatResponse(
+        200,
+        { stream, fileName, mimeType },
+        '头像获取成功',
+      );
     } catch (error) {
       this.logger.error(`读取头像文件失败: ${error.message}`, error.stack);
       throw new RpcException({
