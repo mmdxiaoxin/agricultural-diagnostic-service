@@ -4,7 +4,7 @@ import {
   DownloadFileResponse,
   DownloadFilesRequest,
   DownloadFilesResponse,
-} from '@common/types/download/download.types';
+} from '@common/types/download/download.type';
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, MessagePattern, Payload } from '@nestjs/microservices';
 import { DOWNLOAD_MESSAGE_PATTERNS } from '@shared/constants/download-message-patterns';
