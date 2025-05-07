@@ -23,6 +23,7 @@ export class DiagnosisHistoryService {
     DIAGNOSIS: 'diagnosis',
     DIAGNOSIS_LIST: 'diagnosis:list',
     DIAGNOSIS_STATUS: 'diagnosis:status',
+    USER: 'user',
   } as const;
 
   constructor(
@@ -42,11 +43,14 @@ export class DiagnosisHistoryService {
     const prefix = this.CACHE_KEYS[type];
     switch (type) {
       case 'DIAGNOSIS':
-        return `${prefix}:${args[0]}:${args[1]}`; // diagnosis:id:userId
+        return `${this.CACHE_KEYS.USER}:${args[1]}:${prefix}:${args[0]}`; // user:userId:diagnosis:id
       case 'DIAGNOSIS_LIST':
-        return `${prefix}:${args[0]}:${args[1]}:${args[2]}`; // diagnosis:list:userId:page:pageSize
+        if (args[1] === 'all') {
+          return `${this.CACHE_KEYS.USER}:${args[0]}:${prefix}:all`; // user:userId:diagnosis:list:all
+        }
+        return `${this.CACHE_KEYS.USER}:${args[0]}:${prefix}:${args[1]}:${args[2]}`; // user:userId:diagnosis:list:page:pageSize
       case 'DIAGNOSIS_STATUS':
-        return `${prefix}:${args[0]}:${args[1]}`; // diagnosis:status:id:userId
+        return `${this.CACHE_KEYS.USER}:${args[1]}:${prefix}:${args[0]}`; // user:userId:diagnosis:status:id
       default:
         return prefix;
     }
@@ -54,12 +58,14 @@ export class DiagnosisHistoryService {
 
   // 清除相关缓存
   private async clearRelatedCache(userId: number, diagnosisId?: number) {
-    const patterns = [`${this.CACHE_KEYS.DIAGNOSIS_LIST}:${userId}:*`];
+    const patterns = [
+      `${this.CACHE_KEYS.USER}:${userId}:${this.CACHE_KEYS.DIAGNOSIS_LIST}:*`,
+    ];
 
     if (diagnosisId) {
       patterns.push(
-        `${this.CACHE_KEYS.DIAGNOSIS}:${diagnosisId}:${userId}`,
-        `${this.CACHE_KEYS.DIAGNOSIS_STATUS}:${diagnosisId}:${userId}`,
+        `${this.CACHE_KEYS.USER}:${userId}:${this.CACHE_KEYS.DIAGNOSIS}:${diagnosisId}`,
+        `${this.CACHE_KEYS.USER}:${userId}:${this.CACHE_KEYS.DIAGNOSIS_STATUS}:${diagnosisId}`,
       );
     }
 
