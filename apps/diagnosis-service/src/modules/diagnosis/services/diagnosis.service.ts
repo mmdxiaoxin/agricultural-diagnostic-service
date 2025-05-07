@@ -41,6 +41,7 @@ export class DiagnosisService {
     DIAGNOSIS: 'diagnosis',
     DIAGNOSIS_LIST: 'diagnosis:list',
     DIAGNOSIS_STATUS: 'diagnosis:status',
+    USER: 'user',
   } as const;
 
   constructor(
@@ -105,12 +106,14 @@ export class DiagnosisService {
 
   // 清除相关缓存
   private async clearRelatedCache(userId: number, diagnosisId?: number) {
-    const patterns = [`${this.CACHE_KEYS.DIAGNOSIS_LIST}:${userId}:*`];
+    const patterns = [
+      `${this.CACHE_KEYS.USER}:${userId}:${this.CACHE_KEYS.DIAGNOSIS_LIST}:*`,
+    ];
 
     if (diagnosisId) {
       patterns.push(
-        `${this.CACHE_KEYS.DIAGNOSIS}:${diagnosisId}:${userId}`,
-        `${this.CACHE_KEYS.DIAGNOSIS_STATUS}:${diagnosisId}:${userId}`,
+        `${this.CACHE_KEYS.USER}:${userId}:${this.CACHE_KEYS.DIAGNOSIS}:${diagnosisId}`,
+        `${this.CACHE_KEYS.USER}:${userId}:${this.CACHE_KEYS.DIAGNOSIS_STATUS}:${diagnosisId}`,
       );
     }
 
@@ -639,6 +642,9 @@ export class DiagnosisService {
       await this.logService.addLog(diagnosisId, LogLevel.INFO, '开始诊断任务', {
         status: DiagnosisHistoryStatus.PROCESSING,
       });
+
+      // 清除相关缓存
+      await this.clearRelatedCache(userId, diagnosisId);
 
       await queryRunner.commitTransaction();
 
