@@ -13,7 +13,6 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly MAX_LOGIN_ATTEMPTS = 10;
   private readonly LOCK_TIME = 1800; // 30分钟
-  private readonly CACHE_TTL = 3600; // 1小时
 
   constructor(
     private readonly jwt: JwtService,
@@ -61,23 +60,10 @@ export class AuthService {
       // 检查登录限制
       await this.checkLoginAttempts(login);
 
-      // 并行执行用户查询和密码验证
-      const [user, cachedToken] = await Promise.all([
-        this.getUserWithCache(login),
-        this.redis.get<string>(`token:${login}`),
-      ]);
-
-      // 如果存在缓存token，验证其有效性
-      if (cachedToken) {
-        const tokenData = JSON.parse(cachedToken);
-        const isValid = await this.validateAndCleanToken(
-          login,
-          tokenData.access_token,
-        );
-        if (isValid) {
-          return tokenData;
-        }
-      }
+      // 获取用户信息
+      const user = await firstValueFrom(
+        this.userClient.send({ cmd: 'user.find.byLogin' }, { login }),
+      );
 
       if (!user) {
         await this.handleLoginFailure(login, '账号不存在');
@@ -104,9 +90,10 @@ export class AuthService {
         });
       }
 
-      // 登录成功，生成token并缓存
+      // 登录成功，生成token
       const token = this.generateToken(user);
-      await this.cacheToken(login, token);
+
+      // 清除登录尝试次数
       await this.clearLoginAttempts(login);
 
       return token;
@@ -114,28 +101,6 @@ export class AuthService {
       this.logger.error(`登录失败: ${error.message}`, error.stack);
       throw error;
     }
-  }
-
-  /**
-   * 获取用户信息（带缓存）
-   */
-  private async getUserWithCache(login: string): Promise<User | null> {
-    const cacheKey = `user:login:${login}`;
-    const cachedUser = await this.redis.get<User>(cacheKey);
-
-    if (cachedUser) {
-      return cachedUser;
-    }
-
-    const user = await firstValueFrom(
-      this.userClient.send({ cmd: 'user.find.byLogin' }, { login }),
-    );
-
-    if (user) {
-      await this.redis.set(cacheKey, user, this.CACHE_TTL);
-    }
-
-    return user;
   }
 
   /**
@@ -148,42 +113,13 @@ export class AuthService {
       roles: user.roles.map((role) => role.name),
     };
 
+    const token = this.jwt.sign(payload);
+
     return {
-      access_token: this.jwt.sign(payload),
+      access_token: token,
       token_type: 'Bearer',
       expires_in: 3600 * 24,
     };
-  }
-
-  /**
-   * 缓存令牌
-   */
-  private async cacheToken(login: string, token: any) {
-    const cacheKey = `token:${login}`;
-    await this.redis.set(cacheKey, JSON.stringify(token), 3600 * 24);
-  }
-
-  /**
-   * 验证并清理过期的token
-   */
-  private async validateAndCleanToken(
-    login: string,
-    token: string,
-  ): Promise<boolean> {
-    try {
-      const decoded = this.jwt.verify(token);
-      // 检查 token 是否包含必要的字段
-      if (!decoded || !decoded.userId) {
-        await this.redis.del(`token:${login}`);
-        return false;
-      }
-      return true;
-    } catch (error) {
-      this.logger.warn(`Token验证失败: ${error.message}`);
-      // token 已过期或无效，清除缓存
-      await this.redis.del(`token:${login}`);
-      return false;
-    }
   }
 
   /**
