@@ -4,7 +4,7 @@ import {
 } from '@app/database/entities/diagnosis-log.entity';
 import { RedisService } from '@app/redis';
 import { PageQueryDto } from '@common/dto/page-query.dto';
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -30,6 +30,7 @@ interface LogMetrics {
 
 @Injectable()
 export class DiagnosisLogService implements OnModuleDestroy {
+  private readonly logger = new Logger(DiagnosisLogService.name);
   private readonly STREAM_KEY = 'diagnosis:log:stream';
   private readonly CONSUMER_GROUP = 'diagnosis:log:group';
   private readonly CONSUMER_NAME = 'diagnosis:log:consumer';
@@ -57,10 +58,10 @@ export class DiagnosisLogService implements OnModuleDestroy {
     private readonly redisService: RedisService,
   ) {
     this.initializeStream().catch((error) => {
-      console.error('初始化 Stream 失败:', error);
+      this.logger.error('初始化 Stream 失败:', error);
     });
     this.initializeMetrics().catch((error) => {
-      console.error('初始化指标失败:', error);
+      this.logger.error('初始化指标失败:', error);
     });
     this.startProcessing();
   }
@@ -150,7 +151,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
           } catch (error) {
             // 如果错误是 BUSYGROUP，说明消费者组已经存在，这是正常的
             if (error.message.includes('BUSYGROUP')) {
-              console.log('消费者组已存在，继续执行');
+              this.logger.log('消费者组已存在，继续执行');
             } else {
               // 其他错误，尝试创建新的消费者组
               await this.redisService.xgroupCreate(
@@ -163,15 +164,18 @@ export class DiagnosisLogService implements OnModuleDestroy {
         }
 
         this.isInitialized = true;
-        console.log('Stream 初始化成功');
+        this.logger.log('Stream 初始化成功');
         return;
       } catch (error) {
         lastError = error as Error;
-        console.warn(`Stream 初始化失败，第 ${i + 1} 次尝试:`, error.message);
+        this.logger.warn(
+          `Stream 初始化失败，第 ${i + 1} 次尝试:`,
+          error.message,
+        );
 
         if (i < maxRetries - 1) {
           const delay = retryDelay * Math.pow(2, i);
-          console.warn(`等待 ${delay}ms 后重试...`);
+          this.logger.warn(`等待 ${delay}ms 后重试...`);
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
@@ -211,7 +215,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
     try {
       await this.redisService.xadd(this.STREAM_KEY, logEntry);
     } catch (error) {
-      console.error('添加日志到 Stream 失败:', error);
+      this.logger.error('添加日志到 Stream 失败:', error);
       await this.createLog(diagnosisId, level, message, metadata);
     }
   }
@@ -251,7 +255,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
               try {
                 const log = msg.data as LogEntry;
                 if (!log.diagnosisId || !log.level || !log.message) {
-                  console.error('日志数据不完整:', log);
+                  this.logger.error('日志数据不完整:', log);
                   errorCount++;
                   return null;
                 }
@@ -264,7 +268,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
                   createdAt: new Date(log.timestamp || Date.now()),
                 });
               } catch (error) {
-                console.error('解析日志数据失败:', error, '原始数据:', msg);
+                this.logger.error('解析日志数据失败:', error, '原始数据:', msg);
                 errorCount++;
                 return null;
               }
@@ -320,7 +324,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
     } catch (error) {
       this.consecutiveErrors++;
       await this.redisService.increment(this.REDIS_ERROR_COUNT_KEY);
-      console.error('保存日志失败:', {
+      this.logger.error('保存日志失败:', {
         error: error.message,
         code: error.code,
         sqlMessage: error.sqlMessage,
@@ -449,7 +453,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
         createdAt: Between(new Date(0), cutoffDate),
       });
     } catch (error) {
-      console.error('清理过期日志失败:', error);
+      this.logger.error('清理过期日志失败:', error);
     }
   }
 }
