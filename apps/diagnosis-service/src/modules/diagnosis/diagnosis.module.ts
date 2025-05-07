@@ -12,6 +12,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigEnum } from '@shared/enum/config.enum';
 import {
   DOWNLOAD_SERVICE_GRPC_PORT,
   DOWNLOAD_SERVICE_HOST,
@@ -84,6 +85,12 @@ import { InterfaceCallModule } from './services/interface-call/interface-call.mo
       name: DIAGNOSIS_PROCESSOR,
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get(ConfigEnum.REDIS_HOST, 'localhost'),
+          port: configService.get(ConfigEnum.REDIS_PORT, 6379),
+          password: configService.get(ConfigEnum.REDIS_PASSWORD),
+          db: configService.get(ConfigEnum.REDIS_DB, 0),
+        },
         defaultJobOptions: {
           attempts: 3,
           backoff: {
