@@ -54,6 +54,10 @@ export class DiagnosisLogService implements OnModuleDestroy {
   private readonly MAX_RETRY_COUNT = 3;
   private readonly CACHE_TTL = 300; // 5分钟缓存
 
+  private readonly MAX_MESSAGE_LENGTH = 16000; // 消息最大长度 (约5KB)
+  private readonly MAX_METADATA_SIZE = 8000; // 元数据最大大小 (约2.5KB)
+  private readonly MAX_TOTAL_SIZE = 24000; // 总大小限制 (约7.5KB)
+
   private batchSize = 100;
   private flushInterval = 1000;
   private flushIntervalId: NodeJS.Timeout;
@@ -244,6 +248,71 @@ export class DiagnosisLogService implements OnModuleDestroy {
     );
   }
 
+  private estimateObjectSize(obj: any): number {
+    if (!obj) return 0;
+    // 估算 JSON 字符串的字节大小
+    const jsonStr = JSON.stringify(obj);
+    let byteSize = 0;
+    for (let i = 0; i < jsonStr.length; i++) {
+      const charCode = jsonStr.charCodeAt(i);
+      if (charCode < 0x80) {
+        byteSize += 1; // ASCII 字符
+      } else if (charCode < 0x800) {
+        byteSize += 2; // 2字节 UTF-8
+      } else if (charCode < 0x10000) {
+        byteSize += 3; // 3字节 UTF-8
+      } else {
+        byteSize += 4; // 4字节 UTF-8 (emoji 等)
+      }
+    }
+    return byteSize;
+  }
+
+  private truncateMessage(message: string): string {
+    if (message.length <= this.MAX_MESSAGE_LENGTH) {
+      return message;
+    }
+    // 确保截断后的消息不会超过 MySQL TEXT 限制
+    let truncated = message.slice(0, this.MAX_MESSAGE_LENGTH - 3) + '...';
+    while (this.estimateObjectSize(truncated) > 65535) {
+      // MySQL TEXT 限制
+      truncated = truncated.slice(0, -4) + '...';
+    }
+    return truncated;
+  }
+
+  private truncateMetadata(metadata: Record<string, any>): Record<string, any> {
+    if (!metadata) return {};
+
+    const size = this.estimateObjectSize(metadata);
+    if (size <= this.MAX_METADATA_SIZE) {
+      return metadata;
+    }
+
+    // 如果元数据太大，只保留最重要的字段
+    const result: Record<string, any> = {};
+    const keys = Object.keys(metadata);
+    let currentSize = 0;
+
+    for (const key of keys) {
+      const value = metadata[key];
+      const valueSize = this.estimateObjectSize(value);
+
+      // 确保不会超过 MySQL TEXT 限制
+      if (
+        currentSize + valueSize > this.MAX_METADATA_SIZE ||
+        this.estimateObjectSize(result) > 65535
+      ) {
+        break;
+      }
+
+      result[key] = value;
+      currentSize += valueSize;
+    }
+
+    return result;
+  }
+
   async addLog(
     diagnosisId: number,
     level: LogLevel,
@@ -254,6 +323,38 @@ export class DiagnosisLogService implements OnModuleDestroy {
       await this.initializeStream();
     }
 
+    // 快速检查消息长度和字节大小
+    const messageBytes = this.estimateObjectSize(message);
+    if (message.length > this.MAX_MESSAGE_LENGTH || messageBytes > 65535) {
+      message = this.truncateMessage(message);
+      this.logger.warn(
+        `日志消息被截断，原始长度: ${message.length}，原始字节大小: ${messageBytes}`,
+      );
+    }
+
+    // 快速检查元数据大小
+    if (metadata) {
+      const metadataSize = this.estimateObjectSize(metadata);
+      if (metadataSize > this.MAX_METADATA_SIZE || metadataSize > 65535) {
+        metadata = this.truncateMetadata(metadata);
+        this.logger.warn(`日志元数据被截断，原始字节大小: ${metadataSize}`);
+      }
+    }
+
+    // 检查总大小
+    const totalSize =
+      this.estimateObjectSize(message) + this.estimateObjectSize(metadata);
+    if (totalSize > this.MAX_TOTAL_SIZE || totalSize > 65535) {
+      // 如果总大小仍然超过限制，进一步截断消息
+      const excess = totalSize - this.MAX_TOTAL_SIZE;
+      if (excess > 0) {
+        message = message.slice(0, message.length - excess - 3) + '...';
+        this.logger.warn(
+          `日志总大小超过限制，消息被进一步截断，总字节大小: ${totalSize}`,
+        );
+      }
+    }
+
     const logEntry: LogEntry = {
       diagnosisId,
       level,
@@ -262,9 +363,11 @@ export class DiagnosisLogService implements OnModuleDestroy {
       timestamp: Date.now(),
     };
 
+    // 生成消息ID
     const messageId = this.generateMessageId(logEntry);
     logEntry.messageId = messageId;
 
+    // 检查是否已经处理过
     if (await this.isMessageProcessed(messageId)) {
       this.logger.debug(`消息已处理，跳过: ${messageId}`);
       return;
