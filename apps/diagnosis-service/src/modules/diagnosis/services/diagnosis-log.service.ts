@@ -9,7 +9,7 @@ import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { createHash } from 'crypto';
-import { Between, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 
 interface LogEntry {
   diagnosisId: number;
@@ -18,6 +18,7 @@ interface LogEntry {
   metadata?: Record<string, any>;
   timestamp: number;
   messageId?: string;
+  retryCount?: number;
 }
 
 interface LogMetrics {
@@ -28,6 +29,8 @@ interface LogMetrics {
   pendingCount: number;
   batchSize: number;
   processingInterval: number;
+  deadLetterCount: number;
+  retryCount: number;
 }
 
 @Injectable()
@@ -41,11 +44,15 @@ export class DiagnosisLogService implements OnModuleDestroy {
   private readonly REDIS_BATCH_SIZE_KEY = 'diagnosis:log:metrics:batch_size';
   private readonly REDIS_INTERVAL_KEY = 'diagnosis:log:metrics:interval';
   private readonly REDIS_PROCESSED_IDS_KEY = 'diagnosis:log:processed_ids';
+  private readonly REDIS_DEAD_LETTER_KEY = 'diagnosis:log:dead_letter';
+  private readonly REDIS_CACHE_KEY = 'diagnosis:log:cache';
 
   private readonly MIN_BATCH_SIZE = 50;
   private readonly MAX_BATCH_SIZE = 500;
   private readonly MIN_INTERVAL = 100;
   private readonly MAX_INTERVAL = 5000;
+  private readonly MAX_RETRY_COUNT = 3;
+  private readonly CACHE_TTL = 300; // 5分钟缓存
 
   private batchSize = 100;
   private flushInterval = 1000;
@@ -54,6 +61,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
   private isProcessing = false;
   private consecutiveErrors = 0;
   private lastProcessTime = 0;
+  private metricsUpdateInterval: NodeJS.Timeout;
 
   constructor(
     @InjectRepository(DiagnosisLog)
@@ -67,6 +75,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
       this.logger.error('初始化指标失败:', error);
     });
     this.startProcessing();
+    this.startMetricsUpdate();
   }
 
   private async initializeMetrics(): Promise<void> {
@@ -92,7 +101,12 @@ export class DiagnosisLogService implements OnModuleDestroy {
     processTime: number,
     errorCount: number,
   ): Promise<void> {
+    // 更新上次处理时间
+    this.lastProcessTime = processTime;
+
+    // 根据处理时间和错误率动态调整批处理大小和间隔
     if (errorCount > 0) {
+      // 发生错误时，减小批处理大小并增加间隔
       this.batchSize = Math.max(
         this.MIN_BATCH_SIZE,
         Math.floor(this.batchSize * 0.8),
@@ -101,19 +115,39 @@ export class DiagnosisLogService implements OnModuleDestroy {
         this.MAX_INTERVAL,
         Math.floor(this.flushInterval * 1.2),
       );
-    } else if (processTime < 500) {
-      this.batchSize = Math.min(
-        this.MAX_BATCH_SIZE,
-        Math.floor(this.batchSize * 1.1),
-      );
-      this.flushInterval = Math.max(
-        this.MIN_INTERVAL,
-        Math.floor(this.flushInterval * 0.9),
-      );
+    } else {
+      // 根据处理时间动态调整
+      if (processTime < 200) {
+        // 处理时间很短，可以增加批处理大小
+        this.batchSize = Math.min(
+          this.MAX_BATCH_SIZE,
+          Math.floor(this.batchSize * 1.2),
+        );
+        this.flushInterval = Math.max(
+          this.MIN_INTERVAL,
+          Math.floor(this.flushInterval * 0.9),
+        );
+      } else if (processTime > 800) {
+        // 处理时间较长，需要减小批处理大小
+        this.batchSize = Math.max(
+          this.MIN_BATCH_SIZE,
+          Math.floor(this.batchSize * 0.9),
+        );
+        this.flushInterval = Math.min(
+          this.MAX_INTERVAL,
+          Math.floor(this.flushInterval * 1.1),
+        );
+      }
     }
 
+    // 保存调整后的参数
     await this.redisService.set(this.REDIS_BATCH_SIZE_KEY, this.batchSize);
     await this.redisService.set(this.REDIS_INTERVAL_KEY, this.flushInterval);
+
+    // 记录调整日志
+    this.logger.debug(
+      `处理参数调整: 批处理大小=${this.batchSize}, 处理间隔=${this.flushInterval}ms, 处理时间=${processTime}ms`,
+    );
   }
 
   private async initializeStream(): Promise<void> {
@@ -183,6 +217,9 @@ export class DiagnosisLogService implements OnModuleDestroy {
   async onModuleDestroy() {
     if (this.flushIntervalId) {
       clearInterval(this.flushIntervalId);
+    }
+    if (this.metricsUpdateInterval) {
+      clearInterval(this.metricsUpdateInterval);
     }
     await this.processLogs();
   }
@@ -351,6 +388,8 @@ export class DiagnosisLogService implements OnModuleDestroy {
         pendingCount: pendingInfo.length,
         batchSize: this.batchSize,
         processingInterval: this.flushInterval,
+        deadLetterCount: 0,
+        retryCount: 0,
       };
 
       await this.redisService.set(this.REDIS_METRICS_KEY, metrics, 3600);
@@ -442,21 +481,55 @@ export class DiagnosisLogService implements OnModuleDestroy {
   }
 
   async findAll(diagnosisId: number) {
+    // 尝试从缓存获取
+    const cacheKey = `${this.REDIS_CACHE_KEY}:${diagnosisId}`;
+    const cachedLogs = await this.redisService.get<DiagnosisLog[]>(cacheKey);
+    if (cachedLogs) {
+      return formatResponse(200, cachedLogs, '诊断日志获取成功(缓存)');
+    }
+
     const logs = await this.logRepository.find({
       where: { diagnosisId },
       order: { createdAt: 'DESC' },
     });
+
+    // 更新缓存
+    await this.redisService.set(cacheKey, logs, this.CACHE_TTL);
     return formatResponse(200, logs, '诊断日志获取成功');
   }
 
   async findList(diagnosisId: number, query: PageQueryDto) {
     const { page = 1, pageSize = 10 } = query;
+    const cacheKey = `${this.REDIS_CACHE_KEY}:list:${diagnosisId}:${page}:${pageSize}`;
+
+    // 尝试从缓存获取
+    const cachedResult = await this.redisService.get<{
+      list: DiagnosisLog[];
+      total: number;
+    }>(cacheKey);
+
+    if (cachedResult) {
+      return formatResponse(
+        200,
+        { ...cachedResult, page, pageSize },
+        '诊断日志列表获取成功(缓存)',
+      );
+    }
+
     const [logs, total] = await this.logRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
       where: { diagnosisId },
       order: { createdAt: 'DESC' },
     });
+
+    // 更新缓存
+    await this.redisService.set(
+      cacheKey,
+      { list: logs, total },
+      this.CACHE_TTL,
+    );
+
     return formatResponse(
       200,
       { list: logs, total, page, pageSize },
@@ -469,13 +542,25 @@ export class DiagnosisLogService implements OnModuleDestroy {
     startTime: Date,
     endTime: Date,
   ): Promise<DiagnosisLog[]> {
-    return this.logRepository.find({
+    const cacheKey = `${this.REDIS_CACHE_KEY}:range:${diagnosisId}:${startTime.getTime()}:${endTime.getTime()}`;
+
+    // 尝试从缓存获取
+    const cachedLogs = await this.redisService.get<DiagnosisLog[]>(cacheKey);
+    if (cachedLogs) {
+      return cachedLogs;
+    }
+
+    const logs = await this.logRepository.find({
       where: {
         diagnosisId,
         createdAt: Between(startTime, endTime),
       },
       order: { createdAt: 'ASC' },
     });
+
+    // 更新缓存
+    await this.redisService.set(cacheKey, logs, this.CACHE_TTL);
+    return logs;
   }
 
   async findMetrics(): Promise<LogMetrics | null> {
@@ -494,6 +579,128 @@ export class DiagnosisLogService implements OnModuleDestroy {
       });
     } catch (error) {
       this.logger.error('清理过期日志失败:', error);
+    }
+  }
+
+  private startMetricsUpdate(): void {
+    this.metricsUpdateInterval = setInterval(async () => {
+      try {
+        const metrics = await this.findMetrics();
+        if (metrics) {
+          // 检查错误率
+          if (metrics.errorCount > 0 && metrics.processedCount > 0) {
+            const errorRate = metrics.errorCount / metrics.processedCount;
+            if (errorRate > 0.1) {
+              // 错误率超过10%
+              this.logger.warn(
+                `日志处理错误率过高: ${(errorRate * 100).toFixed(2)}%`,
+              );
+            }
+          }
+
+          // 检查处理延迟
+          if (this.lastProcessTime > 1000) {
+            // 处理时间超过1秒
+            this.logger.warn(`日志处理延迟过高: ${this.lastProcessTime}ms`);
+          }
+
+          // 检查死信队列
+          if (metrics.deadLetterCount > 100) {
+            // 死信数量超过100
+            this.logger.warn(`死信队列积压: ${metrics.deadLetterCount}条`);
+          }
+
+          // 检查处理效率
+          if (metrics.processedCount > 0) {
+            const efficiency =
+              metrics.processedCount / (this.lastProcessTime / 1000);
+            if (efficiency < 10) {
+              // 每秒处理消息数小于10
+              this.logger.warn(`处理效率过低: ${efficiency.toFixed(2)}条/秒`);
+            }
+          }
+        }
+      } catch (error) {
+        this.logger.error('更新指标失败:', error);
+      }
+    }, 60000); // 每分钟更新一次
+  }
+
+  private async moveToDeadLetter(message: any, error: Error): Promise<void> {
+    const deadLetter = {
+      ...message,
+      error: {
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    };
+    const key = `${this.REDIS_DEAD_LETTER_KEY}:${Date.now()}`;
+    await this.redisService.set(key, deadLetter, 7 * 24 * 60 * 60); // 7天过期
+  }
+
+  private async processDeadLetter(): Promise<void> {
+    // 获取所有死信消息的键
+    const deadLetterKeys =
+      (await this.redisService.get<string[]>(this.REDIS_DEAD_LETTER_KEY)) || [];
+    if (deadLetterKeys.length === 0) {
+      return;
+    }
+
+    // 获取最早的一条死信消息
+    const oldestKey = deadLetterKeys[0];
+    const deadLetter = await this.redisService.get<{
+      data: LogEntry;
+      error: {
+        message: string;
+        stack: string;
+        timestamp: string;
+      };
+    }>(oldestKey);
+
+    if (!deadLetter) {
+      // 如果消息不存在，从列表中移除
+      await this.redisService.set(
+        this.REDIS_DEAD_LETTER_KEY,
+        deadLetterKeys.slice(1),
+        7 * 24 * 60 * 60,
+      );
+      return;
+    }
+
+    try {
+      const log = deadLetter.data;
+      if (log.retryCount && log.retryCount >= this.MAX_RETRY_COUNT) {
+        this.logger.error('消息重试次数超过限制，丢弃:', log);
+        // 从列表中移除
+        await this.redisService.set(
+          this.REDIS_DEAD_LETTER_KEY,
+          deadLetterKeys.slice(1),
+          7 * 24 * 60 * 60,
+        );
+        return;
+      }
+
+      log.retryCount = (log.retryCount || 0) + 1;
+      await this.addLog(log.diagnosisId, log.level, log.message, log.metadata);
+      // 从列表中移除
+      await this.redisService.set(
+        this.REDIS_DEAD_LETTER_KEY,
+        deadLetterKeys.slice(1),
+        7 * 24 * 60 * 60,
+      );
+    } catch (error) {
+      this.logger.error('处理死信消息失败:', error);
+      await this.moveToDeadLetter(deadLetter, error);
+    }
+  }
+
+  @Cron('0 */5 * * * *') // 每5分钟执行一次
+  async processDeadLetters() {
+    try {
+      await this.processDeadLetter();
+    } catch (error) {
+      this.logger.error('处理死信队列失败:', error);
     }
   }
 }
