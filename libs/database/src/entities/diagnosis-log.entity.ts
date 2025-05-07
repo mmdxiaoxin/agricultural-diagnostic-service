@@ -38,7 +38,7 @@ export class DiagnosisLog {
   })
   level: LogLevel;
 
-  @Column()
+  @Column({ type: 'text' })
   message: string;
 
   @Column({ type: 'json', nullable: true })
