@@ -29,6 +29,31 @@ export class UserService {
   >();
   private readonly CACHE_TTL = 3600000; // 1小时缓存
   private readonly MAX_CACHE_SIZE = 1000; // 最大缓存数量
+  private readonly SHORT_CACHE_TTL = 300; // 5分钟缓存
+  private readonly MEDIUM_CACHE_TTL = 1800; // 30分钟缓存
+
+  // 缓存键前缀
+  private readonly CACHE_KEYS = {
+    USER: 'user',
+    USER_LIST: 'user:list',
+    USER_LOGIN: 'user:login',
+    USER_EMAIL: 'user:email',
+    USER_USERNAME: 'user:username',
+    USER_ID: 'user:id',
+    USER_ALL: 'user:all',
+    AVATAR: 'avatar',
+  } as const;
+
+  // 缓存配置
+  private readonly CACHE_CONFIG = {
+    USER_ID: { ttl: this.MEDIUM_CACHE_TTL },
+    USER_EMAIL: { ttl: this.MEDIUM_CACHE_TTL },
+    USER_USERNAME: { ttl: this.MEDIUM_CACHE_TTL },
+    USER_LOGIN: { ttl: this.SHORT_CACHE_TTL },
+    USER_LIST: { ttl: this.SHORT_CACHE_TTL },
+    USER_ALL: { ttl: this.SHORT_CACHE_TTL },
+    AVATAR: { ttl: this.CACHE_TTL },
+  } as const;
 
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
@@ -58,22 +83,28 @@ export class UserService {
   }
 
   private async getUserCache(id: number) {
-    const cacheKey = `user:${id}`;
+    const cacheKey = this.generateCacheKey('USER_ID', id);
     return this.redisService.get(cacheKey);
   }
 
   private async updateUserCache(user: User) {
     const { password, ...userData } = user;
-    const cacheKeys = [
-      `user:${user.id}`,
-      `user:email:${user.email}`,
-      `user:username:${user.username}`,
-      `user:login:${user.email}`,
-      `user:login:${user.username}`,
+    const cacheUpdates = [
+      { type: 'USER_ID', key: user.id, data: userData },
+      { type: 'USER_EMAIL', key: user.email, data: userData },
+      { type: 'USER_USERNAME', key: user.username, data: userData },
+      { type: 'USER_LOGIN', key: user.email, data: userData },
+      { type: 'USER_LOGIN', key: user.username, data: userData },
     ];
 
     await Promise.all(
-      cacheKeys.map((key) => this.redisService.set(key, userData, 300)),
+      cacheUpdates.map(({ type, key, data }) =>
+        this.redisService.set(
+          this.generateCacheKey(type as keyof typeof this.CACHE_KEYS, key),
+          data,
+          this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
+        ),
+      ),
     );
   }
 
@@ -85,14 +116,40 @@ export class UserService {
 
     if (user) {
       const cacheKeys = [
-        `user:${user.id}`,
-        `user:email:${user.email}`,
-        `user:username:${user.username}`,
-        `user:login:${user.email}`,
-        `user:login:${user.username}`,
+        this.generateCacheKey('USER_ID', user.id),
+        this.generateCacheKey('USER_EMAIL', user.email),
+        this.generateCacheKey('USER_USERNAME', user.username),
+        this.generateCacheKey('USER_LOGIN', user.email),
+        this.generateCacheKey('USER_LOGIN', user.username),
       ];
 
       await Promise.all(cacheKeys.map((key) => this.redisService.del(key)));
+    }
+  }
+
+  // 生成缓存键的辅助方法
+  private generateCacheKey(
+    type: keyof typeof this.CACHE_KEYS,
+    ...args: any[]
+  ): string {
+    const prefix = this.CACHE_KEYS[type];
+    switch (type) {
+      case 'USER_ID':
+        return `${prefix}:${args[0]}`;
+      case 'USER_EMAIL':
+        return `${prefix}:${args[0]}`;
+      case 'USER_USERNAME':
+        return `${prefix}:${args[0]}`;
+      case 'USER_LOGIN':
+        return `${prefix}:${args[0]}`;
+      case 'USER_LIST':
+        return `${prefix}:${JSON.stringify(args[0])}`;
+      case 'USER_ALL':
+        return prefix;
+      case 'AVATAR':
+        return `${prefix}:${args[0]}`;
+      default:
+        return prefix;
     }
   }
 
@@ -373,7 +430,7 @@ export class UserService {
 
   async getAvatar(userId: number) {
     try {
-      const cacheKey = `avatar:${userId}`;
+      const cacheKey = this.generateCacheKey('AVATAR', userId);
 
       // 1. 检查内存缓存
       const cachedData = this.avatarCache.get(cacheKey);
@@ -521,7 +578,7 @@ export class UserService {
       if (profile.avatar) {
         try {
           await fs.promises.unlink(profile.avatar);
-          await this.redisService.del(`avatar:${userId}`);
+          await this.redisService.del(this.generateCacheKey('AVATAR', userId));
         } catch (error) {
           this.logger.warn(`删除旧头像失败: ${error.message}`);
         }
@@ -545,7 +602,11 @@ export class UserService {
         fileName,
         mimeType: mimetype,
       };
-      await this.redisService.set(`avatar:${userId}`, avatarData, 3600);
+      await this.redisService.set(
+        this.generateCacheKey('AVATAR', userId),
+        avatarData,
+        3600,
+      );
 
       await queryRunner.commitTransaction();
       return formatResponse(200, null, '上传头像成功');
@@ -578,7 +639,7 @@ export class UserService {
     try {
       const { page, pageSize, ...filters } = query;
       const offset = (page - 1) * pageSize;
-      const cacheKey = `user:list:${JSON.stringify(query)}`;
+      const cacheKey = this.generateCacheKey('USER_LIST', query);
 
       // 尝试从缓存获取
       const cachedResult = await this.redisService.get<{
@@ -608,7 +669,8 @@ export class UserService {
           'profile.address',
           'role.id',
           'role.name',
-        ]);
+        ])
+        .cache(true); // 启用 TypeORM 查询缓存
 
       // 添加过滤条件
       if (filters.username) {
@@ -650,8 +712,12 @@ export class UserService {
         pageSize,
       };
 
-      // 缓存结果（5分钟）
-      await this.redisService.set(cacheKey, result, 300);
+      // 使用配置的缓存时间
+      await this.redisService.set(
+        cacheKey,
+        result,
+        this.CACHE_CONFIG.USER_LIST.ttl,
+      );
 
       return formatResponse(200, result, '获取用户列表成功');
     } catch (error) {
@@ -664,7 +730,7 @@ export class UserService {
   }
 
   async findByLogin(login: string): Promise<User | null> {
-    const cacheKey = `user:login:${login}`;
+    const cacheKey = this.generateCacheKey('USER_LOGIN', login);
     const cachedUser = await this.redisService.get<User>(cacheKey);
     if (cachedUser) {
       return cachedUser;
@@ -689,22 +755,30 @@ export class UserService {
       .getOne();
 
     if (user) {
-      // 增加缓存时间到5分钟
-      await this.redisService.set(cacheKey, user, 300);
+      // 使用配置的缓存时间
+      const cacheUpdates = [
+        { type: 'USER_LOGIN', key: login, data: user },
+        { type: 'USER_EMAIL', key: user.email, data: user },
+        { type: 'USER_USERNAME', key: user.username, data: user },
+        { type: 'USER_ID', key: user.id, data: user },
+      ];
 
-      // 同时更新其他相关缓存
-      await Promise.all([
-        this.redisService.set(`user:email:${user.email}`, user, 300),
-        this.redisService.set(`user:username:${user.username}`, user, 300),
-        this.redisService.set(`user:id:${user.id}`, user, 300),
-      ]);
+      await Promise.all(
+        cacheUpdates.map(({ type, key, data }) =>
+          this.redisService.set(
+            this.generateCacheKey(type as keyof typeof this.CACHE_KEYS, key),
+            data,
+            this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
+          ),
+        ),
+      );
     }
 
     return user;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const cacheKey = `user:email:${email}`;
+    const cacheKey = this.generateCacheKey('USER_EMAIL', email);
     const cachedUser = await this.redisService.get(cacheKey);
     if (cachedUser) {
       return cachedUser as User;
@@ -720,7 +794,7 @@ export class UserService {
   }
 
   async findByUsername(username: string): Promise<User | null> {
-    const cacheKey = `user:username:${username}`;
+    const cacheKey = this.generateCacheKey('USER_USERNAME', username);
     const cachedUser = await this.redisService.get(cacheKey);
     if (cachedUser) {
       return cachedUser as User;
@@ -736,7 +810,7 @@ export class UserService {
   }
 
   async findById(id: number): Promise<User | null> {
-    const cacheKey = `user:id:${id}`;
+    const cacheKey = this.generateCacheKey('USER_ID', id);
     const cachedUser = await this.redisService.get(cacheKey);
     if (cachedUser) {
       return cachedUser as User;
@@ -752,7 +826,7 @@ export class UserService {
   }
 
   async findAll(): Promise<User[]> {
-    const cacheKey = `user:all`;
+    const cacheKey = this.generateCacheKey('USER_ALL');
     const cachedUsers = await this.redisService.get(cacheKey);
     if (cachedUsers) {
       return cachedUsers as User[];
