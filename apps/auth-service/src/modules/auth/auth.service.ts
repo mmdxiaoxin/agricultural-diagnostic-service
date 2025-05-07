@@ -146,8 +146,6 @@ export class AuthService {
       userId: user.id,
       username: user.username,
       roles: user.roles.map((role) => role.name),
-      iat: Math.floor(Date.now() / 1000), // 添加签发时间
-      exp: Math.floor(Date.now() / 1000) + 3600 * 24, // 添加过期时间
     };
 
     return {
