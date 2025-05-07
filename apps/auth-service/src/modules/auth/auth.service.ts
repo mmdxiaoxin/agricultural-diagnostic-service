@@ -67,9 +67,16 @@ export class AuthService {
         this.redis.get<string>(`token:${login}`),
       ]);
 
-      // 如果存在有效token，直接返回
+      // 如果存在缓存token，验证其有效性
       if (cachedToken) {
-        return JSON.parse(cachedToken);
+        const tokenData = JSON.parse(cachedToken);
+        const isValid = await this.validateAndCleanToken(
+          login,
+          tokenData.access_token,
+        );
+        if (isValid) {
+          return tokenData;
+        }
       }
 
       if (!user) {
@@ -154,6 +161,23 @@ export class AuthService {
   private async cacheToken(login: string, token: any) {
     const cacheKey = `token:${login}`;
     await this.redis.set(cacheKey, JSON.stringify(token), 3600 * 24);
+  }
+
+  /**
+   * 验证并清理过期的token
+   */
+  private async validateAndCleanToken(
+    login: string,
+    token: string,
+  ): Promise<boolean> {
+    try {
+      const decoded = this.jwt.verify(token);
+      return true;
+    } catch (error) {
+      // token 已过期或无效，清除缓存
+      await this.redis.del(`token:${login}`);
+      return false;
+    }
   }
 
   /**
