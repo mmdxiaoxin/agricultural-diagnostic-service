@@ -1,11 +1,10 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  JoinColumn,
 } from 'typeorm';
 import { DiagnosisHistory } from './diagnosis-history.entity';
 
@@ -39,12 +38,12 @@ export class DiagnosisLog {
   })
   level: LogLevel;
 
-  @Column({ type: 'text' })
+  @Column()
   message: string;
 
   @Column({ type: 'json', nullable: true })
   metadata: Record<string, any>;
 
-  @CreateDateColumn()
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 }
