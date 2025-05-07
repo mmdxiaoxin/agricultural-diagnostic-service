@@ -146,6 +146,8 @@ export class AuthService {
       userId: user.id,
       username: user.username,
       roles: user.roles.map((role) => role.name),
+      iat: Math.floor(Date.now() / 1000), // 添加签发时间
+      exp: Math.floor(Date.now() / 1000) + 3600 * 24, // 添加过期时间
     };
 
     return {
@@ -172,8 +174,14 @@ export class AuthService {
   ): Promise<boolean> {
     try {
       const decoded = this.jwt.verify(token);
+      // 检查 token 是否包含必要的字段
+      if (!decoded || !decoded.userId) {
+        await this.redis.del(`token:${login}`);
+        return false;
+      }
       return true;
     } catch (error) {
+      this.logger.warn(`Token验证失败: ${error.message}`);
       // token 已过期或无效，清除缓存
       await this.redis.del(`token:${login}`);
       return false;
