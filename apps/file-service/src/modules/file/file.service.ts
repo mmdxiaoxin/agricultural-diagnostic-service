@@ -1,27 +1,25 @@
 import { FileEntity } from '@app/database/entities';
-import { FileOperationService } from '@app/file-operation/file-operation.service';
 import {
   UpdateFileDto,
   UpdateFilesAccessDto,
 } from '@common/dto/file/update-file.dto';
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { getFileType } from '@shared/utils';
-import { DataSource, In, Not, Repository } from 'typeorm';
+import { Queue } from 'bullmq';
+import { DataSource, In, Repository } from 'typeorm';
+import { FILE_DELETE_QUEUE } from './file-queue.processor';
 
 @Injectable()
 export class FileService {
-  private readonly logger = new Logger(FileService.name);
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
-    private readonly fileOperationService: FileOperationService,
     private readonly dataSource: DataSource,
-    @InjectQueue('file-delete-queue')
+    @InjectQueue(FILE_DELETE_QUEUE)
     private readonly fileDeleteQueue: Queue,
   ) {}
 

@@ -6,7 +6,9 @@ import { FileEntity } from '@app/database/entities';
 import { DataSource } from 'typeorm';
 import { Not } from 'typeorm';
 
-@Processor('file-delete-queue')
+export const FILE_DELETE_QUEUE = 'file-delete-queue';
+
+@Processor(FILE_DELETE_QUEUE)
 export class FileDeleteQueueProcessor extends WorkerHost {
   private readonly logger = new Logger(FileDeleteQueueProcessor.name);
 
