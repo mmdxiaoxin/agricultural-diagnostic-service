@@ -24,6 +24,8 @@ interface LogMetrics {
   errorCount: number;
   lastProcessedAt: string;
   pendingCount: number;
+  batchSize: number;
+  processingInterval: number;
 }
 
 @Injectable()
@@ -33,10 +35,21 @@ export class DiagnosisLogService implements OnModuleDestroy {
   private readonly CONSUMER_NAME = 'diagnosis:log:consumer';
   private readonly REDIS_METRICS_KEY = 'diagnosis:log:metrics';
   private readonly REDIS_ERROR_COUNT_KEY = 'diagnosis:log:metrics:error_count';
-  private readonly batchSize = 100;
-  private readonly flushInterval = 1000;
+  private readonly REDIS_BATCH_SIZE_KEY = 'diagnosis:log:metrics:batch_size';
+  private readonly REDIS_INTERVAL_KEY = 'diagnosis:log:metrics:interval';
+
+  private readonly MIN_BATCH_SIZE = 50;
+  private readonly MAX_BATCH_SIZE = 500;
+  private readonly MIN_INTERVAL = 100;
+  private readonly MAX_INTERVAL = 5000;
+
+  private batchSize = 100;
+  private flushInterval = 1000;
   private flushIntervalId: NodeJS.Timeout;
   private isInitialized = false;
+  private isProcessing = false;
+  private consecutiveErrors = 0;
+  private lastProcessTime = 0;
 
   constructor(
     @InjectRepository(DiagnosisLog)
@@ -46,10 +59,61 @@ export class DiagnosisLogService implements OnModuleDestroy {
     this.initializeStream().catch((error) => {
       console.error('初始化 Stream 失败:', error);
     });
+    this.initializeMetrics().catch((error) => {
+      console.error('初始化指标失败:', error);
+    });
+    this.startProcessing();
+  }
+
+  private async initializeMetrics(): Promise<void> {
+    const savedBatchSize = await this.redisService.get<number>(
+      this.REDIS_BATCH_SIZE_KEY,
+    );
+    const savedInterval = await this.redisService.get<number>(
+      this.REDIS_INTERVAL_KEY,
+    );
+
+    if (savedBatchSize) this.batchSize = savedBatchSize;
+    if (savedInterval) this.flushInterval = savedInterval;
+  }
+
+  private startProcessing(): void {
     this.flushIntervalId = setInterval(
       () => this.processLogs(),
       this.flushInterval,
     );
+  }
+
+  private async adjustProcessingParameters(
+    processTime: number,
+    errorCount: number,
+  ): Promise<void> {
+    // 根据处理时间和错误率动态调整批处理大小和间隔
+    if (errorCount > 0) {
+      // 发生错误时，减小批处理大小并增加间隔
+      this.batchSize = Math.max(
+        this.MIN_BATCH_SIZE,
+        Math.floor(this.batchSize * 0.8),
+      );
+      this.flushInterval = Math.min(
+        this.MAX_INTERVAL,
+        Math.floor(this.flushInterval * 1.2),
+      );
+    } else if (processTime < 500) {
+      // 处理时间短，可以增加批处理大小
+      this.batchSize = Math.min(
+        this.MAX_BATCH_SIZE,
+        Math.floor(this.batchSize * 1.1),
+      );
+      this.flushInterval = Math.max(
+        this.MIN_INTERVAL,
+        Math.floor(this.flushInterval * 0.9),
+      );
+    }
+
+    // 保存调整后的参数
+    await this.redisService.set(this.REDIS_BATCH_SIZE_KEY, this.batchSize);
+    await this.redisService.set(this.REDIS_INTERVAL_KEY, this.flushInterval);
   }
 
   private async initializeStream(): Promise<void> {
@@ -153,13 +217,14 @@ export class DiagnosisLogService implements OnModuleDestroy {
   }
 
   private async processLogs(): Promise<void> {
-    // 确保 Stream 已初始化
-    if (!this.isInitialized) {
-      await this.initializeStream();
+    if (this.isProcessing) {
+      return;
     }
 
+    this.isProcessing = true;
     const startTime = Date.now();
     let processedCount = 0;
+    let errorCount = 0;
 
     try {
       // 从消费者组读取消息
@@ -174,6 +239,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
       );
 
       if (!messages || messages.length === 0) {
+        this.isProcessing = false;
         return;
       }
 
@@ -186,6 +252,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
                 const log = msg.data as LogEntry;
                 if (!log.diagnosisId || !log.level || !log.message) {
                   console.error('日志数据不完整:', log);
+                  errorCount++;
                   return null;
                 }
 
@@ -198,6 +265,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
                 });
               } catch (error) {
                 console.error('解析日志数据失败:', error, '原始数据:', msg);
+                errorCount++;
                 return null;
               }
             })
@@ -222,20 +290,35 @@ export class DiagnosisLogService implements OnModuleDestroy {
 
       // 更新指标
       const processTime = Date.now() - startTime;
+      this.lastProcessTime = processTime;
       const pendingInfo = await this.redisService.xpending(
         this.STREAM_KEY,
         this.CONSUMER_GROUP,
       );
+
       const metrics: LogMetrics = {
         processedCount,
         processTime,
-        errorCount: 0,
+        errorCount,
         lastProcessedAt: new Date().toISOString(),
         pendingCount: pendingInfo.length,
+        batchSize: this.batchSize,
+        processingInterval: this.flushInterval,
       };
 
       await this.redisService.set(this.REDIS_METRICS_KEY, metrics, 3600);
+
+      // 根据处理结果调整参数
+      await this.adjustProcessingParameters(processTime, errorCount);
+
+      // 重置连续错误计数
+      if (errorCount === 0) {
+        this.consecutiveErrors = 0;
+      } else {
+        this.consecutiveErrors++;
+      }
     } catch (error) {
+      this.consecutiveErrors++;
       await this.redisService.increment(this.REDIS_ERROR_COUNT_KEY);
       console.error('保存日志失败:', {
         error: error.message,
@@ -245,13 +328,21 @@ export class DiagnosisLogService implements OnModuleDestroy {
         stack: error.stack,
       });
 
-      if (error.code === 'ER_NO_DEFAULT_FOR_FIELD') {
-        console.error('数据库字段缺少默认值:', error.sqlMessage);
+      // 如果连续错误次数过多，增加处理间隔
+      if (this.consecutiveErrors > 3) {
+        this.flushInterval = Math.min(
+          this.MAX_INTERVAL,
+          this.flushInterval * 2,
+        );
+        await this.redisService.set(
+          this.REDIS_INTERVAL_KEY,
+          this.flushInterval,
+        );
       }
-      if (error.code === 'ER_NO_REFERENCED_ROW') {
-        console.error('外键约束错误: 诊断记录不存在:', error.sqlMessage);
-      }
+
       throw error;
+    } finally {
+      this.isProcessing = false;
     }
   }
 
