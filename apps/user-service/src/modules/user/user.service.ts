@@ -669,6 +669,7 @@ export class UserService {
           'profile.address',
           'role.id',
           'role.name',
+          'role.alias',
         ])
         .cache(true); // 启用 TypeORM 查询缓存
 
