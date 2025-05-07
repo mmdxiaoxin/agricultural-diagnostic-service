@@ -262,23 +262,40 @@ export class FileService {
         });
       }
 
-      // 将删除任务添加到队列
+      // 使用乐观锁删除文件元数据
+      const deleteResult = await queryRunner.manager.delete(FileEntity, {
+        id: fileId,
+        version: file.version,
+      });
+
+      if (deleteResult.affected === 0) {
+        throw new RpcException({
+          code: HttpStatus.CONFLICT,
+          message: '文件已被其他操作修改，请重试',
+        });
+      }
+
+      // 将物理文件删除任务添加到队列
       await this.fileDeleteQueue.add(
         'delete-file',
-        { fileId, userId },
         {
-          attempts: 3, // 最大重试次数
+          fileId: file.id,
+          filePath: file.filePath,
+          fileMd5: file.fileMd5,
+        },
+        {
+          attempts: 3,
           backoff: {
             type: 'exponential',
-            delay: 1000, // 初始延迟1秒
+            delay: 1000,
           },
-          removeOnComplete: true, // 完成后删除任务
-          removeOnFail: false, // 失败时保留任务以便调试
+          removeOnComplete: true,
+          removeOnFail: false,
         },
       );
 
       await queryRunner.commitTransaction();
-      return formatResponse(202, null, '文件删除任务已提交');
+      return formatResponse(204, null, '成功删除文件');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error instanceof RpcException) {
@@ -327,11 +344,33 @@ export class FileService {
         }
       }
 
-      // 将批量删除任务添加到队列
+      // 使用乐观锁批量删除文件元数据
+      const deletePromises = files.map((file) =>
+        queryRunner.manager.delete(FileEntity, {
+          id: file.id,
+          version: file.version,
+        }),
+      );
+
+      const deleteResults = await Promise.all(deletePromises);
+      const hasConflict = deleteResults.some((result) => result.affected === 0);
+
+      if (hasConflict) {
+        throw new RpcException({
+          code: HttpStatus.CONFLICT,
+          message: '部分文件已被其他操作修改，请重试',
+        });
+      }
+
+      // 将物理文件删除任务添加到队列
       await this.fileDeleteQueue.addBulk(
         files.map((file) => ({
           name: 'delete-file',
-          data: { fileId: file.id, userId },
+          data: {
+            fileId: file.id,
+            filePath: file.filePath,
+            fileMd5: file.fileMd5,
+          },
           opts: {
             attempts: 3,
             backoff: {
@@ -345,7 +384,7 @@ export class FileService {
       );
 
       await queryRunner.commitTransaction();
-      return formatResponse(202, null, '批量文件删除任务已提交');
+      return formatResponse(204, null, '成功批量删除文件');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error instanceof RpcException) {

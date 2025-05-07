@@ -17,36 +17,20 @@ export class FileDeleteQueueProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<{ fileId: number; userId: number }>) {
-    const { fileId, userId } = job.data;
+  async process(
+    job: Job<{ fileId: number; filePath: string; fileMd5: string }>,
+  ) {
+    const { fileId, filePath, fileMd5 } = job.data;
     const queryRunner = this.dataSource.createQueryRunner();
 
     try {
       await queryRunner.connect();
       await queryRunner.startTransaction();
 
-      // 获取文件信息
-      const file = await queryRunner.manager.findOne(FileEntity, {
-        where: { id: fileId },
-        select: ['id', 'fileMd5', 'filePath', 'createdBy', 'version'],
-      });
-
-      if (!file) {
-        this.logger.warn(`File with ID ${fileId} not found`);
-        return;
-      }
-
-      if (file.createdBy !== userId) {
-        this.logger.warn(
-          `User ${userId} is not authorized to delete file ${fileId}`,
-        );
-        return;
-      }
-
       // 获取该文件的所有引用（排除当前文件）
       const references = await queryRunner.manager.find(FileEntity, {
         where: {
-          fileMd5: file.fileMd5,
+          fileMd5: fileMd5,
           id: Not(fileId),
         },
         select: ['id'],
@@ -55,29 +39,19 @@ export class FileDeleteQueueProcessor extends WorkerHost {
       // 如果没有其他引用，则删除实际文件
       if (references.length === 0) {
         try {
-          await this.fileOperationService.deleteFile(file.filePath);
-          this.logger.log(
-            `Successfully deleted physical file: ${file.filePath}`,
-          );
+          await this.fileOperationService.deleteFile(filePath);
+          this.logger.log(`Successfully deleted physical file: ${filePath}`);
         } catch (error) {
           this.logger.error(`Failed to delete physical file: ${error.message}`);
           throw error; // 抛出错误以触发重试
         }
-      }
-
-      // 使用乐观锁删除文件元数据
-      const deleteResult = await queryRunner.manager.delete(FileEntity, {
-        id: fileId,
-        version: file.version,
-      });
-
-      if (deleteResult.affected === 0) {
-        this.logger.warn(`File ${fileId} was modified by another operation`);
-        return;
+      } else {
+        this.logger.log(
+          `File ${fileId} has other references, skipping physical deletion`,
+        );
       }
 
       await queryRunner.commitTransaction();
-      this.logger.log(`Successfully deleted file metadata for file ${fileId}`);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error(`Error processing file delete job: ${error.message}`);
