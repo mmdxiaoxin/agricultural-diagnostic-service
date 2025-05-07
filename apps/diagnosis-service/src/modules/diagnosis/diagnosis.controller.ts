@@ -120,7 +120,7 @@ export class DiagnosisController {
   async diagnosisLogListGet(
     @Payload() payload: { diagnosisId: number; query: PageQueryDto },
   ) {
-    return this.diagnosisLogService.getDiagnosisLogsList(
+    return this.diagnosisLogService.findList(
       payload.diagnosisId,
       payload.query,
     );
@@ -128,7 +128,7 @@ export class DiagnosisController {
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.LOG })
   async diagnosisLogGet(@Payload() payload: { diagnosisId: number }) {
-    return this.diagnosisLogService.getDiagnosisLogs(payload.diagnosisId);
+    return this.diagnosisLogService.findAll(payload.diagnosisId);
   }
 
   @MessagePattern({ cmd: DIAGNOSIS_MESSAGE_PATTERNS.FEEDBACK_LIST })

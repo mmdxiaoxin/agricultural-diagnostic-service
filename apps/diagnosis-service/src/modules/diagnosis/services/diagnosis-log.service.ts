@@ -8,6 +8,7 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
+import { createHash } from 'crypto';
 import { Between, Repository } from 'typeorm';
 
 interface LogEntry {
@@ -16,6 +17,7 @@ interface LogEntry {
   message: string;
   metadata?: Record<string, any>;
   timestamp: number;
+  messageId?: string;
 }
 
 interface LogMetrics {
@@ -38,6 +40,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
   private readonly REDIS_ERROR_COUNT_KEY = 'diagnosis:log:metrics:error_count';
   private readonly REDIS_BATCH_SIZE_KEY = 'diagnosis:log:metrics:batch_size';
   private readonly REDIS_INTERVAL_KEY = 'diagnosis:log:metrics:interval';
+  private readonly REDIS_PROCESSED_IDS_KEY = 'diagnosis:log:processed_ids';
 
   private readonly MIN_BATCH_SIZE = 50;
   private readonly MAX_BATCH_SIZE = 500;
@@ -89,9 +92,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
     processTime: number,
     errorCount: number,
   ): Promise<void> {
-    // 根据处理时间和错误率动态调整批处理大小和间隔
     if (errorCount > 0) {
-      // 发生错误时，减小批处理大小并增加间隔
       this.batchSize = Math.max(
         this.MIN_BATCH_SIZE,
         Math.floor(this.batchSize * 0.8),
@@ -101,7 +102,6 @@ export class DiagnosisLogService implements OnModuleDestroy {
         Math.floor(this.flushInterval * 1.2),
       );
     } else if (processTime < 500) {
-      // 处理时间短，可以增加批处理大小
       this.batchSize = Math.min(
         this.MAX_BATCH_SIZE,
         Math.floor(this.batchSize * 1.1),
@@ -112,7 +112,6 @@ export class DiagnosisLogService implements OnModuleDestroy {
       );
     }
 
-    // 保存调整后的参数
     await this.redisService.set(this.REDIS_BATCH_SIZE_KEY, this.batchSize);
     await this.redisService.set(this.REDIS_INTERVAL_KEY, this.flushInterval);
   }
@@ -128,13 +127,11 @@ export class DiagnosisLogService implements OnModuleDestroy {
 
     for (let i = 0; i < maxRetries; i++) {
       try {
-        // 检查 Stream 是否存在
         const streamInfo = await this.redisService
           .xinfo(this.STREAM_KEY)
           .catch(() => null);
 
         if (!streamInfo) {
-          // Stream 不存在，创建新的 Stream 和消费者组
           await this.redisService.xgroupCreate(
             this.STREAM_KEY,
             this.CONSUMER_GROUP,
@@ -142,18 +139,15 @@ export class DiagnosisLogService implements OnModuleDestroy {
             { mkstream: true },
           );
         } else {
-          // Stream 存在，检查消费者组是否存在
           try {
             await this.redisService.xinfoGroup(
               this.STREAM_KEY,
               this.CONSUMER_GROUP,
             );
           } catch (error) {
-            // 如果错误是 BUSYGROUP，说明消费者组已经存在，这是正常的
             if (error.message.includes('BUSYGROUP')) {
               this.logger.log('消费者组已存在，继续执行');
             } else {
-              // 其他错误，尝试创建新的消费者组
               await this.redisService.xgroupCreate(
                 this.STREAM_KEY,
                 this.CONSUMER_GROUP,
@@ -193,13 +187,32 @@ export class DiagnosisLogService implements OnModuleDestroy {
     await this.processLogs();
   }
 
+  private generateMessageId(logEntry: LogEntry): string {
+    const content = `${logEntry.diagnosisId}:${logEntry.level}:${logEntry.message}:${logEntry.timestamp}`;
+    return createHash('sha256').update(content).digest('hex');
+  }
+
+  private async isMessageProcessed(messageId: string): Promise<boolean> {
+    const result = await this.redisService.get<boolean>(
+      `${this.REDIS_PROCESSED_IDS_KEY}:${messageId}`,
+    );
+    return result === true;
+  }
+
+  private async markMessageAsProcessed(messageId: string): Promise<void> {
+    await this.redisService.set(
+      `${this.REDIS_PROCESSED_IDS_KEY}:${messageId}`,
+      true,
+      7 * 24 * 60 * 60,
+    );
+  }
+
   async addLog(
     diagnosisId: number,
     level: LogLevel,
     message: string,
     metadata?: Record<string, any>,
   ): Promise<void> {
-    // 确保 Stream 已初始化
     if (!this.isInitialized) {
       await this.initializeStream();
     }
@@ -212,11 +225,22 @@ export class DiagnosisLogService implements OnModuleDestroy {
       timestamp: Date.now(),
     };
 
+    const messageId = this.generateMessageId(logEntry);
+    logEntry.messageId = messageId;
+
+    if (await this.isMessageProcessed(messageId)) {
+      this.logger.debug(`消息已处理，跳过: ${messageId}`);
+      return;
+    }
+
     try {
       await this.redisService.xadd(this.STREAM_KEY, logEntry);
     } catch (error) {
       this.logger.error('添加日志到 Stream 失败:', error);
-      await this.createLog(diagnosisId, level, message, metadata);
+      if (!(await this.isMessageProcessed(messageId))) {
+        await this.createLog(diagnosisId, level, message, metadata);
+        await this.markMessageAsProcessed(messageId);
+      }
     }
   }
 
@@ -231,7 +255,6 @@ export class DiagnosisLogService implements OnModuleDestroy {
     let errorCount = 0;
 
     try {
-      // 从消费者组读取消息
       const messages = await this.redisService.xreadgroup(
         this.STREAM_KEY,
         this.CONSUMER_GROUP,
@@ -247,17 +270,26 @@ export class DiagnosisLogService implements OnModuleDestroy {
         return;
       }
 
-      // 使用数据库事务处理消息
       await this.logRepository.manager.transaction(
         async (transactionalEntityManager) => {
-          const entities = messages
-            .map((msg) => {
+          const processedMessages = await Promise.all(
+            messages.map(async (msg) => {
               try {
                 const log = msg.data as LogEntry;
                 if (!log.diagnosisId || !log.level || !log.message) {
                   this.logger.error('日志数据不完整:', log);
                   errorCount++;
                   return null;
+                }
+
+                if (log.messageId) {
+                  const isProcessed = await this.isMessageProcessed(
+                    log.messageId,
+                  );
+                  if (isProcessed) {
+                    this.logger.debug(`消息已处理，跳过: ${log.messageId}`);
+                    return null;
+                  }
                 }
 
                 return transactionalEntityManager.create(DiagnosisLog, {
@@ -272,8 +304,12 @@ export class DiagnosisLogService implements OnModuleDestroy {
                 errorCount++;
                 return null;
               }
-            })
-            .filter((entity): entity is DiagnosisLog => entity !== null);
+            }),
+          );
+
+          const entities = processedMessages.filter(
+            (entity): entity is DiagnosisLog => entity !== null,
+          );
 
           if (entities.length === 0) {
             return;
@@ -282,7 +318,15 @@ export class DiagnosisLogService implements OnModuleDestroy {
           await this.saveWithRetry(entities, transactionalEntityManager);
           processedCount = entities.length;
 
-          // 确认消息已处理
+          await Promise.all(
+            messages.map(async (msg) => {
+              const log = msg.data as LogEntry;
+              if (log.messageId) {
+                await this.markMessageAsProcessed(log.messageId);
+              }
+            }),
+          );
+
           const messageIds = messages.map((msg) => msg.id);
           await this.redisService.xack(
             this.STREAM_KEY,
@@ -292,7 +336,6 @@ export class DiagnosisLogService implements OnModuleDestroy {
         },
       );
 
-      // 更新指标
       const processTime = Date.now() - startTime;
       this.lastProcessTime = processTime;
       const pendingInfo = await this.redisService.xpending(
@@ -312,10 +355,8 @@ export class DiagnosisLogService implements OnModuleDestroy {
 
       await this.redisService.set(this.REDIS_METRICS_KEY, metrics, 3600);
 
-      // 根据处理结果调整参数
       await this.adjustProcessingParameters(processTime, errorCount);
 
-      // 重置连续错误计数
       if (errorCount === 0) {
         this.consecutiveErrors = 0;
       } else {
@@ -332,7 +373,6 @@ export class DiagnosisLogService implements OnModuleDestroy {
         stack: error.stack,
       });
 
-      // 如果连续错误次数过多，增加处理间隔
       if (this.consecutiveErrors > 3) {
         this.flushInterval = Math.min(
           this.MAX_INTERVAL,
@@ -401,7 +441,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
     return this.logRepository.save(entities);
   }
 
-  async getDiagnosisLogs(diagnosisId: number) {
+  async findAll(diagnosisId: number) {
     const logs = await this.logRepository.find({
       where: { diagnosisId },
       order: { createdAt: 'DESC' },
@@ -409,7 +449,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
     return formatResponse(200, logs, '诊断日志获取成功');
   }
 
-  async getDiagnosisLogsList(diagnosisId: number, query: PageQueryDto) {
+  async findList(diagnosisId: number, query: PageQueryDto) {
     const { page = 1, pageSize = 10 } = query;
     const [logs, total] = await this.logRepository.findAndCount({
       skip: (page - 1) * pageSize,
@@ -424,7 +464,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
     );
   }
 
-  async getDiagnosisLogsByTimeRange(
+  async findByRange(
     diagnosisId: number,
     startTime: Date,
     endTime: Date,
@@ -438,7 +478,7 @@ export class DiagnosisLogService implements OnModuleDestroy {
     });
   }
 
-  async getMetrics(): Promise<LogMetrics | null> {
+  async findMetrics(): Promise<LogMetrics | null> {
     return this.redisService.get<LogMetrics>(this.REDIS_METRICS_KEY);
   }
 
