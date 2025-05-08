@@ -4,6 +4,8 @@
 //   protoc               v3.12.4
 // source: apps/api-gateway/src/proto/upload.proto
 
+import { Observable } from 'rxjs';
+
 /* eslint-disable */
 
 export const protobufPackage = 'upload';
@@ -122,15 +124,15 @@ export interface FileInfo {
 
 export interface GrpcUploadService {
   /** 单文件上传 */
-  saveFile(request: SaveFileRequest): Promise<SaveFileResponse>;
+  saveFile(request: SaveFileRequest): Observable<SaveFileResponse>;
   /** 预加载文件 */
-  preloadFile(request: PreloadFileRequest): Promise<PreloadFileResponse>;
+  preloadFile(request: PreloadFileRequest): Observable<PreloadFileResponse>;
   /** 分片上传 */
-  chunkFile(request: ChunkFileRequest): Promise<ChunkFileResponse>;
+  chunkFile(request: ChunkFileRequest): Observable<ChunkFileResponse>;
   /** 完成上传 */
-  completeFile(request: CompleteFileRequest): Promise<CompleteFileResponse>;
+  completeFile(request: CompleteFileRequest): Observable<CompleteFileResponse>;
   /** 创建任务 */
-  createTask(request: CreateTaskRequest): Promise<CreateTaskResponse>;
+  createTask(request: CreateTaskRequest): Observable<CreateTaskResponse>;
   /** 获取任务 */
-  getTask(request: GetTaskRequest): Promise<GetTaskResponse>;
+  getTask(request: GetTaskRequest): Observable<GetTaskResponse>;
 }
