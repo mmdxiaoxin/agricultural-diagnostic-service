@@ -56,15 +56,15 @@ export class UserService {
         return result;
       }
 
-      const { avatar, fileName, mimeType } = result.data;
+      const { buffer, fileName, mimeType } = result.data;
 
       // 设置响应头
       res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
       res.setHeader('Content-Type', mimeType);
       res.setHeader('Cache-Control', 'public, max-age=86400'); // 24小时缓存
 
-      // 直接发送 base64 解码后的 buffer
-      res.send(Buffer.from(avatar, 'base64'));
+      // 直接发送 buffer
+      res.send(buffer);
     } catch (error) {
       this.logger.error(`获取头像失败: ${error.message}`, error.stack);
       throw new HttpException('获取头像失败', HttpStatus.INTERNAL_SERVER_ERROR);

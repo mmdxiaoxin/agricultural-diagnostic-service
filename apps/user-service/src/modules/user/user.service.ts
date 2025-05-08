@@ -440,7 +440,7 @@ export class UserService {
 
       // 2. 检查 Redis 缓存
       const cachedAvatar = await this.redisService.get<{
-        avatar: string;
+        buffer: Buffer;
         fileName: string;
         mimeType: string;
       }>(cacheKey);
@@ -479,12 +479,12 @@ export class UserService {
       }
 
       // 4. 读取文件并处理
-      const avatarBuffer = await fs.promises.readFile(avatarPath);
+      const buffer = await fs.promises.readFile(avatarPath);
       const fileName = path.basename(avatarPath);
       const mimeType = mime.lookup(avatarPath) || 'application/octet-stream';
 
       const avatarData = {
-        avatar: avatarBuffer.toString('base64'),
+        buffer,
         fileName,
         mimeType,
       };
@@ -598,7 +598,7 @@ export class UserService {
 
       // 更新缓存
       const avatarData = {
-        avatar: fileData.toString('base64'),
+        buffer: fileData,
         fileName,
         mimeType: mimetype,
       };
