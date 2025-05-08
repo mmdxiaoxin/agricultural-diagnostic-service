@@ -6,9 +6,9 @@ import { RedisService } from '@app/redis';
 import { ClientProxy } from '@nestjs/microservices';
 import { RpcException } from '@nestjs/microservices';
 import { of, throwError } from 'rxjs';
-import { compare } from 'bcryptjs';
+import { compare } from 'bcrypt';
 
-jest.mock('bcryptjs', () => ({
+jest.mock('bcrypt', () => ({
   compare: jest.fn(),
 }));
 

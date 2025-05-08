@@ -6,7 +6,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
-import { hash } from 'bcryptjs';
+import { hash } from 'bcrypt';
 import * as fs from 'fs';
 import * as mime from 'mime-types';
 import * as path from 'path';

@@ -4,7 +4,7 @@ import { RedisService } from '@app/redis';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { compare } from 'bcryptjs';
+import { compare } from 'bcrypt';
 import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 
