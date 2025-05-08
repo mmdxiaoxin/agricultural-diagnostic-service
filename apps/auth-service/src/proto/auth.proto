@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package auth;
+
+// Auth Service
+service AuthService {
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc Notify (NotifyRequest) returns (NotifyResponse);
+  rpc Verify (VerifyRequest) returns (VerifyResponse);
+  rpc ButtonsGet (ButtonsGetRequest) returns (ButtonsGetResponse);
+}
+
+// Menu Service
+service MenuService {
+  rpc GetRoutes (GetRoutesRequest) returns (GetRoutesResponse);
+  rpc FindAll (FindAllRequest) returns (FindAllResponse);
+  rpc FindOne (FindOneRequest) returns (FindOneResponse);
+  rpc Create (CreateMenuRequest) returns (CreateMenuResponse);
+  rpc Update (UpdateMenuRequest) returns (UpdateMenuResponse);
+  rpc Remove (RemoveMenuRequest) returns (RemoveMenuResponse);
+}
+
+// Auth Service Messages
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message LoginRequest {
+  string login = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+  string message = 2;
+}
+
+message NotifyRequest {
+  string email = 1;
+  string link = 2;
+}
+
+message NotifyResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message VerifyRequest {
+  string token = 1;
+}
+
+message VerifyResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ButtonsGetRequest {}
+
+message ButtonsGetResponse {
+  repeated string buttons = 1;
+}
+
+// Menu Service Messages
+message GetRoutesRequest {
+  repeated string roles = 1;
+}
+
+message GetRoutesResponse {
+  bool success = 1;
+  repeated Menu routes = 2;
+}
+
+message FindAllRequest {}
+
+message FindAllResponse {
+  bool success = 1;
+  repeated Menu menus = 2;
+}
+
+message FindOneRequest {
+  int32 id = 1;
+}
+
+message FindOneResponse {
+  bool success = 1;
+  Menu menu = 2;
+}
+
+message CreateMenuRequest {
+  Menu menu = 1;
+}
+
+message CreateMenuResponse {
+  bool success = 1;
+  Menu menu = 2;
+}
+
+message UpdateMenuRequest {
+  Menu menu = 1;
+}
+
+message UpdateMenuResponse {
+  bool success = 1;
+  Menu menu = 2;
+}
+
+message RemoveMenuRequest {
+  int32 id = 1;
+}
+
+message RemoveMenuResponse {
+  bool success = 1;
+}
+
+// Menu Entity
+message Menu {
+  int32 id = 1;
+  string name = 2;
+  string path = 3;
+  string component = 4;
+  string icon = 5;
+  int32 parent_id = 6;
+  int32 order = 7;
+  bool hidden = 8;
+  repeated string roles = 9;
+} 
