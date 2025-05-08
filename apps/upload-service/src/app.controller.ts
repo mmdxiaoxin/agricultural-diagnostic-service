@@ -1,10 +1,15 @@
 import {
   ChunkFileRequest,
   CompleteFileRequest,
+  CompleteFileResponse,
   CreateTaskRequest,
+  CreateTaskResponse,
   GetTaskRequest,
+  GetTaskResponse,
   PreloadFileRequest,
+  PreloadFileResponse,
   SaveFileRequest,
+  SaveFileResponse,
 } from '@common/types/upload';
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, MessagePattern, Payload } from '@nestjs/microservices';
@@ -60,7 +65,7 @@ export class UploadController {
   }
 
   @GrpcMethod('UploadService', 'SaveFile')
-  async grpcSaveFile(request: SaveFileRequest) {
+  async grpcSaveFile(request: SaveFileRequest): Promise<SaveFileResponse> {
     return this.uploadService.saveFile(
       request.fileMeta,
       Buffer.from(request.fileData),
@@ -69,7 +74,10 @@ export class UploadController {
   }
 
   @GrpcMethod('UploadService', 'PreloadFile')
-  async grpcPreloadFile(request: PreloadFileRequest) {
+  async grpcPreloadFile(
+    request: PreloadFileRequest,
+  ): Promise<PreloadFileResponse> {
+    // @ts-ignore
     return this.uploadService.preloadFile(
       request.fileMd5,
       request.originalFileName,
@@ -86,17 +94,21 @@ export class UploadController {
   }
 
   @GrpcMethod('UploadService', 'CompleteFile')
-  async grpcCompleteFile(request: CompleteFileRequest) {
+  async grpcCompleteFile(
+    request: CompleteFileRequest,
+  ): Promise<CompleteFileResponse> {
     return this.uploadService.completeUpload(request.taskId);
   }
 
   @GrpcMethod('UploadService', 'CreateTask')
-  async grpcCreateTask(request: CreateTaskRequest) {
+  async grpcCreateTask(
+    request: CreateTaskRequest,
+  ): Promise<CreateTaskResponse> {
     return this.uploadService.createTask(request);
   }
 
   @GrpcMethod('UploadService', 'GetTask')
-  async grpcGetTask(request: GetTaskRequest) {
+  async grpcGetTask(request: GetTaskRequest): Promise<GetTaskResponse> {
     return this.uploadService.getTask(request.taskId);
   }
 }

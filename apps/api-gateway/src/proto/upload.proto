@@ -114,12 +114,17 @@ message GetTaskResponse {
 
 // 文件信息
 message FileInfo {
-  string originalFileName = 1;
-  string storageFileName = 2;
-  string filePath = 3;
-  string fileType = 4;
-  int32 fileSize = 5;
-  string fileMd5 = 6;
-  int32 createdBy = 7;
-  int32 updatedBy = 8;
+  int32 id = 1;
+  string originalFileName = 2;
+  string storageFileName = 3;
+  string filePath = 4;
+  string fileType = 5;
+  int32 fileSize = 6;
+  string fileMd5 = 7;
+  string access = 8;
+  int32 version = 9;
+  int32 createdBy = 10;
+  int32 updatedBy = 11;
+  string createdAt = 12;
+  string updatedAt = 13;
 } 

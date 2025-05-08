@@ -105,14 +105,19 @@ export interface GetTaskResponse {
 
 /** 文件信息 */
 export interface FileInfo {
+  id: number;
   originalFileName: string;
   storageFileName: string;
   filePath: string;
   fileType: string;
   fileSize: number;
   fileMd5: string;
+  access: string;
+  version: number;
   createdBy: number;
   updatedBy: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GrpcUploadService {
