@@ -140,6 +140,25 @@ console.log(JSON.stringify(serviceConfig, null, 2));
 const commonConfig = {
   exec_mode: 'cluster',
   watch: false,
+  watch_delay: 1000,
+  ignore_watch: [
+    'node_modules',
+    'logs',
+    'dist',
+    '.git',
+    '*.log',
+    '*.md',
+    '*.json',
+    '*.lock',
+    '*.yml',
+    '*.yaml',
+    '*.config.js',
+    '*.config.cjs',
+    '*.config.ts',
+    '*.config.json',
+    '*.config.yaml',
+    '*.config.yml',
+  ],
   env: {
     ...productionEnv,
   },
@@ -148,6 +167,7 @@ const commonConfig = {
   },
   env_development: {
     ...developmentEnv,
+    watch: true,
   },
   time: true,
   max_restarts: 10,
