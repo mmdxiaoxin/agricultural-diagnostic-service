@@ -1,5 +1,13 @@
+import {
+  ChunkFileRequest,
+  CompleteFileRequest,
+  CreateTaskRequest,
+  GetTaskRequest,
+  PreloadFileRequest,
+  SaveFileRequest,
+} from '@common/types/upload';
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { GrpcMethod, MessagePattern, Payload } from '@nestjs/microservices';
 import { UploadService } from './app.service';
 import { TaskCreateDto } from './dto/task-create.dto';
 import { UploadChunkDto } from './dto/upload-chunk.dto';
@@ -49,5 +57,46 @@ export class UploadController {
   @MessagePattern({ cmd: 'task.get' })
   async getTask(@Payload() payload: { taskId: string }) {
     return this.uploadService.getTask(payload.taskId);
+  }
+
+  @GrpcMethod('UploadService', 'SaveFile')
+  async grpcSaveFile(request: SaveFileRequest) {
+    return this.uploadService.saveFile(
+      request.fileMeta,
+      Buffer.from(request.fileData),
+      request.userId,
+    );
+  }
+
+  @GrpcMethod('UploadService', 'PreloadFile')
+  async grpcPreloadFile(request: PreloadFileRequest) {
+    return this.uploadService.preloadFile(
+      request.fileMd5,
+      request.originalFileName,
+      request.userId,
+    );
+  }
+
+  @GrpcMethod('UploadService', 'ChunkFile')
+  async grpcChunkFile(request: ChunkFileRequest) {
+    return this.uploadService.chunkFile(
+      request.taskMeta,
+      Buffer.from(request.chunkData),
+    );
+  }
+
+  @GrpcMethod('UploadService', 'CompleteFile')
+  async grpcCompleteFile(request: CompleteFileRequest) {
+    return this.uploadService.completeUpload(request.taskId);
+  }
+
+  @GrpcMethod('UploadService', 'CreateTask')
+  async grpcCreateTask(request: CreateTaskRequest) {
+    return this.uploadService.createTask(request);
+  }
+
+  @GrpcMethod('UploadService', 'GetTask')
+  async grpcGetTask(request: GetTaskRequest) {
+    return this.uploadService.getTask(request.taskId);
   }
 }

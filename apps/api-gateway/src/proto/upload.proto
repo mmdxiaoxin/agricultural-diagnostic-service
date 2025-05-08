@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package upload;
+
+service UploadService {
+  // 单文件上传
+  rpc SaveFile (SaveFileRequest) returns (SaveFileResponse) {}
+  // 预加载文件
+  rpc PreloadFile (PreloadFileRequest) returns (PreloadFileResponse) {}
+  // 分片上传
+  rpc ChunkFile (ChunkFileRequest) returns (ChunkFileResponse) {}
+  // 完成上传
+  rpc CompleteFile (CompleteFileRequest) returns (CompleteFileResponse) {}
+  // 创建任务
+  rpc CreateTask (CreateTaskRequest) returns (CreateTaskResponse) {}
+  // 获取任务
+  rpc GetTask (GetTaskRequest) returns (GetTaskResponse) {}
+}
+
+// 文件元数据
+message FileMeta {
+  string originalname = 1;
+  string mimetype = 2;
+  int32 size = 3;
+}
+
+// 单文件上传请求
+message SaveFileRequest {
+  FileMeta fileMeta = 1;
+  bytes fileData = 2;
+  int32 userId = 3;
+}
+
+// 单文件上传响应
+message SaveFileResponse {
+  bool success = 1;
+  FileInfo result = 2;
+}
+
+// 预加载文件请求
+message PreloadFileRequest {
+  string fileMd5 = 1;
+  string originalFileName = 2;
+  int32 userId = 3;
+}
+
+// 预加载文件响应
+message PreloadFileResponse {
+  bool success = 1;
+  FileInfo result = 2;
+}
+
+// 分片上传请求
+message ChunkFileRequest {
+  ChunkMeta taskMeta = 1;
+  bytes chunkData = 2;
+}
+
+// 分片元数据
+message ChunkMeta {
+  string taskId = 1;
+  int32 chunkIndex = 2;
+  int32 totalChunks = 3;
+}
+
+// 分片上传响应
+message ChunkFileResponse {
+  string message = 1;
+  int32 chunkIndex = 2;
+}
+
+// 完成上传请求
+message CompleteFileRequest {
+  string taskId = 1;
+}
+
+// 完成上传响应
+message CompleteFileResponse {
+  bool success = 1;
+  FileInfo file = 2;
+}
+
+// 创建任务请求
+message CreateTaskRequest {
+  int32 userId = 1;
+  string fileName = 2;
+  int32 fileSize = 3;
+  string fileType = 4;
+  string fileMd5 = 5;
+  int32 totalChunks = 6;
+}
+
+// 创建任务响应
+message CreateTaskResponse {
+  string taskId = 1;
+  int32 userId = 2;
+  string fileName = 3;
+  int32 fileSize = 4;
+  string fileType = 5;
+  string fileMd5 = 6;
+  int32 totalChunks = 7;
+  repeated int32 uploadedChunks = 8;
+}
+
+// 获取任务请求
+message GetTaskRequest {
+  string taskId = 1;
+}
+
+// 获取任务响应
+message GetTaskResponse {
+  bool success = 1;
+  CreateTaskResponse result = 2;
+}
+
+// 文件信息
+message FileInfo {
+  string originalFileName = 1;
+  string storageFileName = 2;
+  string filePath = 3;
+  string fileType = 4;
+  int32 fileSize = 5;
+  string fileMd5 = 6;
+  int32 createdBy = 7;
+  int32 updatedBy = 8;
+} 

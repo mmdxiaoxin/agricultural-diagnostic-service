@@ -5,10 +5,12 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import {
+  UPLOAD_SERVICE_GRPC_PORT,
   UPLOAD_SERVICE_HOST,
   UPLOAD_SERVICE_HTTP_PORT,
   UPLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -28,17 +30,43 @@ async function bootstrap() {
 
   // 设置日志级别
   app.useLogger(logLevelMap[logLevel] || logLevelMap.info);
-  const microservice = app.connectMicroservice<MicroserviceOptions>({
+
+  // TCP 微服务
+  const tcpMicroservice = app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
       host: UPLOAD_SERVICE_HOST,
       port: UPLOAD_SERVICE_TCP_PORT,
     },
   });
-  microservice.useGlobalFilters(
+
+  // gRPC 微服务
+  const grpcMicroservice = app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'upload',
+      protoPath: join(__dirname, 'proto/upload.proto'),
+      url: `${UPLOAD_SERVICE_HOST}:${UPLOAD_SERVICE_GRPC_PORT}`,
+      loader: {
+        keepCase: true,
+        longs: String,
+        enums: String,
+        defaults: true,
+        oneofs: true,
+        arrays: true,
+      },
+    },
+  });
+
+  tcpMicroservice.useGlobalFilters(
     new OtherExceptionsFilter(),
     new CustomRpcExceptionFilter(),
   );
+  grpcMicroservice.useGlobalFilters(
+    new OtherExceptionsFilter(),
+    new CustomRpcExceptionFilter(),
+  );
+
   await app.startAllMicroservices();
   await app.listen(UPLOAD_SERVICE_HTTP_PORT);
 }
