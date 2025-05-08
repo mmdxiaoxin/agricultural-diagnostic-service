@@ -12,7 +12,7 @@ import {
   FILE_SERVICE_TCP_PORT,
   UPLOAD_SERVICE_HOST,
   UPLOAD_SERVICE_NAME,
-  UPLOAD_SERVICE_GRPC_PORT,
+  UPLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { join } from 'path';
 import { FileController } from './file.controller';
@@ -31,20 +31,8 @@ import { FileService } from './file.service';
     ClientsModule.register([
       {
         name: UPLOAD_SERVICE_NAME,
-        transport: Transport.GRPC,
-        options: {
-          package: 'upload',
-          protoPath: join(__dirname, 'proto/upload.proto'),
-          url: `${UPLOAD_SERVICE_HOST}:${UPLOAD_SERVICE_GRPC_PORT}`,
-          loader: {
-            keepCase: true,
-            longs: String,
-            enums: String,
-            defaults: true,
-            oneofs: true,
-            arrays: true,
-          },
-        },
+        transport: Transport.TCP,
+        options: { host: UPLOAD_SERVICE_HOST, port: UPLOAD_SERVICE_TCP_PORT },
       },
       {
         name: FILE_SERVICE_NAME,
