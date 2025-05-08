@@ -7,6 +7,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigEnum } from '@shared/enum/config.enum';
 import {
+  USER_SERVICE_HOST,
   USER_SERVICE_NAME,
   USER_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
@@ -30,11 +31,21 @@ import { AuthService } from './auth.service';
       },
       inject: [ConfigService],
     }),
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: USER_SERVICE_NAME,
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: USER_SERVICE_TCP_PORT },
+        useFactory: () => ({
+          transport: Transport.TCP,
+          options: {
+            host: USER_SERVICE_HOST,
+            port: USER_SERVICE_TCP_PORT,
+            keepalive: true,
+            keepaliveInitialDelay: 15000,
+            maxConnections: 20,
+            maxRetries: 2,
+            retryDelay: 500,
+          },
+        }),
       },
     ]),
   ],

@@ -81,7 +81,19 @@ export class AuthService {
         });
       }
 
-      const isValid = await compare(password, user.password);
+      // 检查密码验证缓存
+      const passwordCacheKey = `password_verify:${user.id}:${password}`;
+      const cachedResult = await this.redis.get<boolean>(passwordCacheKey);
+
+      let isValid: boolean;
+      if (cachedResult !== null) {
+        isValid = cachedResult;
+      } else {
+        isValid = await compare(password, user.password);
+        // 缓存密码验证结果，有效期5分钟
+        await this.redis.set(passwordCacheKey, isValid, 300);
+      }
+
       if (!isValid) {
         await this.handleLoginFailure(login, '密码错误');
         throw new RpcException({
