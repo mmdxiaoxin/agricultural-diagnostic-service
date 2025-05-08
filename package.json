@@ -25,6 +25,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.13.0",
     "@grpc/proto-loader": "^0.7.13",
+    "@mapbox/node-pre-gyp": "^2.0.0",
     "@nestjs/bullmq": "^11.0.2",
     "@nestjs/cache-manager": "^3.0.0",
     "@nestjs/common": "^11.0.1",
@@ -43,7 +44,6 @@
     "archiver": "^7.0.1",
     "axios": "^1.8.2",
     "bcrypt": "^5.1.1",
-    "bcryptjs": "^3.0.2",
     "bullmq": "^5.45.2",
     "cache-manager": "^6.4.1",
     "cache-manager-redis-store": "^3.0.1",
@@ -76,7 +76,6 @@
     "@types/ali-oss": "^6.16.11",
     "@types/archiver": "^6.0.3",
     "@types/bcrypt": "^5.0.2",
-    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/lodash-es": "^4.17.12",
