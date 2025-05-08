@@ -5,8 +5,14 @@ import { FeedbackQueryDto } from '@common/dto/diagnosis/feedback-query.dto';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
 import { UpdateFeedbackDto } from '@common/dto/diagnosis/update-feedback.dto';
 import { PageQueryDto } from '@common/dto/page-query.dto';
-import { Inject, Injectable } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { GrpcUploadService } from '@common/types/upload';
+import {
+  Inject,
+  Injectable,
+  OnModuleInit,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
 import { DIAGNOSIS_MESSAGE_PATTERNS } from '@shared/constants/diagnosis-message-patterns';
 import {
   DIAGNOSIS_SERVICE_NAME,
@@ -16,28 +22,36 @@ import { Request } from 'express';
 import { lastValueFrom } from 'rxjs';
 
 @Injectable()
-export class DiagnosisService {
+export class DiagnosisService implements OnModuleInit {
+  private uploadService: GrpcUploadService;
+
   constructor(
-    @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientProxy,
+    @Inject(UPLOAD_SERVICE_NAME) private readonly uploadClient: ClientGrpc,
     @Inject(DIAGNOSIS_SERVICE_NAME)
     private readonly diagnosisClient: ClientProxy,
   ) {}
 
+  onModuleInit() {
+    this.uploadService =
+      this.uploadClient.getService<GrpcUploadService>('UploadService');
+  }
+
   async uploadData(req: Request, file: Express.Multer.File) {
     const fileRes = await lastValueFrom(
-      this.uploadClient.send<{ success: boolean; result: FileEntity }>(
-        { cmd: 'upload.single' },
-        {
-          fileMeta: {
-            originalname: file.originalname,
-            mimetype: file.mimetype,
-            size: file.size,
-          },
-          fileData: file.buffer.toString('base64'),
-          userId: req.user.userId,
+      this.uploadService.saveFile({
+        fileMeta: {
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
         },
-      ),
+        fileData: file.buffer,
+        userId: req.user.userId,
+      }),
     );
+
+    if (!fileRes?.result?.id) {
+      throw new InternalServerErrorException('文件上传失败');
+    }
 
     return this.diagnosisClient.send(
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.CREATE },
