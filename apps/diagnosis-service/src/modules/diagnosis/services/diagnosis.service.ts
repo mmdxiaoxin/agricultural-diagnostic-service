@@ -42,7 +42,10 @@ export class DiagnosisService {
     DIAGNOSIS_LIST: 'diagnosis:list',
     DIAGNOSIS_STATUS: 'diagnosis:status',
     USER: 'user',
+    REMOTE_SERVICE: 'remote:service',
   } as const;
+
+  private readonly CACHE_TTL = 300; // 缓存时间5分钟
 
   constructor(
     @Inject(FILE_SERVICE_NAME)
@@ -125,6 +128,39 @@ export class DiagnosisService {
     }
   }
 
+  // 生成远程服务缓存键
+  private generateRemoteServiceCacheKey(serviceId: number): string {
+    return `${this.CACHE_KEYS.REMOTE_SERVICE}:${serviceId}`;
+  }
+
+  // 获取远程服务配置（带缓存）
+  private async getRemoteServiceWithCache(
+    serviceId: number,
+  ): Promise<RemoteService> {
+    const cacheKey = this.generateRemoteServiceCacheKey(serviceId);
+
+    // 尝试从缓存获取
+    const cachedService = await this.redisService.get<RemoteService>(cacheKey);
+    if (cachedService) {
+      return cachedService;
+    }
+
+    // 缓存未命中，从数据库获取
+    const remoteService = await this.remoteRepository.findOne({
+      where: { id: serviceId },
+      relations: ['interfaces', 'configs'],
+    });
+
+    if (!remoteService) {
+      throw new Error('未找到远程服务配置');
+    }
+
+    // 设置缓存
+    await this.redisService.set(cacheKey, remoteService, this.CACHE_TTL);
+
+    return remoteService;
+  }
+
   // 执行诊断任务
   async executeDiagnosisAsync(
     diagnosisId: number,
@@ -146,13 +182,7 @@ export class DiagnosisService {
       }
 
       // 2. 获取远程服务配置
-      const remoteService = await this.remoteRepository.findOne({
-        where: { id: dto.serviceId },
-        relations: ['interfaces', 'configs'],
-      });
-      if (!remoteService) {
-        throw new Error('未找到远程服务配置');
-      }
+      const remoteService = await this.getRemoteServiceWithCache(dto.serviceId);
 
       // 3. 从服务配置中获取接口调用配置
       const remoteConfig = remoteService.configs.find(
@@ -338,21 +368,7 @@ export class DiagnosisService {
       }
 
       // 2. 获取远程服务配置
-      const remoteService = await this.remoteRepository.findOne({
-        where: { id: dto.serviceId },
-        relations: ['interfaces', 'configs'],
-      });
-      if (!remoteService) {
-        await this.logService.addLog(
-          diagnosisId,
-          LogLevel.ERROR,
-          '未找到远程服务配置',
-        );
-        throw new RpcException({
-          code: 500,
-          message: '未找到远程服务配置',
-        });
-      }
+      const remoteService = await this.getRemoteServiceWithCache(dto.serviceId);
 
       // 3. 从服务配置中获取接口调用配置
       const remoteConfig = remoteService.configs.find(
@@ -579,21 +595,7 @@ export class DiagnosisService {
       }
 
       // 2. 获取远程服务配置
-      const remoteService = await this.remoteRepository.findOne({
-        where: { id: dto.serviceId },
-        relations: ['interfaces', 'configs'],
-      });
-      if (!remoteService) {
-        await this.logService.addLog(
-          diagnosisId,
-          LogLevel.ERROR,
-          '未找到远程服务配置',
-        );
-        throw new RpcException({
-          code: 500,
-          message: '未找到远程服务配置',
-        });
-      }
+      const remoteService = await this.getRemoteServiceWithCache(dto.serviceId);
 
       // 3. 从服务配置中获取接口调用配置
       const remoteConfig = remoteService.configs.find(

@@ -61,6 +61,21 @@ export class RemoteServiceService {
     }
   }
 
+  // 清除诊断服务中的远程服务缓存
+  private async clearDiagnosisServiceCache(serviceId?: number) {
+    const patterns = ['remote:service:*'];
+    if (serviceId) {
+      patterns.push(`remote:service:${serviceId}`);
+    }
+
+    for (const pattern of patterns) {
+      const keys = await this.redisService.getClient().keys(pattern);
+      if (keys.length > 0) {
+        await this.redisService.getClient().del(...keys);
+      }
+    }
+  }
+
   // 获取全部远程服务
   async find(): Promise<RemoteService[]> {
     const cacheKey = this.generateCacheKey('REMOTE_SERVICE_LIST', 'all');
@@ -243,6 +258,7 @@ export class RemoteServiceService {
 
       // 清除相关缓存
       await this.clearRelatedCache(serviceId);
+      await this.clearDiagnosisServiceCache(serviceId);
 
       return updatedService;
     } catch (error) {
@@ -296,6 +312,7 @@ export class RemoteServiceService {
 
       // 清除相关缓存
       await this.clearRelatedCache(serviceId);
+      await this.clearDiagnosisServiceCache(serviceId);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error('删除远程服务失败:', error);
@@ -377,6 +394,7 @@ export class RemoteServiceService {
 
       // 清除相关缓存
       await this.clearRelatedCache();
+      await this.clearDiagnosisServiceCache();
 
       return savedService;
     } catch (error) {
