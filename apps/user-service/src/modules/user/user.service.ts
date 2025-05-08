@@ -737,7 +737,7 @@ export class UserService {
       return cachedUser;
     }
 
-    // 使用更高效的查询方式
+    // 使用更高效的查询方式，只选择必要的字段
     const user = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'role')
@@ -756,7 +756,9 @@ export class UserService {
       .getOne();
 
     if (user) {
-      // 使用配置的缓存时间
+      // 使用 pipeline 批量更新缓存
+      const pipeline = this.redisService.pipeline();
+
       const cacheUpdates = [
         { type: 'USER_LOGIN', key: login, data: user },
         { type: 'USER_EMAIL', key: user.email, data: user },
@@ -764,15 +766,20 @@ export class UserService {
         { type: 'USER_ID', key: user.id, data: user },
       ];
 
-      await Promise.all(
-        cacheUpdates.map(({ type, key, data }) =>
-          this.redisService.set(
-            this.generateCacheKey(type as keyof typeof this.CACHE_KEYS, key),
-            data,
-            this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
-          ),
-        ),
-      );
+      cacheUpdates.forEach(({ type, key, data }) => {
+        const cacheKey = this.generateCacheKey(
+          type as keyof typeof this.CACHE_KEYS,
+          key,
+        );
+        const stringValue = JSON.stringify(data);
+        pipeline.setex(
+          cacheKey,
+          this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
+          stringValue,
+        );
+      });
+
+      await pipeline.exec();
     }
 
     return user;

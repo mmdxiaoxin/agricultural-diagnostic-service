@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ConfigEnum } from '@shared/enum/config.enum';
 import Redis, { ChainableCommander, RedisOptions } from 'ioredis';
@@ -70,10 +70,12 @@ type StreamResult<T> = {
 };
 
 @Injectable()
-export class RedisService implements OnModuleDestroy {
-  private readonly client: Redis;
+export class RedisService implements OnModuleInit, OnModuleDestroy {
+  private client: Redis;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {}
+
+  async onModuleInit() {
     const host = this.configService.get<string>(ConfigEnum.REDIS_HOST);
     const port = this.configService.get<number>(ConfigEnum.REDIS_PORT);
     const password = this.configService.get<string>(ConfigEnum.REDIS_PASSWORD);
@@ -906,5 +908,10 @@ export class RedisService implements OnModuleDestroy {
       }
       return deletedCount;
     }, options);
+  }
+
+  // 创建 pipeline
+  pipeline() {
+    return this.client.pipeline();
   }
 }
