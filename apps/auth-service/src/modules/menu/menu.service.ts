@@ -11,6 +11,17 @@ export class MenuService {
   private readonly CACHE_TTL = 3600; // 缓存1小时
   private readonly logger = new Logger(MenuService.name);
 
+  // 内存缓存
+  private readonly memoryCache = new Map<
+    string,
+    {
+      data: any;
+      timestamp: number;
+    }
+  >();
+  private readonly MEMORY_CACHE_TTL = 300000; // 5分钟
+  private readonly MAX_MEMORY_CACHE_SIZE = 1000;
+
   constructor(
     @InjectRepository(Menu)
     private readonly menuRepository: Repository<Menu>,
@@ -22,56 +33,133 @@ export class MenuService {
     const cacheKey = this.CACHE_PREFIX + roles.sort().join(':');
 
     try {
-      // 尝试从缓存获取
+      // 1. 尝试从内存缓存获取
+      const memoryCached = this.getFromMemoryCache(cacheKey);
+      if (memoryCached) {
+        return formatResponse(
+          200,
+          memoryCached,
+          '获取个人路由权限成功(内存缓存)',
+        );
+      }
+
+      // 2. 尝试从Redis缓存获取
       const cachedRoutes = await this.redisService.get<any[]>(cacheKey);
       if (cachedRoutes) {
-        return formatResponse(200, cachedRoutes, '获取个人路由权限成功');
+        // 更新内存缓存
+        this.updateMemoryCache(cacheKey, cachedRoutes);
+        return formatResponse(
+          200,
+          cachedRoutes,
+          '获取个人路由权限成功(Redis缓存)',
+        );
       }
     } catch (error) {
       this.logger.warn(`从缓存获取菜单路由失败: ${error.message}`);
       // 缓存错误不影响主流程，继续从数据库获取
     }
 
-    // 缓存未命中或出错，从数据库获取
-    const menus = await this.menuRepository.find({
-      relations: ['parent', 'children', 'roles'],
-      where: {
-        roles: {
-          name: In(roles),
-        },
-      },
-      order: { id: 'ASC' },
-    });
-
-    // 按照 sort 属性对菜单进行排序
-    menus.sort((a, b) => a.sort - b.sort);
-
-    // 构建菜单树
-    const buildMenuTree = (parentId: number | null): any[] => {
-      return menus
-        .filter((menu) => menu.parentId === parentId)
-        .sort((a, b) => a.sort - b.sort)
-        .map((menu) => ({
-          icon: menu.icon,
-          title: menu.title,
-          path: menu.path,
-          isLink: menu.isLink,
-          children: buildMenuTree(menu.id),
-        }));
-    };
-
-    // 生成菜单树
-    const menuTree = buildMenuTree(null);
-
+    // 3. 从数据库获取
     try {
-      // 存入缓存
-      await this.redisService.set(cacheKey, menuTree, this.CACHE_TTL);
+      const menus = await this.menuRepository
+        .createQueryBuilder('menu')
+        .leftJoinAndSelect('menu.roles', 'role')
+        .select([
+          'menu.id',
+          'menu.parentId',
+          'menu.icon',
+          'menu.title',
+          'menu.path',
+          'menu.isLink',
+          'menu.sort',
+          'role.name',
+        ])
+        .where('role.name IN (:...roles)', { roles })
+        .orderBy('menu.sort', 'ASC')
+        .cache(true) // 启用TypeORM查询缓存
+        .getMany();
+
+      // 构建菜单树
+      const menuTree = this.buildMenuTree(menus);
+
+      // 4. 更新缓存
+      await this.updateCaches(cacheKey, menuTree);
+
+      return formatResponse(200, menuTree, '获取个人路由权限成功');
     } catch (error) {
-      this.logger.warn(`缓存菜单路由失败: ${error.message}`);
-      // 缓存错误不影响主流程，继续返回数据
+      this.logger.error(`获取菜单路由失败: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  // 从内存缓存获取数据
+  private getFromMemoryCache(key: string): any | null {
+    const cached = this.memoryCache.get(key);
+    if (cached && Date.now() - cached.timestamp < this.MEMORY_CACHE_TTL) {
+      return cached.data;
+    }
+    return null;
+  }
+
+  // 更新内存缓存
+  private updateMemoryCache(key: string, data: any) {
+    // 如果缓存已满，删除最旧的项
+    if (this.memoryCache.size >= this.MAX_MEMORY_CACHE_SIZE) {
+      const oldestKey = Array.from(this.memoryCache.entries()).sort(
+        ([, a], [, b]) => a.timestamp - b.timestamp,
+      )[0][0];
+      this.memoryCache.delete(oldestKey);
     }
 
-    return formatResponse(200, menuTree, '获取个人路由权限成功');
+    this.memoryCache.set(key, {
+      data,
+      timestamp: Date.now(),
+    });
+  }
+
+  // 更新所有缓存
+  private async updateCaches(key: string, data: any) {
+    // 更新内存缓存
+    this.updateMemoryCache(key, data);
+
+    // 更新Redis缓存
+    try {
+      await this.redisService.set(key, data, this.CACHE_TTL);
+    } catch (error) {
+      this.logger.warn(`更新Redis缓存失败: ${error.message}`);
+    }
+  }
+
+  // 构建菜单树
+  private buildMenuTree(menus: Menu[]): any[] {
+    const menuMap = new Map<number, any>();
+    const result: any[] = [];
+
+    // 首先创建所有菜单节点
+    menus.forEach((menu) => {
+      menuMap.set(menu.id, {
+        icon: menu.icon,
+        title: menu.title,
+        path: menu.path,
+        isLink: menu.isLink,
+        children: [],
+      });
+    });
+
+    // 构建树形结构
+    menus.forEach((menu) => {
+      const node = menuMap.get(menu.id);
+      if (!menu.parentId) {
+        result.push(node);
+      } else {
+        const parent = menuMap.get(menu.parentId);
+        if (parent) {
+          parent.children.push(node);
+        }
+      }
+    });
+
+    return result;
   }
 
   // 获取所有菜单
