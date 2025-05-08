@@ -47,31 +47,26 @@ export class UserService {
   }
 
   async getAvatar(userId: number, res: Response) {
-    try {
-      const result = await lastValueFrom(
-        this.userClient.send({ cmd: 'user.avatar.get' }, { userId }),
-      );
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'user.avatar.get' }, { userId }),
+    );
 
-      if (!result.data) {
-        return result;
-      }
-
-      const { buffer, fileName, mimeType } = result.data;
-
-      // 设置响应头
-      res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
-      res.setHeader('Content-Type', mimeType);
-      res.setHeader('Cache-Control', 'public, max-age=86400'); // 24小时缓存
-
-      // 将序列化的 Buffer 数据转换回 Buffer 对象
-      const imageBuffer = Buffer.from(buffer.data);
-
-      // 直接发送 buffer
-      res.send(imageBuffer);
-    } catch (error) {
-      this.logger.error(`获取头像失败: ${error.message}`, error.stack);
-      throw new HttpException('获取头像失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    if (!result.data) {
+      return result;
     }
+
+    const { buffer, fileName, mimeType } = result.data;
+
+    // 设置响应头
+    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // 24小时缓存
+
+    // 将序列化的 Buffer 数据转换回 Buffer 对象
+    const imageBuffer = Buffer.from(buffer.data);
+
+    // 直接发送 buffer
+    res.send(imageBuffer);
   }
 
   updatePassword(userId: number, dto: UpdatePasswordDto) {
