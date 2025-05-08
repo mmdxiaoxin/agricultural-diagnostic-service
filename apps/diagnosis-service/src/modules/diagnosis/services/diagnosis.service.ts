@@ -5,6 +5,7 @@ import {
   FileEntity,
   PollingOperator,
   RemoteService,
+  RemoteConfig,
 } from '@app/database/entities';
 import { LogLevel } from '@app/database/entities/diagnosis-log.entity';
 import { StartDiagnosisDto } from '@common/dto/diagnosis/start-diagnosis.dto';
@@ -167,6 +168,8 @@ export class DiagnosisService {
     dto: StartDiagnosisDto,
     token: string,
     fileId: number,
+    remoteService: RemoteService,
+    remoteConfig: RemoteConfig,
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -181,27 +184,12 @@ export class DiagnosisService {
         throw new Error('未找到诊断记录');
       }
 
-      // 2. 获取远程服务配置
-      const remoteService = await this.getRemoteServiceWithCache(dto.serviceId);
-
-      // 3. 从服务配置中获取接口调用配置
-      const remoteConfig = remoteService.configs.find(
-        (config) => config.id === dto.configId,
-      );
-      if (!remoteConfig) {
-        throw new Error('服务配置无接口配置');
-      }
-      const requests = remoteConfig.config.requests;
-      if (!requests || requests.length === 0) {
-        throw new Error('服务配置中未指定接口调用配置');
-      }
-
-      // 4. 获取接口配置
+      // 2. 获取接口配置
       const remoteInterfaces = new Map(
         remoteService.interfaces.map((interf) => [interf.id, interf]),
       );
 
-      // 5. 获取文件
+      // 3. 获取文件
       const fileMeta = await this.getFileMeta(fileId);
       const fileData = await this.downloadFile(fileMeta);
       await this.logService.addLog(
@@ -210,7 +198,8 @@ export class DiagnosisService {
         `获取文件成功: ${fileMeta.originalFileName}`,
       );
 
-      // 6. 初始化接口调用管理器
+      // 4. 初始化接口调用管理器
+      const requests = remoteConfig.config.requests;
       const processedRequests = requests.map((request) => ({
         ...request,
         pollingCondition: request.pollingCondition
@@ -227,7 +216,7 @@ export class DiagnosisService {
         remoteInterfaces,
       );
 
-      // 7. 注册回调函数
+      // 5. 注册回调函数
       requests.forEach((request) => {
         this.interfaceCallManager.registerCallback(
           request.id,
@@ -247,21 +236,21 @@ export class DiagnosisService {
         );
       });
 
-      // 8. 执行接口调用
+      // 6. 执行接口调用
       const results = await this.interfaceCallManager.execute({
         token,
         fileMeta,
         fileData,
       });
 
-      // 9. 获取最后一个接口的结果
+      // 7. 获取最后一个接口的结果
       const lastRequest = requests[requests.length - 1];
       const lastResult = results.get(lastRequest.id);
       if (!lastResult) {
         throw new Error('接口调用失败，未获取到结果');
       }
 
-      // 10. 更新诊断结果
+      // 8. 更新诊断结果
       diagnosis.status = get(
         lastResult,
         'data.status',
@@ -269,7 +258,7 @@ export class DiagnosisService {
       );
       diagnosis.diagnosisResult = get(lastResult, 'data');
 
-      // 11. 匹配疾病
+      // 9. 匹配疾病
       const predictions = get(lastResult, 'data.predictions', []);
       const response = await lastValueFrom(
         this.knowledgeClient.send<{ data: MatchResult[] }>(
@@ -596,6 +585,17 @@ export class DiagnosisService {
 
       // 2. 获取远程服务配置
       const remoteService = await this.getRemoteServiceWithCache(dto.serviceId);
+      if (!remoteService) {
+        await this.logService.addLog(
+          diagnosisId,
+          LogLevel.ERROR,
+          '未找到远程服务配置',
+        );
+        throw new RpcException({
+          code: 500,
+          message: '未找到远程服务配置',
+        });
+      }
 
       // 3. 从服务配置中获取接口调用配置
       const remoteConfig = remoteService.configs.find(
@@ -650,7 +650,7 @@ export class DiagnosisService {
 
       await queryRunner.commitTransaction();
 
-      // 6. 将任务添加到队列
+      // 6. 将任务添加到队列，同时传递远程服务配置
       await this.diagnosisQueue.add(
         'diagnosis',
         {
@@ -659,6 +659,8 @@ export class DiagnosisService {
           dto,
           token,
           fileId: diagnosis.fileId,
+          remoteService,
+          remoteConfig,
         },
         {
           attempts: 3,

@@ -4,6 +4,7 @@ import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { DIAGNOSIS_PROCESSOR } from '.';
 import { DiagnosisService } from '../services/diagnosis.service';
+import { RemoteConfig, RemoteService } from '@app/database/entities';
 
 @Processor(DIAGNOSIS_PROCESSOR)
 export class DiagnosisProcessor extends WorkerHost {
@@ -22,6 +23,8 @@ export class DiagnosisProcessor extends WorkerHost {
       dto: StartDiagnosisDto;
       token: string;
       fileId: number;
+      remoteService: RemoteService;
+      remoteConfig: RemoteConfig;
     }>,
   ) {
     this.logger.debug(`开始处理诊断任务 ${job.data.diagnosisId}`);
@@ -32,6 +35,8 @@ export class DiagnosisProcessor extends WorkerHost {
         job.data.dto,
         job.data.token,
         job.data.fileId,
+        job.data.remoteService,
+        job.data.remoteConfig,
       );
 
       this.logger.debug(`诊断任务 ${job.data.diagnosisId} 处理完成`);
