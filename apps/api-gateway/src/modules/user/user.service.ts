@@ -63,8 +63,11 @@ export class UserService {
       res.setHeader('Content-Type', mimeType);
       res.setHeader('Cache-Control', 'public, max-age=86400'); // 24小时缓存
 
+      // 将序列化的 Buffer 数据转换回 Buffer 对象
+      const imageBuffer = Buffer.from(buffer.data);
+
       // 直接发送 buffer
-      res.send(buffer);
+      res.send(imageBuffer);
     } catch (error) {
       this.logger.error(`获取头像失败: ${error.message}`, error.stack);
       throw new HttpException('获取头像失败', HttpStatus.INTERNAL_SERVER_ERROR);
