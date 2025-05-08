@@ -133,7 +133,6 @@ export class UploadService {
     taskMeta: {
       taskId: string;
       chunkIndex: number;
-      totalChunks: number;
     },
     chunkData: Buffer,
   ): Promise<{ message: string; chunkIndex: number }> {

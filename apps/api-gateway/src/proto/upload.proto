@@ -60,7 +60,6 @@ message ChunkFileRequest {
 message ChunkMeta {
   string taskId = 1;
   int32 chunkIndex = 2;
-  int32 totalChunks = 3;
 }
 
 // 分片上传响应

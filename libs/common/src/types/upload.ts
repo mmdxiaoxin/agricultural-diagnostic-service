@@ -51,7 +51,6 @@ export interface ChunkFileRequest {
 export interface ChunkMeta {
   taskId: string;
   chunkIndex: number;
-  totalChunks: number;
 }
 
 /** 分片上传响应 */
