@@ -137,9 +137,6 @@ export interface GrpcAuthService {
   notify(request: NotifyRequest): Observable<NotifyResponse>;
   verify(request: VerifyRequest): Observable<VerifyResponse>;
   buttonsGet(request: ButtonsGetRequest): Observable<ButtonsGetResponse>;
-  configureRoles(
-    request: ConfigureRolesRequest,
-  ): Observable<ConfigureRolesResponse>;
 }
 
 /** Menu Service */
@@ -150,4 +147,7 @@ export interface GrpcMenuService {
   create(request: CreateMenuRequest): Observable<CreateMenuResponse>;
   update(request: UpdateMenuRequest): Observable<UpdateMenuResponse>;
   remove(request: RemoveMenuRequest): Observable<RemoveMenuResponse>;
+  configureRoles(
+    request: ConfigureRolesRequest,
+  ): Observable<ConfigureRolesResponse>;
 }
