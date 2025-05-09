@@ -4,7 +4,12 @@ import {
 } from '@app/database/entities/diagnosis-log.entity';
 import { RedisService } from '@app/redis';
 import { PageQueryDto } from '@common/dto/page-query.dto';
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
@@ -34,7 +39,7 @@ interface LogMetrics {
 }
 
 @Injectable()
-export class DiagnosisLogService implements OnModuleDestroy {
+export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiagnosisLogService.name);
   private readonly STREAM_KEY = 'diagnosis:log:stream';
   private readonly CONSUMER_GROUP = 'diagnosis:log:group';
@@ -71,15 +76,20 @@ export class DiagnosisLogService implements OnModuleDestroy {
     @InjectRepository(DiagnosisLog)
     private readonly logRepository: Repository<DiagnosisLog>,
     private readonly redisService: RedisService,
-  ) {
-    this.initializeStream().catch((error) => {
-      this.logger.error('初始化 Stream 失败:', error);
-    });
-    this.initializeMetrics().catch((error) => {
-      this.logger.error('初始化指标失败:', error);
-    });
-    this.startProcessing();
-    this.startMetricsUpdate();
+  ) {}
+
+  async onModuleInit() {
+    try {
+      // 按顺序初始化各个组件
+      await this.initializeStream();
+      await this.initializeMetrics();
+      this.startProcessing();
+      this.startMetricsUpdate();
+      this.logger.log('DiagnosisLogService 初始化成功');
+    } catch (error) {
+      this.logger.error('DiagnosisLogService 初始化失败:', error);
+      throw error;
+    }
   }
 
   private async initializeMetrics(): Promise<void> {
