@@ -94,16 +94,4 @@ export class AuthService {
       '获取按钮成功',
     );
   }
-
-  async configureMenuRoles(menuId: number, roleIds: number[]) {
-    const response = await firstValueFrom(
-      this.grpcMenuService.configureRoles({ menuId, roleIds }),
-    );
-
-    if (!response.success) {
-      throw new InternalServerErrorException('配置菜单角色关联失败');
-    }
-
-    return formatResponse(200, null, '配置菜单角色关联成功');
-  }
 }

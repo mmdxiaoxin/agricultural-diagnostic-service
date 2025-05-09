@@ -4,6 +4,7 @@ import {
   ApiResponse,
 } from '@common/decorator/api-response.decorator';
 import { Roles } from '@common/decorator/roles.decorator';
+import { MenuConfigDto } from '@common/dto/auth/menu-config.dto';
 import { RouteItemDto } from '@common/dto/menu/route.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -126,5 +127,20 @@ export class MenuController {
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '菜单不存在')
   async remove(@Param('id') id: number) {
     return this.menuService.remove(id);
+  }
+
+  @Post('configure-roles')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: '配置菜单角色关联',
+    description: '为指定菜单配置角色权限',
+  })
+  @ApiResponse(HttpStatus.OK, '配置成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
+  @ApiBearerAuth()
+  async configureMenuRoles(@Body() data: MenuConfigDto) {
+    return this.menuService.configureMenuRoles(data);
   }
 }

@@ -1,3 +1,4 @@
+import { MenuConfigDto } from '@common/dto/auth/menu-config.dto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { AUTH_SERVICE_NAME } from 'config/microservice.config';
@@ -33,5 +34,9 @@ export class MenuService {
 
   remove(id: number) {
     return this.authClient.send({ cmd: 'menu.remove' }, { id });
+  }
+
+  configureMenuRoles(data: MenuConfigDto) {
+    return this.authClient.send({ cmd: 'menu.configure.roles' }, data);
   }
 }
