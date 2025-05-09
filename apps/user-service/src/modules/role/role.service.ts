@@ -17,10 +17,14 @@ export class RoleService {
   // 获取角色列表
   async findList(dto: PageQueryKeywordsDto) {
     const { page, pageSize, keyword } = dto;
+    const where = keyword ? { name: Like(`%${keyword}%`) } : {};
     const [roles, total] = await this.roleRepository.findAndCount({
-      where: { name: Like(`%${keyword}%`) },
+      where,
       skip: (page - 1) * pageSize,
       take: pageSize,
+      order: {
+        createdAt: 'DESC',
+      },
     });
     return {
       list: roles,
