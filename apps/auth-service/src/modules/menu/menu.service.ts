@@ -222,4 +222,38 @@ export class MenuService {
     });
     return formatResponse(204, {}, '删除菜单成功');
   }
+
+  // 配置菜单角色关联
+  async configureRoles(menuId: number, roleIds: number[]) {
+    try {
+      const menu = await this.menuRepository.findOne({
+        where: { id: menuId },
+        relations: ['roles'],
+      });
+
+      if (!menu) {
+        return formatResponse(404, null, '菜单不存在');
+      }
+
+      // 更新菜单的角色关联
+      await this.menuRepository
+        .createQueryBuilder()
+        .relation(Menu, 'roles')
+        .of(menu)
+        .addAndRemove(
+          roleIds,
+          menu.roles.map((role) => role.id),
+        );
+
+      // 清除缓存
+      await this.clearMenuCache().catch((error) => {
+        this.logger.warn(`配置角色关联后清除缓存失败: ${error.message}`);
+      });
+
+      return formatResponse(200, null, '配置菜单角色关联成功');
+    } catch (error) {
+      this.logger.error(`配置菜单角色关联失败: ${error.message}`, error.stack);
+      return formatResponse(500, null, '配置菜单角色关联失败');
+    }
+  }
 }

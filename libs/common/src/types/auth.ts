@@ -108,6 +108,15 @@ export interface RemoveMenuResponse {
   success: boolean;
 }
 
+export interface ConfigureRolesRequest {
+  menuId: number;
+  roleIds: number[];
+}
+
+export interface ConfigureRolesResponse {
+  success: boolean;
+}
+
 /** Menu Entity */
 export interface Menu {
   id: number;
@@ -128,6 +137,9 @@ export interface GrpcAuthService {
   notify(request: NotifyRequest): Observable<NotifyResponse>;
   verify(request: VerifyRequest): Observable<VerifyResponse>;
   buttonsGet(request: ButtonsGetRequest): Observable<ButtonsGetResponse>;
+  configureRoles(
+    request: ConfigureRolesRequest,
+  ): Observable<ConfigureRolesResponse>;
 }
 
 /** Menu Service */

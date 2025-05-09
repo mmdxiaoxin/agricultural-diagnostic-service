@@ -19,6 +19,7 @@ service MenuService {
   rpc Create (CreateMenuRequest) returns (CreateMenuResponse);
   rpc Update (UpdateMenuRequest) returns (UpdateMenuResponse);
   rpc Remove (RemoveMenuRequest) returns (RemoveMenuResponse);
+  rpc ConfigureRoles (ConfigureRolesRequest) returns (ConfigureRolesResponse);
 }
 
 // Auth Service Messages
@@ -116,6 +117,15 @@ message RemoveMenuRequest {
 }
 
 message RemoveMenuResponse {
+  bool success = 1;
+}
+
+message ConfigureRolesRequest {
+  int32 menu_id = 1;
+  repeated int32 role_ids = 2;
+}
+
+message ConfigureRolesResponse {
   bool success = 1;
 }
 

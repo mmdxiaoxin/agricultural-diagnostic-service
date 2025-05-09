@@ -11,6 +11,8 @@ import {
   RemoveMenuResponse,
   UpdateMenuRequest,
   UpdateMenuResponse,
+  ConfigureRolesRequest,
+  ConfigureRolesResponse,
 } from '@common/types/auth';
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, MessagePattern, Payload } from '@nestjs/microservices';
@@ -49,6 +51,11 @@ export class MenuController {
   @MessagePattern({ cmd: 'menu.remove' })
   async remove(@Payload() data: { id: number }) {
     return this.menuService.remove(data.id);
+  }
+
+  @MessagePattern({ cmd: 'menu.configure.roles' })
+  async configureRoles(@Payload() data: { menuId: number; roleIds: number[] }) {
+    return this.menuService.configureRoles(data.menuId, data.roleIds);
   }
 
   // gRPC endpoints
@@ -188,6 +195,19 @@ export class MenuController {
     const response = await this.menuService.remove(data.id);
     return {
       success: response.code === 204,
+    };
+  }
+
+  @GrpcMethod('MenuService', 'ConfigureRoles')
+  async grpcConfigureRoles(
+    data: ConfigureRolesRequest,
+  ): Promise<ConfigureRolesResponse> {
+    const response = await this.menuService.configureRoles(
+      data.menuId,
+      data.roleIds,
+    );
+    return {
+      success: response.code === 200,
     };
   }
 }

@@ -80,4 +80,20 @@ export class AuthController {
   async buttonsGet() {
     return this.authService.getButtons();
   }
+
+  @Post('menu/configure-roles')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: '配置菜单角色关联',
+    description: '为指定菜单配置角色权限',
+  })
+  @ApiResponse(HttpStatus.OK, '配置成功')
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiBearerAuth()
+  async configureMenuRoles(
+    @Body() data: { menuId: number; roleIds: number[] },
+  ) {
+    return this.authService.configureMenuRoles(data.menuId, data.roleIds);
+  }
 }
