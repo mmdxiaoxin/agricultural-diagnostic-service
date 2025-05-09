@@ -3,7 +3,7 @@ import { RedisService } from '@app/redis';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { formatResponse } from '@shared/helpers/response.helper';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class MenuService {
@@ -164,9 +164,7 @@ export class MenuService {
 
   // 获取所有菜单
   async findAll() {
-    const list = await this.menuRepository.find({
-      relations: ['parent', 'children'],
-    });
+    const list = await this.menuRepository.find();
     return formatResponse(200, list, '获取所有菜单成功');
   }
 
