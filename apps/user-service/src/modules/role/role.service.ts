@@ -1,10 +1,11 @@
 import { Role } from '@app/database/entities';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 import { CreateRoleDto } from '@common/dto/role/create-role.dto';
 import { UpdateRoleDto } from '@common/dto/role/update-role.dto';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class RoleService {
@@ -12,6 +13,22 @@ export class RoleService {
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
   ) {}
+
+  // 获取角色列表
+  async findList(dto: PageQueryKeywordsDto) {
+    const { page, pageSize, keyword } = dto;
+    const [roles, total] = await this.roleRepository.findAndCount({
+      where: { name: Like(`%${keyword}%`) },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+    return {
+      list: roles,
+      total,
+      page,
+      pageSize,
+    };
+  }
 
   // 获取所有角色
   async findAll() {

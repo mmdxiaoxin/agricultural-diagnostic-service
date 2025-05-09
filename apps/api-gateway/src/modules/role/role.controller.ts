@@ -5,6 +5,8 @@ import {
 } from '@common/decorator/api-response.decorator';
 import { Roles } from '@common/decorator/roles.decorator';
 import { NumberDictDto } from '@common/dto/dict.dto';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
+import { createPageResponseDto } from '@common/dto/page-response.dto';
 import { CreateRoleDto } from '@common/dto/role/create-role.dto';
 import { RoleDto } from '@common/dto/role/role.dto';
 import { UpdateRoleDto } from '@common/dto/role/update-role.dto';
@@ -22,6 +24,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -57,6 +60,23 @@ export class RoleController {
       this.userClient.send({ cmd: 'role.dict' }, {}),
     );
     return formatResponse(200, dict, '角色字典获取成功');
+  }
+
+  @Get('list')
+  @Roles(Role.Admin)
+  @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary: '获取角色列表（分页）',
+    description: '获取系统中所有角色的列表（仅管理员可访问）',
+  })
+  @ApiResponse(HttpStatus.OK, '获取成功', createPageResponseDto(RoleDto), true)
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, '权限不足')
+  async findList(@Query() dto: PageQueryKeywordsDto) {
+    const result = await lastValueFrom(
+      this.userClient.send({ cmd: 'role.findList' }, { dto }),
+    );
+    return formatResponse(200, result, '角色列表获取成功');
   }
 
   @Get()

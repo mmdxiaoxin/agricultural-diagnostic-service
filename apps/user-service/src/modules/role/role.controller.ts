@@ -3,6 +3,7 @@ import { UpdateRoleDto } from '@common/dto/role/update-role.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { RoleService } from './role.service';
+import { PageQueryKeywordsDto } from '@common/dto/knowledge/page-query-keywords.dto';
 
 @Controller()
 export class RoleController {
@@ -11,6 +12,11 @@ export class RoleController {
   @MessagePattern({ cmd: 'role.dict' })
   async getRoleDict() {
     return this.roleService.findDict();
+  }
+
+  @MessagePattern({ cmd: 'role.findList' })
+  async findList(@Payload() payload: { dto: PageQueryKeywordsDto }) {
+    return this.roleService.findList(payload.dto);
   }
 
   @MessagePattern({ cmd: 'role.findAll' })
