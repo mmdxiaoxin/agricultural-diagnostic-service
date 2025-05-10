@@ -629,8 +629,8 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
     const logs = await this.logRepository.find({
       where: { diagnosisId },
       order: {
-        sequence: 'ASC',
-        createdAt: 'ASC',
+        sequence: 'DESC',
+        createdAt: 'DESC',
       },
     });
 
@@ -661,8 +661,8 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
       take: pageSize,
       where: { diagnosisId },
       order: {
-        sequence: 'ASC',
-        createdAt: 'ASC',
+        sequence: 'DESC',
+        createdAt: 'DESC',
       },
     });
 
@@ -698,7 +698,10 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
         diagnosisId,
         createdAt: Between(startTime, endTime),
       },
-      order: { createdAt: 'ASC' },
+      order: {
+        sequence: 'ASC',
+        createdAt: 'ASC',
+      },
     });
 
     // 更新缓存
