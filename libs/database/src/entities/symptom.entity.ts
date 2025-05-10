@@ -16,9 +16,9 @@ export class Symptom extends BaseEntity {
   @Column({ type: 'text', comment: '症状描述' })
   description: string;
 
-  @Column({ nullable: true, comment: '症状图片' })
+  @Column({ type: 'varchar', length: 500, nullable: true, comment: '症状图片' })
   imageUrl: string;
 
-  @Column({ nullable: true, comment: '症状阶段' })
+  @Column({ type: 'varchar', length: 50, nullable: true, comment: '症状阶段' })
   stage: string;
 }

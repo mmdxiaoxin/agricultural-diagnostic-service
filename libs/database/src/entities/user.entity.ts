@@ -5,13 +5,25 @@ import { Role } from './role.entity';
 
 @Entity('user')
 export class User extends BaseEntity {
-  @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+  @Column({
+    type: 'varchar',
+    length: 100,
+    unique: true,
+    nullable: true,
+    comment: '邮箱',
+  })
   email: string | null;
 
-  @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+  @Column({
+    type: 'varchar',
+    length: 50,
+    unique: true,
+    nullable: true,
+    comment: '用户名',
+  })
   username: string | null;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 100, comment: '密码' })
   password: string;
 
   @Column({ type: 'tinyint', default: 0 })

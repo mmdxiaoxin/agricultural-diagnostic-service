@@ -44,7 +44,7 @@ export interface RequestConfig {
 
 @Entity('remote_service_config')
 export class RemoteConfig extends BaseEntity {
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 100, comment: '配置名称' })
   name: string; // 配置名称
 
   @Column({ type: 'text', nullable: true })

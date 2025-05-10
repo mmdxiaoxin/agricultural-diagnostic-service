@@ -5,10 +5,10 @@ import { Menu } from './menu.entity';
 
 @Entity('role')
 export class Role extends BaseEntity {
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 50, unique: true, comment: '角色名称' })
   name: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true, comment: '角色别名' })
   alias: string | null;
 
   @ManyToMany(() => User, (user) => user.roles)

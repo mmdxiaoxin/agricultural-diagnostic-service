@@ -5,10 +5,10 @@ import { RemoteConfig } from './remote-config.entity';
 
 @Entity('remote_service')
 export class RemoteService extends BaseEntity {
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 100, comment: '服务名称' })
   serviceName: string; // 服务名称
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true, comment: '服务类型' })
   serviceType: string; // 服务类型
 
   @Column({ type: 'text', nullable: true })
