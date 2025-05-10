@@ -24,6 +24,7 @@ interface LogEntry {
   timestamp: number;
   messageId?: string;
   retryCount?: number;
+  sequence: number;
 }
 
 interface LogMetrics {
@@ -51,13 +52,14 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
   private readonly REDIS_PROCESSED_IDS_KEY = 'diagnosis:log:processed_ids';
   private readonly REDIS_DEAD_LETTER_KEY = 'diagnosis:log:dead_letter';
   private readonly REDIS_CACHE_KEY = 'diagnosis:log:cache';
+  private readonly REDIS_SEQUENCE_KEY = 'diagnosis:log:sequence';
 
-  private readonly MIN_BATCH_SIZE = 50;
-  private readonly MAX_BATCH_SIZE = 500;
+  private readonly MIN_BATCH_SIZE = 20; // 减小批处理大小以提高顺序准确性
+  private readonly MAX_BATCH_SIZE = 100; // 减小最大批处理大小
   private readonly MIN_INTERVAL = 100;
-  private readonly MAX_INTERVAL = 5000;
+  private readonly MAX_INTERVAL = 2000; // 减小最大间隔以提高实时性
   private readonly MAX_RETRY_COUNT = 3;
-  private readonly CACHE_TTL = 300; // 5分钟缓存
+  private readonly CACHE_TTL = 300;
 
   private readonly MAX_MESSAGE_LENGTH = 16000; // 消息最大长度 (约5KB)
   private readonly MAX_METADATA_SIZE = 8000; // 元数据最大大小 (约2.5KB)
@@ -323,6 +325,14 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
     return result;
   }
 
+  private async getNextSequence(diagnosisId: number): Promise<number> {
+    const key = `${this.REDIS_SEQUENCE_KEY}:${diagnosisId}`;
+    const currentValue = (await this.redisService.get<number>(key)) || 0;
+    const nextValue = currentValue + 1;
+    await this.redisService.set(key, nextValue);
+    return nextValue;
+  }
+
   async addLog(
     diagnosisId: number,
     level: LogLevel,
@@ -332,6 +342,9 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
     if (!this.isInitialized) {
       await this.initializeStream();
     }
+
+    // 获取序号
+    const sequence = await this.getNextSequence(diagnosisId);
 
     // 快速检查消息长度和字节大小
     const messageBytes = this.estimateObjectSize(message);
@@ -351,44 +364,25 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // 检查总大小
-    const totalSize =
-      this.estimateObjectSize(message) + this.estimateObjectSize(metadata);
-    if (totalSize > this.MAX_TOTAL_SIZE || totalSize > 65535) {
-      // 如果总大小仍然超过限制，进一步截断消息
-      const excess = totalSize - this.MAX_TOTAL_SIZE;
-      if (excess > 0) {
-        message = message.slice(0, message.length - excess - 3) + '...';
-        this.logger.warn(
-          `日志总大小超过限制，消息被进一步截断，总字节大小: ${totalSize}`,
-        );
-      }
-    }
-
     const logEntry: LogEntry = {
       diagnosisId,
       level,
       message,
       metadata,
       timestamp: Date.now(),
+      sequence,
     };
 
     // 生成消息ID
     const messageId = this.generateMessageId(logEntry);
     logEntry.messageId = messageId;
 
-    // 检查是否已经处理过
-    if (await this.isMessageProcessed(messageId)) {
-      this.logger.debug(`消息已处理，跳过: ${messageId}`);
-      return;
-    }
-
     try {
       await this.redisService.xadd(this.STREAM_KEY, logEntry);
     } catch (error) {
       this.logger.error('添加日志到 Stream 失败:', error);
       if (!(await this.isMessageProcessed(messageId))) {
-        await this.createLog(diagnosisId, level, message, metadata);
+        await this.createLog(diagnosisId, level, message, sequence, metadata);
         await this.markMessageAsProcessed(messageId);
       }
     }
@@ -420,69 +414,99 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
         return;
       }
 
+      // 按诊断ID分组处理消息
+      const groupedMessages = new Map<number, any[]>();
+      messages.forEach((msg) => {
+        const log = msg.data as LogEntry;
+        if (!log.diagnosisId) return;
+
+        if (!groupedMessages.has(log.diagnosisId)) {
+          groupedMessages.set(log.diagnosisId, []);
+        }
+        const group = groupedMessages.get(log.diagnosisId);
+        if (group) {
+          group.push(msg);
+        }
+      });
+
       await this.logRepository.manager.transaction(
         async (transactionalEntityManager) => {
-          const processedMessages = await Promise.all(
-            messages.map(async (msg) => {
-              try {
-                const log = msg.data as LogEntry;
-                if (!log.diagnosisId || !log.level || !log.message) {
-                  this.logger.error('日志数据不完整:', log);
+          for (const [diagnosisId, groupMessages] of groupedMessages) {
+            // 按序号排序
+            groupMessages.sort((a, b) => {
+              const seqA = (a.data as LogEntry).sequence || 0;
+              const seqB = (b.data as LogEntry).sequence || 0;
+              return seqA - seqB;
+            });
+
+            const processedMessages = await Promise.all(
+              groupMessages.map(async (msg) => {
+                try {
+                  const log = msg.data as LogEntry;
+                  if (!log.diagnosisId || !log.level || !log.message) {
+                    this.logger.error('日志数据不完整:', log);
+                    errorCount++;
+                    return null;
+                  }
+
+                  if (log.messageId) {
+                    const isProcessed = await this.isMessageProcessed(
+                      log.messageId,
+                    );
+                    if (isProcessed) {
+                      return null;
+                    }
+                  }
+
+                  return transactionalEntityManager.create(DiagnosisLog, {
+                    diagnosisId: log.diagnosisId,
+                    level: log.level,
+                    message: log.message,
+                    metadata: log.metadata || {},
+                    createdAt: new Date(log.timestamp || Date.now()),
+                    sequence: log.sequence,
+                  });
+                } catch (error) {
+                  this.logger.error(
+                    '解析日志数据失败:',
+                    error,
+                    '原始数据:',
+                    msg,
+                  );
                   errorCount++;
                   return null;
                 }
+              }),
+            );
 
+            const entities = processedMessages.filter(
+              (entity): entity is DiagnosisLog => entity !== null,
+            );
+
+            if (entities.length === 0) {
+              continue;
+            }
+
+            await this.saveWithRetry(entities, transactionalEntityManager);
+            processedCount += entities.length;
+
+            // 确认消息处理完成
+            await Promise.all(
+              groupMessages.map(async (msg) => {
+                const log = msg.data as LogEntry;
                 if (log.messageId) {
-                  const isProcessed = await this.isMessageProcessed(
-                    log.messageId,
-                  );
-                  if (isProcessed) {
-                    this.logger.debug(`消息已处理，跳过: ${log.messageId}`);
-                    return null;
-                  }
+                  await this.markMessageAsProcessed(log.messageId);
                 }
+              }),
+            );
 
-                return transactionalEntityManager.create(DiagnosisLog, {
-                  diagnosisId: log.diagnosisId,
-                  level: log.level,
-                  message: log.message,
-                  metadata: log.metadata || {},
-                  createdAt: new Date(log.timestamp || Date.now()),
-                });
-              } catch (error) {
-                this.logger.error('解析日志数据失败:', error, '原始数据:', msg);
-                errorCount++;
-                return null;
-              }
-            }),
-          );
-
-          const entities = processedMessages.filter(
-            (entity): entity is DiagnosisLog => entity !== null,
-          );
-
-          if (entities.length === 0) {
-            return;
+            const messageIds = groupMessages.map((msg) => msg.id);
+            await this.redisService.xack(
+              this.STREAM_KEY,
+              this.CONSUMER_GROUP,
+              messageIds,
+            );
           }
-
-          await this.saveWithRetry(entities, transactionalEntityManager);
-          processedCount = entities.length;
-
-          await Promise.all(
-            messages.map(async (msg) => {
-              const log = msg.data as LogEntry;
-              if (log.messageId) {
-                await this.markMessageAsProcessed(log.messageId);
-              }
-            }),
-          );
-
-          const messageIds = messages.map((msg) => msg.id);
-          await this.redisService.xack(
-            this.STREAM_KEY,
-            this.CONSUMER_GROUP,
-            messageIds,
-          );
         },
       );
 
@@ -570,12 +594,14 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
     diagnosisId: number,
     level: LogLevel,
     message: string,
+    sequence: number,
     metadata?: Record<string, any>,
   ): Promise<DiagnosisLog> {
     const log = this.logRepository.create({
       diagnosisId,
       level,
       message,
+      sequence,
       metadata,
     });
     return this.logRepository.save(log);
@@ -594,7 +620,6 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
   }
 
   async findAll(diagnosisId: number) {
-    // 尝试从缓存获取
     const cacheKey = `${this.REDIS_CACHE_KEY}:${diagnosisId}`;
     const cachedLogs = await this.redisService.get<DiagnosisLog[]>(cacheKey);
     if (cachedLogs) {
@@ -603,10 +628,12 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
 
     const logs = await this.logRepository.find({
       where: { diagnosisId },
-      order: { createdAt: 'DESC' },
+      order: {
+        sequence: 'ASC',
+        createdAt: 'ASC',
+      },
     });
 
-    // 更新缓存
     await this.redisService.set(cacheKey, logs, this.CACHE_TTL);
     return formatResponse(200, logs, '诊断日志获取成功');
   }

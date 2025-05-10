@@ -16,6 +16,7 @@ export enum LogLevel {
 }
 
 @Entity()
+@Index(['diagnosisId', 'sequence'])
 @Index(['diagnosisId', 'createdAt'])
 export class DiagnosisLog {
   @PrimaryGeneratedColumn()
@@ -30,6 +31,9 @@ export class DiagnosisLog {
 
   @Column({ nullable: true })
   diagnosisId: number;
+
+  @Column({ type: 'int', default: 0 })
+  sequence: number;
 
   @Column({
     type: 'enum',
