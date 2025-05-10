@@ -278,15 +278,31 @@ export class MenuService {
         .where('role.id = :roleId', { roleId })
         .getMany();
 
-      // 更新角色的菜单关联
-      await this.menuRepository
-        .createQueryBuilder()
-        .relation(Menu, 'roles')
-        .of(menuIds)
-        .addAndRemove(
-          [roleId],
-          currentMenus.map((menu) => menu.id),
-        );
+      const currentMenuIds = currentMenus.map((menu) => menu.id);
+
+      // 计算需要添加和删除的菜单ID
+      const menusToAdd = menuIds.filter((id) => !currentMenuIds.includes(id));
+      const menusToRemove = currentMenuIds.filter(
+        (id) => !menuIds.includes(id),
+      );
+
+      // 添加新的菜单关联
+      if (menusToAdd.length > 0) {
+        await this.menuRepository
+          .createQueryBuilder()
+          .relation(Menu, 'roles')
+          .of(menusToAdd)
+          .add(roleId);
+      }
+
+      // 删除旧的菜单关联
+      if (menusToRemove.length > 0) {
+        await this.menuRepository
+          .createQueryBuilder()
+          .relation(Menu, 'roles')
+          .of(menusToRemove)
+          .remove(roleId);
+      }
 
       // 清除缓存
       await this.clearMenuCache().catch((error) => {
