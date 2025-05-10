@@ -39,6 +39,10 @@ export class MenuService {
     return this.authClient.send({ cmd: 'menu.remove' }, { id });
   }
 
+  getRoleMenuById(roleId: number) {
+    return this.authClient.send({ cmd: 'menu.get.role.by.id' }, { roleId });
+  }
+
   configureMenuRoles(data: RolesConfigDto) {
     return this.authClient.send({ cmd: 'menu.configure.roles' }, data);
   }

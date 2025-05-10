@@ -16,7 +16,7 @@ import {
   ConfigureMenusRequest,
   ConfigureMenusResponse,
 } from '@common/types/auth';
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body } from '@nestjs/common';
 import { GrpcMethod, MessagePattern, Payload } from '@nestjs/microservices';
 import { MenuService } from './menu.service';
 
@@ -28,6 +28,11 @@ export class MenuController {
   @MessagePattern({ cmd: 'menu.get.routes' })
   async getRoutes(@Payload() data: { roles: string[] }) {
     return this.menuService.findAuthRoutes(data.roles);
+  }
+
+  @MessagePattern({ cmd: 'menu.get.role.by.id' })
+  async getRoleById(@Payload() data: { roleId: number }) {
+    return this.menuService.getRoleMenuById(data.roleId);
   }
 
   @MessagePattern({ cmd: 'menu.get' })

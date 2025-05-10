@@ -5,8 +5,8 @@ import {
 } from '@common/decorator/api-response.decorator';
 import { Roles } from '@common/decorator/roles.decorator';
 import {
-  RolesConfigDto,
   MenusConfigDto,
+  RolesConfigDto,
 } from '@common/dto/menu/menu-config.dto';
 import { RouteItemDto } from '@common/dto/menu/route.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
@@ -19,6 +19,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Req,
@@ -130,6 +131,21 @@ export class MenuController {
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '菜单不存在')
   async remove(@Param('id') id: number) {
     return this.menuService.remove(id);
+  }
+
+  @Get('role/:roleId')
+  @Roles(Role.Admin)
+  @UseGuards(RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'roleId', description: '角色ID', type: 'number' })
+  @ApiOperation({
+    summary: '获取角色菜单',
+    description: '获取指定角色的菜单列表',
+  })
+  @ApiResponse(HttpStatus.OK, '获取成功', Array, true)
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
+  async getRoleMenuById(@Param('roleId', ParseIntPipe) roleId: number) {
+    return this.menuService.getRoleMenuById(roleId);
   }
 
   @Post('configure-roles')

@@ -315,4 +315,21 @@ export class MenuService {
       return formatResponse(500, null, '配置角色菜单失败');
     }
   }
+
+  // 获取角色下的所有菜单ID
+  async getRoleMenuById(roleId: number) {
+    try {
+      const menus = await this.menuRepository
+        .createQueryBuilder('menu')
+        .leftJoinAndSelect('menu.roles', 'role')
+        .where('role.id = :roleId', { roleId })
+        .getMany();
+
+      const menuIds = menus.map((menu) => menu.id);
+      return formatResponse(200, menuIds, '获取角色菜单成功');
+    } catch (error) {
+      this.logger.error(`获取角色菜单失败: ${error.message}`, error.stack);
+      return formatResponse(500, null, '获取角色菜单失败');
+    }
+  }
 }
