@@ -116,7 +116,7 @@ export class AuthService {
       const cachedResult = await this.redis.get<boolean>(passwordCacheKey);
 
       let isValid: boolean;
-      if (cachedResult !== null) {
+      if (typeof cachedResult === 'boolean') {
         isValid = cachedResult;
       } else {
         isValid = await this.verifyPassword(password, user.password);
