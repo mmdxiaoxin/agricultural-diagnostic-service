@@ -112,7 +112,7 @@ export class AuthService {
       }
 
       // 检查密码验证缓存
-      const passwordCacheKey = `${this.PASSWORD_VERIFY_CACHE_PREFIX}${user.id}:${await this.hashPassword(password)}`;
+      const passwordCacheKey = `${this.PASSWORD_VERIFY_CACHE_PREFIX}${user.id}:${password}`;
       const cachedResult = await this.redis.get<boolean>(passwordCacheKey);
 
       let isValid: boolean;
