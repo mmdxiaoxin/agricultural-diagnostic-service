@@ -108,7 +108,18 @@ export class KnowledgeService {
         });
       }
 
-      // 2. 创建病害基本信息
+      // 2. 验证疾病名称是否重复
+      const existingDisease = await this.diseaseRepository.findOne({
+        where: { name: dto.name },
+      });
+      if (existingDisease) {
+        throw new RpcException({
+          code: 400,
+          message: `疾病名称 "${dto.name}" 已存在`,
+        });
+      }
+
+      // 3. 创建病害基本信息
       const disease = this.diseaseRepository.create({
         name: dto.name,
         alias: dto.alias,
@@ -118,10 +129,10 @@ export class KnowledgeService {
         difficultyLevel: dto.difficultyLevel,
       });
 
-      // 3. 保存病害基本信息
+      // 4. 保存病害基本信息
       const savedDisease = await queryRunner.manager.save(disease);
 
-      // 4. 处理症状
+      // 5. 处理症状
       if (dto.symptoms && dto.symptoms.length > 0) {
         const symptoms = dto.symptoms.map((symptom) => ({
           ...symptom,
@@ -130,7 +141,7 @@ export class KnowledgeService {
         await queryRunner.manager.save('symptom', symptoms);
       }
 
-      // 5. 处理治疗方案
+      // 6. 处理治疗方案
       if (dto.treatments && dto.treatments.length > 0) {
         const treatments = dto.treatments.map((treatment) => ({
           ...treatment,
@@ -139,7 +150,7 @@ export class KnowledgeService {
         await queryRunner.manager.save('treatment', treatments);
       }
 
-      // 6. 处理环境因素
+      // 7. 处理环境因素
       if (dto.environmentFactors && dto.environmentFactors.length > 0) {
         const environmentFactors = dto.environmentFactors.map((factor) => ({
           ...factor,
@@ -151,7 +162,7 @@ export class KnowledgeService {
         );
       }
 
-      // 7. 处理诊断规则
+      // 8. 处理诊断规则
       if (dto.diagnosisRules && dto.diagnosisRules.length > 0) {
         const diagnosisRules = dto.diagnosisRules.map((rule) => ({
           ...rule,
@@ -160,7 +171,7 @@ export class KnowledgeService {
         await queryRunner.manager.save('diagnosis_rule', diagnosisRules);
       }
 
-      // 8. 重新获取完整的病害信息（包含所有关联数据）
+      // 9. 重新获取完整的病害信息（包含所有关联数据）
       const completeDisease = await queryRunner.manager.findOne(Disease, {
         where: { id: savedDisease.id },
         relations: [
