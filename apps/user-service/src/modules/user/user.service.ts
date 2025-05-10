@@ -1,6 +1,7 @@
 import { Profile, Role, User } from '@app/database/entities';
 import { RedisService } from '@app/redis';
 import { UpdateUserStatusDto } from '@common/dto/user/update-user-status.dto';
+import { UpdateUserDto } from '@common/dto/user/update-user.dto';
 import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
@@ -11,7 +12,6 @@ import * as fs from 'fs';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import { DataSource, In, Repository } from 'typeorm';
-import { UpdateUserDto } from './dto/update-user.dto';
 
 /**
  * 用户模块服务

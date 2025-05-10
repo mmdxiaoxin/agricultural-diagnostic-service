@@ -1,12 +1,12 @@
+import { UpdatePasswordDto } from '@common/dto/user/change-pass.dto';
+import { CreateUserDto } from '@common/dto/user/create-user.dto';
+import { ResetPasswordDto } from '@common/dto/user/reset-pass.dto';
+import { UpdateProfileDto } from '@common/dto/user/update-profile.dto';
 import { UpdateUserStatusDto } from '@common/dto/user/update-user-status.dto';
+import { UpdateUserDto } from '@common/dto/user/update-user.dto';
 import { UserPageQueryDto } from '@common/dto/user/user-page-query.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { UpdatePasswordDto } from './dto/change-pass.dto';
-import { CreateUserDto } from './dto/create-user.dto';
-import { ResetPasswordDto } from './dto/reset-pass.dto';
-import { UpdateProfileDto } from './dto/update-profile.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 
 /**
