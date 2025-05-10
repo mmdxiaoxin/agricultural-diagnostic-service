@@ -16,12 +16,12 @@ import {
   UpdateUserStatusRequest,
   UploadAvatarRequest,
 } from '@common/types/user';
-import { Injectable } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { UserService } from './user.service';
 
-@Injectable()
+@Controller()
 export class UserGrpcController {
   constructor(private readonly userService: UserService) {}
 
