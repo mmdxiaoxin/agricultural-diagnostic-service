@@ -98,7 +98,7 @@ export class AuthService {
       await this.checkLoginAttempts(login);
 
       // 获取用户信息
-      const user = await firstValueFrom(
+      const user = await lastValueFrom(
         this.userClient.send({ cmd: 'user.find.byLogin' }, { login }),
       );
 
