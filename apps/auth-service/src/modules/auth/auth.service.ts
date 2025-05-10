@@ -47,6 +47,13 @@ export class AuthService {
     password: string,
     hashedPassword: string,
   ): Promise<boolean> {
+    if (!password || !hashedPassword) {
+      this.logger.error('密码验证失败：密码或哈希密码为空', {
+        hasPassword: !!password,
+        hasHashedPassword: !!hashedPassword,
+      });
+      throw new Error('密码验证参数不完整');
+    }
     // 直接使用 compare 进行验证
     return compare(password, hashedPassword);
   }
@@ -111,6 +118,15 @@ export class AuthService {
         });
       }
 
+      // 检查用户密码是否存在
+      if (!user.password) {
+        this.logger.error('用户密码为空', { userId: user.id, login });
+        throw new RpcException({
+          code: 500,
+          message: '用户密码数据异常',
+        });
+      }
+
       // 检查密码验证缓存
       const passwordCacheKey = `${this.PASSWORD_VERIFY_CACHE_PREFIX}${user.id}:${password}`;
       const cachedResult = await this.redis.get<boolean>(passwordCacheKey);
@@ -119,13 +135,25 @@ export class AuthService {
       if (typeof cachedResult === 'boolean') {
         isValid = cachedResult;
       } else {
-        isValid = await this.verifyPassword(password, user.password);
-        // 缓存密码验证结果，有效期5分钟
-        await this.redis.set(
-          passwordCacheKey,
-          isValid,
-          this.PASSWORD_CACHE_TTL,
-        );
+        try {
+          isValid = await this.verifyPassword(password, user.password);
+          // 缓存密码验证结果，有效期5分钟
+          await this.redis.set(
+            passwordCacheKey,
+            isValid,
+            this.PASSWORD_CACHE_TTL,
+          );
+        } catch (error) {
+          this.logger.error('密码验证失败', {
+            error: error.message,
+            userId: user.id,
+            login,
+          });
+          throw new RpcException({
+            code: 500,
+            message: '密码验证失败',
+          });
+        }
       }
 
       if (!isValid) {
