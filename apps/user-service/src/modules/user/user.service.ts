@@ -371,6 +371,10 @@ export class UserService {
 
     user.status = 1;
     await this.userRepository.save(user);
+
+    // 更新用户缓存
+    await this.updateUserCache(user);
+
     return { success: true };
   }
 
