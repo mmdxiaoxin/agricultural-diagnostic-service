@@ -21,6 +21,9 @@ import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { formatResponse } from '@shared/helpers/response.helper';
 import { UserService } from './user.service';
 
+/**
+ * 用户模块 gRPC 控制器
+ */
 @Controller()
 export class UserGrpcController {
   constructor(private readonly userService: UserService) {}
