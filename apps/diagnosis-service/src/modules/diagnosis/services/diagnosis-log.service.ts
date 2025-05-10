@@ -417,6 +417,7 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
     let errorCount = 0;
 
     try {
+      // 使用非阻塞读取
       const messages = await this.redisService.xreadgroup(
         this.STREAM_KEY,
         this.CONSUMER_GROUP,
@@ -424,7 +425,7 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
         {
           count: this.batchSize,
           noack: false,
-          block: 5000, // 阻塞5秒等待新消息
+          block: 0, // 改为非阻塞读取
         },
       );
 
@@ -448,6 +449,12 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
         }
       });
 
+      // 分离数据库操作和Redis操作
+      const savedEntities: DiagnosisLog[] = [];
+      const messageIds: string[] = [];
+      const processedMessageIds: string[] = [];
+
+      // 1. 先处理数据库操作
       await this.logRepository.manager.transaction(
         async (transactionalEntityManager) => {
           for (const [diagnosisId, groupMessages] of groupedMessages) {
@@ -475,16 +482,23 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
                     if (isProcessed) {
                       return null;
                     }
+                    processedMessageIds.push(log.messageId);
                   }
 
-                  return transactionalEntityManager.create(DiagnosisLog, {
-                    diagnosisId: log.diagnosisId,
-                    level: log.level,
-                    message: log.message,
-                    metadata: log.metadata || {},
-                    createdAt: new Date(log.timestamp || Date.now()),
-                    sequence: log.sequence,
-                  });
+                  const entity = transactionalEntityManager.create(
+                    DiagnosisLog,
+                    {
+                      diagnosisId: log.diagnosisId,
+                      level: log.level,
+                      message: log.message,
+                      metadata: log.metadata || {},
+                      createdAt: new Date(log.timestamp || Date.now()),
+                      sequence: log.sequence,
+                    },
+                  );
+
+                  messageIds.push(msg.id);
+                  return entity;
                 } catch (error) {
                   this.logger.error(
                     '解析日志数据失败:',
@@ -506,51 +520,66 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
               continue;
             }
 
-            await this.saveWithRetry(entities, transactionalEntityManager);
+            const saved = await this.saveWithRetry(
+              entities,
+              transactionalEntityManager,
+            );
+            savedEntities.push(...saved);
             processedCount += entities.length;
-
-            // 确认消息处理完成
-            await Promise.all(
-              groupMessages.map(async (msg) => {
-                const log = msg.data as LogEntry;
-                if (log.messageId) {
-                  await this.markMessageAsProcessed(log.messageId);
-                }
-              }),
-            );
-
-            const messageIds = groupMessages.map((msg) => msg.id);
-            await this.redisService.xack(
-              this.STREAM_KEY,
-              this.CONSUMER_GROUP,
-              messageIds,
-            );
           }
         },
       );
 
+      // 2. 如果数据库操作成功，再处理Redis操作
+      if (savedEntities.length > 0) {
+        // 批量标记消息为已处理
+        if (processedMessageIds.length > 0) {
+          const pipeline = this.redisService.pipeline();
+          processedMessageIds.forEach((messageId) => {
+            pipeline.setex(
+              `${this.REDIS_PROCESSED_IDS_KEY}:${messageId}`,
+              60 * 60,
+              '1',
+            );
+          });
+          await pipeline.exec();
+        }
+
+        // 确认消息
+        if (messageIds.length > 0) {
+          await this.redisService.xack(
+            this.STREAM_KEY,
+            this.CONSUMER_GROUP,
+            messageIds,
+          );
+        }
+      }
+
       const processTime = Date.now() - startTime;
       this.lastProcessTime = processTime;
-      const pendingInfo = await this.redisService.xpending(
-        this.STREAM_KEY,
-        this.CONSUMER_GROUP,
-      );
 
-      const metrics: LogMetrics = {
-        processedCount,
-        processTime,
-        errorCount,
-        lastProcessedAt: new Date().toISOString(),
-        pendingCount: pendingInfo.length,
-        batchSize: this.batchSize,
-        processingInterval: this.flushInterval,
-        deadLetterCount: 0,
-        retryCount: 0,
-      };
+      // 只有在实际处理了消息时才更新指标
+      if (processedCount > 0) {
+        const pendingInfo = await this.redisService.xpending(
+          this.STREAM_KEY,
+          this.CONSUMER_GROUP,
+        );
 
-      await this.redisService.set(this.REDIS_METRICS_KEY, metrics, 3600);
+        const metrics: LogMetrics = {
+          processedCount,
+          processTime,
+          errorCount,
+          lastProcessedAt: new Date().toISOString(),
+          pendingCount: pendingInfo.length,
+          batchSize: this.batchSize,
+          processingInterval: this.flushInterval,
+          deadLetterCount: 0,
+          retryCount: 0,
+        };
 
-      await this.adjustProcessingParameters(processTime, errorCount);
+        await this.redisService.set(this.REDIS_METRICS_KEY, metrics, 3600);
+        await this.adjustProcessingParameters(processTime, errorCount);
+      }
 
       if (errorCount === 0) {
         this.consecutiveErrors = 0;
@@ -589,13 +618,13 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
     entities: DiagnosisLog[],
     transactionalEntityManager: any,
     maxRetries = 3,
-  ): Promise<void> {
+  ): Promise<DiagnosisLog[]> {
     let lastError: Error | null = null;
 
     for (let i = 0; i < maxRetries; i++) {
       try {
-        await transactionalEntityManager.save(entities);
-        return;
+        const saved = await transactionalEntityManager.save(entities);
+        return saved;
       } catch (error) {
         lastError = error;
         if (i < maxRetries - 1) {
