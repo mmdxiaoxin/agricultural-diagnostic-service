@@ -117,6 +117,14 @@ export interface ConfigureRolesResponse {
   success: boolean;
 }
 
+export interface ConfigureMenusRequest {
+  menuIds: number[];
+  roleId: number;
+}
+
+export interface ConfigureMenusResponse {
+  success: boolean;
+}
 /** Menu Entity */
 export interface Menu {
   id: number;
@@ -150,4 +158,7 @@ export interface GrpcMenuService {
   configureRoles(
     request: ConfigureRolesRequest,
   ): Observable<ConfigureRolesResponse>;
+  configureMenus(
+    request: ConfigureMenusRequest,
+  ): Observable<ConfigureMenusResponse>;
 }

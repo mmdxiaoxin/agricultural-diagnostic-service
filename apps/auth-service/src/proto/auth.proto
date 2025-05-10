@@ -20,6 +20,7 @@ service MenuService {
   rpc Update (UpdateMenuRequest) returns (UpdateMenuResponse);
   rpc Remove (RemoveMenuRequest) returns (RemoveMenuResponse);
   rpc ConfigureRoles (ConfigureRolesRequest) returns (ConfigureRolesResponse);
+  rpc ConfigureMenus (ConfigureMenusRequest) returns (ConfigureMenusResponse);
 }
 
 // Auth Service Messages
@@ -126,6 +127,15 @@ message ConfigureRolesRequest {
 }
 
 message ConfigureRolesResponse {
+  bool success = 1;
+}
+
+message ConfigureMenusRequest {
+  repeated int32 menu_ids = 1;
+  int32 role_id = 2;
+}
+
+message ConfigureMenusResponse {
   bool success = 1;
 }
 

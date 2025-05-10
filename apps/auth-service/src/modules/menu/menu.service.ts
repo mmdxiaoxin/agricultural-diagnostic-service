@@ -256,4 +256,47 @@ export class MenuService {
       return formatResponse(500, null, '配置菜单角色关联失败');
     }
   }
+
+  // 为角色配置菜单
+  async configureMenus(menuIds: number[], roleId: number) {
+    try {
+      // 获取角色信息
+      const role = await this.menuRepository
+        .createQueryBuilder()
+        .relation(Menu, 'roles')
+        .of(roleId)
+        .loadOne();
+
+      if (!role) {
+        return formatResponse(404, null, '角色不存在');
+      }
+
+      // 获取当前角色的所有菜单
+      const currentMenus = await this.menuRepository
+        .createQueryBuilder('menu')
+        .leftJoinAndSelect('menu.roles', 'role')
+        .where('role.id = :roleId', { roleId })
+        .getMany();
+
+      // 更新角色的菜单关联
+      await this.menuRepository
+        .createQueryBuilder()
+        .relation(Menu, 'roles')
+        .of(menuIds)
+        .addAndRemove(
+          [roleId],
+          currentMenus.map((menu) => menu.id),
+        );
+
+      // 清除缓存
+      await this.clearMenuCache().catch((error) => {
+        this.logger.warn(`配置菜单后清除缓存失败: ${error.message}`);
+      });
+
+      return formatResponse(200, null, '配置角色菜单成功');
+    } catch (error) {
+      this.logger.error(`配置角色菜单失败: ${error.message}`, error.stack);
+      return formatResponse(500, null, '配置角色菜单失败');
+    }
+  }
 }
