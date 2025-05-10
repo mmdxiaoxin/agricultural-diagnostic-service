@@ -54,16 +54,15 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
   private readonly REDIS_CACHE_KEY = 'diagnosis:log:cache';
   private readonly REDIS_SEQUENCE_KEY = 'diagnosis:log:sequence';
 
-  private readonly MIN_BATCH_SIZE = 20; // 减小批处理大小以提高顺序准确性
-  private readonly MAX_BATCH_SIZE = 100; // 减小最大批处理大小
-  private readonly MIN_INTERVAL = 100;
-  private readonly MAX_INTERVAL = 2000; // 减小最大间隔以提高实时性
-  private readonly MAX_RETRY_COUNT = 3;
-  private readonly CACHE_TTL = 300;
+  private readonly MIN_BATCH_SIZE = 20; // 最小批处理大小
+  private readonly MAX_BATCH_SIZE = 100; // 最大批处理大小
+  private readonly MIN_INTERVAL = 100; // 最小间隔
+  private readonly MAX_INTERVAL = 2000; // 最大间隔
+  private readonly MAX_RETRY_COUNT = 3; // 最大重试次数
+  private readonly CACHE_TTL = 300; // 缓存过期时间
 
   private readonly MAX_MESSAGE_LENGTH = 16000; // 消息最大长度 (约5KB)
   private readonly MAX_METADATA_SIZE = 8000; // 元数据最大大小 (约2.5KB)
-  private readonly MAX_TOTAL_SIZE = 24000; // 总大小限制 (约7.5KB)
 
   private batchSize = 100;
   private flushInterval = 1000;
