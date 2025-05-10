@@ -660,7 +660,10 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
       skip: (page - 1) * pageSize,
       take: pageSize,
       where: { diagnosisId },
-      order: { createdAt: 'DESC' },
+      order: {
+        sequence: 'ASC',
+        createdAt: 'ASC',
+      },
     });
 
     // 更新缓存
