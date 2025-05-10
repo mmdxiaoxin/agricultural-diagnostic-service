@@ -910,8 +910,20 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }, options);
   }
 
-  // 创建 pipeline
+  /**
+   * 创建 pipeline
+   * @returns pipeline 实例
+   */
   pipeline() {
     return this.client.pipeline();
+  }
+
+  /**
+   * 获取 Stream 长度
+   * @param key Stream 键
+   * @returns Stream 长度
+   */
+  async xlen(key: RedisKey): Promise<number> {
+    return await this.client.xlen(key);
   }
 }

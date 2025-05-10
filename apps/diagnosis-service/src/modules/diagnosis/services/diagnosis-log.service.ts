@@ -107,10 +107,16 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
   }
 
   private startProcessing(): void {
-    this.flushIntervalId = setInterval(
-      () => this.processLogs(),
-      this.flushInterval,
-    );
+    const processWithInterval = async () => {
+      await this.processLogs();
+      // 动态调整下一次处理的时间
+      this.flushIntervalId = setTimeout(
+        processWithInterval,
+        this.flushInterval,
+      );
+    };
+
+    processWithInterval();
   }
 
   private async adjustProcessingParameters(
@@ -256,7 +262,7 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
     await this.redisService.set(
       `${this.REDIS_PROCESSED_IDS_KEY}:${messageId}`,
       true,
-      7 * 24 * 60 * 60,
+      60 * 60, // 1小时
     );
   }
 
@@ -393,6 +399,18 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    // 添加检查，如果没有待处理的消息，直接返回
+    const pendingCount = await this.redisService.xlen(this.STREAM_KEY);
+    if (pendingCount === 0) {
+      // 如果没有待处理的消息，增加处理间隔
+      this.flushInterval = Math.min(
+        this.MAX_INTERVAL,
+        this.flushInterval * 1.5,
+      );
+      await this.redisService.set(this.REDIS_INTERVAL_KEY, this.flushInterval);
+      return;
+    }
+
     this.isProcessing = true;
     const startTime = Date.now();
     let processedCount = 0;
@@ -406,6 +424,7 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
         {
           count: this.batchSize,
           noack: false,
+          block: 5000, // 阻塞5秒等待新消息
         },
       );
 
@@ -848,5 +867,23 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       this.logger.error('处理死信队列失败:', error);
     }
+  }
+
+  private async adjustProcessingInterval(pendingCount: number): Promise<void> {
+    if (pendingCount === 0) {
+      // 如果没有待处理的消息，增加处理间隔
+      this.flushInterval = Math.min(
+        this.MAX_INTERVAL,
+        this.flushInterval * 1.5,
+      );
+    } else if (pendingCount > this.batchSize * 2) {
+      // 如果待处理消息数量超过批处理大小的2倍，减少处理间隔
+      this.flushInterval = Math.max(
+        this.MIN_INTERVAL,
+        this.flushInterval * 0.8,
+      );
+    }
+
+    await this.redisService.set(this.REDIS_INTERVAL_KEY, this.flushInterval);
   }
 }
