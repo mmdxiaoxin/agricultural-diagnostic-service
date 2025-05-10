@@ -1,4 +1,4 @@
-import { Menu } from '@app/database/entities/menu.entity';
+import { Menu, Role } from '@app/database/entities';
 import { RedisService } from '@app/redis';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -25,6 +25,8 @@ export class MenuService {
   constructor(
     @InjectRepository(Menu)
     private readonly menuRepository: Repository<Menu>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
     private readonly redisService: RedisService,
   ) {}
 
@@ -261,11 +263,9 @@ export class MenuService {
   async configureMenus(menuIds: number[], roleId: number) {
     try {
       // 获取角色信息
-      const role = await this.menuRepository
-        .createQueryBuilder()
-        .relation(Menu, 'roles')
-        .of(roleId)
-        .loadOne();
+      const role = await this.roleRepository.findOne({
+        where: { id: roleId },
+      });
 
       if (!role) {
         return formatResponse(404, null, '角色不存在');
