@@ -15,7 +15,11 @@ const getServerInfo = () => {
 
   // 获取当前内存使用情况
   const freeMemory = os.freemem();
-  const usedMemory = totalMemory - freeMemory;
+  const usedMemory = Math.max(0, totalMemory - freeMemory);
+  const memoryUsage = Math.min(
+    100,
+    Math.floor((usedMemory / totalMemory) * 100),
+  );
 
   return {
     system: {
@@ -35,7 +39,7 @@ const getServerInfo = () => {
       total: Math.floor(totalMemory / (1024 * 1024 * 1024)), // 转换为GB
       free: Math.floor(freeMemory / (1024 * 1024 * 1024)), // 转换为GB
       used: Math.floor(usedMemory / (1024 * 1024 * 1024)), // 转换为GB
-      usage: Math.floor((usedMemory / totalMemory) * 100), // 使用率百分比
+      usage: memoryUsage, // 使用率百分比
     },
   };
 };
