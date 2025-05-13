@@ -33,8 +33,11 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/ecosystem.config.cjs ./
 COPY --from=builder /app/.env* ./
 
-# 创建日志目录
-RUN mkdir -p logs
+# 创建数据存储目录
+RUN mkdir -p /app/dist/chunks \
+  && mkdir -p /app/dist/uploads \
+  && mkdir -p /app/dist/avatar \
+  && mkdir -p logs
 
 # 设置环境变量
 ENV NODE_ENV=production
