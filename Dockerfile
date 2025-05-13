@@ -6,20 +6,16 @@ WORKDIR /app
 
 # 复制 package.json 和 package-lock.json
 COPY package*.json ./
-COPY pnpm-lock.yaml ./
-
-# 安装 pnpm
-RUN npm install -g pnpm
 
 # 安装依赖
-RUN pnpm install
+RUN npm install
 
 # 复制源代码和环境变量文件
 COPY . .
 COPY .env* ./
 
 # 构建项目
-RUN pnpm build:all
+RUN npm run build:all
 
 # 生产阶段
 FROM node:22-alpine
