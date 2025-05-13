@@ -1,6 +1,45 @@
 const path = require('path');
 const dotenv = require('dotenv');
 const os = require('os');
+const fs = require('fs');
+
+// 加载环境变量
+const loadEnv = (envFile) => {
+  const envPath = path.resolve(__dirname, envFile);
+  console.log(`尝试加载环境变量文件: ${envPath}`);
+
+  if (!fs.existsSync(envPath)) {
+    console.warn(`环境变量文件不存在: ${envPath}`);
+    return {};
+  }
+
+  const result = dotenv.config({ path: envPath });
+  if (result.error) {
+    console.error(`加载环境变量文件失败: ${envPath}`, result.error);
+    return {};
+  }
+
+  console.log(`成功加载环境变量文件: ${envFile}`);
+  return result.parsed || {};
+};
+
+// 加载不同环境的配置
+const developmentEnv = loadEnv('.env.development.local');
+const productionEnv = loadEnv('.env.production.local');
+const defaultEnv = loadEnv('.env');
+
+// 合并环境变量，优先级：development/production > default
+const env = {
+  ...defaultEnv,
+  ...(process.env.NODE_ENV === 'production' ? productionEnv : developmentEnv),
+};
+
+// 将环境变量注入到 process.env
+Object.entries(env).forEach(([key, value]) => {
+  if (!process.env[key]) {
+    process.env[key] = value;
+  }
+});
 
 // 获取容器资源信息
 const getServerInfo = () => {
@@ -104,16 +143,6 @@ const calculateServiceConfig = (serverInfo) => {
     otherServices: other,
   };
 };
-
-// 加载环境变量
-const loadEnv = (envFile) => {
-  const envPath = path.resolve(__dirname, envFile);
-  return dotenv.config({ path: envPath }).parsed;
-};
-
-// 加载不同环境的配置
-const developmentEnv = loadEnv('.env.development.local');
-const productionEnv = loadEnv('.env.production.local');
 
 // 获取服务器信息并计算配置
 const serverInfo = getServerInfo();
