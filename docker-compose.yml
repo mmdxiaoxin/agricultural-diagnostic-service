@@ -27,6 +27,7 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    cpuset: '0,1,2,3'
     deploy:
       resources:
         limits:
