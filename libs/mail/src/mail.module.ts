@@ -6,10 +6,6 @@ import { ConfigModule } from '@nestjs/config';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // 让配置全局可用
-      envFilePath: [
-        '.env',
-        `.env.${process.env.NODE_ENV || 'development'}.local`,
-      ],
     }),
     MailModule,
   ],

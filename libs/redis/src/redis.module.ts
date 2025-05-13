@@ -7,10 +7,6 @@ import { RedisService } from './redis.service';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [
-        '.env',
-        `.env.${process.env.NODE_ENV || 'development'}.local`,
-      ],
     }),
   ],
   providers: [RedisService],

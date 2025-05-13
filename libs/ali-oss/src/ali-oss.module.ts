@@ -7,10 +7,6 @@ import aliOssConfig from './ali-oss.config';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [
-        '.env',
-        `.env.${process.env.NODE_ENV || 'development'}.local`,
-      ],
     }),
     ConfigModule.forFeature(aliOssConfig),
   ],

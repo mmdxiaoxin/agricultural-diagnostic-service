@@ -36,10 +36,6 @@ export class DatabaseModule {
           imports: [
             ConfigModule.forRoot({
               isGlobal: true,
-              envFilePath: [
-                '.env',
-                `.env.${process.env.NODE_ENV || 'development'}.local`,
-              ],
             }),
           ],
           inject: [ConfigService],
