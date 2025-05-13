@@ -220,6 +220,23 @@ const commonConfig = {
   log_rotate_keep: 10,
 };
 
+// 获取CPU核心配置
+const getCpuCores = () => {
+  // 从环境变量获取CPU核心配置
+  const cpuCores = process.env.CPU_CORES;
+  if (!cpuCores) {
+    console.warn('未设置 CPU_CORES 环境变量，使用默认值: 0,1,2,3');
+    return '0,1,2,3';
+  }
+  return cpuCores;
+};
+
+// 获取服务特定的CPU核心配置
+const getServiceCpuCores = (serviceName) => {
+  const envKey = `${serviceName.toUpperCase().replace(/-/g, '_')}_CPU_CORES`;
+  return process.env[envKey] || getCpuCores();
+};
+
 module.exports = {
   apps: [
     {
@@ -231,6 +248,8 @@ module.exports = {
       error_file: 'logs/api-gateway/error.log',
       out_file: 'logs/api-gateway/out.log',
       node_args: '--trace-warnings',
+      interpreter: 'taskset',
+      interpreter_args: `-c ${getServiceCpuCores('api-gateway')} node`,
     },
     {
       name: 'auth-service',
@@ -240,6 +259,8 @@ module.exports = {
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
       error_file: 'logs/auth-service/error.log',
       out_file: 'logs/auth-service/out.log',
+      interpreter: 'taskset',
+      interpreter_args: `-c ${getServiceCpuCores('auth-service')} node`,
     },
     {
       name: 'download-service',
@@ -249,6 +270,8 @@ module.exports = {
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
       error_file: 'logs/download-service/error.log',
       out_file: 'logs/download-service/out.log',
+      interpreter: 'taskset',
+      interpreter_args: `-c ${getServiceCpuCores('download-service')} node`,
     },
     {
       name: 'file-service',
@@ -258,6 +281,8 @@ module.exports = {
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
       error_file: 'logs/file-service/error.log',
       out_file: 'logs/file-service/out.log',
+      interpreter: 'taskset',
+      interpreter_args: `-c ${getServiceCpuCores('file-service')} node`,
     },
     {
       name: 'upload-service',
@@ -267,6 +292,8 @@ module.exports = {
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
       error_file: 'logs/upload-service/error.log',
       out_file: 'logs/upload-service/out.log',
+      interpreter: 'taskset',
+      interpreter_args: `-c ${getServiceCpuCores('upload-service')} node`,
     },
     {
       name: 'user-service',
@@ -276,6 +303,8 @@ module.exports = {
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
       error_file: 'logs/user-service/error.log',
       out_file: 'logs/user-service/out.log',
+      interpreter: 'taskset',
+      interpreter_args: `-c ${getServiceCpuCores('user-service')} node`,
     },
     {
       name: 'knowledge-service',
@@ -285,6 +314,8 @@ module.exports = {
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
       error_file: 'logs/knowledge-service/error.log',
       out_file: 'logs/knowledge-service/out.log',
+      interpreter: 'taskset',
+      interpreter_args: `-c ${getServiceCpuCores('knowledge-service')} node`,
     },
     {
       name: 'diagnosis-service',
@@ -295,6 +326,8 @@ module.exports = {
       error_file: 'logs/diagnosis-service/error.log',
       out_file: 'logs/diagnosis-service/out.log',
       node_args: `--trace-warnings --max-old-space-size=${serviceConfig.diagnosis.memory * 1024}`,
+      interpreter: 'taskset',
+      interpreter_args: `-c ${getServiceCpuCores('diagnosis-service')} node`,
     },
   ],
 };

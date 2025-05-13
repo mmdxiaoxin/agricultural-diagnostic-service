@@ -8,22 +8,26 @@ services:
       dockerfile: Dockerfile
     container_name: agricultural-service
     ports:
-      - "3000:3000"  # api-gateway
-      - "3001:3001"  # auth-service
-      - "3002:3002"  # user-service
-      - "3003:3003"  # diagnosis-service
-      - "3004:3004"  # upload-service
-      - "3005:3005"  # download-service
-      - "3006:3006"  # file-service
-      - "3007:3007"  # knowledge-service
+      - "3000:3000" # api-gateway
+      - "3001:3001" # auth-service
+      - "3002:3002" # user-service
+      - "3003:3003" # diagnosis-service
+      - "3004:3004" # upload-service
+      - "3005:3005" # download-service
+      - "3006:3006" # file-service
+      - "3007:3007" # knowledge-service
     environment:
       - NODE_ENV=production
       - DB_HOST=host.docker.internal
       - DB_PORT=3306
       - REDIS_HOST=host.docker.internal
       - REDIS_PORT=6379
-      - CONTAINER_MEMORY_LIMIT=16  # 16GB 内存限制
-      - CONTAINER_CPU_LIMIT=4      # 4核 CPU 限制
+      - CONTAINER_MEMORY_LIMIT=16 # 16GB 内存限制
+      - CONTAINER_CPU_LIMIT=4 # 4核 CPU 限制
+      # CPU 核心配置
+      - CPU_CORES=0,1,2,3 # 默认使用的 CPU 核心
+      - API_GATEWAY_CPU_CORES=0,1 # API 网关使用的 CPU 核心
+      - DIAGNOSIS_SERVICE_CPU_CORES=2,3 # 诊断服务使用的 CPU 核心
     volumes:
       - ./logs:/app/logs
     networks:
@@ -45,4 +49,4 @@ networks:
 
 volumes:
   mysql_data:
-  redis_data: 
+  redis_data:
