@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { DatasetModule } from './modules/dataset/dataset.module';
 import { FileModule } from './modules/file/file.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { FileModule } from './modules/file/file.module';
     FileModule,
     DatasetModule,
     PrometheusModule.register(),
+    HealthModule,
   ],
 })
 export class AppModule {}

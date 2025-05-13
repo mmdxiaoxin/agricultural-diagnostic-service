@@ -23,6 +23,7 @@ import { MenuModule } from './menu/menu.module';
 import { RemoteModule } from './remote/remote.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
+import { HealthModule } from './health/health.module';
 
 /**
  * 根模块
@@ -75,6 +76,7 @@ import { UserModule } from './user/user.module';
     ]),
     DiagnosisModule,
     RemoteModule,
+    HealthModule,
   ],
   controllers: [AppController],
 })

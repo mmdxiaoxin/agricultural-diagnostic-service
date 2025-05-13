@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { KnowledgeModule } from './modules/knowledge/knowledge.module';
     DatabaseModule.register(),
     KnowledgeModule,
     PrometheusModule.register(),
+    HealthModule,
   ],
 })
 export class AppModule {}

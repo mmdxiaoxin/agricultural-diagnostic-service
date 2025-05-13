@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { UploadController } from './app.controller';
 import { UploadService } from './app.service';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { UploadService } from './app.service';
     DatabaseModule.forFeature([FileEntity, Dataset]),
     RedisModule,
     PrometheusModule.register(),
+    HealthModule,
   ],
   controllers: [UploadController],
   providers: [UploadService],

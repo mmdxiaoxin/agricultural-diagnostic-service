@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { AuthModule } from './modules/auth/auth.module';
+import { HealthModule } from './modules/health/health.module';
 import { MenuModule } from './modules/menu/menu.module';
 
 @Module({
@@ -14,6 +15,7 @@ import { MenuModule } from './modules/menu/menu.module';
     AuthModule,
     MenuModule,
     PrometheusModule.register(),
+    HealthModule,
   ],
 })
 export class AppModule {}

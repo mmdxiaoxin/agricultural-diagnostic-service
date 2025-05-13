@@ -6,6 +6,7 @@ import { ConfigEnum } from '@shared/enum/config.enum';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { DiagnosisModule } from './modules/diagnosis/diagnosis.module';
 import { RemoteServiceModule } from './modules/remote/remote.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { RemoteServiceModule } from './modules/remote/remote.module';
     RemoteServiceModule,
     DiagnosisModule,
     PrometheusModule.register(),
+    HealthModule,
   ],
 })
 export class AppModule {}
