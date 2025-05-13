@@ -41,6 +41,7 @@ RUN mkdir -p /app/dist/chunks \
 
 # 设置环境变量
 ENV NODE_ENV=production
+ENV DOCKER_HOST=host.docker.internal
 
 # 暴露端口（根据实际服务端口调整）
 EXPOSE 3000-3007
