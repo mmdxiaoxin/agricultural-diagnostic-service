@@ -22,6 +22,8 @@ services:
       - DB_PORT=3306
       - REDIS_HOST=host.docker.internal
       - REDIS_PORT=6379
+      - CONTAINER_MEMORY_LIMIT=16  # 16GB 内存限制
+      - CONTAINER_CPU_LIMIT=4      # 4核 CPU 限制
     volumes:
       - ./logs:/app/logs
     networks:

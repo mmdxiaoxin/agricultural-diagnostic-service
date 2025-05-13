@@ -2,54 +2,50 @@ const path = require('path');
 const dotenv = require('dotenv');
 const os = require('os');
 
-// 获取服务器信息
+// 获取容器资源信息
 const getServerInfo = () => {
-  const totalMemory = os.totalmem();
+  // 从环境变量或默认值获取容器资源限制
+  const totalMemory = process.env.CONTAINER_MEMORY_LIMIT
+    ? parseInt(process.env.CONTAINER_MEMORY_LIMIT) * 1024 * 1024 * 1024
+    : 8 * 1024 * 1024 * 1024; // 默认8GB
+
+  const cpuCores = process.env.CONTAINER_CPU_LIMIT
+    ? parseInt(process.env.CONTAINER_CPU_LIMIT)
+    : 4; // 默认4核
+
+  // 获取当前内存使用情况
   const freeMemory = os.freemem();
-  const cpus = os.cpus();
-  const cpuCores = cpus.length;
-  const platform = os.platform();
-  const release = os.release();
-  const hostname = os.hostname();
-  const uptime = os.uptime();
-  const loadAvg = os.loadavg();
-
-  // 计算CPU使用率
-  const cpuUsage = cpus.map((cpu) => {
-    const total = Object.values(cpu.times).reduce((acc, tv) => acc + tv, 0);
-    const idle = cpu.times.idle;
-    return (((total - idle) / total) * 100).toFixed(2);
-  });
-
-  // 格式化运行时间
-  const formatUptime = (seconds) => {
-    const days = Math.floor(seconds / (3600 * 24));
-    const hours = Math.floor((seconds % (3600 * 24)) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${days}天 ${hours}小时 ${minutes}分钟`;
-  };
+  const usedMemory = totalMemory - freeMemory;
 
   return {
     system: {
-      platform,
-      release,
-      hostname,
-      uptime: formatUptime(uptime),
+      platform: os.platform(),
+      release: os.release(),
+      hostname: os.hostname(),
+      uptime: formatUptime(os.uptime()),
     },
     cpu: {
       cores: cpuCores,
-      model: cpus[0].model,
-      speed: `${cpus[0].speed}MHz`,
-      usage: cpuUsage,
-      loadAverage: loadAvg.map((load) => load.toFixed(2)),
+      model: 'Container CPU',
+      speed: 'N/A',
+      usage: [0], // 容器中无法准确获取CPU使用率
+      loadAverage: [0, 0, 0], // 容器中无法准确获取负载
     },
     memory: {
       total: Math.floor(totalMemory / (1024 * 1024 * 1024)), // 转换为GB
       free: Math.floor(freeMemory / (1024 * 1024 * 1024)), // 转换为GB
-      used: Math.floor((totalMemory - freeMemory) / (1024 * 1024 * 1024)), // 转换为GB
-      usage: Math.floor(((totalMemory - freeMemory) / totalMemory) * 100), // 使用率百分比
+      used: Math.floor(usedMemory / (1024 * 1024 * 1024)), // 转换为GB
+      usage: Math.floor((usedMemory / totalMemory) * 100), // 使用率百分比
     },
   };
+};
+
+// 格式化运行时间
+const formatUptime = (seconds) => {
+  const days = Math.floor(seconds / (3600 * 24));
+  const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${days}天 ${hours}小时 ${minutes}分钟`;
 };
 
 // 计算服务配置
