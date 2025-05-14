@@ -27,6 +27,7 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
   private serviceId: string;
   private readonly options: Required<ConsulServiceOptions>;
   private isRegistered = false;
+  private isConsulAvailable = false;
 
   constructor(private configService: ConfigService) {
     this.options = {
@@ -44,17 +45,27 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
       retryDelay: this.configService.get('CONSUL_RETRY_DELAY', 5000),
     };
 
-    this.consul = new Consul({
-      host: this.options.host,
-      port: this.options.port,
-      promisify: true,
-    });
-
-    this.serviceId = `${this.options.serviceName}-${process.pid}`;
+    try {
+      this.consul = new Consul({
+        host: this.options.host,
+        port: this.options.port,
+        promisify: true,
+      });
+      this.serviceId = `${this.options.serviceName}-${process.pid}`;
+    } catch (error) {
+      this.logger.error(`Failed to initialize Consul client: ${error.message}`);
+      this.isConsulAvailable = false;
+    }
   }
 
   async onModuleInit() {
-    await this.registerServiceWithRetry();
+    if (this.isConsulAvailable) {
+      await this.registerServiceWithRetry();
+    } else {
+      this.logger.warn(
+        'Consul service is not available, skipping service registration',
+      );
+    }
   }
 
   async onModuleDestroy() {
@@ -69,6 +80,7 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
       try {
         await this.registerService();
         this.isRegistered = true;
+        this.isConsulAvailable = true;
         return;
       } catch (error) {
         attempts++;
@@ -82,7 +94,10 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
         }
       }
     }
-    this.logger.error('Failed to register service after all retry attempts');
+    this.logger.warn(
+      'Failed to register service after all retry attempts, continuing without Consul',
+    );
+    this.isConsulAvailable = false;
   }
 
   private async registerService() {
@@ -108,6 +123,8 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async deregisterService() {
+    if (!this.isConsulAvailable) return;
+
     try {
       await this.consul.agent.service.deregister(this.serviceId);
       this.logger.log(
@@ -116,27 +133,41 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
       this.isRegistered = false;
     } catch (error) {
       this.logger.error(`Failed to deregister service: ${error.message}`);
-      throw error;
     }
   }
 
   async discoverService(serviceName: string): Promise<string> {
+    if (!this.isConsulAvailable) {
+      this.logger.warn(
+        'Consul is not available, using default service discovery',
+      );
+      return `http://localhost:${this.options.servicePort}`;
+    }
+
     try {
       const result = await this.consul.catalog.service.nodes(serviceName);
       if (result && result.length > 0) {
         const service = result[0];
         return `http://${service.ServiceAddress}:${service.ServicePort}`;
       }
-      throw new Error(`Service ${serviceName} not found`);
+      this.logger.warn(
+        `Service ${serviceName} not found in Consul, using default service discovery`,
+      );
+      return `http://localhost:${this.options.servicePort}`;
     } catch (error) {
       this.logger.error(
         `Failed to discover service ${serviceName}: ${error.message}`,
       );
-      throw error;
+      return `http://localhost:${this.options.servicePort}`;
     }
   }
 
   async getConfig(key: string): Promise<any> {
+    if (!this.isConsulAvailable) {
+      this.logger.warn('Consul is not available, returning null for config');
+      return null;
+    }
+
     try {
       const result = await this.consul.kv.get(key);
       if (!result || !result.Value) {
@@ -147,18 +178,22 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(
         `Failed to get config for key ${key}: ${error.message}`,
       );
-      throw error;
+      return null;
     }
   }
 
   async setConfig(key: string, value: any): Promise<void> {
+    if (!this.isConsulAvailable) {
+      this.logger.warn('Consul is not available, skipping config set');
+      return;
+    }
+
     try {
       await this.consul.kv.set(key, JSON.stringify(value));
     } catch (error) {
       this.logger.error(
         `Failed to set config for key ${key}: ${error.message}`,
       );
-      throw error;
     }
   }
 }
