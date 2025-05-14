@@ -17,6 +17,7 @@ export interface HealthCheck {
   path?: string;
   port?: number;
   host?: string;
+  protocol?: 'http' | 'https';
   deregister_critical_service_after?: string;
   success_before_passing?: number;
   failures_before_critical?: number;
@@ -165,6 +166,7 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
         const serviceHost =
           check.host ?? this.configService.get('SERVICE_HOST', 'localhost');
         const servicePort = check.port ?? this.options.servicePort;
+        const protocol = check.protocol ?? 'http';
 
         switch (check.type) {
           case 'tcp':
@@ -176,13 +178,13 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
             return {
               ...baseCheck,
               grpc: `${serviceHost}:${servicePort}`,
-              grpc_use_tls: false,
+              grpc_use_tls: protocol === 'https',
             };
           case 'http':
           default:
             return {
               ...baseCheck,
-              http: `http://${serviceHost}:${servicePort}${check.path ?? this.options.healthCheckPath}`,
+              http: `${protocol}://${serviceHost}:${servicePort}${check.path ?? this.options.healthCheckPath}`,
             };
         }
       });
