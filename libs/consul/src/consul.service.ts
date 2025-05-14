@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import Consul from 'consul';
 import { ConfigService } from '@nestjs/config';
+const Consul = require('consul');
+type ConsulType = typeof Consul;
 
 export interface ConsulServiceOptions {
   host?: string;
@@ -14,7 +15,7 @@ export interface ConsulServiceOptions {
 
 @Injectable()
 export class ConsulService implements OnModuleInit, OnModuleDestroy {
-  private consul: Consul;
+  private consul: ConsulType;
   private serviceId: string;
   private readonly options: Required<ConsulServiceOptions>;
 
