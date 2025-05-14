@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 const Consul = require('consul');
 type ConsulType = typeof Consul;
@@ -11,13 +16,17 @@ export interface ConsulServiceOptions {
   healthCheckPath?: string;
   healthCheckInterval?: string;
   healthCheckTimeout?: string;
+  retryAttempts?: number;
+  retryDelay?: number;
 }
 
 @Injectable()
 export class ConsulService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(ConsulService.name);
   private consul: ConsulType;
   private serviceId: string;
   private readonly options: Required<ConsulServiceOptions>;
+  private isRegistered = false;
 
   constructor(private configService: ConfigService) {
     this.options = {
@@ -31,22 +40,49 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
         '10s',
       ),
       healthCheckTimeout: this.configService.get('HEALTH_CHECK_TIMEOUT', '5s'),
+      retryAttempts: this.configService.get('CONSUL_RETRY_ATTEMPTS', 5),
+      retryDelay: this.configService.get('CONSUL_RETRY_DELAY', 5000),
     };
 
     this.consul = new Consul({
       host: this.options.host,
       port: this.options.port,
+      promisify: true,
     });
 
     this.serviceId = `${this.options.serviceName}-${process.pid}`;
   }
 
   async onModuleInit() {
-    await this.registerService();
+    await this.registerServiceWithRetry();
   }
 
   async onModuleDestroy() {
-    await this.deregisterService();
+    if (this.isRegistered) {
+      await this.deregisterService();
+    }
+  }
+
+  private async registerServiceWithRetry() {
+    let attempts = 0;
+    while (attempts < this.options.retryAttempts) {
+      try {
+        await this.registerService();
+        this.isRegistered = true;
+        return;
+      } catch (error) {
+        attempts++;
+        this.logger.warn(
+          `Failed to register service (attempt ${attempts}/${this.options.retryAttempts}): ${error.message}`,
+        );
+        if (attempts < this.options.retryAttempts) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, this.options.retryDelay),
+          );
+        }
+      }
+    }
+    this.logger.error('Failed to register service after all retry attempts');
   }
 
   private async registerService() {
@@ -62,22 +98,25 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
           timeout: this.options.healthCheckTimeout,
         },
       });
-      console.log(
+      this.logger.log(
         `Service ${this.options.serviceName} registered successfully`,
       );
     } catch (error) {
-      console.error('Failed to register service:', error);
+      this.logger.error(`Failed to register service: ${error.message}`);
+      throw error;
     }
   }
 
   private async deregisterService() {
     try {
       await this.consul.agent.service.deregister(this.serviceId);
-      console.log(
+      this.logger.log(
         `Service ${this.options.serviceName} deregistered successfully`,
       );
+      this.isRegistered = false;
     } catch (error) {
-      console.error('Failed to deregister service:', error);
+      this.logger.error(`Failed to deregister service: ${error.message}`);
+      throw error;
     }
   }
 
@@ -90,7 +129,9 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
       }
       throw new Error(`Service ${serviceName} not found`);
     } catch (error) {
-      console.error(`Failed to discover service ${serviceName}:`, error);
+      this.logger.error(
+        `Failed to discover service ${serviceName}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -103,7 +144,9 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
       }
       return JSON.parse(result.Value);
     } catch (error) {
-      console.error(`Failed to get config for key ${key}:`, error);
+      this.logger.error(
+        `Failed to get config for key ${key}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -112,7 +155,9 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.consul.kv.set(key, JSON.stringify(value));
     } catch (error) {
-      console.error(`Failed to set config for key ${key}:`, error);
+      this.logger.error(
+        `Failed to set config for key ${key}: ${error.message}`,
+      );
       throw error;
     }
   }
