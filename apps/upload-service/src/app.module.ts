@@ -20,7 +20,7 @@ import {
       serviceName: UPLOAD_SERVICE_NAME,
       servicePort: UPLOAD_SERVICE_HTTP_PORT,
       healthCheckPath: '/health',
-      healthCheckInterval: '10s',
+      healthCheckInterval: '30s',
       healthCheckTimeout: '5s',
     }),
     RedisModule,

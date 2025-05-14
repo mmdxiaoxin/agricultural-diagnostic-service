@@ -21,7 +21,7 @@ import {
       serviceName: USER_SERVICE_NAME,
       servicePort: USER_SERVICE_HTTP_PORT,
       healthCheckPath: '/health',
-      healthCheckInterval: '10s',
+      healthCheckInterval: '30s',
       healthCheckTimeout: '5s',
     }),
     UserModule,

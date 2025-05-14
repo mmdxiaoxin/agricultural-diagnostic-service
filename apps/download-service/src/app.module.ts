@@ -19,7 +19,7 @@ import {
       serviceName: DOWNLOAD_SERVICE_NAME,
       servicePort: DOWNLOAD_SERVICE_HTTP_PORT,
       healthCheckPath: '/health',
-      healthCheckInterval: '10s',
+      healthCheckInterval: '30s',
       healthCheckTimeout: '5s',
     }),
     PrometheusModule.register(),
