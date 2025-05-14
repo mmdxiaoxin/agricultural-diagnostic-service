@@ -20,6 +20,8 @@
     "paths": {
       "@app/ali-oss": ["libs/ali-oss/src"],
       "@app/ali-oss/*": ["libs/ali-oss/src/*"],
+      "@app/consul": ["libs/consul/src"],
+      "@app/consul/*": ["libs/consul/src/*"],
       "@app/database": ["libs/database/src"],
       "@app/database/*": ["libs/database/src/*"],
       "@app/file-operation": ["libs/file-operation/src"],

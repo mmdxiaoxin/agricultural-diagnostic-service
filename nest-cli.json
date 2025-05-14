@@ -4,9 +4,7 @@
   "sourceRoot": "apps/api-gateway/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": [
-      "**/*.proto"
-    ],
+    "assets": ["**/*.proto"],
     "watchAssets": true,
     "webpack": true,
     "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
@@ -39,6 +37,15 @@
       "sourceRoot": "apps/auth-service/src",
       "compilerOptions": {
         "tsConfigPath": "apps/auth-service/tsconfig.app.json"
+      }
+    },
+    "consul": {
+      "type": "library",
+      "root": "libs/consul",
+      "entryFile": "index",
+      "sourceRoot": "libs/consul/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/consul/tsconfig.lib.json"
       }
     },
     "database": {
