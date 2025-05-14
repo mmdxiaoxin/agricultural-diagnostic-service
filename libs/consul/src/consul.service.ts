@@ -3,6 +3,8 @@ import {
   OnModuleInit,
   OnModuleDestroy,
   Logger,
+  Inject,
+  Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 const Consul = require('consul');
@@ -29,20 +31,39 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
   private isRegistered = false;
   private isConsulAvailable = false;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    @Optional()
+    @Inject('CONSUL_OPTIONS')
+    private readonly consulOptions?: ConsulServiceOptions,
+  ) {
     this.options = {
-      host: this.configService.get('CONSUL_HOST', 'localhost'),
-      port: this.configService.get('CONSUL_PORT', 8500),
-      serviceName: this.configService.get('SERVICE_NAME', 'unknown-service'),
-      servicePort: this.configService.get('HTTP_PORT', 3000),
-      healthCheckPath: this.configService.get('HEALTH_CHECK_PATH', '/health'),
-      healthCheckInterval: this.configService.get(
-        'HEALTH_CHECK_INTERVAL',
-        '10s',
-      ),
-      healthCheckTimeout: this.configService.get('HEALTH_CHECK_TIMEOUT', '5s'),
-      retryAttempts: this.configService.get('CONSUL_RETRY_ATTEMPTS', 5),
-      retryDelay: this.configService.get('CONSUL_RETRY_DELAY', 5000),
+      host:
+        this.consulOptions?.host ??
+        this.configService.get('CONSUL_HOST', 'localhost'),
+      port:
+        this.consulOptions?.port ?? this.configService.get('CONSUL_PORT', 8500),
+      serviceName:
+        this.consulOptions?.serviceName ??
+        this.configService.get('SERVICE_NAME', 'unknown-service'),
+      servicePort:
+        this.consulOptions?.servicePort ??
+        this.configService.get('HTTP_PORT', 3000),
+      healthCheckPath:
+        this.consulOptions?.healthCheckPath ??
+        this.configService.get('HEALTH_CHECK_PATH', '/health'),
+      healthCheckInterval:
+        this.consulOptions?.healthCheckInterval ??
+        this.configService.get('HEALTH_CHECK_INTERVAL', '10s'),
+      healthCheckTimeout:
+        this.consulOptions?.healthCheckTimeout ??
+        this.configService.get('HEALTH_CHECK_TIMEOUT', '5s'),
+      retryAttempts:
+        this.consulOptions?.retryAttempts ??
+        this.configService.get('CONSUL_RETRY_ATTEMPTS', 5),
+      retryDelay:
+        this.consulOptions?.retryDelay ??
+        this.configService.get('CONSUL_RETRY_DELAY', 5000),
     };
 
     try {
@@ -52,6 +73,7 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
         promisify: true,
       });
       this.serviceId = `${this.options.serviceName}-${process.pid}`;
+      this.isConsulAvailable = true;
     } catch (error) {
       this.logger.error(`Failed to initialize Consul client: ${error.message}`);
       this.isConsulAvailable = false;
