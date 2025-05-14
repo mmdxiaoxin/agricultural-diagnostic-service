@@ -1,6 +1,9 @@
 # 构建阶段
 FROM node:22-alpine AS builder
 
+# 设置 npm 镜像源
+RUN npm config set registry https://registry.npmmirror.com
+
 # 安装 bcrypt 所需的系统依赖
 RUN apk add --no-cache python3 make g++
 
@@ -22,6 +25,9 @@ RUN npm run build:all
 
 # 生产阶段
 FROM node:22-alpine
+
+# 设置 npm 镜像源
+RUN npm config set registry https://registry.npmmirror.com
 
 # 安装 PM2
 RUN npm install -g pm2
