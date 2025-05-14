@@ -10,6 +10,17 @@ import { ConfigService } from '@nestjs/config';
 const Consul = require('consul');
 type ConsulType = typeof Consul;
 
+export interface HealthCheck {
+  type: 'http' | 'tcp' | 'grpc';
+  interval?: string;
+  timeout?: string;
+  path?: string;
+  port?: number;
+  deregister_critical_service_after?: string;
+  success_before_passing?: number;
+  failures_before_critical?: number;
+}
+
 export interface ConsulServiceOptions {
   host?: string;
   port?: number;
@@ -20,6 +31,7 @@ export interface ConsulServiceOptions {
   healthCheckTimeout?: string;
   retryAttempts?: number;
   retryDelay?: number;
+  healthChecks?: HealthCheck[];
 }
 
 @Injectable()
@@ -54,7 +66,7 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
         this.configService.get('HEALTH_CHECK_PATH', '/health'),
       healthCheckInterval:
         this.consulOptions?.healthCheckInterval ??
-        this.configService.get('HEALTH_CHECK_INTERVAL', '10s'),
+        this.configService.get('HEALTH_CHECK_INTERVAL', '30s'),
       healthCheckTimeout:
         this.consulOptions?.healthCheckTimeout ??
         this.configService.get('HEALTH_CHECK_TIMEOUT', '5s'),
@@ -64,6 +76,17 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
       retryDelay:
         this.consulOptions?.retryDelay ??
         this.configService.get('CONSUL_RETRY_DELAY', 5000),
+      healthChecks: this.consulOptions?.healthChecks ?? [
+        {
+          type: 'http',
+          interval: '30s',
+          timeout: '5s',
+          path: '/health',
+          deregister_critical_service_after: '1m',
+          success_before_passing: 1,
+          failures_before_critical: 3,
+        },
+      ],
     };
 
     try {
@@ -124,19 +147,46 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
 
   private async registerService() {
     try {
+      const checks = this.options.healthChecks.map((check, index) => {
+        const baseCheck = {
+          name: `${this.options.serviceName}-health-check-${index + 1}`,
+          interval: check.interval ?? this.options.healthCheckInterval,
+          timeout: check.timeout ?? this.options.healthCheckTimeout,
+          deregister_critical_service_after:
+            check.deregister_critical_service_after ?? '1m',
+          success_before_passing: check.success_before_passing ?? 1,
+          failures_before_critical: check.failures_before_critical ?? 3,
+        };
+
+        switch (check.type) {
+          case 'tcp':
+            return {
+              ...baseCheck,
+              tcp: `localhost:${check.port ?? this.options.servicePort}`,
+            };
+          case 'grpc':
+            return {
+              ...baseCheck,
+              grpc: `localhost:${check.port ?? this.options.servicePort}`,
+              grpc_use_tls: false,
+            };
+          case 'http':
+          default:
+            return {
+              ...baseCheck,
+              http: `http://localhost:${check.port ?? this.options.servicePort}${check.path ?? this.options.healthCheckPath}`,
+            };
+        }
+      });
+
       await this.consul.agent.service.register({
         id: this.serviceId,
         name: this.options.serviceName,
         port: this.options.servicePort,
-        check: {
-          name: `${this.options.serviceName}-health-check`,
-          http: `http://localhost:${this.options.servicePort}${this.options.healthCheckPath}`,
-          interval: this.options.healthCheckInterval,
-          timeout: this.options.healthCheckTimeout,
-        },
+        checks,
       });
       this.logger.log(
-        `Service ${this.options.serviceName} registered successfully`,
+        `Service ${this.options.serviceName} registered successfully with ${checks.length} health checks`,
       );
     } catch (error) {
       this.logger.error(`Failed to register service: ${error.message}`);
