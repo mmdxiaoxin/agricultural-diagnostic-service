@@ -4,10 +4,9 @@ import { RedisService } from '@app/redis';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { compare, hash } from 'bcrypt';
+import { compare } from 'bcrypt';
 import { USER_SERVICE_NAME } from 'config/microservice.config';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
-import { cpus } from 'os';
 
 @Injectable()
 export class AuthService {
@@ -16,8 +15,6 @@ export class AuthService {
   private readonly LOCK_TIME = 1800; // 30分钟
   private readonly PASSWORD_CACHE_TTL = 300; // 5分钟缓存
   private readonly PASSWORD_VERIFY_CACHE_PREFIX = 'password_verify:';
-  private readonly SALT_ROUNDS = 10;
-  private readonly PARALLEL_HASHES = Math.max(2, cpus().length - 1); // 保留一个核心给主线程
 
   constructor(
     private readonly jwt: JwtService,
@@ -27,35 +24,24 @@ export class AuthService {
   ) {}
 
   /**
-   * 并行密码加密
-   */
-  private async hashPassword(password: string): Promise<string> {
-    // 使用 Promise.all 并行执行多个哈希操作
-    const hashes = await Promise.all(
-      Array(this.PARALLEL_HASHES)
-        .fill(null)
-        .map(() => hash(password, this.SALT_ROUNDS)),
-    );
-    // 返回第一个哈希结果
-    return hashes[0];
-  }
-
-  /**
    * 密码验证
    */
   private async verifyPassword(
     password: string,
     hashedPassword: string,
   ): Promise<boolean> {
-    if (!password || !hashedPassword) {
-      this.logger.error('密码验证失败：密码或哈希密码为空', {
-        hasPassword: !!password,
-        hasHashedPassword: !!hashedPassword,
+    try {
+      if (!password || !hashedPassword) {
+        throw new Error('密码验证参数不完整');
+      }
+      return await compare(password, hashedPassword);
+    } catch (error) {
+      this.logger.error(`密码验证失败: ${error.message}`, error.stack);
+      throw new RpcException({
+        code: 500,
+        message: '密码验证失败',
       });
-      throw new Error('密码验证参数不完整');
     }
-    // 直接使用 compare 进行验证
-    return compare(password, hashedPassword);
   }
 
   /**
