@@ -16,6 +16,7 @@ export interface HealthCheck {
   timeout?: string;
   path?: string;
   port?: number;
+  host?: string;
   deregister_critical_service_after?: string;
   success_before_passing?: number;
   failures_before_critical?: number;
@@ -82,6 +83,9 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
           interval: '30s',
           timeout: '5s',
           path: '/health',
+          host:
+            this.consulOptions?.host ??
+            this.configService.get('SERVICE_HOST', 'localhost'),
           deregister_critical_service_after: '1m',
           success_before_passing: 1,
           failures_before_critical: 3,
@@ -158,23 +162,27 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
           failures_before_critical: check.failures_before_critical ?? 3,
         };
 
+        const serviceHost =
+          check.host ?? this.configService.get('SERVICE_HOST', 'localhost');
+        const servicePort = check.port ?? this.options.servicePort;
+
         switch (check.type) {
           case 'tcp':
             return {
               ...baseCheck,
-              tcp: `localhost:${check.port ?? this.options.servicePort}`,
+              tcp: `${serviceHost}:${servicePort}`,
             };
           case 'grpc':
             return {
               ...baseCheck,
-              grpc: `localhost:${check.port ?? this.options.servicePort}`,
+              grpc: `${serviceHost}:${servicePort}`,
               grpc_use_tls: false,
             };
           case 'http':
           default:
             return {
               ...baseCheck,
-              http: `http://localhost:${check.port ?? this.options.servicePort}${check.path ?? this.options.healthCheckPath}`,
+              http: `http://${serviceHost}:${servicePort}${check.path ?? this.options.healthCheckPath}`,
             };
         }
       });
