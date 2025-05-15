@@ -29,8 +29,3 @@ logs
 # 测试文件
 test
 coverage
-
-# 其他
-.env
-.env.*
-!.env.example
