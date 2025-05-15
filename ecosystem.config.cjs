@@ -230,6 +230,21 @@ module.exports = {
       max_memory_restart: `${serviceConfig.otherServices.memory}G`,
       error_file: 'logs/auth-service/error.log',
       out_file: 'logs/auth-service/out.log',
+      env: {
+        ...commonConfig.env,
+        UV_THREADPOOL_SIZE: Math.max(4, serverInfo.cpu.cores * 2).toString(),
+        NODE_OPTIONS: '--max-old-space-size=1024',
+      },
+      env_production: {
+        ...commonConfig.env_production,
+        UV_THREADPOOL_SIZE: Math.max(4, serverInfo.cpu.cores * 2).toString(),
+        NODE_OPTIONS: '--max-old-space-size=1024',
+      },
+      env_development: {
+        ...commonConfig.env_development,
+        UV_THREADPOOL_SIZE: Math.max(4, serverInfo.cpu.cores * 2).toString(),
+        NODE_OPTIONS: '--max-old-space-size=1024',
+      },
     },
     {
       name: 'download-service',
