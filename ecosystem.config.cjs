@@ -49,12 +49,9 @@ const getServerInfo = () => {
     : 8 * 1024 * 1024 * 1024; // 默认8GB
 
   // 获取CPU信息
-  const logicalCores = process.env.CONTAINER_CPU_LIMIT
+  const cpuCores = process.env.CONTAINER_CPU_LIMIT
     ? parseInt(process.env.CONTAINER_CPU_LIMIT)
-    : 4; // 默认4个逻辑核心
-
-  // 线程比例为2:1，计算物理核心数
-  const physicalCores = Math.ceil(logicalCores / 2);
+    : 4; // 默认4个计算单元
 
   // 获取当前内存使用情况
   const freeMemory = os.freemem();
@@ -72,8 +69,7 @@ const getServerInfo = () => {
       uptime: formatUptime(os.uptime()),
     },
     cpu: {
-      physicalCores: physicalCores,
-      logicalCores: logicalCores,
+      cores: cpuCores,
       model: 'Container CPU',
       speed: 'N/A',
       usage: [0], // 容器中无法准确获取CPU使用率
@@ -99,33 +95,32 @@ const formatUptime = (seconds) => {
 // 计算服务配置
 const calculateServiceConfig = (serverInfo) => {
   const { memory, cpu } = serverInfo;
-  const totalLogicalCores = cpu.logicalCores;
-  const totalPhysicalCores = cpu.physicalCores;
+  const totalCores = cpu.cores;
 
   // 预留系统内存（20%）
   const availableMemory = Math.floor(memory.total * 0.8);
 
   // 计算每个服务的配置
   const diagnosis = {
-    instances: Math.max(1, Math.floor(totalPhysicalCores * 0.3)), // 使用30%的物理CPU核心
-    memory: Math.min(4, Math.floor(availableMemory * 0.3)), // 使用30%的可用内存，最大4GB
+    instances: Math.max(1, Math.floor(totalCores * 0.25)),
+    memory: Math.min(2, Math.floor(availableMemory * 0.2)),
   };
 
   const gateway = {
-    instances: Math.max(1, Math.floor(totalPhysicalCores * 0.2)), // 使用20%的物理CPU核心
-    memory: Math.min(2, Math.floor(availableMemory * 0.15)), // 使用15%的可用内存，最大2GB
+    instances: Math.max(1, Math.floor(totalCores * 0.35)),
+    memory: Math.min(1.5, Math.floor(availableMemory * 0.15)),
   };
 
   const other = {
-    instances: Math.max(1, Math.floor(totalPhysicalCores * 0.1)), // 使用10%的物理CPU核心
-    memory: Math.min(1, Math.floor(availableMemory * 0.1)), // 使用10%的可用内存，最大1GB
+    instances: Math.max(1, Math.floor(totalCores * 0.05)),
+    memory: Math.min(0.5, Math.floor(availableMemory * 0.05)),
   };
 
-  // 确保总实例数不超过物理CPU核心数
+  // 确保总实例数不超过CPU核心数
   const totalInstances =
     diagnosis.instances + gateway.instances + other.instances * 6; // 6个其他服务
-  if (totalInstances > totalPhysicalCores) {
-    const scaleFactor = totalPhysicalCores / totalInstances;
+  if (totalInstances > totalCores) {
+    const scaleFactor = totalCores / totalInstances;
     diagnosis.instances = Math.max(
       1,
       Math.floor(diagnosis.instances * scaleFactor),
@@ -157,8 +152,7 @@ console.log(`运行时间: ${serverInfo.system.uptime}`);
 
 console.log('\n=== CPU信息 ===');
 console.log(`CPU型号: ${serverInfo.cpu.model}`);
-console.log(`物理核心数: ${serverInfo.cpu.physicalCores}`);
-console.log(`逻辑核心数: ${serverInfo.cpu.logicalCores}`);
+console.log(`CPU核心数: ${serverInfo.cpu.cores}`);
 console.log(`CPU频率: ${serverInfo.cpu.speed}`);
 console.log(`CPU使用率: ${serverInfo.cpu.usage.join('% ')}%`);
 console.log(`系统负载: ${serverInfo.cpu.loadAverage.join(', ')}`);
