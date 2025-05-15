@@ -100,38 +100,33 @@ const calculateServiceConfig = (serverInfo) => {
   // 预留系统内存（20%）
   const availableMemory = Math.floor(memory.total * 0.8);
 
-  // 计算每个服务的配置
+  // API Gateway 直接使用 CPU 核心数
+  const gateway = {
+    instances: totalCores, // 直接使用所有 CPU 核心
+    memory: Math.min(1.5, Math.floor(availableMemory * 0.15)),
+  };
+
+  // 诊断服务使用 25% 的额外计算资源
   const diagnosis = {
     instances: Math.max(1, Math.floor(totalCores * 0.25)),
     memory: Math.min(2, Math.floor(availableMemory * 0.2)),
   };
 
-  const gateway = {
-    instances: Math.max(2, Math.floor(totalCores * 0.35)),
-    memory: Math.min(1.5, Math.floor(availableMemory * 0.15)),
-  };
-
+  // 其他服务共享剩余资源
   const other = {
     instances: Math.max(1, Math.floor(totalCores * 0.1)),
     memory: Math.min(1, Math.floor(availableMemory * 0.1)),
   };
 
-  // 确保总实例数不超过CPU核心数，但保持网关至少2个实例
-  const totalInstances =
-    diagnosis.instances + gateway.instances + other.instances * 6;
-  if (totalInstances > totalCores) {
-    const scaleFactor = (totalCores - 2) / (totalInstances - gateway.instances);
-    diagnosis.instances = Math.max(
-      1,
-      Math.floor(diagnosis.instances * scaleFactor),
-    );
-    other.instances = Math.max(1, Math.floor(other.instances * scaleFactor));
-  }
+  // 计算 UV_THREADPOOL_SIZE
+  // 对于 bcrypt 操作，建议线程池大小为 CPU 核心数的 2 倍
+  const threadPoolSize = Math.max(4, totalCores * 2);
 
   return {
     diagnosis,
     apiGateway: gateway,
     otherServices: other,
+    threadPoolSize,
   };
 };
 
@@ -221,6 +216,18 @@ module.exports = {
       error_file: 'logs/api-gateway/error.log',
       out_file: 'logs/api-gateway/out.log',
       node_args: '--trace-warnings',
+      env: {
+        ...commonConfig.env,
+        NODE_OPTIONS: `--max-old-space-size=${serviceConfig.apiGateway.memory * 1024}`,
+      },
+      env_production: {
+        ...commonConfig.env_production,
+        NODE_OPTIONS: `--max-old-space-size=${serviceConfig.apiGateway.memory * 1024}`,
+      },
+      env_development: {
+        ...commonConfig.env_development,
+        NODE_OPTIONS: `--max-old-space-size=${serviceConfig.apiGateway.memory * 1024}`,
+      },
     },
     {
       name: 'auth-service',
