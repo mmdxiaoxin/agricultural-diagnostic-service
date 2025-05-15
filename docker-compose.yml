@@ -26,8 +26,6 @@ services:
       - CONTAINER_CPU_LIMIT=4 # 4核 CPU 限制
     volumes:
       - ./logs:/app/logs
-    networks:
-      - app-network
     restart: unless-stopped
     cpuset: '0,1,2,3'
     deploy:
@@ -38,11 +36,3 @@ services:
         reservations:
           cpus: '2'
           memory: 8G
-
-networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  mysql_data:
-  redis_data:
