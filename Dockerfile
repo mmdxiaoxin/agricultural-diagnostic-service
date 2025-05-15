@@ -25,6 +25,7 @@ COPY libs/ ./libs/
 COPY tsconfig*.json ./
 COPY nest-cli.json ./
 COPY .env* ./
+COPY config/ ./config/
 
 # 分别构建各个服务
 RUN nest build api-gateway && \
