@@ -10,7 +10,7 @@ RUN apk add --no-cache python3 make g++
 # 设置工作目录
 WORKDIR /app
 
-# 复制 package.json 和 package-lock.json
+# 首先只复制 package.json 和 package-lock.json
 COPY package*.json ./
 
 # 安装依赖
@@ -19,8 +19,10 @@ RUN npm install
 # 安装 Nest CLI
 RUN npm install -g @nestjs/cli
 
-# 复制源代码和环境变量文件
-COPY . .
+# 复制源代码文件，排除 node_modules 和 dist
+COPY src/ ./src/
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
 COPY .env* ./
 
 # 分别构建各个服务
