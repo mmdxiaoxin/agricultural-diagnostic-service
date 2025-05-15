@@ -20,7 +20,8 @@ RUN npm install
 RUN npm install -g @nestjs/cli
 
 # 复制源代码文件，排除 node_modules 和 dist
-COPY src/ ./src/
+COPY apps/ ./apps/
+COPY libs/ ./libs/
 COPY tsconfig*.json ./
 COPY nest-cli.json ./
 COPY .env* ./
