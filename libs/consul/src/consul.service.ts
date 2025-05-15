@@ -100,7 +100,7 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
         port: this.options.port,
         promisify: true,
       });
-      this.serviceId = `${this.options.serviceName}-${process.pid}`;
+      this.serviceId = `${this.options.serviceName}-${this.options.servicePort}`;
       this.isConsulAvailable = true;
     } catch (error) {
       this.logger.error(`Failed to initialize Consul client: ${error.message}`);
@@ -152,6 +152,16 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
 
   private async registerService() {
     try {
+      // 先尝试注销可能存在的旧服务实例
+      try {
+        await this.consul.agent.service.deregister(this.serviceId);
+        this.logger.log(
+          `Deregistered existing service instance: ${this.serviceId}`,
+        );
+      } catch (error) {
+        // 忽略注销失败的错误，因为可能是首次注册
+      }
+
       const checks = this.options.healthChecks.map((check, index) => {
         const baseCheck = {
           name: `${this.options.serviceName}-health-check-${index + 1}`,
