@@ -9,7 +9,7 @@ import {
   VerifyRequest,
   VerifyResponse,
 } from '@common/types/auth';
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { GrpcMethod, MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -17,6 +17,8 @@ import { RegisterDto } from './dto/register.dto';
 
 @Controller()
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(private authService: AuthService) {}
 
   @MessagePattern({ cmd: 'auth.register' })
@@ -28,7 +30,13 @@ export class AuthController {
   @MessagePattern({ cmd: 'auth.login' })
   async login(@Payload() payload: { dto: LoginDto }) {
     const { login, password } = payload.dto;
-    return this.authService.login(login, password);
+    try {
+      const result = await this.authService.login(login, password);
+      return result;
+    } catch (error) {
+      this.logger.error(`登录处理失败: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   @MessagePattern({ cmd: 'auth.notify' })
@@ -65,6 +73,7 @@ export class AuthController {
         message: '登录成功',
       };
     } catch (error) {
+      this.logger.error(`gRPC登录处理失败: ${error.message}`, error.stack);
       return {
         token: '',
         message: error.message,

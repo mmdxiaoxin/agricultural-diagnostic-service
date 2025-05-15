@@ -80,16 +80,25 @@ export class AuthService {
    */
   async login(login: string, password: string) {
     try {
-      // 检查登录限制
-      await this.checkLoginAttempts(login);
+      // 异步检查登录限制
+      const loginAttemptsCheck = this.checkLoginAttempts(login);
 
-      // 获取用户信息
-      const user = await lastValueFrom(
+      // 异步获取用户信息
+      const userInfoPromise = lastValueFrom(
         this.userClient.send({ cmd: 'user.find.byLogin' }, { login }),
       );
 
+      // 等待登录限制检查完成
+      await loginAttemptsCheck;
+
+      // 获取用户信息
+      const user = await userInfoPromise;
+
       if (!user) {
-        await this.handleLoginFailure(login, '账号不存在');
+        // 异步处理登录失败
+        this.handleLoginFailure(login, '账号不存在').catch((err) =>
+          this.logger.error('处理登录失败时出错', err),
+        );
         throw new RpcException({
           code: 400,
           message: '账号或密码错误',
@@ -97,7 +106,10 @@ export class AuthService {
       }
 
       if (user.status === 0) {
-        await this.handleLoginFailure(login, '账号未激活或已被禁用');
+        // 异步处理登录失败
+        this.handleLoginFailure(login, '账号未激活或已被禁用').catch((err) =>
+          this.logger.error('处理登录失败时出错', err),
+        );
         throw new RpcException({
           code: 400,
           message: '账号未激活或已经被禁用',
@@ -113,7 +125,7 @@ export class AuthService {
         });
       }
 
-      // 检查密码验证缓存
+      // 异步检查密码验证缓存
       const passwordCacheKey = `${this.PASSWORD_VERIFY_CACHE_PREFIX}${user.id}:${password}`;
       const cachedResult = await this.redis.get<boolean>(passwordCacheKey);
 
@@ -122,13 +134,12 @@ export class AuthService {
         isValid = cachedResult;
       } else {
         try {
+          // 异步验证密码
           isValid = await this.verifyPassword(password, user.password);
-          // 缓存密码验证结果，有效期5分钟
-          await this.redis.set(
-            passwordCacheKey,
-            isValid,
-            this.PASSWORD_CACHE_TTL,
-          );
+          // 异步缓存密码验证结果
+          this.redis
+            .set(passwordCacheKey, isValid, this.PASSWORD_CACHE_TTL)
+            .catch((err) => this.logger.error('缓存密码验证结果失败', err));
         } catch (error) {
           this.logger.error('密码验证失败', {
             error: error.message,
@@ -143,18 +154,23 @@ export class AuthService {
       }
 
       if (!isValid) {
-        await this.handleLoginFailure(login, '密码错误');
+        // 异步处理登录失败
+        this.handleLoginFailure(login, '密码错误').catch((err) =>
+          this.logger.error('处理登录失败时出错', err),
+        );
         throw new RpcException({
           code: 400,
           message: '账号或密码错误',
         });
       }
 
-      // 登录成功，生成token
+      // 生成token
       const token = this.generateToken(user);
 
-      // 清除登录尝试次数
-      await this.clearLoginAttempts(login);
+      // 异步清除登录尝试次数
+      this.clearLoginAttempts(login).catch((err) =>
+        this.logger.error('清除登录尝试次数失败', err),
+      );
 
       return token;
     } catch (error) {
