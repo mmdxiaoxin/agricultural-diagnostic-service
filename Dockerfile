@@ -16,12 +16,22 @@ COPY package*.json ./
 # 安装依赖
 RUN npm install
 
+# 安装 Nest CLI
+RUN npm install -g @nestjs/cli
+
 # 复制源代码和环境变量文件
 COPY . .
 COPY .env* ./
 
-# 构建项目
-RUN npm run build:all
+# 分别构建各个服务
+RUN nest build api-gateway && \
+  nest build auth-service && \
+  nest build download-service && \
+  nest build file-service && \
+  nest build upload-service && \
+  nest build user-service && \
+  nest build knowledge-service && \
+  nest build diagnosis-service
 
 # 生产阶段
 FROM node:22-alpine
