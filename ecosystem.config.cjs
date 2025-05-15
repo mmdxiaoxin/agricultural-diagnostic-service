@@ -107,7 +107,7 @@ const calculateServiceConfig = (serverInfo) => {
   };
 
   const gateway = {
-    instances: Math.max(1, Math.floor(totalCores * 0.35)),
+    instances: Math.max(2, Math.floor(totalCores * 0.35)), // 最小保持2个实例
     memory: Math.min(1.5, Math.floor(availableMemory * 0.15)),
   };
 
@@ -116,20 +116,17 @@ const calculateServiceConfig = (serverInfo) => {
     memory: Math.min(0.5, Math.floor(availableMemory * 0.05)),
   };
 
-  // 确保总实例数不超过CPU核心数
+  // 确保总实例数不超过CPU核心数，但保持网关至少2个实例
   const totalInstances =
     diagnosis.instances + gateway.instances + other.instances * 6; // 6个其他服务
   if (totalInstances > totalCores) {
-    const scaleFactor = totalCores / totalInstances;
+    const scaleFactor = (totalCores - 2) / (totalInstances - gateway.instances); // 预留2个核心给网关
     diagnosis.instances = Math.max(
       1,
       Math.floor(diagnosis.instances * scaleFactor),
     );
-    gateway.instances = Math.max(
-      1,
-      Math.floor(gateway.instances * scaleFactor),
-    );
     other.instances = Math.max(1, Math.floor(other.instances * scaleFactor));
+    // 网关保持2个实例不变
   }
 
   return {
