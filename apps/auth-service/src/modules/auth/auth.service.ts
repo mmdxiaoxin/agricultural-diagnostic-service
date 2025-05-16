@@ -13,8 +13,6 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly MAX_LOGIN_ATTEMPTS = 10;
   private readonly LOCK_TIME = 1800; // 30分钟
-  private readonly PASSWORD_CACHE_TTL = 300; // 5分钟缓存
-  private readonly PASSWORD_VERIFY_CACHE_PREFIX = 'password_verify:';
 
   constructor(
     private readonly jwt: JwtService,
@@ -125,42 +123,29 @@ export class AuthService {
         });
       }
 
-      // 异步检查密码验证缓存
-      const passwordCacheKey = `${this.PASSWORD_VERIFY_CACHE_PREFIX}${user.id}:${password}`;
-      const cachedResult = await this.redis.get<boolean>(passwordCacheKey);
+      try {
+        // 直接验证密码
+        const isValid = await this.verifyPassword(password, user.password);
 
-      let isValid: boolean;
-      if (typeof cachedResult === 'boolean') {
-        isValid = cachedResult;
-      } else {
-        try {
-          // 异步验证密码
-          isValid = await this.verifyPassword(password, user.password);
-          // 异步缓存密码验证结果
-          this.redis
-            .set(passwordCacheKey, isValid, this.PASSWORD_CACHE_TTL)
-            .catch((err) => this.logger.error('缓存密码验证结果失败', err));
-        } catch (error) {
-          this.logger.error('密码验证失败', {
-            error: error.message,
-            userId: user.id,
-            login,
-          });
+        if (!isValid) {
+          // 异步处理登录失败
+          this.handleLoginFailure(login, '密码错误').catch((err) =>
+            this.logger.error('处理登录失败时出错', err),
+          );
           throw new RpcException({
-            code: 500,
-            message: '密码验证失败',
+            code: 400,
+            message: '账号或密码错误',
           });
         }
-      }
-
-      if (!isValid) {
-        // 异步处理登录失败
-        this.handleLoginFailure(login, '密码错误').catch((err) =>
-          this.logger.error('处理登录失败时出错', err),
-        );
+      } catch (error) {
+        this.logger.error('密码验证失败', {
+          error: error.message,
+          userId: user.id,
+          login,
+        });
         throw new RpcException({
-          code: 400,
-          message: '账号或密码错误',
+          code: 500,
+          message: '密码验证失败',
         });
       }
 
