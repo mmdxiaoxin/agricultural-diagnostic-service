@@ -664,19 +664,6 @@ export class UserService {
     try {
       const { page, pageSize, ...filters } = query;
       const offset = (page - 1) * pageSize;
-      const cacheKey = this.generateCacheKey('USER_LIST', query);
-
-      // 尝试从缓存获取
-      const cachedResult = await this.redisService.get<{
-        list: any[];
-        total: number;
-        page: number;
-        pageSize: number;
-      }>(cacheKey);
-
-      if (cachedResult) {
-        return formatResponse(200, cachedResult, '获取用户列表成功(缓存)');
-      }
 
       // 构建查询
       const queryBuilder = this.userRepository
@@ -696,7 +683,7 @@ export class UserService {
           'role.name',
           'role.alias',
         ])
-        .cache(true); // 启用 TypeORM 查询缓存
+        .cache(1000);
 
       // 添加过滤条件
       if (filters.username) {
@@ -737,13 +724,6 @@ export class UserService {
         page,
         pageSize,
       };
-
-      // 使用配置的缓存时间
-      await this.redisService.set(
-        cacheKey,
-        result,
-        this.CACHE_CONFIG.USER_LIST.ttl,
-      );
 
       return formatResponse(200, result, '获取用户列表成功');
     } catch (error) {
