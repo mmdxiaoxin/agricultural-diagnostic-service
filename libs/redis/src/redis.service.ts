@@ -166,10 +166,17 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async get<T extends RedisValue>(key: RedisKey): Promise<T | null> {
     const data = await this.client.get(key);
     if (!data) return null;
+
     try {
-      return JSON.parse(data) as T;
+      const parsed = JSON.parse(data);
+      // 验证解析后的数据是否包含必要的字段
+      if (typeof parsed === 'object' && parsed !== null) {
+        return parsed as T;
+      }
+      return null;
     } catch (error) {
-      return data as unknown as T;
+      console.error('Redis 数据反序列化失败:', error);
+      return null;
     }
   }
 
