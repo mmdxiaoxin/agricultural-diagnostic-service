@@ -182,12 +182,16 @@ export class MenuService {
   // 清除所有菜单相关的缓存
   private async clearMenuCache() {
     try {
+      // 清除 Redis 缓存
       const keys = await this.redisService
         .getClient()
         .keys(`${this.CACHE_PREFIX}*`);
       if (keys.length > 0) {
         await this.redisService.getClient().del(...keys);
       }
+
+      // 清除内存缓存
+      this.memoryCache.clear();
     } catch (error) {
       this.logger.error(`清除菜单缓存失败: ${error.message}`);
       // 缓存清除失败不影响主流程
