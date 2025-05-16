@@ -756,7 +756,6 @@ export class UserService {
       ])
       .where('user.email = :login', { login })
       .orWhere('user.username = :login', { login })
-      .cache(true) // 启用 TypeORM 查询缓存
       .getOne();
 
     if (user) {
