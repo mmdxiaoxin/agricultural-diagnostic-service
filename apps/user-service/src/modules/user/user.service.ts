@@ -736,12 +736,15 @@ export class UserService {
 
   async findByLogin(login: string): Promise<User | null> {
     const cacheKey = this.generateCacheKey('USER_LOGIN', login);
+
+    // 1. 先尝试从缓存获取
     const cachedUser = await this.redisService.get<User>(cacheKey);
-    if (cachedUser) {
+    if (cachedUser && cachedUser.password) {
+      this.logger.debug(`从缓存获取用户数据: ${login}`);
       return cachedUser;
     }
 
-    // 使用更高效的查询方式，只选择必要的字段
+    // 2. 缓存未命中,从数据库查询
     const user = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'role')
@@ -759,9 +762,13 @@ export class UserService {
       .getOne();
 
     if (user) {
-      // 使用 pipeline 批量更新缓存
-      const pipeline = this.redisService.pipeline();
+      // 3. 验证用户数据的完整性
+      if (!user.password) {
+        this.logger.warn(`用户密码为空: ${login}`);
+        return null;
+      }
 
+      // 4. 更新缓存,使用 pipeline 批量操作
       const cacheUpdates = [
         { type: 'USER_LOGIN', key: login, data: user },
         { type: 'USER_EMAIL', key: user.email, data: user },
@@ -769,6 +776,7 @@ export class UserService {
         { type: 'USER_ID', key: user.id, data: user },
       ];
 
+      const pipeline = this.redisService.pipeline();
       cacheUpdates.forEach(({ type, key, data }) => {
         const cacheKey = this.generateCacheKey(
           type as keyof typeof this.CACHE_KEYS,
@@ -783,6 +791,7 @@ export class UserService {
       });
 
       await pipeline.exec();
+      this.logger.debug(`更新用户缓存: ${login}`);
     }
 
     return user;
