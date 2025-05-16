@@ -171,6 +171,21 @@ export class UserService {
     }
   }
 
+  private async generateUniqueUsername(email: string): Promise<string> {
+    // 从邮箱中提取用户名部分
+    const baseUsername = email.split('@')[0];
+    let username = baseUsername;
+    let counter = 1;
+
+    // 检查用户名是否已存在
+    while (await this.findByUsername(username)) {
+      username = `${baseUsername}${counter}`;
+      counter++;
+    }
+
+    return username;
+  }
+
   async userCreate(user: Partial<User>, profile?: Partial<Profile>) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -178,6 +193,12 @@ export class UserService {
 
     try {
       await this.validateUserParams(user);
+
+      // 如果没有提供用户名，则生成一个唯一的用户名
+      if (!user.username && user.email) {
+        user.username = await this.generateUniqueUsername(user.email);
+      }
+
       await this.setRoles(user);
       await this.setDefaultPassword(user);
 
