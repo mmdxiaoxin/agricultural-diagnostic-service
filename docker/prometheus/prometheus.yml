@@ -3,19 +3,20 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['host.docker.internal:4001']
-
   - job_name: 'pm2'
     static_configs:
       - targets: ['host.docker.internal:9209']
     metrics_path: '/metrics'
+    scrape_interval: 5s
+    scrape_timeout: 3s
+    scheme: http
+    honor_labels: true
+    fallback_scrape_protocol: 'PrometheusText0.0.4'
 
   - job_name: 'api-gateway'
     static_configs:
       - targets: ['host.docker.internal:3000']
-    metrics_path: '/metrics'
+    metrics_path: '/api/metrics'
 
   - job_name: 'auth-service'
     static_configs:
