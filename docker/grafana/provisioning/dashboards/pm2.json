@@ -117,9 +117,9 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(pm2_uptime{job=\"pm2\",name!=\"pm2-metrics\"}) by (name)",
+          "expr": "pm2_uptime{job=\"pm2\",name!=\"pm2-metrics\"}",
           "interval": "",
-          "legendFormat": "{{name}}",
+          "legendFormat": "{{name}} - 进程 {{pid}}",
           "refId": "A"
         }
       ],
