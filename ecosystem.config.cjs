@@ -94,6 +94,43 @@ const formatUptime = (seconds) => {
 
 // 计算服务配置
 const calculateServiceConfig = (serverInfo) => {
+  // 检查是否使用自动分配模式
+  const useAutoAllocation = process.env.USE_AUTO_ALLOCATION === 'true';
+
+  if (!useAutoAllocation) {
+    // 手动分配模式
+    return {
+      diagnosis: {
+        instances: process.env.DIAGNOSIS_INSTANCES
+          ? parseInt(process.env.DIAGNOSIS_INSTANCES)
+          : 1,
+        memory: process.env.DIAGNOSIS_MEMORY
+          ? parseInt(process.env.DIAGNOSIS_MEMORY)
+          : 2,
+      },
+      apiGateway: {
+        instances: process.env.GATEWAY_INSTANCES
+          ? parseInt(process.env.GATEWAY_INSTANCES)
+          : 1,
+        memory: process.env.GATEWAY_MEMORY
+          ? parseInt(process.env.GATEWAY_MEMORY)
+          : 1.5,
+      },
+      otherServices: {
+        instances: process.env.OTHER_INSTANCES
+          ? parseInt(process.env.OTHER_INSTANCES)
+          : 1,
+        memory: process.env.OTHER_MEMORY
+          ? parseInt(process.env.OTHER_MEMORY)
+          : 1,
+      },
+      threadPoolSize: process.env.THREAD_POOL_SIZE
+        ? parseInt(process.env.THREAD_POOL_SIZE)
+        : 4,
+    };
+  }
+
+  // 自动分配模式
   const { memory, cpu } = serverInfo;
   const totalCores = cpu.cores;
 
