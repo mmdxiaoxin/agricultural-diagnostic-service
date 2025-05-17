@@ -72,6 +72,10 @@ async function bootstrap() {
   // 启动所有微服务
   await app.startAllMicroservices();
   // 启动 HTTP 服务
-  await app.listen(DOWNLOAD_SERVICE_HTTP_PORT);
+  await app.listen(DOWNLOAD_SERVICE_HTTP_PORT, '0.0.0.0');
+
+  console.log(
+    `Metrics server is running on http://localhost:${DOWNLOAD_SERVICE_HTTP_PORT}/metrics`,
+  );
 }
 bootstrap();

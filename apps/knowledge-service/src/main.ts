@@ -40,6 +40,10 @@ async function bootstrap() {
     new CustomRpcExceptionFilter(),
   );
   await app.startAllMicroservices();
-  await app.listen(KNOWLEDGE_SERVICE_HTTP_PORT);
+  await app.listen(KNOWLEDGE_SERVICE_HTTP_PORT, '0.0.0.0');
+
+  console.log(
+    `Metrics server is running on http://localhost:${KNOWLEDGE_SERVICE_HTTP_PORT}/metrics`,
+  );
 }
 bootstrap();
