@@ -98,7 +98,7 @@ const calculateServiceConfig = (serverInfo) => {
   const useAutoAllocation = process.env.USE_AUTO_ALLOCATION === 'true';
 
   if (!useAutoAllocation) {
-    // 手动分配模式
+    // 手动分配模式 - 不限制CPU核心数
     return {
       diagnosis: {
         instances: process.env.DIAGNOSIS_INSTANCES
@@ -249,7 +249,7 @@ module.exports = {
       script: 'dist/apps/api-gateway/main.js',
       instances: serviceConfig.apiGateway.instances,
       ...commonConfig,
-      max_memory_restart: `${serviceConfig.apiGateway.memory}G`,
+      max_memory_restart: `${serviceConfig.apiGateway.memory * 1024}M`,
       error_file: 'logs/api-gateway/error.log',
       out_file: 'logs/api-gateway/out.log',
       node_args: '--trace-warnings',
@@ -271,7 +271,7 @@ module.exports = {
       script: 'dist/apps/auth-service/main.js',
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
-      max_memory_restart: `${serviceConfig.otherServices.memory}G`,
+      max_memory_restart: `${serviceConfig.otherServices.memory * 1024}M`,
       error_file: 'logs/auth-service/error.log',
       out_file: 'logs/auth-service/out.log',
       env: {
@@ -295,7 +295,7 @@ module.exports = {
       script: 'dist/apps/download-service/main.js',
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
-      max_memory_restart: `${serviceConfig.otherServices.memory}G`,
+      max_memory_restart: `${serviceConfig.otherServices.memory * 1024}M`,
       error_file: 'logs/download-service/error.log',
       out_file: 'logs/download-service/out.log',
     },
@@ -304,7 +304,7 @@ module.exports = {
       script: 'dist/apps/file-service/main.js',
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
-      max_memory_restart: `${serviceConfig.otherServices.memory}G`,
+      max_memory_restart: `${serviceConfig.otherServices.memory * 1024}M`,
       error_file: 'logs/file-service/error.log',
       out_file: 'logs/file-service/out.log',
     },
@@ -313,7 +313,7 @@ module.exports = {
       script: 'dist/apps/upload-service/main.js',
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
-      max_memory_restart: `${serviceConfig.otherServices.memory}G`,
+      max_memory_restart: `${serviceConfig.otherServices.memory * 1024}M`,
       error_file: 'logs/upload-service/error.log',
       out_file: 'logs/upload-service/out.log',
     },
@@ -322,7 +322,7 @@ module.exports = {
       script: 'dist/apps/user-service/main.js',
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
-      max_memory_restart: `${serviceConfig.otherServices.memory}G`,
+      max_memory_restart: `${serviceConfig.otherServices.memory * 1024}M`,
       error_file: 'logs/user-service/error.log',
       out_file: 'logs/user-service/out.log',
     },
@@ -331,7 +331,7 @@ module.exports = {
       script: 'dist/apps/knowledge-service/main.js',
       instances: serviceConfig.otherServices.instances,
       ...commonConfig,
-      max_memory_restart: `${serviceConfig.otherServices.memory}G`,
+      max_memory_restart: `${serviceConfig.otherServices.memory * 1024}M`,
       error_file: 'logs/knowledge-service/error.log',
       out_file: 'logs/knowledge-service/out.log',
     },
@@ -340,7 +340,7 @@ module.exports = {
       script: 'dist/apps/diagnosis-service/main.js',
       instances: serviceConfig.diagnosis.instances,
       ...commonConfig,
-      max_memory_restart: `${serviceConfig.diagnosis.memory}G`,
+      max_memory_restart: `${serviceConfig.diagnosis.memory * 1024}M`,
       error_file: 'logs/diagnosis-service/error.log',
       out_file: 'logs/diagnosis-service/out.log',
       node_args: `--trace-warnings --max-old-space-size=${serviceConfig.diagnosis.memory * 1024}`,
