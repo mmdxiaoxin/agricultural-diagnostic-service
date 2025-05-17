@@ -87,7 +87,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pm2_instances{job=\"pm2\",name!=\"pm2-metrics\"}",
+          "expr": "count(pm2_instances{job=\"pm2\",name!=\"pm2-metrics\"}) by (name)",
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -175,7 +175,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pm2_uptime{job=\"pm2\",name!=\"pm2-metrics\"}",
+          "expr": "sum(pm2_uptime{job=\"pm2\",name!=\"pm2-metrics\"}) by (name)",
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -263,7 +263,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pm2_restarts{job=\"pm2\",name!=\"pm2-metrics\"}",
+          "expr": "sum(pm2_restarts{job=\"pm2\",name!=\"pm2-metrics\"}) by (name)",
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
