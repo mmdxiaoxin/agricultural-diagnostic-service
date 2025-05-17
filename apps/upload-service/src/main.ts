@@ -68,6 +68,10 @@ async function bootstrap() {
   );
 
   await app.startAllMicroservices();
-  await app.listen(UPLOAD_SERVICE_HTTP_PORT);
+  await app.listen(UPLOAD_SERVICE_HTTP_PORT, '0.0.0.0');
+
+  console.log(
+    `Metrics server is running on http://localhost:${UPLOAD_SERVICE_HTTP_PORT}/metrics`,
+  );
 }
 bootstrap();
