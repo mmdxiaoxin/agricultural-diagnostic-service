@@ -975,7 +975,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pm2_memory{job=~\"auth-service|user-service|diagnosis-service|upload-service|download-service|file-service|knowledge-service|api-gateway\"}",
+          "expr": "pm2_memory{job=\"pm2\"}",
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -1063,7 +1063,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pm2_cpu{job=~\"auth-service|user-service|diagnosis-service|upload-service|download-service|file-service|knowledge-service|api-gateway\"}",
+          "expr": "pm2_cpu{job=\"pm2\"}",
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -1151,7 +1151,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pm2_heap_usage{job=~\"auth-service|user-service|diagnosis-service|upload-service|download-service|file-service|knowledge-service|api-gateway\"}",
+          "expr": "pm2_heap_usage{job=\"pm2\"}",
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -1239,7 +1239,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pm2_event_loop_latency{job=~\"auth-service|user-service|diagnosis-service|upload-service|download-service|file-service|knowledge-service|api-gateway\"}",
+          "expr": "pm2_event_loop_latency{job=\"pm2\"}",
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -1327,7 +1327,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pm2_http_p95_latency{job=~\"auth-service|user-service|diagnosis-service|upload-service|download-service|file-service|knowledge-service|api-gateway\"}",
+          "expr": "pm2_http_p95_latency{job=\"pm2\"}",
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -1415,7 +1415,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "pm2_active_handles{job=~\"auth-service|user-service|diagnosis-service|upload-service|download-service|file-service|knowledge-service|api-gateway\"}",
+          "expr": "pm2_active_handles{job=\"pm2\"}",
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
