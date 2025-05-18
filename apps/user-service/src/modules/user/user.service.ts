@@ -19,7 +19,13 @@ import { DataSource, In, Repository } from 'typeorm';
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
-  private avatarPath = path.join(__dirname, '..', '..', 'avatar');
+  private readonly DEFAULT_AVATAR_PATH = path.join(
+    __dirname,
+    '..',
+    'assets',
+    'avatar-xIXQgi5p.png',
+  );
+  private readonly avatarPath = path.join(__dirname, '..', '..', 'avatar');
   private readonly avatarCache = new Map<
     string,
     {
@@ -484,23 +490,20 @@ export class UserService {
       });
 
       if (!user || !user.profile) {
-        throw new RpcException({
-          code: 404,
-          message: '未找到用户或用户头像',
-        });
+        // 如果用户或用户资料不存在，返回默认头像
+        return this.getDefaultAvatar();
       }
 
       const profile = user.profile;
       if (!profile.avatar) {
-        return formatResponse(200, null, '未找到头像');
+        // 如果用户没有设置头像，返回默认头像
+        return this.getDefaultAvatar();
       }
 
       const avatarPath = profile.avatar;
       if (!fs.existsSync(avatarPath)) {
-        throw new RpcException({
-          code: 404,
-          message: '未找到头像文件',
-        });
+        // 如果头像文件不存在，返回默认头像
+        return this.getDefaultAvatar();
       }
 
       // 4. 读取文件并处理
@@ -520,10 +523,8 @@ export class UserService {
       return formatResponse(200, avatarData, '头像获取成功');
     } catch (error) {
       this.logger.error(`获取头像失败: ${error.message}`, error.stack);
-      throw new RpcException({
-        code: 500,
-        message: '获取头像失败',
-      });
+      // 发生错误时返回默认头像
+      return this.getDefaultAvatar();
     }
   }
 
@@ -548,6 +549,36 @@ export class UserService {
 
     // 更新 Redis 缓存
     await this.redisService.set(key, data, 3600);
+  }
+
+  private async getDefaultAvatar() {
+    try {
+      if (!fs.existsSync(this.DEFAULT_AVATAR_PATH)) {
+        this.logger.error('默认头像文件不存在');
+        throw new RpcException({
+          code: 500,
+          message: '默认头像文件不存在',
+        });
+      }
+
+      const buffer = await fs.promises.readFile(this.DEFAULT_AVATAR_PATH);
+      const fileName = 'avatar-xIXQgi5p.png';
+      const mimeType = 'image/png';
+
+      const avatarData = {
+        buffer,
+        fileName,
+        mimeType,
+      };
+
+      return formatResponse(200, avatarData, '获取默认头像成功');
+    } catch (error) {
+      this.logger.error(`获取默认头像失败: ${error.message}`, error.stack);
+      throw new RpcException({
+        code: 500,
+        message: '获取默认头像失败',
+      });
+    }
   }
 
   async profileUpdate(userId: number, profile: Partial<Profile>) {
