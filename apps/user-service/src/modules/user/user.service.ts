@@ -21,7 +21,7 @@ export class UserService {
   private readonly logger = new Logger(UserService.name);
   private readonly DEFAULT_AVATAR_PATH = path.join(
     __dirname,
-    '..',
+    '.',
     'assets',
     'avatar-xIXQgi5p.png',
   );
