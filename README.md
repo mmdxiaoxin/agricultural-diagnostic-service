@@ -104,13 +104,142 @@ docker build -t agricultural-diagnostic-service .
 docker run -d -p 3000-3007:3000-3007 agricultural-diagnostic-service
 ```
 
-### 环境变量配置
+### 非Docker环境部署
 
-系统支持多环境配置，通过以下文件进行管理：
+#### 系统要求
 
-- `.env`：默认配置
-- `.env.development.local`：开发环境配置
-- `.env.production.local`：生产环境配置
+- Node.js >= 22 (推荐使用nvm管理Node.js版本)
+- npm >= 10
+- MySQL >= 8
+- Redis >= 7
+- PM2 >= 5
+
+#### 安装步骤
+
+1. **安装Node.js**
+
+```bash
+# 使用nvm安装Node.js
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+source ~/.bashrc
+nvm install 22
+nvm use 22
+```
+
+2. **克隆项目并安装依赖**
+
+```bash
+git clone <项目地址>
+cd agricultural-diagnostic-service
+npm install
+```
+
+3. **配置环境变量**
+
+```bash
+# 复制环境变量模板文件
+cp .env.example .env
+cp .env.example .env.development.local
+cp .env.example .env.production.local
+
+# 根据实际环境修改配置文件
+vim .env
+vim .env.development.local
+vim .env.production.local
+```
+
+必需的环境变量配置说明：
+
+```bash
+# 数据库配置
+DB_TYPE=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=agricultural_diagnostic
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+DB_SYNC=true  # 开发环境建议开启，生产环境建议关闭
+
+# JWT密钥
+SECRET=your_jwt_secret_key
+
+# Redis配置
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password
+REDIS_RECONNECT=true
+REDIS_DB=0
+
+# 邮件服务配置
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_USER=your_email@example.com
+MAIL_PASS=your_email_password
+MAIL_FROM=your_email@example.com
+
+# 日志配置
+LOG_LEVEL=info  # debug, info, warn, error
+LOG_ON=true
+TIMESTAMP=true
+```
+
+4. **构建项目**
+
+```bash
+# 构建所有服务
+npm run build:all
+```
+
+5. **启动服务**
+
+```bash
+# 开发环境
+npm run start:dev
+
+# 生产环境
+npm run start:prod
+```
+
+#### 服务管理
+
+使用PM2管理服务：
+
+```bash
+# 查看服务状态
+pm2 status
+
+# 查看服务日志
+pm2 logs
+
+# 重启服务
+pm2 restart all
+
+# 停止服务
+pm2 stop all
+
+# 删除服务
+pm2 delete all
+```
+
+#### 服务端口说明
+
+- API网关服务：3000
+- 认证服务：3001
+- 诊断服务：3002
+- 知识库服务：3003
+- 文件服务：3004
+- 用户服务：3005
+- 下载服务：3006
+- 上传服务：3007
+
+#### 注意事项
+
+1. 确保所有必需的端口（3000-3007）未被其他服务占用
+2. 生产环境部署前请确保已正确配置所有环境变量
+3. 建议使用PM2的集群模式运行服务，以充分利用多核CPU
+4. 定期检查日志文件，确保服务正常运行
+5. 建议配置防火墙规则，只开放必要的端口
 
 ## 监控和日志
 
