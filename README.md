@@ -1,39 +1,71 @@
 # 农业病害智能诊断系统服务
 
+<div align="center">
+
+![NestJS](https://img.shields.io/badge/NestJS-EA2845?style=for-the-badge&logo=nestjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+[![GitHub stars](https://img.shields.io/github/stars/mmdxiaoxin/agricultural-diagnostic-service?style=social)](https://github.com/mmdxiaoxin/agricultural-diagnostic-service/stargazers)
+
 <p align="center">
   <img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" />
 </p>
 
-## 项目简介
+</div>
+
+## 📖 项目简介
 
 农业病害智能诊断系统是一个基于NestJS框架开发的微服务架构系统，旨在为农业生产提供智能化的病害诊断服务。系统采用现代化的技术栈，提供高可用性、可扩展性和可维护性的解决方案。
 
-## 系统架构
+### ✨ 主要特性
+
+- 🔐 完整的用户认证和授权系统
+- 🏥 智能病害诊断服务
+- 📚 丰富的农业知识库
+- 📁 高效的文件管理系统
+- 📊 实时监控和性能分析
+- 🔄 高可用性和可扩展性
+- 🔍 详细的日志记录和追踪
+
+## 🏗️ 系统架构
 
 系统采用微服务架构，包含以下核心服务：
 
-- **API网关服务**：统一入口，负责请求路由和负载均衡
-- **认证服务**：处理用户认证和授权
-- **诊断服务**：核心业务服务，提供病害诊断功能
-- **知识库服务**：管理农业知识库
-- **文件服务**：处理文件上传和管理
-- **用户服务**：管理用户信息和权限
-- **下载服务**：处理文件下载
-- **上传服务**：处理文件上传
+| 服务名称    | 端口 | 功能描述                         |
+| ----------- | ---- | -------------------------------- |
+| API网关服务 | 3000 | 统一入口，负责请求路由和负载均衡 |
+| 认证服务    | 3001 | 处理用户认证和授权               |
+| 诊断服务    | 3002 | 核心业务服务，提供病害诊断功能   |
+| 知识库服务  | 3003 | 管理农业知识库                   |
+| 文件服务    | 3004 | 处理文件上传和管理               |
+| 用户服务    | 3005 | 管理用户信息和权限               |
+| 下载服务    | 3006 | 处理文件下载                     |
+| 上传服务    | 3007 | 处理文件上传                     |
 
-## 技术栈
+## 🛠️ 技术栈
+
+### 核心框架
 
 - **框架**：NestJS
+- **语言**：TypeScript
 - **数据库**：MySQL
 - **缓存**：Redis
 - **消息队列**：BullMQ
+
+### 基础设施
+
 - **对象存储**：阿里云OSS
 - **服务发现**：Consul
 - **监控**：Prometheus
 - **日志管理**：PM2
 - **容器化**：Docker
 
-## 快速开始
+## 🚀 快速开始
 
 ### 环境要求
 
@@ -46,30 +78,31 @@
 ### 安装依赖
 
 ```bash
-npm install
+# 使用pnpm安装依赖
+pnpm install
 ```
 
 ### 开发环境运行
 
 ```bash
 # 开发模式
-npm run start:dev
+pnpm run start:dev
 
 # 调试模式
-npm run start:debug
+pnpm run start:debug
 ```
 
 ### 生产环境运行
 
 ```bash
 # 构建项目
-npm run build
+pnpm run build
 
 # 生产模式运行
-npm run start:prod
+pnpm run start:prod
 ```
 
-## 项目结构
+## 📁 项目结构
 
 ```
 ├── apps/                    # 微服务应用
@@ -92,7 +125,7 @@ npm run start:prod
 └── scripts/               # 工具脚本
 ```
 
-## 部署指南
+## 📦 部署指南
 
 ### 一、环境准备
 
@@ -484,42 +517,36 @@ scrape_configs:
 - 监控数据默认保存在本地，建议配置数据持久化
 - 生产环境建议配置监控系统的备份策略
 
-## 监控和日志
-
-- 使用PM2进行进程管理和日志收集
-- 通过Prometheus进行系统监控
-- 日志文件位于`logs`目录下
-
-## 开发指南
+## 📝 开发指南
 
 ### 代码规范
 
 ```bash
 # 代码格式化
-npm run format
+pnpm run format
 
 # 代码检查
-npm run lint
+pnpm run lint
 ```
 
 ### 测试
 
 ```bash
 # 单元测试
-npm run test
+pnpm run test
 
 # E2E测试
-npm run test:e2e
+pnpm run test:e2e
 
 # 测试覆盖率
-npm run test:cov
+pnpm run test:cov
 ```
 
 ### 文档生成
 
 ```bash
 # 生成API文档
-npm run doc
+pnpm run doc
 ```
 
 ### API文档访问
@@ -535,14 +562,7 @@ npm run doc
    - 开发环境：`http://localhost:3000/api-json`
    - 生产环境：`https://your-domain/api-json`
 
-通过Swagger UI界面，您可以：
-
-- 查看所有可用的API接口
-- 测试API接口
-- 查看请求/响应模型
-- 下载API文档
-
-## 贡献指南
+## 🤝 贡献指南
 
 1. Fork 项目
 2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
@@ -550,7 +570,7 @@ npm run doc
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 创建Pull Request
 
-## 许可证
+## 📄 许可证
 
 本项目采用 GNU Affero General Public License v3.0 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
@@ -563,9 +583,15 @@ GNU Affero General Public License 是一个自由软件许可证，专门设计�
 
 更多信息请访问 [GNU AGPL v3.0](https://www.gnu.org/licenses/agpl-3.0.html)。
 
-## 联系方式
+## 📞 联系方式
 
 如有问题或建议，请通过以下方式联系我们：
 
 - 项目维护者：[mmdxiaoxin]
 - 邮箱：[782446723@qq.com]
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by mmdxiaoxin.</sub>
+</div>
