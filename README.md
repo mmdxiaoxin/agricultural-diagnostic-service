@@ -104,6 +104,51 @@ docker build -t agricultural-diagnostic-service .
 docker run -d -p 3000-3007:3000-3007 agricultural-diagnostic-service
 ```
 
+### 监控系统部署
+
+系统集成了Prometheus和Grafana进行监控，可以通过以下步骤部署监控系统：
+
+1. **启动监控服务**
+
+```bash
+# 进入docker目录
+cd docker
+
+# 启动监控服务
+./start-monitor.sh
+```
+
+2. **访问监控面板**
+
+- Grafana面板：`http://localhost:4000`
+  - 用户名：`admin`
+  - 密码：`admin123`
+- Prometheus：`http://localhost:4001`
+
+3. **监控内容**
+
+系统提供了两个主要的监控面板：
+
+- **微服务监控面板**：监控所有微服务的运行状态、性能指标
+- **PM2监控面板**：监控Node.js进程的运行状态、资源使用情况
+
+4. **监控指标**
+
+监控系统收集以下指标：
+
+- 服务响应时间
+- 请求成功率
+- CPU使用率
+- 内存使用情况
+- 进程状态
+- 错误率统计
+
+5. **注意事项**
+
+- 确保端口4000和4001未被占用
+- 首次登录Grafana后请及时修改默认密码
+- 监控数据默认保存在Docker卷中，重启容器后数据不会丢失
+
 ### 非Docker环境部署
 
 #### 系统要求
@@ -119,6 +164,7 @@ docker run -d -p 3000-3007:3000-3007 agricultural-diagnostic-service
 由于项目使用了bcrypt包，需要安装以下前置依赖：
 
 **Linux环境**：
+
 ```bash
 # Ubuntu/Debian
 sudo apt-get update
@@ -130,7 +176,9 @@ sudo yum install -y python3
 ```
 
 **Windows环境**：
+
 1. 安装 [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)：
+
 ```bash
 # 以管理员身份运行 PowerShell
 npm install --global --production windows-build-tools
@@ -139,6 +187,7 @@ npm install --global --production windows-build-tools
 2. 安装 [Python](https://www.python.org/downloads/)（确保安装时勾选"Add Python to PATH"）
 
 **macOS环境**：
+
 ```bash
 # 使用 Homebrew
 brew install python3
@@ -314,6 +363,7 @@ npm run doc
 系统集成了Swagger UI，可以通过以下方式访问API文档：
 
 1. **Swagger UI界面**
+
    - 开发环境：`http://localhost:3000/api`
    - 生产环境：`https://your-domain/api`
 
@@ -322,6 +372,7 @@ npm run doc
    - 生产环境：`https://your-domain/api-json`
 
 通过Swagger UI界面，您可以：
+
 - 查看所有可用的API接口
 - 测试API接口
 - 查看请求/响应模型
