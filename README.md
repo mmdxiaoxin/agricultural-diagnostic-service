@@ -114,6 +114,36 @@ docker run -d -p 3000-3007:3000-3007 agricultural-diagnostic-service
 - Redis >= 7
 - PM2 >= 5
 
+#### 前置依赖安装
+
+由于项目使用了bcrypt包，需要安装以下前置依赖：
+
+**Linux环境**：
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install -y build-essential python3
+
+# CentOS/RHEL
+sudo yum groupinstall -y "Development Tools"
+sudo yum install -y python3
+```
+
+**Windows环境**：
+1. 安装 [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)：
+```bash
+# 以管理员身份运行 PowerShell
+npm install --global --production windows-build-tools
+```
+
+2. 安装 [Python](https://www.python.org/downloads/)（确保安装时勾选"Add Python to PATH"）
+
+**macOS环境**：
+```bash
+# 使用 Homebrew
+brew install python3
+```
+
 #### 安装步骤
 
 1. **安装Node.js**
