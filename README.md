@@ -92,78 +92,62 @@ npm run start:prod
 └── scripts/               # 工具脚本
 ```
 
-## 部署
+## 部署指南
 
-### Docker部署
+### 一、环境准备
 
-```bash
-# 构建镜像
-docker build -t agricultural-diagnostic-service .
+#### 1. 系统要求
 
-# 运行容器
-docker run -d -p 3000-3007:3000-3007 agricultural-diagnostic-service
-```
+- 操作系统：Ubuntu 22.04 LTS / CentOS 8 或更高版本
+- CPU：2核或以上
+- 内存：4GB或以上
+- 硬盘：50GB或以上可用空间
+- 网络：稳定的互联网连接
 
-### 监控系统部署
+#### 2. 基础软件安装
 
-系统集成了Prometheus和Grafana进行监控，可以通过以下步骤部署监控系统：
-
-1. **启动监控服务**
+**更新系统包**：
 
 ```bash
-# 进入docker目录
-cd docker
+# Ubuntu/Debian
+sudo apt update && sudo apt upgrade -y
 
-# 启动监控服务
-./start-monitor.sh
+# CentOS/RHEL
+sudo yum update -y
 ```
 
-2. **访问监控面板**
+**安装基础工具**：
 
-- Grafana面板：`http://localhost:4000`
-  - 用户名：`admin`
-  - 密码：`admin123`
-- Prometheus：`http://localhost:4001`
+```bash
+# Ubuntu/Debian
+sudo apt install -y curl wget git vim build-essential
 
-3. **监控内容**
+# CentOS/RHEL
+sudo yum install -y curl wget git vim gcc gcc-c++ make
+```
 
-系统提供了两个主要的监控面板：
+#### 3. Node.js环境安装
 
-- **微服务监控面板**：监控所有微服务的运行状态、性能指标
-- **PM2监控面板**：监控Node.js进程的运行状态、资源使用情况
+**使用NVM安装Node.js**：
 
-4. **监控指标**
+```bash
+# 安装NVM
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 
-监控系统收集以下指标：
+# 重新加载配置
+source ~/.bashrc
 
-- 服务响应时间
-- 请求成功率
-- CPU使用率
-- 内存使用情况
-- 进程状态
-- 错误率统计
+# 安装Node.js
+nvm install 22
+nvm use 22
+nvm alias default 22
 
-5. **注意事项**
+# 验证安装
+node --version  # 应显示 v22.x.x
+npm --version   # 应显示 10.x.x
+```
 
-- 确保端口4000和4001未被占用
-- 首次登录Grafana后请及时修改默认密码
-- 监控数据默认保存在Docker卷中，重启容器后数据不会丢失
-
-### 非Docker环境部署
-
-#### 系统要求
-
-- Node.js >= 22 (推荐使用nvm管理Node.js版本)
-- npm >= 10
-- MySQL >= 8
-- Redis >= 7
-- PM2 >= 5
-
-#### 前置依赖安装
-
-由于项目使用了bcrypt包，需要安装以下前置依赖：
-
-**全局工具安装**：
+#### 4. 全局工具安装
 
 ```bash
 # 安装PM2
@@ -174,9 +158,14 @@ npm install -g pnpm
 
 # 安装Nest CLI
 npm install -g @nestjs/cli
+
+# 验证安装
+pm2 --version
+pnpm --version
+nest --version
 ```
 
-**数据库和缓存服务安装**：
+#### 5. 数据库和缓存服务安装
 
 **MySQL安装**：
 
@@ -194,6 +183,16 @@ sudo systemctl enable mysqld
 
 # 初始化MySQL（首次安装后）
 sudo mysql_secure_installation
+
+# 创建数据库和用户
+mysql -u root -p
+```
+
+```sql
+CREATE DATABASE agricultural_diagnostic CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'agri_user'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON agricultural_diagnostic.* TO 'agri_user'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
 **Redis安装**：
@@ -209,9 +208,18 @@ sudo systemctl enable redis-server
 sudo yum install redis
 sudo systemctl start redis
 sudo systemctl enable redis
+
+# 配置Redis密码（可选但推荐）
+sudo vim /etc/redis/redis.conf
 ```
 
-**验证安装**：
+在redis.conf中添加或修改：
+
+```
+requirepass your_redis_password
+```
+
+**验证服务安装**：
 
 ```bash
 # 验证MySQL
@@ -220,73 +228,45 @@ mysql -u root -p
 
 # 验证Redis
 redis-cli ping  # 应返回 PONG
+redis-cli -a your_redis_password ping  # 使用密码验证
 ```
 
-**Linux环境**：
+### 二、项目部署
+
+#### 1. 获取项目代码
 
 ```bash
-# Ubuntu/Debian
-sudo apt-get update
-sudo apt-get install -y build-essential python3
-
-# CentOS/RHEL
-sudo yum groupinstall -y "Development Tools"
-sudo yum install -y python3
-```
-
-**Windows环境**：
-
-1. 安装 [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)：
-
-```bash
-# 以管理员身份运行 PowerShell
-npm install --global --production windows-build-tools
-```
-
-2. 安装 [Python](https://www.python.org/downloads/)（确保安装时勾选"Add Python to PATH"）
-
-**macOS环境**：
-
-```bash
-# 使用 Homebrew
-brew install python3
-```
-
-#### 安装步骤
-
-1. **安装Node.js**
-
-```bash
-# 使用nvm安装Node.js
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-source ~/.bashrc
-nvm install 22
-nvm use 22
-```
-
-2. **克隆项目并安装依赖**
-
-```bash
+# 克隆项目
 git clone <项目地址>
 cd agricultural-diagnostic-service
-npm install
+
+# 切换到稳定版本（可选）
+git checkout <版本标签>
 ```
 
-3. **配置环境变量**
+#### 2. 安装项目依赖
 
 ```bash
-# 复制环境变量模板文件
+# 使用pnpm安装依赖
+pnpm install
+
+# 如果遇到权限问题
+sudo chown -R $USER:$USER .
+```
+
+#### 3. 环境配置
+
+```bash
+# 复制环境配置文件
 cp .env.example .env
 cp .env.example .env.development.local
 cp .env.example .env.production.local
 
-# 根据实际环境修改配置文件
+# 编辑配置文件
 vim .env
-vim .env.development.local
-vim .env.production.local
 ```
 
-必需的环境变量配置说明：
+配置示例：
 
 ```bash
 # 数据库配置
@@ -294,12 +274,9 @@ DB_TYPE=mysql
 DB_HOST=localhost
 DB_PORT=3306
 DB_DATABASE=agricultural_diagnostic
-DB_USERNAME=your_username
+DB_USERNAME=agri_user
 DB_PASSWORD=your_password
 DB_SYNC=true  # 开发环境建议开启，生产环境建议关闭
-
-# JWT密钥
-SECRET=your_jwt_secret_key
 
 # Redis配置
 REDIS_HOST=localhost
@@ -307,6 +284,10 @@ REDIS_PORT=6379
 REDIS_PASSWORD=your_redis_password
 REDIS_RECONNECT=true
 REDIS_DB=0
+
+# JWT配置
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=24h
 
 # 邮件服务配置
 MAIL_HOST=smtp.example.com
@@ -317,67 +298,164 @@ MAIL_PASS=your_email_password
 MAIL_FROM=your_email@example.com
 
 # 日志配置
-LOG_LEVEL=info  # debug, info, warn, error
+LOG_LEVEL=info
 LOG_ON=true
 TIMESTAMP=true
 ```
 
-4. **构建项目**
+#### 4. 构建项目
 
 ```bash
 # 构建所有服务
-npm run build:all
+pnpm run build:all
+
+# 验证构建结果
+ls -l dist/
 ```
 
-5. **启动服务**
+#### 5. 启动服务
+
+**开发环境**：
 
 ```bash
-# 开发环境
-npm run start:dev
+# 使用PM2启动开发环境
+pm2 start ecosystem.config.js --env development
 
-# 生产环境
-npm run start:prod
+# 查看服务状态
+pm2 status
+
+# 查看日志
+pm2 logs
 ```
 
-#### 服务管理
+**生产环境**：
 
-使用PM2管理服务：
+```bash
+# 使用PM2启动生产环境
+pm2 start ecosystem.config.js --env production
+
+# 设置开机自启
+pm2 startup
+pm2 save
+```
+
+#### 6. 验证部署
+
+```bash
+# 检查服务状态
+pm2 status
+
+# 检查端口占用
+netstat -tulpn | grep -E '3000|3001|3002|3003|3004|3005|3006|3007'
+
+# 测试API网关
+curl http://localhost:3000/health
+```
+
+### 三、监控配置
+
+#### 1. 安装监控工具
+
+```bash
+# 安装Prometheus
+wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+tar xvfz prometheus-*.tar.gz
+cd prometheus-*
+
+# 安装Grafana
+wget https://dl.grafana.com/enterprise/release/grafana-enterprise-10.0.0.linux-amd64.tar.gz
+tar xvfz grafana-*.tar.gz
+cd grafana-*
+```
+
+#### 2. 配置监控
+
+```bash
+# 配置Prometheus
+vim prometheus.yml
+```
+
+添加以下配置：
+
+```yaml
+scrape_configs:
+  - job_name: 'agricultural-diagnostic'
+    static_configs:
+      - targets: ['localhost:3000', 'localhost:3001', 'localhost:3002']
+```
+
+#### 3. 启动监控服务
+
+```bash
+# 启动Prometheus
+./prometheus --config.file=prometheus.yml
+
+# 启动Grafana
+./bin/grafana-server
+```
+
+#### 4. 访问监控面板
+
+- Grafana: http://localhost:4000
+  - 默认用户名：admin
+  - 默认密码：admin123
+- Prometheus: http://localhost:4001
+
+### 四、维护指南
+
+#### 1. 日常维护
 
 ```bash
 # 查看服务状态
 pm2 status
 
-# 查看服务日志
+# 查看日志
 pm2 logs
 
 # 重启服务
 pm2 restart all
 
-# 停止服务
-pm2 stop all
-
-# 删除服务
-pm2 delete all
+# 更新代码
+git pull
+pnpm install
+pnpm run build:all
+pm2 restart all
 ```
 
-#### 服务端口说明
+#### 2. 备份策略
 
-- API网关服务：3000
-- 认证服务：3001
-- 诊断服务：3002
-- 知识库服务：3003
-- 文件服务：3004
-- 用户服务：3005
-- 下载服务：3006
-- 上传服务：3007
+```bash
+# 备份数据库
+mysqldump -u root -p agricultural_diagnostic > backup_$(date +%Y%m%d).sql
 
-#### 注意事项
+# 备份配置文件
+cp .env .env.backup_$(date +%Y%m%d)
+```
 
-1. 确保所有必需的端口（3000-3007）未被其他服务占用
-2. 生产环境部署前请确保已正确配置所有环境变量
-3. 建议使用PM2的集群模式运行服务，以充分利用多核CPU
-4. 定期检查日志文件，确保服务正常运行
-5. 建议配置防火墙规则，只开放必要的端口
+#### 3. 故障排查
+
+```bash
+# 检查服务状态
+pm2 status
+pm2 logs
+
+# 检查系统资源
+htop
+df -h
+free -m
+
+# 检查网络连接
+netstat -tulpn
+```
+
+#### 4. 安全建议
+
+1. 定期更新系统和依赖包
+2. 使用强密码并定期更换
+3. 配置防火墙只开放必要端口
+4. 启用SSL/TLS加密
+5. 定期备份数据
+6. 监控异常访问
 
 ## 监控和日志
 
