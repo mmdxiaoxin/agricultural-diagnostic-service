@@ -176,6 +176,52 @@ npm install -g pnpm
 npm install -g @nestjs/cli
 ```
 
+**数据库和缓存服务安装**：
+
+**MySQL安装**：
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install mysql-server
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+# CentOS/RHEL
+sudo yum install mysql-server
+sudo systemctl start mysqld
+sudo systemctl enable mysqld
+
+# 初始化MySQL（首次安装后）
+sudo mysql_secure_installation
+```
+
+**Redis安装**：
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install redis-server
+sudo systemctl start redis-server
+sudo systemctl enable redis-server
+
+# CentOS/RHEL
+sudo yum install redis
+sudo systemctl start redis
+sudo systemctl enable redis
+```
+
+**验证安装**：
+
+```bash
+# 验证MySQL
+mysql --version
+mysql -u root -p
+
+# 验证Redis
+redis-cli ping  # 应返回 PONG
+```
+
 **Linux环境**：
 
 ```bash
