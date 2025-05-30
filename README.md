@@ -78,28 +78,28 @@
 ### 安装依赖
 
 ```bash
-# 使用pnpm安装依赖
-pnpm install
+# 使用npm安装依赖
+npm install
 ```
 
 ### 开发环境运行
 
 ```bash
 # 开发模式
-pnpm run start:dev
+npm run start:dev
 
 # 调试模式
-pnpm run start:debug
+npm run start:debug
 ```
 
 ### 生产环境运行
 
 ```bash
 # 构建项目
-pnpm run build
+npm run build
 
 # 生产模式运行
-pnpm run start:prod
+npm run start:prod
 ```
 
 ## 📁 项目结构
@@ -280,8 +280,8 @@ git checkout <版本标签>
 #### 2. 安装项目依赖
 
 ```bash
-# 使用pnpm安装依赖
-pnpm install
+# 使用npm安装依赖
+npm install
 
 # 如果遇到权限问题
 sudo chown -R $USER:$USER .
@@ -340,7 +340,7 @@ TIMESTAMP=true
 
 ```bash
 # 构建所有服务
-pnpm run build:all
+npm run build:all
 
 # 验证构建结果
 ls -l dist/
@@ -401,8 +401,8 @@ pm2 restart all
 
 # 更新代码
 git pull
-pnpm install
-pnpm run build:all
+npm install
+npm run build:all
 pm2 restart all
 ```
 
@@ -523,30 +523,30 @@ scrape_configs:
 
 ```bash
 # 代码格式化
-pnpm run format
+npm run format
 
 # 代码检查
-pnpm run lint
+npm run lint
 ```
 
 ### 测试
 
 ```bash
 # 单元测试
-pnpm run test
+npm run test
 
 # E2E测试
-pnpm run test:e2e
+npm run test:e2e
 
 # 测试覆盖率
-pnpm run test:cov
+npm run test:cov
 ```
 
 ### 文档生成
 
 ```bash
 # 生成API文档
-pnpm run doc
+npm run doc
 ```
 
 ### API文档访问
