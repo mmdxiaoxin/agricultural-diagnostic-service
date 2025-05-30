@@ -163,6 +163,19 @@ cd docker
 
 由于项目使用了bcrypt包，需要安装以下前置依赖：
 
+**全局工具安装**：
+
+```bash
+# 安装PM2
+npm install -g pm2
+
+# 安装pnpm
+npm install -g pnpm
+
+# 安装Nest CLI
+npm install -g @nestjs/cli
+```
+
 **Linux环境**：
 
 ```bash
