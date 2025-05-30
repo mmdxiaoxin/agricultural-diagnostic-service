@@ -687,23 +687,32 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
 
   async findList(diagnosisId: number, query: PageQueryDto) {
     const { page = 1, pageSize = 10 } = query;
-    const cacheKey = `${this.REDIS_CACHE_KEY}:list:${diagnosisId}:${page}:${pageSize}`;
+
+    // 获取最新的序列号作为缓存版本
+    const lastSequence =
+      (await this.redisService.get<number>(
+        `${this.REDIS_SEQUENCE_KEY}:${diagnosisId}`,
+      )) || 0;
+    const cacheKey = `${this.REDIS_CACHE_KEY}:list:${diagnosisId}:${page}:${pageSize}:${lastSequence}`;
 
     // 尝试从缓存获取
     const cachedResult = await this.redisService.get<{
       list: DiagnosisLog[];
       total: number;
+      sequence: number;
     }>(cacheKey);
 
-    if (cachedResult) {
+    // 验证缓存数据的序列号是否是最新的
+    if (cachedResult && cachedResult.sequence === lastSequence) {
       return formatResponse(
         200,
-        { ...cachedResult, page, pageSize },
+        { list: cachedResult.list, total: cachedResult.total, page, pageSize },
         '诊断日志列表获取成功(缓存)',
       );
     }
 
-    const [logs, total] = await this.logRepository.findAndCount({
+    // 如果缓存不存在或已过期，从数据库查询
+    let [logs, total] = await this.logRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
       where: { diagnosisId },
@@ -713,10 +722,39 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
-    // 更新缓存
+    // 验证查询结果的顺序
+    if (logs.length > 1) {
+      for (let i = 1; i < logs.length; i++) {
+        if (logs[i].sequence >= logs[i - 1].sequence) {
+          this.logger.warn(
+            `检测到日志顺序异常: diagnosisId=${diagnosisId}, page=${page}`,
+          );
+          // 重新查询以确保顺序正确
+          const [correctedLogs, correctedTotal] =
+            await this.logRepository.findAndCount({
+              skip: (page - 1) * pageSize,
+              take: pageSize,
+              where: { diagnosisId },
+              order: {
+                sequence: 'DESC',
+                createdAt: 'DESC',
+              },
+            });
+          logs = correctedLogs;
+          total = correctedTotal;
+          break;
+        }
+      }
+    }
+
+    // 更新缓存，包含序列号信息
     await this.redisService.set(
       cacheKey,
-      { list: logs, total },
+      {
+        list: logs,
+        total,
+        sequence: lastSequence,
+      },
       this.CACHE_TTL,
     );
 
