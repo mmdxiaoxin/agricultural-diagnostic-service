@@ -352,56 +352,7 @@ netstat -tulpn | grep -E '3000|3001|3002|3003|3004|3005|3006|3007'
 curl http://localhost:3000/health
 ```
 
-### 三、监控配置
-
-#### 1. 安装监控工具
-
-```bash
-# 安装Prometheus
-wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
-tar xvfz prometheus-*.tar.gz
-cd prometheus-*
-
-# 安装Grafana
-wget https://dl.grafana.com/enterprise/release/grafana-enterprise-10.0.0.linux-amd64.tar.gz
-tar xvfz grafana-*.tar.gz
-cd grafana-*
-```
-
-#### 2. 配置监控
-
-```bash
-# 配置Prometheus
-vim prometheus.yml
-```
-
-添加以下配置：
-
-```yaml
-scrape_configs:
-  - job_name: 'agricultural-diagnostic'
-    static_configs:
-      - targets: ['localhost:3000', 'localhost:3001', 'localhost:3002']
-```
-
-#### 3. 启动监控服务
-
-```bash
-# 启动Prometheus
-./prometheus --config.file=prometheus.yml
-
-# 启动Grafana
-./bin/grafana-server
-```
-
-#### 4. 访问监控面板
-
-- Grafana: http://localhost:4000
-  - 默认用户名：admin
-  - 默认密码：admin123
-- Prometheus: http://localhost:4001
-
-### 四、维护指南
+### 三、维护指南
 
 #### 1. 日常维护
 
@@ -456,6 +407,82 @@ netstat -tulpn
 4. 启用SSL/TLS加密
 5. 定期备份数据
 6. 监控异常访问
+
+### 四、可选：监控系统配置
+
+> 注意：监控系统配置是可选的，仅在生产环境或需要详细监控时建议配置。
+
+#### 1. 安装监控工具
+
+```bash
+# 安装Prometheus
+wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+tar xvfz prometheus-*.tar.gz
+cd prometheus-*
+
+# 安装Grafana
+wget https://dl.grafana.com/enterprise/release/grafana-enterprise-10.0.0.linux-amd64.tar.gz
+tar xvfz grafana-*.tar.gz
+cd grafana-*
+```
+
+#### 2. 配置监控
+
+```bash
+# 配置Prometheus
+vim prometheus.yml
+```
+
+添加以下配置：
+
+```yaml
+scrape_configs:
+  - job_name: 'agricultural-diagnostic'
+    static_configs:
+      - targets: ['localhost:3000', 'localhost:3001', 'localhost:3002']
+```
+
+#### 3. 启动监控服务
+
+```bash
+# 启动Prometheus
+./prometheus --config.file=prometheus.yml
+
+# 启动Grafana
+./bin/grafana-server
+```
+
+#### 4. 访问监控面板
+
+- Grafana: http://localhost:4000
+  - 默认用户名：admin
+  - 默认密码：admin123
+- Prometheus: http://localhost:4001
+
+#### 5. 监控内容
+
+系统提供了两个主要的监控面板：
+
+- **微服务监控面板**：监控所有微服务的运行状态、性能指标
+- **PM2监控面板**：监控Node.js进程的运行状态、资源使用情况
+
+#### 6. 监控指标
+
+监控系统收集以下指标：
+
+- 服务响应时间
+- 请求成功率
+- CPU使用率
+- 内存使用情况
+- 进程状态
+- 错误率统计
+
+#### 7. 注意事项
+
+- 确保端口4000和4001未被占用
+- 首次登录Grafana后请及时修改默认密码
+- 监控数据默认保存在本地，建议配置数据持久化
+- 生产环境建议配置监控系统的备份策略
 
 ## 监控和日志
 
