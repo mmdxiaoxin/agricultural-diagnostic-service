@@ -160,11 +160,20 @@ npm run doc
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+本项目采用 GNU Affero General Public License v3.0 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+GNU Affero General Public License 是一个自由软件许可证，专门设计用于确保在网络服务器软件的情况下与社区合作。该许可证要求：
+
+1. 您可以自由地运行、修改和分发本软件
+2. 如果您修改了软件并在网络服务器上运行，必须向用户提供源代码
+3. 您必须保留所有版权声明和许可证信息
+4. 您必须明确说明您对软件所做的任何修改
+
+更多信息请访问 [GNU AGPL v3.0](https://www.gnu.org/licenses/agpl-3.0.html)。
 
 ## 联系方式
 
 如有问题或建议，请通过以下方式联系我们：
 
-- 项目维护者：[您的名字]
-- 邮箱：[您的邮箱]
+- 项目维护者：[mmdxiaoxin]
+- 邮箱：[782446723@qq.com]
