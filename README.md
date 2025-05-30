@@ -309,6 +309,24 @@ npm run test:cov
 npm run doc
 ```
 
+### API文档访问
+
+系统集成了Swagger UI，可以通过以下方式访问API文档：
+
+1. **Swagger UI界面**
+   - 开发环境：`http://localhost:3000/api`
+   - 生产环境：`https://your-domain/api`
+
+2. **Swagger JSON**
+   - 开发环境：`http://localhost:3000/api-json`
+   - 生产环境：`https://your-domain/api-json`
+
+通过Swagger UI界面，您可以：
+- 查看所有可用的API接口
+- 测试API接口
+- 查看请求/响应模型
+- 下载API文档
+
 ## 贡献指南
 
 1. Fork 项目
