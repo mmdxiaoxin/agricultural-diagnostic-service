@@ -399,9 +399,6 @@ export class DiagnosisService {
         status: DiagnosisHistoryStatus.PROCESSING,
       });
 
-      // 清除相关缓存
-      await this.clearRelatedCache(userId, diagnosisId);
-
       // 6. 获取文件
       if (!diagnosis.fileId) {
         await this.logService.addLog(
