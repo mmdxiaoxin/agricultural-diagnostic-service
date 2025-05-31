@@ -395,11 +395,13 @@ export class DiagnosisService {
       // 5. 更新诊断状态
       diagnosis.status = DiagnosisHistoryStatus.PROCESSING;
       await queryRunner.manager.save(diagnosis);
+
+      // 6. 记录开始诊断日志
       await this.logService.addLog(diagnosisId, LogLevel.INFO, '开始诊断任务', {
         status: DiagnosisHistoryStatus.PROCESSING,
       });
 
-      // 6. 获取文件
+      // 7. 获取文件
       if (!diagnosis.fileId) {
         await this.logService.addLog(
           diagnosisId,
@@ -419,7 +421,7 @@ export class DiagnosisService {
         `获取文件成功: ${fileMeta.originalFileName}`,
       );
 
-      // 7. 初始化接口调用管理器
+      // 8. 初始化接口调用管理器
       const processedRequests = requests.map((request) => ({
         ...request,
         pollingCondition: request.pollingCondition
@@ -436,7 +438,7 @@ export class DiagnosisService {
         remoteInterfaces,
       );
 
-      // 8. 注册回调函数
+      // 9. 注册回调函数
       requests.forEach((request) => {
         this.interfaceCallManager.registerCallback(
           request.id,
@@ -456,14 +458,14 @@ export class DiagnosisService {
         );
       });
 
-      // 9. 执行接口调用
+      // 10. 执行接口调用
       const results = await this.interfaceCallManager.execute({
         token,
         fileMeta,
         fileData,
       });
 
-      // 10. 获取最后一个接口的结果
+      // 11. 获取最后一个接口的结果
       const lastRequest = requests[requests.length - 1];
       const lastResult = results.get(lastRequest.id);
       if (!lastResult) {
@@ -478,7 +480,7 @@ export class DiagnosisService {
         });
       }
 
-      // 11. 更新诊断结果
+      // 12. 更新诊断结果
       diagnosis.status = get(lastResult, 'data.status');
       diagnosis.diagnosisResult = get(
         lastResult,
@@ -486,7 +488,7 @@ export class DiagnosisService {
         null,
       ) as PredictionData | null;
 
-      // 12. 匹配疾病
+      // 13. 匹配疾病
       const predictions = get(lastResult, 'data.predictions', []);
       const response = await lastValueFrom(
         this.knowledgeClient.send<{ data: MatchResult[] }>(
@@ -503,6 +505,8 @@ export class DiagnosisService {
       diagnosis.diagnosisResult.matchResults = response.data;
 
       await queryRunner.manager.save(diagnosis);
+
+      // 14. 记录诊断完成日志
       await this.logService.addLog(diagnosisId, LogLevel.INFO, '诊断任务完成', {
         status: diagnosis.status,
         result: get(lastResult, 'data'),
