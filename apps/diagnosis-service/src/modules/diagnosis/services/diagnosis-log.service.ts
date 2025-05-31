@@ -717,35 +717,19 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
       take: pageSize,
       where: { diagnosisId },
       order: {
-        sequence: 'DESC',
-        createdAt: 'DESC',
+        createdAt: 'DESC', // 首先按创建时间降序
+        sequence: 'DESC', // 然后按序列号降序
       },
     });
 
-    // 验证查询结果的顺序
-    if (logs.length > 1) {
-      for (let i = 1; i < logs.length; i++) {
-        if (logs[i].sequence >= logs[i - 1].sequence) {
-          this.logger.warn(
-            `检测到日志顺序异常: diagnosisId=${diagnosisId}, page=${page}`,
-          );
-          // 重新查询以确保顺序正确
-          const [correctedLogs, correctedTotal] =
-            await this.logRepository.findAndCount({
-              skip: (page - 1) * pageSize,
-              take: pageSize,
-              where: { diagnosisId },
-              order: {
-                sequence: 'DESC',
-                createdAt: 'DESC',
-              },
-            });
-          logs = correctedLogs;
-          total = correctedTotal;
-          break;
-        }
-      }
-    }
+    // 确保日志按时间顺序正确排序
+    logs = logs.sort((a, b) => {
+      // 首先按创建时间排序
+      const timeDiff = b.createdAt.getTime() - a.createdAt.getTime();
+      if (timeDiff !== 0) return timeDiff;
+      // 如果时间相同，则按序列号排序
+      return b.sequence - a.sequence;
+    });
 
     // 更新缓存，包含序列号信息
     await this.redisService.set(
