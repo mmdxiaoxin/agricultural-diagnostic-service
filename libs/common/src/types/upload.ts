@@ -26,8 +26,10 @@ export interface SaveFileRequest {
 
 /** 单文件上传响应 */
 export interface SaveFileResponse {
+  code: number;
+  message: string;
   success: boolean;
-  result: FileInfo | undefined;
+  data: FileInfo | undefined;
 }
 
 /** 预加载文件请求 */
@@ -39,8 +41,10 @@ export interface PreloadFileRequest {
 
 /** 预加载文件响应 */
 export interface PreloadFileResponse {
+  code: number;
+  message: string;
   success: boolean;
-  result: FileInfo | undefined;
+  data: FileInfo | undefined;
 }
 
 /** 分片上传请求 */
@@ -68,8 +72,10 @@ export interface CompleteFileRequest {
 
 /** 完成上传响应 */
 export interface CompleteFileResponse {
+  code: number;
+  message: string;
   success: boolean;
-  file: FileInfo | undefined;
+  data: FileInfo | undefined;
 }
 
 /** 创建任务请求 */
@@ -101,8 +107,10 @@ export interface GetTaskRequest {
 
 /** 获取任务响应 */
 export interface GetTaskResponse {
+  code: number;
+  message: string;
   success: boolean;
-  result: CreateTaskResponse | undefined;
+  data: CreateTaskResponse | undefined;
 }
 
 /** 文件信息 */

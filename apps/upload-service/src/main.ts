@@ -8,7 +8,6 @@ import {
   UPLOAD_SERVICE_GRPC_PORT,
   UPLOAD_SERVICE_HOST,
   UPLOAD_SERVICE_HTTP_PORT,
-  UPLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { join } from 'path';
 import { AppModule } from './app.module';
@@ -31,15 +30,6 @@ async function bootstrap() {
   // 设置日志级别
   app.useLogger(logLevelMap[logLevel] || logLevelMap.info);
 
-  // TCP 微服务
-  const tcpMicroservice = app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.TCP,
-    options: {
-      host: UPLOAD_SERVICE_HOST,
-      port: UPLOAD_SERVICE_TCP_PORT,
-    },
-  });
-
   // gRPC 微服务
   const grpcMicroservice = app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.GRPC,
@@ -58,10 +48,6 @@ async function bootstrap() {
     },
   });
 
-  tcpMicroservice.useGlobalFilters(
-    new OtherExceptionsFilter(),
-    new CustomRpcExceptionFilter(),
-  );
   grpcMicroservice.useGlobalFilters(
     new OtherExceptionsFilter(),
     new CustomRpcExceptionFilter(),

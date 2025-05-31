@@ -92,7 +92,7 @@ export class FileService implements OnModuleInit {
           userId,
         }),
       );
-      return formatResponse(200, response.result, '上传成功');
+      return formatResponse(200, response.data, '上传成功');
     } catch (error) {
       throw error;
     }
@@ -125,14 +125,14 @@ export class FileService implements OnModuleInit {
     const response = await lastValueFrom(
       this.uploadService.getTask({ taskId }),
     );
-    return formatResponse(200, response.result, '任务查询成功');
+    return formatResponse(response.code, response.data, response.message);
   }
 
   async completeUpload(dto: CompleteChunkDto) {
     const response = await lastValueFrom(
       this.uploadService.completeFile({ taskId: dto.taskId }),
     );
-    return formatResponse(200, response.file, '上传成功');
+    return formatResponse(200, response.data, '上传成功');
   }
 
   async uploadChunk(file: Express.Multer.File, dto: UploadChunkDto) {

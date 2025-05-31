@@ -49,7 +49,7 @@ export class DiagnosisService implements OnModuleInit {
       }),
     );
 
-    if (!fileRes?.result?.id) {
+    if (!fileRes?.data?.id) {
       throw new InternalServerErrorException('文件上传失败');
     }
 
@@ -57,7 +57,7 @@ export class DiagnosisService implements OnModuleInit {
       { cmd: DIAGNOSIS_MESSAGE_PATTERNS.CREATE },
       {
         userId: req.user.userId,
-        fileId: fileRes.result.id,
+        fileId: fileRes.data.id,
       },
     );
   }

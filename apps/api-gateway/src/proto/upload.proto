@@ -33,8 +33,10 @@ message SaveFileRequest {
 
 // 单文件上传响应
 message SaveFileResponse {
-  bool success = 1;
-  FileInfo result = 2;
+  int32 code = 1;
+  string message = 2;
+  bool success = 3;
+  FileInfo data = 4;
 }
 
 // 预加载文件请求
@@ -46,8 +48,10 @@ message PreloadFileRequest {
 
 // 预加载文件响应
 message PreloadFileResponse {
-  bool success = 1;
-  FileInfo result = 2;
+  int32 code = 1;
+  string message = 2;
+  bool success = 3;
+  FileInfo data = 4;
 }
 
 // 分片上传请求
@@ -75,8 +79,10 @@ message CompleteFileRequest {
 
 // 完成上传响应
 message CompleteFileResponse {
-  bool success = 1;
-  FileInfo file = 2;
+  int32 code = 1;
+  string message = 2;
+  bool success = 3;
+  FileInfo file = 4;
 }
 
 // 创建任务请求
@@ -108,8 +114,10 @@ message GetTaskRequest {
 
 // 获取任务响应
 message GetTaskResponse {
-  bool success = 1;
-  CreateTaskResponse result = 2;
+  int32 code = 1;
+  string message = 2;
+  bool success = 3;
+  CreateTaskResponse data = 4;
 }
 
 // 文件信息

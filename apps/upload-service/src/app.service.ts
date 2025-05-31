@@ -123,7 +123,12 @@ export class UploadService {
 
       await queryRunner.manager.save(file);
       await queryRunner.commitTransaction();
-      return { success: true, result: file };
+      return {
+        code: 200,
+        message: '文件上传成功',
+        success: true,
+        data: file,
+      };
     } catch (error) {
       this.logger.error(`保存文件失败: ${error.message}`);
       await queryRunner.rollbackTransaction();
@@ -297,7 +302,12 @@ export class UploadService {
         await queryRunner.manager.save(fileEntity);
         await queryRunner.commitTransaction();
         await this.redisService.del(`upload:task:${taskId}`);
-        return { success: true, file: fileEntity };
+        return {
+          code: 200,
+          message: '文件合并成功',
+          success: true,
+          data: fileEntity,
+        };
       } catch (error) {
         await queryRunner.rollbackTransaction();
         this.logger.error(`合并文件失败: ${error.message}`);
@@ -340,7 +350,12 @@ export class UploadService {
     if (!task) {
       throw new RpcException('上传任务不存在或已过期');
     }
-    return { success: true, result: task };
+    return {
+      code: 200,
+      message: '获取任务成功',
+      success: true,
+      data: task,
+    };
   }
 
   //———————————————————————————————————————
@@ -354,7 +369,12 @@ export class UploadService {
         where: { fileMd5 },
       });
       if (!found) {
-        return { success: false, result: null };
+        return {
+          code: 404,
+          message: '文件不存在',
+          success: false,
+          data: null,
+        };
       }
       const file = this.fileRepository.create({
         originalFileName,
@@ -368,7 +388,12 @@ export class UploadService {
       });
       await queryRunner.manager.save(file);
       await queryRunner.commitTransaction();
-      return { success: true, result: file };
+      return {
+        code: 200,
+        message: '文件预加载成功',
+        success: true,
+        data: file,
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error(`保存文件元数据失败: ${error.message}`);
