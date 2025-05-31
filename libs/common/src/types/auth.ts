@@ -56,88 +56,6 @@ export interface ButtonsGetResponse {
   buttons: string[];
 }
 
-/** Menu Service Messages */
-export interface GetRoutesRequest {
-  roles: string[];
-}
-
-export interface GetRoutesResponse {
-  success: boolean;
-  routes: Menu[];
-}
-
-export interface FindAllRequest {}
-
-export interface FindAllResponse {
-  success: boolean;
-  menus: Menu[];
-}
-
-export interface FindOneRequest {
-  id: number;
-}
-
-export interface FindOneResponse {
-  success: boolean;
-  menu: Menu | undefined;
-}
-
-export interface CreateMenuRequest {
-  menu: Menu | undefined;
-}
-
-export interface CreateMenuResponse {
-  success: boolean;
-  menu: Menu | undefined;
-}
-
-export interface UpdateMenuRequest {
-  menu: Menu | undefined;
-}
-
-export interface UpdateMenuResponse {
-  success: boolean;
-  menu: Menu | undefined;
-}
-
-export interface RemoveMenuRequest {
-  id: number;
-}
-
-export interface RemoveMenuResponse {
-  success: boolean;
-}
-
-export interface ConfigureRolesRequest {
-  menuId: number;
-  roleIds: number[];
-}
-
-export interface ConfigureRolesResponse {
-  success: boolean;
-}
-
-export interface ConfigureMenusRequest {
-  menuIds: number[];
-  roleId: number;
-}
-
-export interface ConfigureMenusResponse {
-  success: boolean;
-}
-/** Menu Entity */
-export interface Menu {
-  id: number;
-  name: string;
-  path: string;
-  component: string;
-  icon: string;
-  parentId: number;
-  order: number;
-  hidden: boolean;
-  roles: string[];
-}
-
 /** Auth Service */
 export interface GrpcAuthService {
   register(request: RegisterRequest): Observable<RegisterResponse>;
@@ -145,20 +63,4 @@ export interface GrpcAuthService {
   notify(request: NotifyRequest): Observable<NotifyResponse>;
   verify(request: VerifyRequest): Observable<VerifyResponse>;
   buttonsGet(request: ButtonsGetRequest): Observable<ButtonsGetResponse>;
-}
-
-/** Menu Service */
-export interface GrpcMenuService {
-  getRoutes(request: GetRoutesRequest): Observable<GetRoutesResponse>;
-  findAll(request: FindAllRequest): Observable<FindAllResponse>;
-  findOne(request: FindOneRequest): Observable<FindOneResponse>;
-  create(request: CreateMenuRequest): Observable<CreateMenuResponse>;
-  update(request: UpdateMenuRequest): Observable<UpdateMenuResponse>;
-  remove(request: RemoveMenuRequest): Observable<RemoveMenuResponse>;
-  configureRoles(
-    request: ConfigureRolesRequest,
-  ): Observable<ConfigureRolesResponse>;
-  configureMenus(
-    request: ConfigureMenusRequest,
-  ): Observable<ConfigureMenusResponse>;
 }
