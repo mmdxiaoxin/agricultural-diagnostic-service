@@ -1,8 +1,10 @@
-import { DynamicModule, Global, Module } from '@nestjs/common';
+import { DynamicModule, Global, Module, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
 import { ConfigEnum } from '@shared/enum/config.enum';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import {
   Crop,
   Dataset,
@@ -27,7 +29,33 @@ import {
 
 @Global()
 @Module({})
-export class DatabaseModule {
+export class DatabaseModule implements OnModuleInit {
+  private readonly logger = new Logger(DatabaseModule.name);
+
+  constructor(
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
+  ) {}
+
+  async onModuleInit() {
+    await this.initializeBasicRoles();
+    this.logger.log('数据库初始化完成，基础角色检查完毕');
+  }
+
+  private async initializeBasicRoles() {
+    for (const roleData of Role.BASIC_ROLES) {
+      const existingRole = await this.roleRepository.findOne({
+        where: { name: roleData.name },
+      });
+
+      if (!existingRole) {
+        const role = this.roleRepository.create(roleData);
+        await this.roleRepository.save(role);
+        this.logger.log(`创建基础角色: ${roleData.name} (${roleData.alias})`);
+      }
+    }
+  }
+
   static register(entities: EntityClassOrSchema[] = []): DynamicModule {
     return {
       module: DatabaseModule,
@@ -73,6 +101,7 @@ export class DatabaseModule {
             ],
           }),
         }),
+        TypeOrmModule.forFeature([Role]),
       ],
       exports: [TypeOrmModule],
     };

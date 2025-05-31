@@ -16,4 +16,10 @@ export class Role extends BaseEntity {
 
   @ManyToMany(() => Menu, (menu) => menu.roles)
   menus: Menu[];
+
+  static readonly BASIC_ROLES = [
+    { name: 'admin', alias: '管理员' },
+    { name: 'expert', alias: '专家' },
+    { name: 'user', alias: '农户' },
+  ];
 }
