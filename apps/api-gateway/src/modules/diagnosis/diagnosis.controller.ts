@@ -17,7 +17,7 @@ import { PageQueryDto } from '@common/dto/page-query.dto';
 import { createPageResponseDto } from '@common/dto/page-response.dto';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
-import { ParseNumberArrayPipe } from '@common/pipe/array-number.pipe';
+import { ParseNumberArrayPipe } from '@common/pipe/number-array.pipe';
 import { FileSizeValidationPipe } from '@common/pipe/file-size.pipe';
 import { FileTypeValidationPipe } from '@common/pipe/file-type.pipe';
 import {
