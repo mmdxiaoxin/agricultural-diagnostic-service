@@ -10,8 +10,6 @@ import { AppModule } from './modules/app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const subnetIp = configService.get<string>('SUBNET_IP');
-
   // 从环境变量获取日志级别
   const logLevel = configService.get<string>('LOG_LEVEL', 'info').toLowerCase();
 
@@ -32,8 +30,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'http://localhost:5173',
-      `http://${subnetIp}`,
-      `https://${subnetIp}`,
+      'http://localhost:8080',
       'http://www.binghai-zhenduan.com',
       'https://www.binghai-zhenduan.com',
       'http://www.mmdxiaoxin.top',
