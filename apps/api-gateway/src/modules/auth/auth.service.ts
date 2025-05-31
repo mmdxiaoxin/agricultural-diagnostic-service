@@ -1,6 +1,6 @@
 import { LoginDto } from '@common/dto/auth/login.dto';
 import { RegisterDto } from '@common/dto/auth/register.dto';
-import { GrpcAuthService, GrpcMenuService } from '@common/types/auth';
+import { GrpcAuthService } from '@common/types/auth';
 import {
   Inject,
   Injectable,
@@ -16,13 +16,10 @@ import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class AuthService {
   private grpcAuthService: GrpcAuthService;
-  private grpcMenuService: GrpcMenuService;
 
   constructor(@Inject(AUTH_SERVICE_NAME) private readonly client: ClientGrpc) {
     this.grpcAuthService =
       this.client.getService<GrpcAuthService>('AuthService');
-    this.grpcMenuService =
-      this.client.getService<GrpcMenuService>('MenuService');
   }
 
   async register(req: Request, dto: RegisterDto) {
