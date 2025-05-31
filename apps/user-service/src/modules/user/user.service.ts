@@ -781,36 +781,35 @@ export class UserService {
 
     // 1. 先尝试从缓存获取
     const cachedUser = await this.redisService.get<User>(cacheKey);
-    if (cachedUser && cachedUser.password) {
+    if (cachedUser) {
       this.logger.debug(`从缓存获取用户数据: ${login}`);
       return cachedUser;
     }
 
-    // 2. 缓存未命中,从数据库查询
+    // 2. 缓存未命中,使用更高效的查询方式
     const user = await this.userRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.roles', 'role')
+      .leftJoinAndSelect('user.roles', 'roles')
+      .leftJoinAndSelect('user.profile', 'profile')
+      .where('user.email = :login OR user.username = :login', { login })
       .select([
         'user.id',
         'user.username',
         'user.email',
         'user.password',
         'user.status',
-        'role.id',
-        'role.name',
+        'roles.id',
+        'roles.name',
+        'roles.alias',
+        'profile.id',
+        'profile.name',
+        'profile.phone',
+        'profile.address',
       ])
-      .where('user.email = :login', { login })
-      .orWhere('user.username = :login', { login })
       .getOne();
 
     if (user) {
-      // 3. 验证用户数据的完整性
-      if (!user.password) {
-        this.logger.warn(`用户密码为空: ${login}`);
-        return null;
-      }
-
-      // 4. 更新缓存,使用 pipeline 批量操作
+      // 3. 更新缓存,使用 pipeline 批量操作
       const cacheUpdates = [
         { type: 'USER_LOGIN', key: login, data: user },
         { type: 'USER_EMAIL', key: user.email, data: user },
@@ -846,10 +845,17 @@ export class UserService {
       return cachedUser as User;
     }
 
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'username', 'email', 'password', 'status'],
+    });
 
     if (user) {
-      await this.redisService.set(cacheKey, user, 60);
+      await this.redisService.set(
+        cacheKey,
+        user,
+        this.CACHE_CONFIG.USER_EMAIL.ttl,
+      );
     }
 
     return user;
@@ -862,10 +868,17 @@ export class UserService {
       return cachedUser as User;
     }
 
-    const user = await this.userRepository.findOne({ where: { username } });
+    const user = await this.userRepository.findOne({
+      where: { username },
+      select: ['id', 'username', 'email', 'password', 'status'],
+    });
 
     if (user) {
-      await this.redisService.set(cacheKey, user, 60);
+      await this.redisService.set(
+        cacheKey,
+        user,
+        this.CACHE_CONFIG.USER_USERNAME.ttl,
+      );
     }
 
     return user;
