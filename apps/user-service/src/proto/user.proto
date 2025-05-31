@@ -2,283 +2,37 @@ syntax = "proto3";
 
 package user;
 
-// 导入 google 的 timestamp 类型
-import "google/protobuf/timestamp.proto";
-
-// 用户服务
 service UserService {
-  // 获取个人信息
-  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
-  
-  // 更新个人信息
-  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
-  
-  // 上传个人头像
-  rpc UploadAvatar(UploadAvatarRequest) returns (UploadAvatarResponse);
-  
-  // 获取个人头像
-  rpc GetAvatar(GetAvatarRequest) returns (GetAvatarResponse);
-  
-  // 修改密码
-  rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordResponse);
-  
-  // 获取用户列表
-  rpc GetUserList(GetUserListRequest) returns (GetUserListResponse);
-  
-  // 创建用户
-  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
-  
-  // 获取单个用户信息
-  rpc GetUser(GetUserRequest) returns (GetUserResponse);
-  
-  // 删除用户
-  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
-  
-  // 更新用户
-  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
-  
-  // 更新用户状态
-  rpc UpdateUserStatus(UpdateUserStatusRequest) returns (UpdateUserStatusResponse);
-  
-  // 激活用户
-  rpc ActivateUser(ActivateUserRequest) returns (ActivateUserResponse);
-  
-  // 重置用户密码
-  rpc ResetUserPassword(ResetUserPasswordRequest) returns (ResetUserPasswordResponse);
-  
-  // 根据登录名查找用户
-  rpc FindByLogin(FindByLoginRequest) returns (FindByLoginResponse);
-  
-  // 根据用户名查找用户
-  rpc FindByUsername(FindByUsernameRequest) returns (FindByUsernameResponse);
-  
-  // 根据邮箱查找用户
-  rpc FindByEmail(FindByEmailRequest) returns (FindByEmailResponse);
+  rpc UploadAvatar (UploadAvatarRequest) returns (UploadAvatarResponse);
+  rpc GetAvatar (GetAvatarRequest) returns (stream GetAvatarResponse);
 }
 
-// 基础响应消息
-message BaseResponse {
-  int32 code = 1;
-  string message = 2;
-  bytes data = 3;
-}
-
-// 时间戳消息
-message Timestamp {
-  google.protobuf.Timestamp createdAt = 1;
-  google.protobuf.Timestamp updatedAt = 2;
-}
-
-// 角色消息
-message Role {
-  int32 id = 1;
-  string name = 2;
-  string alias = 3;
-  Timestamp timestamp = 4;
-}
-
-// 个人信息消息
-message Profile {
-  int32 id = 1;
-  int32 gender = 2;
-  string avatar = 3;
-  string name = 4;
-  string phone = 5;
-  string address = 6;
-}
-
-// 用户消息
-message User {
-  int32 id = 1;
-  string email = 2;
-  string username = 3;
-  int32 status = 4;
-  repeated Role roles = 5;
-  Profile profile = 6;
-  Timestamp timestamp = 7;
-}
-
-// 分页请求
-message PaginationRequest {
-  int32 page = 1;
-  int32 pageSize = 2;
-}
-
-// 分页响应
-message PaginationResponse {
-  int32 total = 1;
-  int32 page = 2;
-  int32 pageSize = 3;
-}
-
-// GetProfile 请求
-message GetProfileRequest {
-  int32 userId = 1;
-}
-
-// GetProfile 响应
-message GetProfileResponse {
-  BaseResponse response = 1;
-}
-
-// UpdateProfile 请求
-message UpdateProfileRequest {
-  int32 userId = 1;
-  Profile profile = 2;
-}
-
-// UpdateProfile 响应
-message UpdateProfileResponse {
-  BaseResponse response = 1;
-}
-
-// UploadAvatar 请求
 message UploadAvatarRequest {
   int32 userId = 1;
-  bytes fileData = 2;
+  string fileData = 2;  // base64 encoded file data
   string mimetype = 3;
 }
 
-// UploadAvatar 响应
 message UploadAvatarResponse {
-  BaseResponse response = 1;
+  bool success = 1;
+  string message = 2;
 }
 
-// GetAvatar 请求
 message GetAvatarRequest {
   int32 userId = 1;
 }
 
-// GetAvatar 响应
 message GetAvatarResponse {
-  BaseResponse response = 1;
+  bool success = 1;
+  string message = 2;
+  oneof data {
+    AvatarMetadata metadata = 3;
+    bytes chunk = 4;
+  }
 }
 
-// UpdatePassword 请求
-message UpdatePasswordRequest {
-  int32 userId = 1;
-  string confirmPassword = 2;
+message AvatarMetadata {
+  string fileName = 1;
+  string mimeType = 2;
+  int64 totalSize = 3;
 }
-
-// UpdatePassword 响应
-message UpdatePasswordResponse {
-  BaseResponse response = 1;
-}
-
-// GetUserList 请求
-message GetUserListRequest {
-  PaginationRequest pagination = 1;
-  string username = 2;
-  string name = 3;
-  string phone = 4;
-  string address = 5;
-}
-
-// GetUserList 响应
-message GetUserListResponse {
-  BaseResponse response = 1;
-}
-
-// CreateUser 请求
-message CreateUserRequest {
-  User user = 1;
-  Profile profile = 2;
-}
-
-// CreateUser 响应
-message CreateUserResponse {
-  BaseResponse response = 1;
-}
-
-// GetUser 请求
-message GetUserRequest {
-  int32 id = 1;
-}
-
-// GetUser 响应
-message GetUserResponse {
-  BaseResponse response = 1;
-}
-
-// DeleteUser 请求
-message DeleteUserRequest {
-  int32 id = 1;
-}
-
-// DeleteUser 响应
-message DeleteUserResponse {
-  BaseResponse response = 1;
-}
-
-// UpdateUser 请求
-message UpdateUserRequest {
-  int32 id = 1;
-  User user = 2;
-}
-
-// UpdateUser 响应
-message UpdateUserResponse {
-  BaseResponse response = 1;
-}
-
-// UpdateUserStatus 请求
-message UpdateUserStatusRequest {
-  int32 id = 1;
-  int32 status = 2;
-}
-
-// UpdateUserStatus 响应
-message UpdateUserStatusResponse {
-  BaseResponse response = 1;
-}
-
-// ActivateUser 请求
-message ActivateUserRequest {
-  int32 id = 1;
-}
-
-// ActivateUser 响应
-message ActivateUserResponse {
-  BaseResponse response = 1;
-}
-
-// ResetUserPassword 请求
-message ResetUserPasswordRequest {
-  int32 id = 1;
-  string password = 2;
-}
-
-// ResetUserPassword 响应
-message ResetUserPasswordResponse {
-  BaseResponse response = 1;
-}
-
-// FindByLogin 请求
-message FindByLoginRequest {
-  string login = 1;
-}
-
-// FindByLogin 响应
-message FindByLoginResponse {
-  BaseResponse response = 1;
-}
-
-// FindByUsername 请求
-message FindByUsernameRequest {
-  string username = 1;
-}
-
-// FindByUsername 响应
-message FindByUsernameResponse {
-  BaseResponse response = 1;
-}
-
-// FindByEmail 请求
-message FindByEmailRequest {
-  string email = 1;
-}
-
-// FindByEmail 响应
-message FindByEmailResponse {
-  BaseResponse response = 1;
-} 
