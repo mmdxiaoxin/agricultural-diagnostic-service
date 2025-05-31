@@ -1,3 +1,5 @@
+import { LoginDto } from '@common/dto/auth/login.dto';
+import { RegisterDto } from '@common/dto/auth/register.dto';
 import {
   ButtonsGetResponse,
   LoginRequest,
@@ -12,8 +14,6 @@ import {
 import { Controller, Logger } from '@nestjs/common';
 import { GrpcMethod, MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 
 @Controller()
 export class AuthController {
