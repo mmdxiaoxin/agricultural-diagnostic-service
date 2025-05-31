@@ -73,9 +73,9 @@ export class MenuController {
   // gRPC endpoints
   @GrpcMethod('MenuService', 'GetRoutes')
   async grpcGetRoutes(data: GetRoutesRequest): Promise<GetRoutesResponse> {
-    const response = await this.menuService.findAuthRoutes(data.roles);
-    const routes =
-      response.data?.map((menu) => ({
+    try {
+      const response = await this.menuService.findAuthRoutes(data.roles);
+      const routes = response.data?.map((menu) => ({
         id: menu.id,
         name: menu.title,
         path: menu.path,
@@ -86,17 +86,23 @@ export class MenuController {
         hidden: false,
         roles: menu.roles.map((role) => role.name),
       })) || [];
-    return {
-      success: response.code === 200,
-      routes,
-    };
+      return {
+        success: response.code === 200,
+        routes,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        routes: [],
+      };
+    }
   }
 
   @GrpcMethod('MenuService', 'FindAll')
   async grpcFindAll(): Promise<FindAllResponse> {
-    const response = await this.menuService.findAll();
-    const menus =
-      response.data?.map((menu) => ({
+    try {
+      const response = await this.menuService.findAll();
+      const menus = response.data?.map((menu) => ({
         id: menu.id,
         name: menu.title,
         path: menu.path,
@@ -107,132 +113,177 @@ export class MenuController {
         hidden: false,
         roles: menu.roles.map((role) => role.name),
       })) || [];
-    return {
-      success: response.code === 200,
-      menus,
-    };
+      return {
+        success: response.code === 200,
+        menus,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        menus: [],
+      };
+    }
   }
 
   @GrpcMethod('MenuService', 'FindOne')
   async grpcFindOne(data: FindOneRequest): Promise<FindOneResponse> {
-    const response = await this.menuService.findOne(data.id);
-    const menu = response.data
-      ? {
-          id: response.data.id,
-          name: response.data.title,
-          path: response.data.path,
-          component: response.data.isLink || '',
-          icon: response.data.icon,
-          parentId: response.data.parentId || 0,
-          order: response.data.sort,
-          hidden: false,
-          roles: response.data.roles.map((role) => role.name),
-        }
-      : undefined;
-    return {
-      success: response.code === 200,
-      menu,
-    };
+    try {
+      const response = await this.menuService.findOne(data.id);
+      const menu = response.data
+        ? {
+            id: response.data.id,
+            name: response.data.title,
+            path: response.data.path,
+            component: response.data.isLink || '',
+            icon: response.data.icon,
+            parentId: response.data.parentId || 0,
+            order: response.data.sort,
+            hidden: false,
+            roles: response.data.roles.map((role) => role.name),
+          }
+        : undefined;
+      return {
+        success: response.code === 200,
+        menu,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        menu: undefined,
+      };
+    }
   }
 
   @GrpcMethod('MenuService', 'Create')
   async grpcCreate(data: CreateMenuRequest): Promise<CreateMenuResponse> {
-    if (!data.menu) {
-      return { success: false, menu: undefined };
+    try {
+      if (!data.menu) {
+        return { success: false, menu: undefined };
+      }
+      const menuData = {
+        title: data.menu.name,
+        path: data.menu.path,
+        isLink: data.menu.component,
+        icon: data.menu.icon,
+        parentId: data.menu.parentId || undefined,
+        sort: data.menu.order,
+      };
+      const response = await this.menuService.create(menuData);
+      const menu = response.data
+        ? {
+            id: response.data.id,
+            name: response.data.title,
+            path: response.data.path,
+            component: response.data.isLink || '',
+            icon: response.data.icon,
+            parentId: response.data.parentId || 0,
+            order: response.data.sort,
+            hidden: false,
+            roles: response.data.roles.map((role) => role.name),
+          }
+        : undefined;
+      return {
+        success: response.code === 201,
+        menu,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        menu: undefined,
+      };
     }
-    const menuData = {
-      title: data.menu.name,
-      path: data.menu.path,
-      isLink: data.menu.component,
-      icon: data.menu.icon,
-      parentId: data.menu.parentId || undefined,
-      sort: data.menu.order,
-    };
-    const response = await this.menuService.create(menuData);
-    const menu = response.data
-      ? {
-          id: response.data.id,
-          name: response.data.title,
-          path: response.data.path,
-          component: response.data.isLink || '',
-          icon: response.data.icon,
-          parentId: response.data.parentId || 0,
-          order: response.data.sort,
-          hidden: false,
-          roles: response.data.roles.map((role) => role.name),
-        }
-      : undefined;
-    return {
-      success: response.code === 201,
-      menu,
-    };
   }
 
   @GrpcMethod('MenuService', 'Update')
   async grpcUpdate(data: UpdateMenuRequest): Promise<UpdateMenuResponse> {
-    if (!data.menu || !data.menu.id) {
-      return { success: false, menu: undefined };
+    try {
+      if (!data.menu || !data.menu.id) {
+        return { success: false, menu: undefined };
+      }
+      const menuData = {
+        title: data.menu.name,
+        path: data.menu.path,
+        isLink: data.menu.component,
+        icon: data.menu.icon,
+        parentId: data.menu.parentId || undefined,
+        sort: data.menu.order,
+      };
+      const response = await this.menuService.update(data.menu.id, menuData);
+      const updatedMenu = await this.menuService.findOne(data.menu.id);
+      const menu = updatedMenu.data
+        ? {
+            id: updatedMenu.data.id,
+            name: updatedMenu.data.title,
+            path: updatedMenu.data.path,
+            component: updatedMenu.data.isLink || '',
+            icon: updatedMenu.data.icon,
+            parentId: updatedMenu.data.parentId || 0,
+            order: updatedMenu.data.sort,
+            hidden: false,
+            roles: updatedMenu.data.roles.map((role) => role.name),
+          }
+        : undefined;
+      return {
+        success: response.code === 200,
+        menu,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        menu: undefined,
+      };
     }
-    const menuData = {
-      title: data.menu.name,
-      path: data.menu.path,
-      isLink: data.menu.component,
-      icon: data.menu.icon,
-      parentId: data.menu.parentId || undefined,
-      sort: data.menu.order,
-    };
-    const response = await this.menuService.update(data.menu.id, menuData);
-    const updatedMenu = await this.menuService.findOne(data.menu.id);
-    const menu = updatedMenu.data
-      ? {
-          id: updatedMenu.data.id,
-          name: updatedMenu.data.title,
-          path: updatedMenu.data.path,
-          component: updatedMenu.data.isLink || '',
-          icon: updatedMenu.data.icon,
-          parentId: updatedMenu.data.parentId || 0,
-          order: updatedMenu.data.sort,
-          hidden: false,
-          roles: updatedMenu.data.roles.map((role) => role.name),
-        }
-      : undefined;
-    return {
-      success: response.code === 200,
-      menu,
-    };
   }
 
   @GrpcMethod('MenuService', 'Remove')
   async grpcRemove(data: RemoveMenuRequest): Promise<RemoveMenuResponse> {
-    const response = await this.menuService.remove(data.id);
-    return {
-      success: response.code === 204,
-    };
+    try {
+      const response = await this.menuService.remove(data.id);
+      return {
+        success: response.code === 204,
+      };
+    } catch (error) {
+      return {
+        success: false,
+      };
+    }
   }
 
   @GrpcMethod('MenuService', 'ConfigureRoles')
   async grpcConfigureRoles(
     data: ConfigureRolesRequest,
   ): Promise<ConfigureRolesResponse> {
-    const response = await this.menuService.configureRoles(
-      data.menuId,
-      data.roleIds,
-    );
-    return {
-      success: response.code === 200,
-    };
+    try {
+      const response = await this.menuService.configureRoles(
+        data.menuId,
+        data.roleIds,
+      );
+      return {
+        success: response.code === 200,
+      };
+    } catch (error) {
+      return {
+        success: false,
+      };
+    }
   }
 
   @GrpcMethod('MenuService', 'ConfigureMenus')
   async grpcConfigureMenus(
     data: ConfigureMenusRequest,
   ): Promise<ConfigureMenusResponse> {
-    const response = await this.menuService.configureMenus(
-      data.menuIds,
-      data.roleId,
-    );
-    return {
-      success: response.code === 200,
-    };
+    try {
+      const response = await this.menuService.configureMenus(
+        data.menuIds,
+        data.roleId,
+      );
+      return {
+        success: response.code === 200,
+      };
+    } catch (error) {
+      return {
+        success: false,
+      };
+    }
   }
 }
