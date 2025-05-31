@@ -103,15 +103,20 @@ export class UserService {
       { type: 'USER_LOGIN', key: user.username, data: userData },
     ];
 
-    await Promise.all(
-      cacheUpdates.map(({ type, key, data }) =>
-        this.redisService.set(
-          this.generateCacheKey(type as keyof typeof this.CACHE_KEYS, key),
-          data,
-          this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
-        ),
-      ),
-    );
+    const pipeline = this.redisService.pipeline();
+    cacheUpdates.forEach(({ type, key, data }) => {
+      const cacheKey = this.generateCacheKey(
+        type as keyof typeof this.CACHE_KEYS,
+        key,
+      );
+      pipeline.setex(
+        cacheKey,
+        this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
+        JSON.stringify(data),
+      );
+    });
+
+    await pipeline.exec();
   }
 
   private async deleteUserCache(id: number) {
@@ -129,7 +134,12 @@ export class UserService {
         this.generateCacheKey('USER_LOGIN', user.username),
       ];
 
-      await Promise.all(cacheKeys.map((key) => this.redisService.del(key)));
+      const pipeline = this.redisService.pipeline();
+      cacheKeys.forEach((key) => {
+        pipeline.del(key);
+      });
+
+      await pipeline.exec();
     }
   }
 
