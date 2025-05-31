@@ -8,7 +8,6 @@ import {
   DOWNLOAD_SERVICE_GRPC_PORT,
   DOWNLOAD_SERVICE_HOST,
   DOWNLOAD_SERVICE_HTTP_PORT,
-  DOWNLOAD_SERVICE_TCP_PORT,
 } from 'config/microservice.config';
 import { join } from 'path';
 import { AppModule } from './app.module';
@@ -32,15 +31,6 @@ async function bootstrap() {
   // 设置日志级别
   app.useLogger(logLevelMap[logLevel] || logLevelMap.info);
 
-  // TCP 微服务
-  const tcpMicroservice = app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.TCP,
-    options: {
-      host: DOWNLOAD_SERVICE_HOST,
-      port: DOWNLOAD_SERVICE_TCP_PORT,
-    },
-  });
-
   // gRPC 微服务
   const grpcMicroservice = app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.GRPC,
@@ -59,11 +49,6 @@ async function bootstrap() {
     },
   });
 
-  // 添加全局过滤器
-  tcpMicroservice.useGlobalFilters(
-    new OtherExceptionsFilter(),
-    new CustomRpcExceptionFilter(),
-  );
   grpcMicroservice.useGlobalFilters(
     new OtherExceptionsFilter(),
     new CustomRpcExceptionFilter(),
