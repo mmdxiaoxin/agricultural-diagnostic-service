@@ -332,10 +332,11 @@ export class DiagnosisLogService implements OnModuleInit, OnModuleDestroy {
 
   private async getNextSequence(diagnosisId: number): Promise<number> {
     const key = `${this.REDIS_SEQUENCE_KEY}:${diagnosisId}`;
-    const currentValue = (await this.redisService.get<number>(key)) || 0;
-    const nextValue = currentValue + 1;
-    await this.redisService.set(key, nextValue);
-    return nextValue;
+    // 使用 INCR 命令原子性地增加序列号
+    const sequence = await this.redisService.getClient().incr(key);
+    // 设置过期时间（24小时）
+    await this.redisService.getClient().expire(key, 24 * 60 * 60);
+    return sequence;
   }
 
   async addLog(
