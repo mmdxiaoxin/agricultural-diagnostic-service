@@ -798,6 +798,7 @@ export class UserService {
         'user.email',
         'user.password',
         'user.status',
+        'user.createdAt',
         'roles.id',
         'roles.name',
         'roles.alias',
