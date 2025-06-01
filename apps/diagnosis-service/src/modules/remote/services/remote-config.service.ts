@@ -1,4 +1,8 @@
-import { RemoteConfig, RemoteService } from '@app/database/entities';
+import {
+  RemoteConfig,
+  RemoteService,
+  RemoteInterface,
+} from '@app/database/entities';
 import { RedisService } from '@app/redis';
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
@@ -15,9 +19,81 @@ export class RemoteConfigService {
   constructor(
     @InjectRepository(RemoteConfig)
     private remoteConfigRepository: Repository<RemoteConfig>,
+    @InjectRepository(RemoteInterface)
+    private remoteInterfaceRepository: Repository<RemoteInterface>,
     private dataSource: DataSource,
     private readonly redisService: RedisService,
   ) {}
+
+  // 验证配置的有效性
+  private async validateConfig(
+    config: Partial<RemoteConfig>,
+    serviceId: number,
+  ) {
+    if (!config.config?.requests || !Array.isArray(config.config.requests)) {
+      throw new RpcException({
+        code: 400,
+        message: '配置中必须包含有效的请求配置',
+      });
+    }
+
+    // 获取服务下的所有接口
+    const interfaces = await this.remoteInterfaceRepository.find({
+      where: { serviceId },
+    });
+    const interfaceMap = new Map(interfaces.map((i) => [i.id, i]));
+
+    // 创建请求ID集合，用于验证result
+    const requestIds = new Set(config.config.requests.map((req) => req.id));
+
+    // 验证result属性
+    if (config.config.result !== undefined) {
+      if (!requestIds.has(config.config.result)) {
+        throw new RpcException({
+          code: 400,
+          message: `result属性引用的接口ID ${config.config.result} 不存在于requests数组中`,
+        });
+      }
+    }
+
+    // 验证每个请求的接口ID是否存在
+    for (const request of config.config.requests) {
+      if (!request.id || !interfaceMap.has(request.id)) {
+        throw new RpcException({
+          code: 400,
+          message: `请求配置中引用了不存在的接口ID: ${request.id}`,
+        });
+      }
+
+      // 验证next数组中的接口ID
+      if (request.next && Array.isArray(request.next)) {
+        for (const nextId of request.next) {
+          if (!interfaceMap.has(nextId)) {
+            throw new RpcException({
+              code: 400,
+              message: `请求配置的next数组中引用了不存在的接口ID: ${nextId}`,
+            });
+          }
+        }
+      }
+
+      // 验证params中的模板变量
+      if (request.params) {
+        const templateRegex = /{{#(\d+)\.([^}]+)}}/g;
+        const matches = JSON.stringify(request.params).matchAll(templateRegex);
+
+        for (const match of matches) {
+          const referencedId = parseInt(match[1], 10);
+          if (!interfaceMap.has(referencedId)) {
+            throw new RpcException({
+              code: 400,
+              message: `参数中引用了不存在的接口ID: ${referencedId}`,
+            });
+          }
+        }
+      }
+    }
+  }
 
   // 清除相关缓存
   private async clearRelatedCache(serviceId: number) {
@@ -92,6 +168,9 @@ export class RemoteConfigService {
         });
       }
 
+      // 验证配置的有效性
+      await this.validateConfig(config, serviceId);
+
       // 创建配置
       const newConfig = queryRunner.manager.create(RemoteConfig, {
         ...config,
@@ -139,6 +218,9 @@ export class RemoteConfigService {
           message: '未找到当前配置',
         });
       }
+
+      // 验证配置的有效性
+      await this.validateConfig(config, existingConfig.service.id);
 
       Object.assign(existingConfig, config);
       const updatedConfig = await queryRunner.manager.save(existingConfig);
