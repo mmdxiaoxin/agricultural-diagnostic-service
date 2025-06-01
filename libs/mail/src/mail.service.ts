@@ -1,24 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ConfigEnum } from '@shared/enum/config.enum';
 import * as nodemailer from 'nodemailer';
+import { mailConfigSchema, type MailConfig } from './schemas/mail.schema';
 
 @Injectable()
-export class MailService {
+export class MailService implements OnModuleInit {
   private transporter: nodemailer.Transporter;
 
-  constructor(private readonly configService: ConfigService) {
-    this.transporter = nodemailer.createTransport({
-      host: this.configService.get<string>(
-        ConfigEnum.MAIL_HOST,
-        'smtp.example.com',
-      ),
-      port: this.configService.get<number>(ConfigEnum.MAIL_PORT, 465),
-      secure: this.configService.get<boolean>(ConfigEnum.MAIL_SECURE, true),
+  constructor(private readonly configService: ConfigService) {}
+
+  onModuleInit() {
+    const config = {
+      host: this.configService.get<string>(ConfigEnum.MAIL_HOST),
+      port: this.configService.get<number>(ConfigEnum.MAIL_PORT),
+      secure: this.configService.get<boolean>(ConfigEnum.MAIL_SECURE),
       auth: {
         user: this.configService.get<string>(ConfigEnum.MAIL_USER),
         pass: this.configService.get<string>(ConfigEnum.MAIL_PASS),
       },
+      from: this.configService.get<string>(ConfigEnum.MAIL_FROM),
+    } as MailConfig;
+
+    // 验证配置
+    const validatedConfig = mailConfigSchema.parse(config);
+
+    this.transporter = nodemailer.createTransport({
+      host: validatedConfig.host,
+      port: validatedConfig.port,
+      secure: validatedConfig.secure,
+      auth: validatedConfig.auth,
     });
   }
 

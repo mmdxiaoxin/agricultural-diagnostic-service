@@ -65,7 +65,8 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.20",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zod": "^3.25.46"
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.26",
