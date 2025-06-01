@@ -243,9 +243,17 @@ export class DiagnosisService {
         fileData,
       });
 
-      // 7. 获取最后一个接口的结果
-      const lastRequest = requests[requests.length - 1];
-      const lastResult = results.get(lastRequest.id);
+      // 7. 获取结果
+      let lastResult;
+      if (remoteConfig.config.result) {
+        // 如果配置了result字段，使用指定的接口ID获取结果
+        lastResult = results.get(remoteConfig.config.result);
+      } else {
+        // 否则使用最后一个接口的结果
+        const lastRequest = requests[requests.length - 1];
+        lastResult = results.get(lastRequest.id);
+      }
+
       if (!lastResult) {
         throw new Error('接口调用失败，未获取到结果');
       }
@@ -465,9 +473,17 @@ export class DiagnosisService {
         fileData,
       });
 
-      // 11. 获取最后一个接口的结果
-      const lastRequest = requests[requests.length - 1];
-      const lastResult = results.get(lastRequest.id);
+      // 11. 获取结果
+      let lastResult;
+      if (remoteConfig.config.result) {
+        // 如果配置了result字段，使用指定的接口ID获取结果
+        lastResult = results.get(remoteConfig.config.result);
+      } else {
+        // 否则使用最后一个接口的结果
+        const lastRequest = requests[requests.length - 1];
+        lastResult = results.get(lastRequest.id);
+      }
+
       if (!lastResult) {
         await this.logService.addLog(
           diagnosisId,

@@ -53,6 +53,7 @@ export class RemoteConfig extends BaseEntity {
   @Column({ type: 'json' })
   config: {
     requests: Array<RequestConfig>;
+    result?: number; // 指定获取结果的接口ID
   };
 
   @Column({
