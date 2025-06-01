@@ -320,7 +320,7 @@ DB_SYNC=true  # 开发环境建议开启，生产环境建议关闭
 # Redis配置
 REDIS_HOST=localhost
 REDIS_PORT=6379
-REDIS_PASSWORD=your_redis_password
+REDIS_PASSWORD=your_redis_password  # 如果Redis设置了密码，此项必须配置
 REDIS_RECONNECT=true
 REDIS_DB=0
 
