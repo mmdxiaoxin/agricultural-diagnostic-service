@@ -37,6 +37,8 @@ export class RemoteConfigService {
       });
     }
 
+    const requests = config.config.requests;
+
     // 获取服务下的所有接口
     const interfaces = await this.remoteInterfaceRepository.find({
       where: { serviceId },
@@ -44,7 +46,7 @@ export class RemoteConfigService {
     const interfaceMap = new Map(interfaces.map((i) => [i.id, i]));
 
     // 创建请求ID集合，用于验证result
-    const requestIds = new Set(config.config.requests.map((req) => req.id));
+    const requestIds = new Set(requests.map((req) => req.id));
 
     // 验证result属性
     if (config.config.result !== undefined) {
@@ -57,7 +59,8 @@ export class RemoteConfigService {
     }
 
     // 验证每个请求的接口ID是否存在
-    for (const request of config.config.requests) {
+    for (let i = 0; i < requests.length; i++) {
+      const request = requests[i];
       if (!request.id || !interfaceMap.has(request.id)) {
         throw new RpcException({
           code: 400,
@@ -80,17 +83,47 @@ export class RemoteConfigService {
       // 验证params中的模板变量
       if (request.params) {
         const templateRegex = /{{#(\d+)\.([^}]+)}}/g;
-        const matches = JSON.stringify(request.params).matchAll(templateRegex);
 
-        for (const match of matches) {
-          const referencedId = parseInt(match[1], 10);
-          if (!interfaceMap.has(referencedId)) {
-            throw new RpcException({
-              code: 400,
-              message: `参数中引用了不存在的接口ID: ${referencedId}`,
-            });
+        // 递归检查对象中的所有值
+        const checkValue = (value: any) => {
+          if (typeof value === 'string' && value.includes('{{#')) {
+            const matches = value.matchAll(templateRegex);
+            for (const match of matches) {
+              const referencedId = parseInt(match[1], 10);
+              if (!interfaceMap.has(referencedId)) {
+                throw new RpcException({
+                  code: 400,
+                  message: `参数中引用了不存在的接口ID: ${referencedId}`,
+                });
+              }
+
+              // 检查引用的接口是否在当前请求之前
+              const referencedIndex = requests.findIndex(
+                (req) => req.id === referencedId,
+              );
+              if (referencedIndex === -1) {
+                throw new RpcException({
+                  code: 400,
+                  message: `参数中引用的接口ID ${referencedId} 不存在于requests数组中`,
+                });
+              }
+              if (referencedIndex >= i) {
+                throw new RpcException({
+                  code: 400,
+                  message: `参数中引用的接口ID ${referencedId} 必须在当前请求之前`,
+                });
+              }
+            }
+          } else if (typeof value === 'object' && value !== null) {
+            if (Array.isArray(value)) {
+              value.forEach((item) => checkValue(item));
+            } else {
+              Object.values(value).forEach((val) => checkValue(val));
+            }
           }
-        }
+        };
+
+        checkValue(request.params);
       }
     }
   }
