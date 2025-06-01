@@ -78,18 +78,12 @@ export class RemoteConfigService {
             });
           }
 
-          // 检查引用的接口是否存在于后续请求中
-          const nextIndex = requests.findIndex((req) => req.id === nextId);
-          if (nextIndex === -1) {
+          // 检查引用的接口是否存在于requests数组中
+          const nextRequest = requests.find((req) => req.id === nextId);
+          if (!nextRequest) {
             throw new RpcException({
               code: 400,
               message: `请求配置的next数组中引用的接口ID ${nextId} 不存在于requests数组中`,
-            });
-          }
-          if (nextIndex <= i) {
-            throw new RpcException({
-              code: 400,
-              message: `请求配置的next数组中引用的接口ID ${nextId} 必须在当前请求之后`,
             });
           }
         }
