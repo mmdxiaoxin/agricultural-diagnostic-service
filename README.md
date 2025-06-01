@@ -336,6 +336,12 @@ MAIL_USER=your_email@example.com
 MAIL_PASS=your_email_password
 MAIL_FROM=your_email@example.com
 
+# 阿里云OSS配置（可选，不配置则无法使用OSS服务）
+OSS_ACCESS_KEY_ID=your_access_key_id
+OSS_ACCESS_KEY_SECRET=your_access_key_secret
+OSS_BUCKET_NAME=your_bucket_name
+OSS_REGION=oss-cn-hangzhou  # 例如：oss-cn-hangzhou, oss-cn-beijing 等
+
 # 日志配置
 LOG_LEVEL=info
 LOG_ON=true
