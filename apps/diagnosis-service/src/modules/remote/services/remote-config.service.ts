@@ -229,10 +229,12 @@ export class RemoteConfigService {
       return savedConfig;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      if (error instanceof RpcException) {
+        throw error;
+      }
       throw new RpcException({
         code: 500,
         message: '创建配置失败',
-        data: error,
       });
     } finally {
       await queryRunner.release();
@@ -274,10 +276,12 @@ export class RemoteConfigService {
       return updatedConfig;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      if (error instanceof RpcException) {
+        throw error;
+      }
       throw new RpcException({
         code: 500,
         message: '更新配置失败',
-        data: error,
       });
     } finally {
       await queryRunner.release();
@@ -311,10 +315,12 @@ export class RemoteConfigService {
       await this.clearRelatedCache(serviceId);
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      if (error instanceof RpcException) {
+        throw error;
+      }
       throw new RpcException({
         code: 500,
         message: '删除配置失败',
-        data: error,
       });
     } finally {
       await queryRunner.release();
@@ -356,10 +362,12 @@ export class RemoteConfigService {
       return savedConfig;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      if (error instanceof RpcException) {
+        throw error;
+      }
       throw new RpcException({
         code: 500,
         message: '复制配置失败',
-        data: error,
       });
     } finally {
       await queryRunner.release();
