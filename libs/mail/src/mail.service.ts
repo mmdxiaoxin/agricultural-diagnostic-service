@@ -13,8 +13,8 @@ export class MailService implements OnModuleInit {
   onModuleInit() {
     const config = {
       host: this.configService.get<string>(ConfigEnum.MAIL_HOST),
-      port: this.configService.get<number>(ConfigEnum.MAIL_PORT),
-      secure: this.configService.get<boolean>(ConfigEnum.MAIL_SECURE),
+      port: Number(this.configService.get<string>(ConfigEnum.MAIL_PORT)),
+      secure: this.configService.get<string>(ConfigEnum.MAIL_SECURE) === 'true',
       auth: {
         user: this.configService.get<string>(ConfigEnum.MAIL_USER),
         pass: this.configService.get<string>(ConfigEnum.MAIL_PASS),
