@@ -26,6 +26,8 @@ services:
       - CONTAINER_CPU_LIMIT=4 # 4核 CPU 限制
     volumes:
       - ./logs:/app/logs
+      - ./data/avatar:/app/dist/avatar
+      - ./data/uploads:/app/dist/uploads
     restart: unless-stopped
     cpuset: '0,1,2,3'
     deploy:
