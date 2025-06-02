@@ -234,6 +234,41 @@ GRANT ALL PRIVILEGES ON agricultural_diagnostic.* TO 'agri_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
+**系统初始化说明**：
+
+系统在首次启动时会自动初始化以下基础数据：
+
+1. **基础角色**：
+
+   - 管理员（admin）：系统管理员，拥有所有权限
+   - 专家（expert）：农业专家，拥有诊断和知识库管理权限
+   - 农户（user）：普通用户，拥有基本的诊断和查询权限
+
+2. **系统菜单**：
+   - 系统会自动初始化预设的菜单结构
+   - 菜单配置位于 `libs/database/src/data/menus.ts`
+   - 您可以通过修改该文件来自定义菜单结构
+   - 菜单初始化仅在数据库为空时执行，不会覆盖已存在的菜单
+
+**自定义菜单配置**：
+
+如需自定义菜单，请修改 `libs/database/src/data/menus.ts` 文件。菜单配置格式如下：
+
+```typescript
+export const menusData = [
+  {
+    icon: 'MenuOutlined', // 菜单图标
+    title: '菜单管理', // 菜单标题
+    path: '/user/menu/manage', // 菜单路径
+    sort: 0, // 排序号
+    parentId: 2, // 父菜单ID（可选）
+    isLink: null, // 外部链接（可选）
+    roles: ['admin'], // 可访问的角色
+  },
+  // ... 更多菜单配置
+];
+```
+
 **Redis安装**：
 
 ```bash
