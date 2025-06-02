@@ -418,7 +418,43 @@ npm run build:all
 pm2 restart all
 ```
 
-#### 2. 备份策略
+#### 2. 数据持久化说明
+
+系统使用 Docker 卷来持久化存储重要数据，主要包括：
+
+1. **文件存储**
+
+   - 用户上传文件存储在 `uploads_data` 卷中
+   - 用户头像存储在 `avatar_data` 卷中
+   - 日志文件存储在 `./logs` 目录中
+
+2. **数据备份建议**
+
+   ```bash
+   # 备份上传文件
+   docker run --rm -v uploads_data:/source -v $(pwd)/backup:/backup alpine tar czf /backup/uploads_backup_$(date +%Y%m%d).tar.gz -C /source .
+
+   # 备份头像文件
+   docker run --rm -v avatar_data:/source -v $(pwd)/backup:/backup alpine tar czf /backup/avatar_backup_$(date +%Y%m%d).tar.gz -C /source .
+   ```
+
+3. **数据恢复方法**
+
+   ```bash
+   # 恢复上传文件
+   docker run --rm -v uploads_data:/target -v $(pwd)/backup:/backup alpine sh -c "rm -rf /target/* && tar xzf /backup/uploads_backup.tar.gz -C /target"
+
+   # 恢复头像文件
+   docker run --rm -v avatar_data:/target -v $(pwd)/backup:/backup alpine sh -c "rm -rf /target/* && tar xzf /backup/avatar_backup.tar.gz -C /target"
+   ```
+
+4. **注意事项**
+   - 定期备份重要数据
+   - 在更新系统前确保数据已备份
+   - 监控存储空间使用情况
+   - 建议配置自动备份任务
+
+#### 3. 备份策略
 
 ```bash
 # 备份数据库
@@ -428,7 +464,7 @@ mysqldump -u root -p agricultural_diagnostic > backup_$(date +%Y%m%d).sql
 cp .env .env.backup_$(date +%Y%m%d)
 ```
 
-#### 3. 故障排查
+#### 4. 故障排查
 
 ```bash
 # 检查服务状态
@@ -444,7 +480,7 @@ free -m
 netstat -tulpn
 ```
 
-#### 4. 安全建议
+#### 5. 安全建议
 
 1. 定期更新系统和依赖包
 2. 使用强密码并定期更换
