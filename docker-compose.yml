@@ -26,8 +26,8 @@ services:
       - CONTAINER_CPU_LIMIT=4 # 4核 CPU 限制
     volumes:
       - ./logs:/app/logs
-      - ./data/avatar:/app/dist/avatar
-      - ./data/uploads:/app/dist/uploads
+      - avatar_data:/app/dist/avatar
+      - uploads_data:/app/dist/uploads
     restart: unless-stopped
     cpuset: '0,1,2,3'
     deploy:
@@ -38,3 +38,9 @@ services:
         reservations:
           cpus: '2'
           memory: 8G
+
+volumes:
+  avatar_data:
+    driver: local
+  uploads_data:
+    driver: local
