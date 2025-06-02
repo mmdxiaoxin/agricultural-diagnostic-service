@@ -23,14 +23,15 @@ RUN npm install -g @nestjs/cli
 COPY . .
 
 # 分别构建各个服务
-RUN nest build api-gateway && \
-  nest build auth-service && \
-  nest build download-service && \
-  nest build file-service && \
-  nest build upload-service && \
-  nest build user-service && \
-  nest build knowledge-service && \
-  nest build diagnosis-service
+RUN nest build api-gateway & \
+    nest build auth-service & \
+    nest build download-service & \
+    nest build file-service & \
+    nest build upload-service & \
+    nest build user-service & \
+    nest build knowledge-service & \
+    nest build diagnosis-service & \
+    wait
 
 # 生产阶段
 FROM node:22-alpine
