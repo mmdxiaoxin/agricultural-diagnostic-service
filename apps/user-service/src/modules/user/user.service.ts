@@ -825,7 +825,6 @@ export class UserService {
     const user = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'roles')
-      .leftJoinAndSelect('user.profile', 'profile')
       .where('user.email = :login OR user.username = :login', { login })
       .select([
         'user.id',
@@ -837,10 +836,6 @@ export class UserService {
         'roles.id',
         'roles.name',
         'roles.alias',
-        'profile.id',
-        'profile.name',
-        'profile.phone',
-        'profile.address',
       ])
       .getOne();
 
