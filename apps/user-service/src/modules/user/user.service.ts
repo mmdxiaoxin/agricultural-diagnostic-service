@@ -905,7 +905,10 @@ export class UserService {
       return cachedUser as User;
     }
 
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['profile', 'roles'],
+    });
 
     if (user) {
       await this.redisService.set(cacheKey, user, 60);
