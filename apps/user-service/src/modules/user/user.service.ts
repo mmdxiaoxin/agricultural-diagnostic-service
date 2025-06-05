@@ -101,13 +101,23 @@ export class UserService {
     return JSON.parse(cachedData.data);
   }
 
-  private async updateUserCache(user: User) {
+  private async updateUserCache(
+    user: User,
+    includeLoginCache: boolean = false,
+  ) {
     const { password, ...userData } = user;
     const cacheUpdates = [
       { type: 'USER_ID', key: user.id, data: userData },
       { type: 'USER_EMAIL', key: user.email, data: userData },
       { type: 'USER_USERNAME', key: user.username, data: userData },
     ];
+
+    if (includeLoginCache) {
+      cacheUpdates.push(
+        { type: 'USER_LOGIN', key: user.email, data: user },
+        { type: 'USER_LOGIN', key: user.username, data: user },
+      );
+    }
 
     const pipeline = this.redisService.pipeline();
 
@@ -122,7 +132,7 @@ export class UserService {
       // 使用 HSET 存储结构化数据
       pipeline.hset(cacheKey, {
         data: JSON.stringify(data),
-        timestamp: Date.now(),
+        timestamp: Date.now().toString(),
         version: config.version,
       });
       pipeline.expire(cacheKey, config.ttl);
@@ -131,28 +141,16 @@ export class UserService {
     await pipeline.exec();
   }
 
-  private async updateLoginCache(user: User) {
-    const cacheUpdates = [
-      { type: 'USER_LOGIN', key: user.email, data: user },
-      { type: 'USER_LOGIN', key: user.username, data: user },
+  private async deleteLoginCache(user: User) {
+    const cacheKeys = [
+      this.generateCacheKey('USER_LOGIN', user.email),
+      this.generateCacheKey('USER_LOGIN', user.username),
     ];
 
     const pipeline = this.redisService.pipeline();
-
-    for (const { type, key, data } of cacheUpdates) {
-      const cacheKey = this.generateCacheKey(
-        type as keyof typeof this.CACHE_KEYS,
-        key,
-      );
-      const config = this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG];
-
-      pipeline.hset(cacheKey, {
-        data: JSON.stringify(data),
-        timestamp: Date.now(),
-        version: config.version,
-      });
-      pipeline.expire(cacheKey, config.ttl);
-    }
+    cacheKeys.forEach((key) => {
+      pipeline.unlink(key);
+    });
 
     await pipeline.exec();
   }
@@ -404,8 +402,9 @@ export class UserService {
 
       await queryRunner.commitTransaction();
 
-      // 更新缓存
+      // 更新缓存并删除登录缓存
       await this.updateUserCache(user);
+      await this.deleteLoginCache(user);
 
       return formatResponse(200, null, '用户信息更新成功');
     } catch (error) {
@@ -822,10 +821,16 @@ export class UserService {
     const cacheKey = this.generateCacheKey('USER_LOGIN', login);
 
     // 1. 先尝试从缓存获取
-    const cachedUser = await this.redisService.get<User>(cacheKey);
-    if (cachedUser) {
-      this.logger.debug(`从缓存获取用户数据: ${login}`);
-      return cachedUser;
+    const cachedData = await this.redisService.hgetall(cacheKey);
+    if (cachedData) {
+      // 验证缓存版本
+      const config = this.CACHE_CONFIG.USER_LOGIN;
+      if (cachedData.version === config.version) {
+        this.logger.debug(`从缓存获取用户数据: ${login}`);
+        return JSON.parse(cachedData.data);
+      }
+      // 版本不匹配，删除缓存
+      await this.redisService.unlink(cacheKey);
     }
 
     // 2. 缓存未命中,使用更高效的查询方式
@@ -848,11 +853,7 @@ export class UserService {
 
     if (user) {
       // 3. 更新登录相关缓存（包含密码）
-      await this.updateLoginCache(user);
-
-      // 4. 更新其他缓存（不包含密码）
-      await this.updateUserCache(user);
-
+      await this.updateUserCache(user, true);
       this.logger.debug(`更新用户缓存: ${login}`);
     }
 
@@ -861,9 +862,16 @@ export class UserService {
 
   async findByEmail(email: string): Promise<User | null> {
     const cacheKey = this.generateCacheKey('USER_EMAIL', email);
-    const cachedUser = await this.redisService.get(cacheKey);
-    if (cachedUser) {
-      return cachedUser as User;
+    const cachedData = await this.redisService.hgetall(cacheKey);
+
+    if (cachedData) {
+      // 验证缓存版本
+      const config = this.CACHE_CONFIG.USER_EMAIL;
+      if (cachedData.version === config.version) {
+        return JSON.parse(cachedData.data);
+      }
+      // 版本不匹配，删除缓存
+      await this.redisService.unlink(cacheKey);
     }
 
     const user = await this.userRepository.findOne({
@@ -872,11 +880,7 @@ export class UserService {
     });
 
     if (user) {
-      await this.redisService.set(
-        cacheKey,
-        user,
-        this.CACHE_CONFIG.USER_EMAIL.ttl,
-      );
+      await this.updateUserCache(user);
     }
 
     return user;
@@ -884,9 +888,16 @@ export class UserService {
 
   async findByUsername(username: string): Promise<User | null> {
     const cacheKey = this.generateCacheKey('USER_USERNAME', username);
-    const cachedUser = await this.redisService.get(cacheKey);
-    if (cachedUser) {
-      return cachedUser as User;
+    const cachedData = await this.redisService.hgetall(cacheKey);
+
+    if (cachedData) {
+      // 验证缓存版本
+      const config = this.CACHE_CONFIG.USER_USERNAME;
+      if (cachedData.version === config.version) {
+        return JSON.parse(cachedData.data);
+      }
+      // 版本不匹配，删除缓存
+      await this.redisService.unlink(cacheKey);
     }
 
     const user = await this.userRepository.findOne({
@@ -895,11 +906,7 @@ export class UserService {
     });
 
     if (user) {
-      await this.redisService.set(
-        cacheKey,
-        user,
-        this.CACHE_CONFIG.USER_USERNAME.ttl,
-      );
+      await this.updateUserCache(user);
     }
 
     return user;
@@ -907,9 +914,16 @@ export class UserService {
 
   async findById(id: number): Promise<User | null> {
     const cacheKey = this.generateCacheKey('USER_ID', id);
-    const cachedUser = await this.redisService.get(cacheKey);
-    if (cachedUser) {
-      return cachedUser as User;
+    const cachedData = await this.redisService.hgetall(cacheKey);
+
+    if (cachedData) {
+      // 验证缓存版本
+      const config = this.CACHE_CONFIG.USER_ID;
+      if (cachedData.version === config.version) {
+        return JSON.parse(cachedData.data);
+      }
+      // 版本不匹配，删除缓存
+      await this.redisService.unlink(cacheKey);
     }
 
     const user = await this.userRepository.findOne({
@@ -918,7 +932,7 @@ export class UserService {
     });
 
     if (user) {
-      await this.redisService.set(cacheKey, user, 60);
+      await this.updateUserCache(user);
     }
 
     return user;
@@ -926,15 +940,28 @@ export class UserService {
 
   async findAll(): Promise<User[]> {
     const cacheKey = this.generateCacheKey('USER_ALL');
-    const cachedUsers = await this.redisService.get(cacheKey);
-    if (cachedUsers) {
-      return cachedUsers as User[];
+    const cachedData = await this.redisService.hgetall(cacheKey);
+
+    if (cachedData) {
+      // 验证缓存版本
+      const config = this.CACHE_CONFIG.USER_ALL;
+      if (cachedData.version === config.version) {
+        return JSON.parse(cachedData.data);
+      }
+      // 版本不匹配，删除缓存
+      await this.redisService.unlink(cacheKey);
     }
 
     const users = await this.userRepository.find();
 
     if (users.length > 0) {
-      await this.redisService.set(cacheKey, users, 300); // 5 分钟缓存
+      const config = this.CACHE_CONFIG.USER_ALL;
+      await this.redisService.hset(cacheKey, {
+        data: JSON.stringify(users),
+        timestamp: Date.now().toString(),
+        version: config.version,
+      });
+      await this.redisService.expire(cacheKey, config.ttl);
     }
 
     return users;
