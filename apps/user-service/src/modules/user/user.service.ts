@@ -788,6 +788,29 @@ export class UserService {
     }
   }
 
+  private async updateLoginCache(user: User) {
+    const cacheUpdates = [
+      { type: 'USER_LOGIN', key: user.email, data: user },
+      { type: 'USER_LOGIN', key: user.username, data: user },
+    ];
+
+    const pipeline = this.redisService.pipeline();
+    cacheUpdates.forEach(({ type, key, data }) => {
+      const cacheKey = this.generateCacheKey(
+        type as keyof typeof this.CACHE_KEYS,
+        key,
+      );
+      const stringValue = JSON.stringify(data);
+      pipeline.setex(
+        cacheKey,
+        this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
+        stringValue,
+      );
+    });
+
+    await pipeline.exec();
+  }
+
   async findByLogin(login: string): Promise<User | null> {
     const cacheKey = this.generateCacheKey('USER_LOGIN', login);
 
@@ -822,29 +845,12 @@ export class UserService {
       .getOne();
 
     if (user) {
-      // 3. 更新缓存,使用 pipeline 批量操作
-      const cacheUpdates = [
-        { type: 'USER_LOGIN', key: login, data: user },
-        { type: 'USER_EMAIL', key: user.email, data: user },
-        { type: 'USER_USERNAME', key: user.username, data: user },
-        { type: 'USER_ID', key: user.id, data: user },
-      ];
+      // 3. 更新登录相关缓存（包含密码）
+      await this.updateLoginCache(user);
 
-      const pipeline = this.redisService.pipeline();
-      cacheUpdates.forEach(({ type, key, data }) => {
-        const cacheKey = this.generateCacheKey(
-          type as keyof typeof this.CACHE_KEYS,
-          key,
-        );
-        const stringValue = JSON.stringify(data);
-        pipeline.setex(
-          cacheKey,
-          this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
-          stringValue,
-        );
-      });
+      // 4. 更新其他缓存（不包含密码）
+      await this.updateUserCache(user);
 
-      await pipeline.exec();
       this.logger.debug(`更新用户缓存: ${login}`);
     }
 
