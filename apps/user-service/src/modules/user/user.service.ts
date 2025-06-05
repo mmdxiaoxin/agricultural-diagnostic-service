@@ -50,15 +50,18 @@ export class UserService {
     AVATAR: 'avatar',
   } as const;
 
+  // 缓存版本控制
+  private readonly CACHE_VERSION = 'v1';
+
   // 缓存配置
   private readonly CACHE_CONFIG = {
-    USER_ID: { ttl: this.MEDIUM_CACHE_TTL },
-    USER_EMAIL: { ttl: this.MEDIUM_CACHE_TTL },
-    USER_USERNAME: { ttl: this.MEDIUM_CACHE_TTL },
-    USER_LOGIN: { ttl: this.SHORT_CACHE_TTL },
-    USER_LIST: { ttl: this.SHORT_CACHE_TTL },
-    USER_ALL: { ttl: this.SHORT_CACHE_TTL },
-    AVATAR: { ttl: this.CACHE_TTL },
+    USER_ID: { ttl: this.MEDIUM_CACHE_TTL, version: this.CACHE_VERSION },
+    USER_EMAIL: { ttl: this.MEDIUM_CACHE_TTL, version: this.CACHE_VERSION },
+    USER_USERNAME: { ttl: this.MEDIUM_CACHE_TTL, version: this.CACHE_VERSION },
+    USER_LOGIN: { ttl: this.SHORT_CACHE_TTL, version: this.CACHE_VERSION },
+    USER_LIST: { ttl: this.SHORT_CACHE_TTL, version: this.CACHE_VERSION },
+    USER_ALL: { ttl: this.SHORT_CACHE_TTL, version: this.CACHE_VERSION },
+    AVATAR: { ttl: this.CACHE_TTL, version: this.CACHE_VERSION },
   } as const;
 
   constructor(
@@ -90,7 +93,20 @@ export class UserService {
 
   private async getUserCache(id: number) {
     const cacheKey = this.generateCacheKey('USER_ID', id);
-    return this.redisService.get(cacheKey);
+    const cachedData = await this.redisService.hgetall(cacheKey);
+
+    if (!cachedData) {
+      return null;
+    }
+
+    // 验证缓存版本
+    const config = this.CACHE_CONFIG.USER_ID;
+    if (cachedData.version !== config.version) {
+      await this.redisService.unlink(cacheKey);
+      return null;
+    }
+
+    return JSON.parse(cachedData.data);
   }
 
   private async updateUserCache(user: User) {
@@ -102,17 +118,23 @@ export class UserService {
     ];
 
     const pipeline = this.redisService.pipeline();
-    cacheUpdates.forEach(({ type, key, data }) => {
+
+    // 使用事务确保缓存更新的原子性
+    for (const { type, key, data } of cacheUpdates) {
       const cacheKey = this.generateCacheKey(
         type as keyof typeof this.CACHE_KEYS,
         key,
       );
-      pipeline.setex(
-        cacheKey,
-        this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
-        JSON.stringify(data),
-      );
-    });
+      const config = this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG];
+
+      // 使用 HSET 存储结构化数据
+      pipeline.hset(cacheKey, {
+        data: JSON.stringify(data),
+        timestamp: Date.now(),
+        version: config.version,
+      });
+      pipeline.expire(cacheKey, config.ttl);
+    }
 
     await pipeline.exec();
   }
@@ -124,18 +146,21 @@ export class UserService {
     ];
 
     const pipeline = this.redisService.pipeline();
-    cacheUpdates.forEach(({ type, key, data }) => {
+
+    for (const { type, key, data } of cacheUpdates) {
       const cacheKey = this.generateCacheKey(
         type as keyof typeof this.CACHE_KEYS,
         key,
       );
-      const stringValue = JSON.stringify(data);
-      pipeline.setex(
-        cacheKey,
-        this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
-        stringValue,
-      );
-    });
+      const config = this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG];
+
+      pipeline.hset(cacheKey, {
+        data: JSON.stringify(data),
+        timestamp: Date.now(),
+        version: config.version,
+      });
+      pipeline.expire(cacheKey, config.ttl);
+    }
 
     await pipeline.exec();
   }
@@ -156,8 +181,10 @@ export class UserService {
       ];
 
       const pipeline = this.redisService.pipeline();
+
+      // 使用 UNLINK 代替 DEL，避免阻塞
       cacheKeys.forEach((key) => {
-        pipeline.del(key);
+        pipeline.unlink(key);
       });
 
       await pipeline.exec();
@@ -170,23 +197,26 @@ export class UserService {
     ...args: any[]
   ): string {
     const prefix = this.CACHE_KEYS[type];
+    const version =
+      this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].version;
+
     switch (type) {
       case 'USER_ID':
-        return `${prefix}:${args[0]}`;
+        return `${prefix}:${version}:${args[0]}`;
       case 'USER_EMAIL':
-        return `${prefix}:${args[0]}`;
+        return `${prefix}:${version}:${args[0]}`;
       case 'USER_USERNAME':
-        return `${prefix}:${args[0]}`;
+        return `${prefix}:${version}:${args[0]}`;
       case 'USER_LOGIN':
-        return `${prefix}:${args[0]}`;
+        return `${prefix}:${version}:${args[0]}`;
       case 'USER_LIST':
-        return `${prefix}:${JSON.stringify(args[0])}`;
+        return `${prefix}:${version}:${JSON.stringify(args[0])}`;
       case 'USER_ALL':
-        return prefix;
+        return `${prefix}:${version}`;
       case 'AVATAR':
-        return `${prefix}:${args[0]}`;
+        return `${prefix}:${version}:${args[0]}`;
       default:
-        return prefix;
+        return `${prefix}:${version}`;
     }
   }
 

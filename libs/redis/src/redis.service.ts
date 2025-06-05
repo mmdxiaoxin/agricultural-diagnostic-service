@@ -933,4 +933,22 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async xlen(key: RedisKey): Promise<number> {
     return await this.client.xlen(key);
   }
+
+  /**
+   * 获取哈希表的所有字段和值
+   * @param key 哈希表键
+   * @returns 包含所有字段和值的对象
+   */
+  async hgetall(key: RedisKey): Promise<Record<string, string>> {
+    return await this.client.hgetall(key);
+  }
+
+  /**
+   * 异步删除指定的键
+   * @param key 要删除的键
+   * @returns 被删除的键数量
+   */
+  async unlink(key: RedisKey): Promise<number> {
+    return await this.client.unlink(key);
+  }
 }
