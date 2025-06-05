@@ -99,8 +99,6 @@ export class UserService {
       { type: 'USER_ID', key: user.id, data: userData },
       { type: 'USER_EMAIL', key: user.email, data: userData },
       { type: 'USER_USERNAME', key: user.username, data: userData },
-      { type: 'USER_LOGIN', key: user.email, data: userData },
-      { type: 'USER_LOGIN', key: user.username, data: userData },
     ];
 
     const pipeline = this.redisService.pipeline();
@@ -113,6 +111,29 @@ export class UserService {
         cacheKey,
         this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
         JSON.stringify(data),
+      );
+    });
+
+    await pipeline.exec();
+  }
+
+  private async updateLoginCache(user: User) {
+    const cacheUpdates = [
+      { type: 'USER_LOGIN', key: user.email, data: user },
+      { type: 'USER_LOGIN', key: user.username, data: user },
+    ];
+
+    const pipeline = this.redisService.pipeline();
+    cacheUpdates.forEach(({ type, key, data }) => {
+      const cacheKey = this.generateCacheKey(
+        type as keyof typeof this.CACHE_KEYS,
+        key,
+      );
+      const stringValue = JSON.stringify(data);
+      pipeline.setex(
+        cacheKey,
+        this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
+        stringValue,
       );
     });
 
@@ -786,29 +807,6 @@ export class UserService {
         message: '获取用户列表失败',
       });
     }
-  }
-
-  private async updateLoginCache(user: User) {
-    const cacheUpdates = [
-      { type: 'USER_LOGIN', key: user.email, data: user },
-      { type: 'USER_LOGIN', key: user.username, data: user },
-    ];
-
-    const pipeline = this.redisService.pipeline();
-    cacheUpdates.forEach(({ type, key, data }) => {
-      const cacheKey = this.generateCacheKey(
-        type as keyof typeof this.CACHE_KEYS,
-        key,
-      );
-      const stringValue = JSON.stringify(data);
-      pipeline.setex(
-        cacheKey,
-        this.CACHE_CONFIG[type as keyof typeof this.CACHE_CONFIG].ttl,
-        stringValue,
-      );
-    });
-
-    await pipeline.exec();
   }
 
   async findByLogin(login: string): Promise<User | null> {
