@@ -141,20 +141,6 @@ export class UserService {
     await pipeline.exec();
   }
 
-  private async deleteLoginCache(user: User) {
-    const cacheKeys = [
-      this.generateCacheKey('USER_LOGIN', user.email),
-      this.generateCacheKey('USER_LOGIN', user.username),
-    ];
-
-    const pipeline = this.redisService.pipeline();
-    cacheKeys.forEach((key) => {
-      pipeline.unlink(key);
-    });
-
-    await pipeline.exec();
-  }
-
   private async deleteUserCache(id: number) {
     const user = await this.userRepository.findOne({
       where: { id },
@@ -171,12 +157,9 @@ export class UserService {
       ];
 
       const pipeline = this.redisService.pipeline();
-
-      // 使用 UNLINK 代替 DEL，避免阻塞
       cacheKeys.forEach((key) => {
         pipeline.unlink(key);
       });
-
       await pipeline.exec();
     }
   }
@@ -402,9 +385,8 @@ export class UserService {
 
       await queryRunner.commitTransaction();
 
-      // 更新缓存并删除登录缓存
-      await this.updateUserCache(user);
-      await this.deleteLoginCache(user);
+      // 删除所有相关缓存
+      await this.deleteUserCache(id);
 
       return formatResponse(200, null, '用户信息更新成功');
     } catch (error) {
@@ -434,8 +416,8 @@ export class UserService {
     user.status = dto.status;
     await this.userRepository.save(user);
 
-    // 更新用户缓存
-    await this.updateUserCache(user);
+    // 删除所有相关缓存
+    await this.deleteUserCache(id);
 
     return formatResponse(200, null, '用户状态更新成功');
   }
@@ -455,8 +437,8 @@ export class UserService {
     user.status = 1;
     await this.userRepository.save(user);
 
-    // 更新用户缓存
-    await this.updateUserCache(user);
+    // 删除所有相关缓存
+    await this.deleteUserCache(id);
 
     return { success: true };
   }
@@ -478,8 +460,8 @@ export class UserService {
     user.password = hashedPassword;
     await this.userRepository.save(user);
 
-    // 更新用户缓存
-    await this.updateUserCache(user);
+    // 删除所有相关缓存
+    await this.deleteUserCache(id);
 
     return formatResponse(200, null, '重置用户密码成功');
   }
@@ -641,7 +623,10 @@ export class UserService {
 
     Object.assign(userProfile, profile);
     await this.profileRepository.save(userProfile);
-    await this.updateUserCache(user);
+
+    // 删除所有相关缓存
+    await this.deleteUserCache(userId);
+
     return formatResponse(200, null, '更新个人信息成功');
   }
 
@@ -694,24 +679,11 @@ export class UserService {
       profile.avatar = filePath;
       await queryRunner.manager.save(profile);
 
-      // 更新缓存
-      const avatarData = {
-        buffer: fileData,
-        fileName,
-        mimeType: mimetype,
-      };
-      const config = this.CACHE_CONFIG.AVATAR;
-      await this.redisService.hset(this.generateCacheKey('AVATAR', userId), {
-        data: JSON.stringify(avatarData),
-        timestamp: Date.now().toString(),
-        version: config.version,
-      });
-      await this.redisService.expire(
-        this.generateCacheKey('AVATAR', userId),
-        config.ttl,
-      );
-
       await queryRunner.commitTransaction();
+
+      // 删除所有相关缓存
+      await this.deleteUserCache(userId);
+
       return formatResponse(200, null, '上传头像成功');
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -736,8 +708,8 @@ export class UserService {
     user.password = await hash(password, 10);
     await this.userRepository.save(user);
 
-    // 更新用户缓存
-    await this.updateUserCache(user);
+    // 删除所有相关缓存
+    await this.deleteUserCache(userId);
 
     return formatResponse(200, null, '修改密码成功');
   }
