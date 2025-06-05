@@ -391,6 +391,10 @@ export class UserService {
 
     user.status = dto.status;
     await this.userRepository.save(user);
+
+    // 更新用户缓存
+    await this.updateUserCache(user);
+
     return formatResponse(200, null, '用户状态更新成功');
   }
 
@@ -431,6 +435,10 @@ export class UserService {
     const hashedPassword = await hash(newPassword || '123456', 10);
     user.password = hashedPassword;
     await this.userRepository.save(user);
+
+    // 更新用户缓存
+    await this.updateUserCache(user);
+
     return formatResponse(200, null, '重置用户密码成功');
   }
 
@@ -698,6 +706,10 @@ export class UserService {
     }
     user.password = await hash(password, 10);
     await this.userRepository.save(user);
+
+    // 更新用户缓存
+    await this.updateUserCache(user);
+
     return formatResponse(200, null, '修改密码成功');
   }
 
