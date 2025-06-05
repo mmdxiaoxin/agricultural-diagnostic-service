@@ -951,4 +951,24 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async unlink(key: RedisKey): Promise<number> {
     return await this.client.unlink(key);
   }
+
+  /**
+   * 设置哈希表字段的值
+   * @param key 哈希表键
+   * @param data 要存储的数据对象
+   * @returns 成功返回 1，否则返回 0
+   */
+  async hset(key: RedisKey, data: Record<string, string>): Promise<number> {
+    return await this.client.hset(key, data);
+  }
+
+  /**
+   * 设置键的过期时间
+   * @param key 键名
+   * @param seconds 过期时间（秒）
+   * @returns 成功返回 1，否则返回 0
+   */
+  async expire(key: RedisKey, seconds: number): Promise<number> {
+    return await this.client.expire(key, seconds);
+  }
 }

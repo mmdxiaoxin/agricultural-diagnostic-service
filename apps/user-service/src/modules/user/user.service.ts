@@ -26,15 +26,7 @@ export class UserService {
     'avatar-xIXQgi5p.png',
   );
   private readonly avatarPath = path.join(__dirname, '..', '..', 'avatar');
-  private readonly avatarCache = new Map<
-    string,
-    {
-      data: { avatar: string; fileName: string; mimeType: string };
-      timestamp: number;
-    }
-  >();
   private readonly CACHE_TTL = 3600000; // 1小时缓存
-  private readonly MAX_CACHE_SIZE = 1000; // 最大缓存数量
   private readonly SHORT_CACHE_TTL = 300; // 5分钟缓存
   private readonly MEDIUM_CACHE_TTL = 1800; // 30分钟缓存
 
@@ -532,26 +524,23 @@ export class UserService {
     try {
       const cacheKey = this.generateCacheKey('AVATAR', userId);
 
-      // 1. 检查内存缓存
-      const cachedData = this.avatarCache.get(cacheKey);
-      if (cachedData && Date.now() - cachedData.timestamp < this.CACHE_TTL) {
-        return formatResponse(200, cachedData.data, '头像获取成功(内存缓存)');
-      }
-
-      // 2. 检查 Redis 缓存
-      const cachedAvatar = await this.redisService.get<{
-        buffer: Buffer;
-        fileName: string;
-        mimeType: string;
-      }>(cacheKey);
-
+      // 1. 检查 Redis 缓存
+      const cachedAvatar = await this.redisService.hgetall(cacheKey);
       if (cachedAvatar) {
-        // 更新内存缓存
-        this.updateMemoryCache(cacheKey, cachedAvatar);
-        return formatResponse(200, cachedAvatar, '头像获取成功(Redis缓存)');
+        // 验证缓存版本
+        const config = this.CACHE_CONFIG.AVATAR;
+        if (cachedAvatar.version === config.version) {
+          return formatResponse(
+            200,
+            JSON.parse(cachedAvatar.data),
+            '头像获取成功(Redis缓存)',
+          );
+        }
+        // 版本不匹配，删除缓存
+        await this.redisService.unlink(cacheKey);
       }
 
-      // 3. 从数据库获取用户信息
+      // 2. 从数据库获取用户信息
       const user = await this.userRepository.findOne({
         where: { id: userId },
         relations: ['profile'],
@@ -575,7 +564,7 @@ export class UserService {
         return this.getDefaultAvatar();
       }
 
-      // 4. 读取文件并处理
+      // 3. 读取文件并处理
       const buffer = await fs.promises.readFile(avatarPath);
       const fileName = path.basename(avatarPath);
       const mimeType = mime.lookup(avatarPath) || 'application/octet-stream';
@@ -586,8 +575,14 @@ export class UserService {
         mimeType,
       };
 
-      // 5. 更新缓存
-      await this.updateCaches(cacheKey, avatarData);
+      // 4. 更新缓存
+      const config = this.CACHE_CONFIG.AVATAR;
+      await this.redisService.hset(cacheKey, {
+        data: JSON.stringify(avatarData),
+        timestamp: Date.now().toString(),
+        version: config.version,
+      });
+      await this.redisService.expire(cacheKey, config.ttl);
 
       return formatResponse(200, avatarData, '头像获取成功');
     } catch (error) {
@@ -595,29 +590,6 @@ export class UserService {
       // 发生错误时返回默认头像
       return this.getDefaultAvatar();
     }
-  }
-
-  private updateMemoryCache(key: string, data: any) {
-    // 如果缓存已满，删除最旧的项
-    if (this.avatarCache.size >= this.MAX_CACHE_SIZE) {
-      const oldestKey = Array.from(this.avatarCache.entries()).sort(
-        ([, a], [, b]) => a.timestamp - b.timestamp,
-      )[0][0];
-      this.avatarCache.delete(oldestKey);
-    }
-
-    this.avatarCache.set(key, {
-      data,
-      timestamp: Date.now(),
-    });
-  }
-
-  private async updateCaches(key: string, data: any) {
-    // 更新内存缓存
-    this.updateMemoryCache(key, data);
-
-    // 更新 Redis 缓存
-    await this.redisService.set(key, data, 3600);
   }
 
   private async getDefaultAvatar() {
@@ -703,7 +675,9 @@ export class UserService {
       if (profile.avatar) {
         try {
           await fs.promises.unlink(profile.avatar);
-          await this.redisService.del(this.generateCacheKey('AVATAR', userId));
+          await this.redisService.unlink(
+            this.generateCacheKey('AVATAR', userId),
+          );
         } catch (error) {
           this.logger.warn(`删除旧头像失败: ${error.message}`);
         }
@@ -727,10 +701,15 @@ export class UserService {
         fileName,
         mimeType: mimetype,
       };
-      await this.redisService.set(
+      const config = this.CACHE_CONFIG.AVATAR;
+      await this.redisService.hset(this.generateCacheKey('AVATAR', userId), {
+        data: JSON.stringify(avatarData),
+        timestamp: Date.now().toString(),
+        version: config.version,
+      });
+      await this.redisService.expire(
         this.generateCacheKey('AVATAR', userId),
-        avatarData,
-        3600,
+        config.ttl,
       );
 
       await queryRunner.commitTransaction();
