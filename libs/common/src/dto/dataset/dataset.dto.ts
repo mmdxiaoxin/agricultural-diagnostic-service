@@ -50,7 +50,7 @@ export class DatasetWithCountDto extends DatasetDto {
   datasetSize: number;
 }
 
-export class DatasetWithFiletDto extends DatasetDto {
+export class DatasetWithFileDto extends DatasetDto {
   @ApiProperty({
     description: '文件ID',
     example: [1, 2, 3],

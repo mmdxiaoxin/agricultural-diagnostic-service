@@ -9,7 +9,7 @@ import { CreateDatasetDto } from '@common/dto/dataset/create-dataset.dto';
 import {
   DatasetDto,
   DatasetWithCountDto,
-  DatasetWithFiletDto,
+  DatasetWithFileDto,
 } from '@common/dto/dataset/dataset.dto';
 import { UpdateDatasetAccessDto } from '@common/dto/dataset/update-dataset-access.dto';
 import { UpdateDatasetDto } from '@common/dto/dataset/update-dataset.dto';
@@ -114,7 +114,7 @@ export class DatasetController {
     description: '获取指定数据集的详细信息',
   })
   @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '获取成功', DatasetWithFiletDto)
+  @ApiResponse(HttpStatus.OK, '获取成功', DatasetWithFileDto)
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '数据集不存在')
   async getDatasetDetail(
@@ -130,7 +130,7 @@ export class DatasetController {
   @Put(':datasetId')
   @ApiOperation({ summary: '更新数据集', description: '更新指定数据集的信息' })
   @ApiParam({ name: 'datasetId', description: '数据集ID', type: 'number' })
-  @ApiResponse(HttpStatus.OK, '更新成功', DatasetWithFiletDto)
+  @ApiResponse(HttpStatus.OK, '更新成功', DatasetWithFileDto)
   @ApiErrorResponse(HttpStatus.BAD_REQUEST, '请求参数错误')
   @ApiErrorResponse(HttpStatus.UNAUTHORIZED, '未授权访问')
   @ApiErrorResponse(HttpStatus.NOT_FOUND, '数据集不存在')
