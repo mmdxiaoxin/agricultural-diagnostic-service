@@ -77,41 +77,49 @@ export class DatabaseModule implements OnModuleInit {
       return;
     }
 
+    // 按照依赖关系排序菜单数据（父菜单在前，子菜单在后）
+    const sortedMenusData = this.sortMenusByDependency(menusData);
+
+    // 创建ID映射：数据文件中的ID -> 数据库中的ID
+    const idMapping = new Map<number, number>();
     const menuMap = new Map<string, Menu>();
 
-    // 创建所有菜单，不设置父子关系
-    for (const menuData of menusData) {
+    // 第一轮：创建所有菜单，不设置父子关系
+    for (const menuData of sortedMenusData) {
       const menu = this.menuRepository.create({
         icon: menuData.icon,
         title: menuData.title,
         path: menuData.path,
         sort: menuData.sort || 0,
         isLink: menuData.isLink || undefined,
-        parentId: menuData.parentId || undefined,
+        parentId: undefined, // 先不设置父ID
       });
       const savedMenu = await this.menuRepository.save(menu);
+
+      // 建立映射关系
+      idMapping.set(menuData.id, savedMenu.id);
       menuMap.set(menuData.path, savedMenu);
-      this.logger.log(`创建菜单: ${menuData.title}`);
+      this.logger.log(`创建菜单: ${menuData.title} (ID: ${savedMenu.id})`);
     }
 
-    // 设置父子关系
-    for (const menuData of menusData) {
+    // 第二轮：设置父子关系
+    for (const menuData of sortedMenusData) {
       if (menuData.parentId) {
-        const parentMenu = menusData.find((m) => m.id === menuData.parentId);
-        if (parentMenu) {
-          const childMenu = menuMap.get(menuData.path);
-          const parentMenuEntity = menuMap.get(parentMenu.path);
+        const parentDbId = idMapping.get(menuData.parentId);
+        const childMenu = menuMap.get(menuData.path);
 
-          if (childMenu && parentMenuEntity) {
-            childMenu.parent = parentMenuEntity;
-            await this.menuRepository.save(childMenu);
-          }
+        if (parentDbId && childMenu) {
+          childMenu.parentId = parentDbId;
+          await this.menuRepository.save(childMenu);
+          this.logger.log(
+            `设置父子关系: ${childMenu.title} -> 父菜单ID: ${parentDbId}`,
+          );
         }
       }
     }
 
-    // 设置角色关系
-    for (const menuData of menusData) {
+    // 第三轮：设置角色关系
+    for (const menuData of sortedMenusData) {
       const menu = menuMap.get(menuData.path);
       if (menu && menuData.roles) {
         const roles = await this.roleRepository.find({
@@ -119,10 +127,49 @@ export class DatabaseModule implements OnModuleInit {
         });
         menu.roles = roles;
         await this.menuRepository.save(menu);
+        this.logger.log(
+          `设置角色关系: ${menu.title} -> ${roles.map((r) => r.name).join(', ')}`,
+        );
       }
     }
 
     this.logger.log('菜单初始化完成');
+  }
+
+  /**
+   * 按照依赖关系排序菜单数据
+   * 确保父菜单在子菜单之前创建
+   */
+  private sortMenusByDependency(
+    menus: typeof menusData,
+  ): (typeof menusData)[number][] {
+    const menuMap = new Map<number, (typeof menusData)[number]>();
+    const result: (typeof menusData)[number][] = [];
+    const visited = new Set<number>();
+
+    // 建立菜单映射
+    menus.forEach((menu) => menuMap.set(menu.id, menu));
+
+    // 深度优先遍历，确保父菜单在前
+    const visit = (menuId: number) => {
+      if (visited.has(menuId)) return;
+
+      const menu = menuMap.get(menuId);
+      if (!menu) return;
+
+      // 先访问父菜单
+      if (menu.parentId && !visited.has(menu.parentId)) {
+        visit(menu.parentId);
+      }
+
+      visited.add(menuId);
+      result.push(menu);
+    };
+
+    // 访问所有菜单
+    menus.forEach((menu) => visit(menu.id));
+
+    return result;
   }
 
   static register(entities: EntityClassOrSchema[] = []): DynamicModule {
