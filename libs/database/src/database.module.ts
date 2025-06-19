@@ -79,7 +79,7 @@ export class DatabaseModule implements OnModuleInit {
 
     const menuMap = new Map<string, Menu>();
 
-    // 创建所有菜单，不设置父子关系
+    // 第一步：创建所有菜单，不设置父子关系
     for (const menuData of menusData) {
       const menu = this.menuRepository.create({
         icon: menuData.icon,
@@ -87,30 +87,34 @@ export class DatabaseModule implements OnModuleInit {
         path: menuData.path,
         sort: menuData.sort || 0,
         isLink: menuData.isLink || undefined,
-        parentId: menuData.parentId || undefined,
+        parentId: undefined, // 先不设置父ID
       });
       const savedMenu = await this.menuRepository.save(menu);
       menuMap.set(menuData.path, savedMenu);
-      this.logger.log(`创建菜单: ${menuData.title}`);
+      this.logger.log(`创建菜单: ${menuData.title} (ID: ${savedMenu.id})`);
     }
 
-    // 设置父子关系
+    // 第二步：设置父子关系
     for (const menuData of menusData) {
-      if (menuData.parentId) {
-        const parentMenu = menusData.find((m) => m.id === menuData.parentId);
-        if (parentMenu) {
-          const childMenu = menuMap.get(menuData.path);
-          const parentMenuEntity = menuMap.get(parentMenu.path);
+      if (menuData.parentPath) {
+        const childMenu = menuMap.get(menuData.path);
+        const parentMenu = menuMap.get(menuData.parentPath);
 
-          if (childMenu && parentMenuEntity) {
-            childMenu.parent = parentMenuEntity;
-            await this.menuRepository.save(childMenu);
-          }
+        if (childMenu && parentMenu) {
+          childMenu.parentId = parentMenu.id;
+          await this.menuRepository.save(childMenu);
+          this.logger.log(
+            `设置父子关系: ${childMenu.title} -> ${parentMenu.title}`,
+          );
+        } else {
+          this.logger.warn(
+            `无法找到父子关系: ${menuData.path} -> ${menuData.parentPath}`,
+          );
         }
       }
     }
 
-    // 设置角色关系
+    // 第三步：设置角色关系
     for (const menuData of menusData) {
       const menu = menuMap.get(menuData.path);
       if (menu && menuData.roles) {
@@ -119,6 +123,9 @@ export class DatabaseModule implements OnModuleInit {
         });
         menu.roles = roles;
         await this.menuRepository.save(menu);
+        this.logger.log(
+          `设置菜单角色: ${menu.title} -> ${roles.map((r) => r.name).join(', ')}`,
+        );
       }
     }
 
