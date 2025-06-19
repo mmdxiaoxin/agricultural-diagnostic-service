@@ -360,7 +360,7 @@ REDIS_RECONNECT=true
 REDIS_DB=0
 
 # JWT配置
-JWT_SECRET=your_jwt_secret_key
+SECRET=your_jwt_secret_key
 JWT_EXPIRES_IN=24h
 
 # 邮件服务配置
